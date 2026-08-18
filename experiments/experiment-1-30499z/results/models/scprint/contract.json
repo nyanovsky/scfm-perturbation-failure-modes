@@ -1,0 +1,35 @@
+{
+  "model": "scprint",
+  "checkpoint": "jkobject/scPRINT:medium-v1.5.ckpt",
+  "checkpoint_revision": "8e1ad1a1bc40c1fc2f4f1700fe27923eea9a2bed",
+  "checkpoint_md5": null,
+  "input_normalization": "raw counts per gene, normalized inside the model (hyper_parameter normalization='log': expression / expression.sum() for 'sum', log2(1+expression) for 'log'), with a requested-read-depth token prepended (log2(1 + total counts))",
+  "output_head": "decoders.ExprDecoder -> output['mean'], scaled by the depth multiplier",
+  "output_semantics": "predicted share of the cell's counts for that gene: the expression decoder ends in a softmax across the supplied gene positions, conditioned on the requested read depth. Multiply by the total count to read it as an expected count; it is not a log fold change, and the values depend on which genes were supplied together",
+  "information_flow": "bidirectional flash transformer over the supplied gene set plus cell-embedding tokens",
+  "ordering_dependent": false,
+  "response_symmetric": false,
+  "symmetry_evidence": "measured on the demonstration cell: d ENSG00000198899 / d ENSG00000198712 = 4.962827e-03 against d ENSG00000198712 / d ENSG00000198899 = 6.816680e-03 (relative gap 0.272); the two cross entries differ by more than 10%",
+  "differentiable_wrt_input_expression": true,
+  "jacobian_available": true,
+  "jacobian_method": "forward_mode_autodiff_jvp",
+  "jacobian_unavailable_reason": null,
+  "jacobian_check": {
+    "primary_method": "forward_mode_autodiff_jvp",
+    "cross_check_method": "central_finite_difference(step=1.73)",
+    "pearson_primary_vs_cross_check": 0.9999999869934212,
+    "max_abs_difference": 0.00014597177505493164,
+    "relative_l2_difference": 0.0002629272370969856,
+    "primary_l2": 0.7062718272209167,
+    "cross_check_l2": 0.706418514251709
+  },
+  "vocabulary_kind": "ensembl",
+  "vocabulary_size": 44756,
+  "context_length": 44756,
+  "dtype": "float32",
+  "substitutions": [
+    "simpler_flash.FlashSelfAttention.forward delegated to the package's own pure-torch SelfAttention: the fused kernel asserts fp16/bf16 and has no forward-mode derivative, so the response and its Jacobian would not be computable in float32. Same weights, same attention, different kernel (upstream forward kept at FlashSelfAttention.forward)",
+    "stubbed scprint.model.utils / scprint.utils / scprint.tasks.* at import time to avoid bionty+lamindb+scdataloader (a configured lamindb instance is not available and is unnecessary for a forward pass); model source unmodified"
+  ],
+  "notes": "The gene vocabulary is the checkpoint's own hyper_parameters['genes'] list; gene identity enters through a frozen pretrained (ESM-derived) gene embedding indexed by position in that list. Checkpoint hyper-parameters recorded: {'d_model': 256, 'nhead': 4, 'nlayers': 8, 'normalization': 'log', 'attn_bias': 'none', 'expr_encoder_layers': 2, 'transformer': 'flash', 'expr_emb_style': 'continuous', 'domain_spec_batchnorm': 'None', 'n_input_bins': 0, 'mvc_decoder': 'inner product', 'compress_class_dim': None, 'cell_emb_style': 'cls', 'cell_specific_blocks': False, 'depth_atinput': False, 'freeze_embeddings': False, 'zinb': True, 'dropout': 0.0, 'lr': 0.0001, 'num_heads_kv': 4, 'residual_in_fp32': True, 'checkpointing': False, 'fused_dropout_add_ln': False, 'return_residual': False, 'mlp_ratio': 4.0, 'fused_mlp': False, 'fused_bias_fc': False, 'sequence_parallel': False, 'drop_path_rate': 0.0, 'weight_init': '', 'precpt_gene_emb': '/lustre/fswork/projects/rech/xeg/uat95fg/gene_embeddings.parquet', '_instantiator': 'lightning.pytorch.cli.instantiate_module', 'gene_pos_enc': None}."
+}

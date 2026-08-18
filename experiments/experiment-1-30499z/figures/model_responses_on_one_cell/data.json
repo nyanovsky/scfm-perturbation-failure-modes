@@ -1,0 +1,26 @@
+{
+  "scgpt": {
+    "spearman_response_vs_input": 0.3907153337300778,
+    "median_expressed": 30.388931274414062,
+    "median_unexpressed": 29.745389938354492,
+    "output_semantics": "predicted binned expression value for that gene in this cell, on the 51-bin training scale (not counts, not CP10K)"
+  },
+  "aido_cell": {
+    "spearman_response_vs_input": 0.5539762711635552,
+    "median_expressed": 0.8696830868721008,
+    "median_unexpressed": 0.3272174000740051,
+    "output_semantics": "one scalar per gene position (the model's masked-language-model regression target, i.e. predicted high-read-depth expression on the log1p CP10K scale); the last two positions are read-depth tokens and are dropped"
+  },
+  "scprint": {
+    "spearman_response_vs_input": 0.5878389761494293,
+    "median_expressed": 0.9294219613075256,
+    "median_unexpressed": 0.578639030456543,
+    "output_semantics": "predicted share of the cell's counts for that gene: the expression decoder ends in a softmax across the supplied gene positions, conditioned on the requested read depth. Multiply by the total count to read it as an expected count; it is not a log fold change, and the values depend on which genes were supplied together"
+  },
+  "transcriptformer": {
+    "spearman_response_vs_input": 0.3568910769809041,
+    "median_expressed": 0.0003745142894331366,
+    "median_unexpressed": 0.0003234646574128419,
+    "output_semantics": "predicted share of the cell's total counts assigned to that gene, conditioned on the gene's own identity and on the identity and count of every gene earlier in the ordering. Reported as mu / total counts so values are comparable across passes; raw mu is not."
+  }
+}

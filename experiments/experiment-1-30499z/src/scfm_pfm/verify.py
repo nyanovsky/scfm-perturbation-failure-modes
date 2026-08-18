@@ -75,7 +75,17 @@ def check_effects(ch: Checks, root: Path) -> None:
                f"{len(strata)} strata {dict(sorted(strata.items()))}")
         ch.add(sec, "expressed", int(genes.expressed.sum()) > 0,
                f"{int(genes.expressed.sum())} genes above {C.EFFECTS.expressed_min_cp10k} CP10K")
-        ch.add(sec, "qc_json", "n_cells_final" in qc, f"cells retained {qc.get('n_cells_final')}")
+        retained = qc.get("retained", {})
+        ch.add(
+            sec,
+            "qc_json",
+            {"cells", "control_cells", "perturbations"} <= set(retained)
+            and "config" in qc
+            and "source" in qc,
+            f"{retained.get('cells')} cells retained, {retained.get('control_cells')} of them "
+            f"non-targeting controls, over {retained.get('perturbations')} perturbations; "
+            f"provenance and config recorded",
+        )
 
         # noise ceilings: bounded, and higher for larger effects
         in_range = ceil[(ceil["median"] <= 0) | (ceil["median"] > 1)]
@@ -167,10 +177,26 @@ def check_models(ch: Checks, root: Path) -> None:
         for field in ("input_normalization", "output_head", "output_semantics", "information_flow"):
             ch.add(sec, f"contract_{field}", bool(str(con.get(field, "")).strip()),
                    f"{len(str(con.get(field, '')))} characters recorded")
-        ch.add(sec, "symmetry", con.get("response_symmetric") is not None
-               and bool(str(con.get("symmetry_evidence", "")).strip()),
-               f"response_symmetric={con.get('response_symmetric')}, "
-               f"ordering_dependent={con.get('ordering_dependent')}")
+        # symmetry must be either answered or explicitly measured-and-inconclusive:
+        # a silent None would let a later run assume a symmetric response matrix
+        probe = demo.get("jacobian", {}).get("symmetry_probe") or {}
+        answered = con.get("response_symmetric") is not None
+        explained = probe.get("verdict") in ("not_determined", "not_measured") and bool(
+            probe.get("note") or probe.get("reason")
+        )
+        ch.add(
+            sec,
+            "symmetry",
+            (answered or explained) and bool(str(con.get("symmetry_evidence", "")).strip()),
+            f"response_symmetric={con.get('response_symmetric')}, "
+            f"ordering_dependent={con.get('ordering_dependent')}, "
+            f"cross-entry probe {probe.get('verdict', 'absent')}"
+            + (
+                f" (ratio {probe['ratio_d_source_d_target_over_d_target_d_source']:.4g})"
+                if "ratio_d_source_d_target_over_d_target_d_source" in probe
+                else ""
+            ),
+        )
         jac = demo.get("jacobian", {})
         ok = jac.get("available") or bool(jac.get("unavailable_reason"))
         ch.add(sec, "jacobian", bool(ok),

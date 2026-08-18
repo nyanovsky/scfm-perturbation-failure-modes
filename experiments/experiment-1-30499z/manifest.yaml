@@ -2,8 +2,35 @@ experiment: 1
 eid: "exp_01m09d588jez38j6trqk30499z"
 title: "Nadig effect matrices and the four-model response contract"
 date: "2026-08-18"
-status: in-progress
-data: {}
-outputs: {}
-results: {}
-slurm_jobs: []
+status: complete
+data:
+  perturb_seq: "GEO GSE264667 Replogle-Nadig CRISPRi Perturb-seq (HepG2, Jurkat)"
+  reference_de: "tahoebio/replogle-nadig-de-rhaister (pdex/all_pdex.parquet, 29.8 GB)"
+outputs:
+  artifact_root: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/"
+  effects: "effects/{hepg2,jurkat}/{effects.npz,perturbations.parquet,genes.parquet,noise_ceiling_summary.parquet,qc.json}"
+  gene_universe: "gene_universe/{gene_universe.parquet,vocabulary_<model>.parquet,coverage.json}"
+  models: "models/{scgpt,aido_cell,scprint,transcriptformer}/{response_vector,jacobian_column}.parquet + {contract,environment,demo}.json"
+  crosscheck: "crosscheck/reference_accumulated.npz; results/crosscheck/*.parquet + summary.json"
+  report: "results/data_preparation_report.md"
+  provenance: "results/provenance.json"
+results:
+  retained_perturbations_hepg2: 1982
+  retained_perturbations_jurkat: 2201
+  median_knockdown_hepg2: 0.8976
+  median_knockdown_jurkat: 0.8866
+  universe_genes: 7444
+  reference_pooled_spearman: 0.9251
+  reference_pooled_entries: 8464986
+  reference_shared_pairs: 2877
+  models_with_response_and_jacobian: 4
+  verify: "84/84 checks passed"
+slurm_jobs:
+  - {id: "209514077812", what: "effect matrices, both cell lines"}
+  - {id: "393902382560", what: "gene universe + four vocabularies"}
+  - {id: "172313890488", what: "real non-targeting control demo cells"}
+  - {id: "334694176457", what: "reference cross-check accumulation (29.8 GB streamed)"}
+  - {id: "591358479969", what: "scGPT response + Jacobian + symmetry"}
+  - {id: "807222987875", what: "AIDO.Cell response + Jacobian + symmetry"}
+  - {id: "843963170442", what: "scPRINT response + Jacobian + symmetry"}
+  - {id: "110126229432", what: "TranscriptFormer response + Jacobian + symmetry"}

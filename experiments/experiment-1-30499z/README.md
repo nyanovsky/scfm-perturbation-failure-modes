@@ -44,5 +44,35 @@ uv run python -m scfm_pfm.verify --all
 
 ## Outputs
 
-Filled in at completion; see `manifest.yaml` and the provenance manifest under
-the experiment artifacts directory.
+All durable outputs live under the experiment artifact store, rooted at
+`artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/` (readable from any fabric). Small reviewable copies are tracked in
+`results/`.
+
+| output | location | what it is |
+|---|---|---|
+| effect matrices | `effects/{hepg2,jurkat}/effects.npz` | delta and log2FC matrices vs batch-matched non-targeting controls, both estimators |
+| per-perturbation table | `effects/<cl>/perturbations.parquet` | knockdown, DE counts, effect-size strata, split-half and split-by-batch ceilings |
+| gene tables | `effects/<cl>/genes.parquet` | pooled control CP10K and the expressed-gene flag |
+| ceiling summary | `effects/<cl>/noise_ceiling_summary.parquet` | per-stratum medians and quartiles for both splits and both metrics |
+| filter/QC record | `effects/<cl>/qc.json` | funnel counts, config, retained counts, environment |
+| gene universe | `gene_universe/gene_universe.parquet` | 7,444 genes measured in both lines and present in all four vocabularies |
+| model vocabularies | `gene_universe/vocabulary_<model>.parquet` | position, token, resolved Ensembl id, resolution route |
+| model responses | `models/<model>/response_vector.parquet` | per-gene response over the universe on one real control cell |
+| model Jacobians | `models/<model>/jacobian_column.parquet` | d response / d source gene count for that cell |
+| model contracts | `models/<model>/contract.json` | output semantics, information flow, ordering, symmetry, substitutions |
+| model environments | `models/<model>/environment.json` | pinned packages, image, device, checkpoint revision |
+| reference accumulation | `crosscheck/reference_accumulated.npz` | pooled sums from the 29.8 GB tahoebio release |
+| cross-check result | `results/crosscheck/{summary.json,*.parquet}` | pooled Spearman 0.9251 over 8,464,986 entries |
+| report | `results/data_preparation_report.md` | the data-prep report, every number read from a file above |
+| provenance | `results/provenance.json` | sources, checksums, checkpoint revisions, job ids, file contract |
+
+Source data: GEO GSE264667 (HepG2 h5ad md5 `dfc676e4186b8c8c173ff14e1194cc8a`,
+5,614,460,941 bytes) and `tahoebio/replogle-nadig-de-rhaister`. Model
+checkpoints: `wanglab/scGPT-human` @ `a24c2377`, `genbio-ai/GB.Cell-100M` @
+`a983b388` (published as AIDO.Cell-100M), scPRINT `medium-v1.5.ckpt` @
+`8e1ad1a1`, TranscriptFormer `tf_sapiens`. One pinned stack
+(`envs/model_stack.sh`, torch 2.5.1+cu121) on `python:3.11-slim` + H100; each
+model still runs in its own job and records its own resolved package set. No
+external model API or LLM was used. Seed 42. Done condition:
+`uv run python -m scfm_pfm.verify --all` -> 84/84 checks passed
+(2026-08-18).

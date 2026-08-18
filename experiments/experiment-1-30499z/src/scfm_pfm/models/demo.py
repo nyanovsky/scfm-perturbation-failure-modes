@@ -122,7 +122,90 @@ def run(
         if not np.isfinite(column).all():
             raise RuntimeError("non-finite values in the jacobian column")
 
+    # Is the response matrix symmetric? One column does not answer that, so read a
+    # second column at the gene this source moves most and compare the two cross
+    # entries. A later run that treats the matrix as symmetric is relying on this.
+    symmetry = None
+    if column is not None:
+        with np.errstate(invalid="ignore"):
+            mag = np.abs(column).copy()
+        mag[source_row] = -np.inf
+        mag[uni_counts <= 0] = -np.inf  # only genes actually present in the cell
+        target_row = int(np.argmax(mag))
+        target_position = int(universe[f"{model}_position"].to_numpy()[target_row])
+        try:
+            column2, method2, reason2 = m.jacobian_column(prepared, target_position)
+        except Exception as exc:  # noqa: BLE001
+            column2, method2, reason2 = None, "failed", f"{type(exc).__name__}: {exc}"
+        if column2 is not None:
+            column2 = np.asarray(column2, dtype=np.float64)
+            d_ts = float(column[target_row])
+            d_st = float(column2[source_row])
+            denom = max(abs(d_ts), abs(d_st))
+            ratio = float(d_st / d_ts) if d_ts != 0 else float("nan")
+            rel_gap = float(abs(d_ts - d_st) / denom) if denom > 0 else 0.0
+            chk = getattr(m, "jacobian_check", {}) or {}
+            stability = float(chk.get("pearson_primary_vs_cross_check", 1.0))
+            magnitude_gap = float(chk.get("relative_l2_difference", 0.0))
+            # A cross-entry comparison is only meaningful if the Jacobian estimate is
+            # stable in BOTH direction and magnitude across step sizes: a factor-of-two
+            # magnitude drift would otherwise read as asymmetry.
+            if stability < 0.99 or magnitude_gap > 0.5:
+                verdict = "not_determined"
+                note = (
+                    "the Jacobian estimate itself is step-dependent here (primary vs "
+                    f"cross-check Pearson {stability:.4f}, relative L2 difference "
+                    f"{magnitude_gap:.4f}), so the asymmetry cannot be separated from "
+                    "estimation error"
+                )
+            elif rel_gap <= 0.1:
+                verdict = "symmetric_at_this_pair"
+                note = "the two cross entries agree to within 10%"
+            else:
+                verdict = "asymmetric"
+                note = "the two cross entries differ by more than 10%"
+            symmetry = {
+                "source_gene": source_gene,
+                "target_gene": str(uni_ids[target_row]),
+                "target_selection": "largest |d response / d source count| among genes present in the cell",
+                "d_target_d_source": d_ts,
+                "d_source_d_target": d_st,
+                "ratio_d_source_d_target_over_d_target_d_source": ratio,
+                "relative_gap": rel_gap,
+                "second_column_method": method2,
+                "jacobian_stability_pearson": stability,
+                "jacobian_magnitude_relative_l2_gap": magnitude_gap,
+                "verdict_criterion": "cross-entry gap >10% => asymmetric, but only when the Jacobian estimate is stable (Pearson >= 0.99 and relative L2 difference <= 0.5 between step sizes)",
+                "verdict": verdict,
+                "note": note,
+            }
+        else:
+            symmetry = {"verdict": "not_measured", "reason": reason2, "note": method2}
+
     contract = m.contract()
+    if symmetry is not None and symmetry["verdict"] in ("symmetric_at_this_pair", "asymmetric"):
+        measured = symmetry["verdict"] == "symmetric_at_this_pair"
+        evidence = (
+            f"measured on the demonstration cell: d {symmetry['target_gene']} / d "
+            f"{symmetry['source_gene']} = {symmetry['d_target_d_source']:.6e} against "
+            f"d {symmetry['source_gene']} / d {symmetry['target_gene']} = "
+            f"{symmetry['d_source_d_target']:.6e} (relative gap "
+            f"{symmetry['relative_gap']:.3f}); {symmetry['note']}"
+        )
+        if contract.response_symmetric is None:
+            contract.response_symmetric = measured
+            contract.symmetry_evidence = evidence
+        else:
+            contract.symmetry_evidence = (
+                f"{contract.symmetry_evidence} Cross-entry measurement: {evidence}"
+            )
+    elif symmetry is not None and contract.response_symmetric is None:
+        contract.response_symmetric = None
+        contract.symmetry_evidence = (
+            f"{contract.symmetry_evidence} Cross-entry measurement inconclusive: "
+            f"{symmetry.get('note') or symmetry.get('reason')}"
+        )
+
     out_dir = paths.ensure(out_dir)
     frame = pd.DataFrame(
         {
@@ -203,6 +286,7 @@ def run(
             "self_entry": float(column[source_row]) if column is not None else None,
             "n_nonzero": int((column != 0).sum()) if column is not None else None,
             "check": getattr(m, "jacobian_check", {}),
+            "symmetry_probe": symmetry,
         },
         "ordering_probe": probe,
         "substitutions": list(contract.substitutions),
