@@ -42,6 +42,34 @@ def build(model: str, cache: Path, universe: pd.DataFrame, vocab: pd.DataFrame, 
     return getattr(mod, cls_name)(cache=cache, universe=universe, vocab=vocab, device=device)
 
 
+def load_demo_cell(
+    demo_dir: Path, cell_line: str, cell_index: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, str]:
+    """The real control cell, from whichever form of the export is present.
+
+    The parquet is the form that survives delivery into a job (the snapshot
+    honours .gitignore, which excludes *.npz); the npz is kept for local use.
+    """
+    parquet = demo_dir / f"demo_cells_{cell_line}.parquet"
+    if parquet.exists():
+        frame = pd.read_parquet(parquet)
+        cols = [c for c in frame.columns if c.startswith("counts__")]
+        col = cols[cell_index]
+        return (
+            frame[col].to_numpy(dtype=np.float32),
+            frame["gene_id"].to_numpy().astype(str),
+            frame["gene_name"].to_numpy().astype(str),
+            col.removeprefix("counts__"),
+        )
+    npz = np.load(demo_dir / f"demo_cells_{cell_line}.npz", allow_pickle=False)
+    return (
+        npz["counts"][cell_index].astype(np.float32),
+        npz["gene_ids"].astype(str),
+        npz["gene_names"].astype(str),
+        str(npz["barcodes"][cell_index]),
+    )
+
+
 def run(
     model: str,
     cache: Path,
@@ -56,11 +84,7 @@ def run(
     started = time.time()
     universe = pd.read_parquet(universe_dir / "gene_universe.parquet")
     vocab = pd.read_parquet(universe_dir / f"vocabulary_{model}.parquet")
-    npz = np.load(demo_dir / f"demo_cells_{cell_line}.npz", allow_pickle=False)
-    counts = npz["counts"][cell_index].astype(np.float32)
-    gene_ids = npz["gene_ids"].astype(str)
-    gene_names = npz["gene_names"].astype(str)
-    barcode = str(npz["barcodes"][cell_index])
+    counts, gene_ids, gene_names, barcode = load_demo_cell(demo_dir, cell_line, cell_index)
 
     uni_ids = universe["gene_id"].to_numpy().astype(str)
     count_by_gene = dict(zip(gene_ids, counts))

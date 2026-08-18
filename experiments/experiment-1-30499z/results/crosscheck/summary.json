@@ -1,0 +1,59 @@
+{
+  "gate_metric": "pooled Spearman over every shared (cell line, target, gene) log2FC entry",
+  "pooled_spearman": 0.9251473654766353,
+  "n_pooled_entries": 8464986,
+  "n_shared_cell_line_target_pairs": 2877,
+  "median_per_pair_spearman": 0.9449320225074849,
+  "median_per_pair_spearman_top_stratum": 0.9771579205417162,
+  "per_pair_spearman_by_stratum": {
+    "S1_lowest": {
+      "n": 663,
+      "median_spearman": 0.9190788413184906
+    },
+    "S2": {
+      "n": 741,
+      "median_spearman": 0.9299824885870143
+    },
+    "S3": {
+      "n": 713,
+      "median_spearman": 0.9518662393727612
+    },
+    "S4_highest": {
+      "n": 760,
+      "median_spearman": 0.9771579205417162
+    }
+  },
+  "per_cell_line": {
+    "hepg2": {
+      "reference_targets_seen": 1340,
+      "shared_genes": 2649,
+      "expressed_genes": 3119,
+      "matched_pairs": 1340,
+      "our_retained_perturbations": 1982
+    },
+    "jurkat": {
+      "reference_targets_seen": 1537,
+      "shared_genes": 3198,
+      "expressed_genes": 3469,
+      "matched_pairs": 1537,
+      "our_retained_perturbations": 2201
+    }
+  },
+  "reference": {
+    "repo": "tahoebio/replogle-nadig-de-rhaister",
+    "table": "pdex/all_pdex.parquet",
+    "reference_gene_panel": 6546,
+    "pooling": "log2(sum_b n_b*target_mean_b / sum_b n_b*ref_mean_b)"
+  },
+  "own_estimator_agreement": {
+    "median_pearson_within_vs_pooled_lfc": 0.9962737669767255,
+    "median_pearson_within_vs_pooled_delta": 0.9971252477641686,
+    "by_stratum": {
+      "S1_lowest": 0.9942299321730395,
+      "S2": 0.9946589914163958,
+      "S3": 0.9965804571276022,
+      "S4_highest": 0.9985653022137627
+    }
+  },
+  "runtime_seconds": 15.5
+}

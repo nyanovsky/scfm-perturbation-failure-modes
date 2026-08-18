@@ -147,6 +147,39 @@ def load_ours(cell_line: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return np.asarray(npz["targets"]), npz["lfc_within_batch"][:, cols], cols
 
 
+def save_accumulator(acc: dict, feature_names: list[str], path: Path) -> Path:
+    """Persist the streamed reference sums so the comparison can run elsewhere.
+
+    Streaming the 29.8 GB reference needs a job; joining it against our effect
+    matrices needs those matrices. Splitting the two at this file lets each half
+    run where its inputs actually are.
+    """
+    arrays: dict[str, np.ndarray] = {"feature_names": np.array([str(x) for x in feature_names])}
+    for cl, a in acc.items():
+        n = len(a["targets"])
+        arrays[f"{cl}__targets"] = np.array([str(t) for t in a["targets"]], dtype="U64")
+        arrays[f"{cl}__num"] = a["num"][:n].astype(np.float32)
+        arrays[f"{cl}__den"] = a["den"][:n].astype(np.float32)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(path, **arrays)
+    print(f"[crosscheck] wrote {path} ({path.stat().st_size / 1e6:.1f} MB)", flush=True)
+    return path
+
+
+def load_accumulator(path: Path) -> tuple[dict, list[str]]:
+    z = np.load(path, allow_pickle=False)
+    feature_names = [str(x) for x in z["feature_names"]]
+    acc = {}
+    for cl in paths.CELL_LINES:
+        tg = [str(t) for t in z[f"{cl}__targets"]]
+        acc[cl] = {
+            "targets": {t: i for i, t in enumerate(tg)},
+            "num": z[f"{cl}__num"].astype(np.float64),
+            "den": z[f"{cl}__den"].astype(np.float64),
+        }
+    return acc, feature_names
+
+
 def own_estimator_agreement(cell_line: str) -> pd.DataFrame:
     """Within-batch vs batch-pooled, per perturbation: the batch-confounding check."""
     compact = compact_dir()
@@ -178,16 +211,39 @@ def own_estimator_agreement(cell_line: str) -> pd.DataFrame:
     )
 
 
-def run(out_dir: Path, max_row_groups: int | None = None, sample: int = 40000) -> dict:
+def run(
+    out_dir: Path,
+    max_row_groups: int | None = None,
+    stage: str = "all",
+    accumulator: Path | None = None,
+) -> dict:
     started = time.time()
     import urllib.request
 
-    with urllib.request.urlopen(FEATURE_NAMES_URL, timeout=120) as fh:
-        feature_names = json.load(fh)
-    feature_names = [str(x) for x in feature_names]
-    print(f"[crosscheck] reference gene panel: {len(feature_names)} genes", flush=True)
+    acc_path = accumulator or (out_dir / "reference_accumulated.npz")
+    if stage == "compare":
+        acc, feature_names = load_accumulator(acc_path)
+        print(
+            f"[crosscheck] loaded reference sums from {acc_path}: "
+            f"{len(feature_names)} genes, "
+            + ", ".join(f"{cl} {len(acc[cl]['targets'])} targets" for cl in acc),
+            flush=True,
+        )
+    else:
+        with urllib.request.urlopen(FEATURE_NAMES_URL, timeout=120) as fh:
+            feature_names = json.load(fh)
+        feature_names = [str(x) for x in feature_names]
+        print(f"[crosscheck] reference gene panel: {len(feature_names)} genes", flush=True)
 
-    acc = stream_reference(paths.CELL_LINES, len(feature_names), max_row_groups)
+        acc = stream_reference(paths.CELL_LINES, len(feature_names), max_row_groups)
+        save_accumulator(acc, feature_names, paths.ensure(out_dir) / "reference_accumulated.npz")
+        if stage == "reference":
+            return {
+                "stage": "reference",
+                "targets": {cl: len(acc[cl]["targets"]) for cl in acc},
+                "genes": len(feature_names),
+                "runtime_seconds": round(time.time() - started, 1),
+            }
 
     pair_rows: list[dict] = []
     scatter: list[pd.DataFrame] = []
@@ -341,9 +397,22 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--max-row-groups", type=int, default=None)
     ap.add_argument("--out", default=None)
+    ap.add_argument(
+        "--stage",
+        default="all",
+        choices=("all", "reference", "compare"),
+        help="reference: stream and save the reference sums; compare: join them "
+        "against our effect matrices; all: both in one process",
+    )
+    ap.add_argument("--accumulator", default=None, help="path to reference_accumulated.npz")
     args = ap.parse_args(argv)
     out = Path(args.out) if args.out else paths.crosscheck_dir()
-    run(out, args.max_row_groups)
+    run(
+        out,
+        args.max_row_groups,
+        stage=args.stage,
+        accumulator=Path(args.accumulator) if args.accumulator else None,
+    )
     return 0
 
 

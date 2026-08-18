@@ -27,5 +27,6 @@ _raw/
 results/artifacts_mirror/
 scratch/pkgsrc/
 results/artifacts_mirror/
-results/handoff/
-_raw/
+# the model jobs read these, so they must be delivered with the code
+results/handoff/crosscheck/
+results/handoff/effects/

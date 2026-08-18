@@ -63,6 +63,20 @@ def export(cell_line: str, raw_dir: Path, out_dir: Path) -> dict:
         gem_groups=gem[picked],
         row_indices=np.array(picked, dtype=np.int64),
     )
+    # Also written as parquet: the delivery snapshot honours .gitignore, which
+    # excludes *.npz, so the tabular form is the one that reaches a job.
+    import pandas as pd
+
+    frame = pd.DataFrame(
+        {
+            "gene_id": var["gene_id"].to_numpy().astype(str),
+            "gene_name": var["gene_name"].to_numpy().astype(str),
+        }
+    )
+    for j, bc in enumerate(barcode[picked]):
+        frame[f"counts__{bc}"] = counts_arr[j]
+    frame.to_parquet(out_dir / f"demo_cells_{cell_line}.parquet", index=False)
+
     meta = {
         "cell_line": cell_line,
         "source": {k: fetch.get(k) for k in ("url", "size_bytes", "md5", "reused_existing")},
