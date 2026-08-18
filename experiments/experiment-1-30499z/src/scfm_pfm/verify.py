@@ -61,9 +61,9 @@ def check_effects(ch: Checks, root: Path) -> None:
         mats = ["delta_within_batch", "delta_pooled", "lfc_within_batch", "lfc_pooled"]
         bad = {m: int((~np.isfinite(npz[m])).sum()) for m in mats}
         ch.add(sec, "finite", all(v == 0 for v in bad.values()), f"non-finite entries {bad}")
-        ch.add(sec, "min_cells", int(pert.n_cells.min()) >= C.PERT_FILTERS.min_cells,
+        ch.add(sec, "min_cells", int(pert.n_cells.min()) >= C.PERTURBATION_FILTERS.min_cells,
                f"smallest retained perturbation has {int(pert.n_cells.min())} cells "
-               f"(threshold {C.PERT_FILTERS.min_cells})")
+               f"(threshold {C.PERTURBATION_FILTERS.min_cells})")
         kd = pert.knockdown.dropna()
         ch.add(sec, "knockdown", float(kd.median()) > 0.5,
                f"median on-target knockdown {float(kd.median()):.4f} over {kd.size} measured targets")

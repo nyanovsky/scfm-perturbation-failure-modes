@@ -24,6 +24,9 @@ N_CELLS = 4
 
 def export(cell_line: str, raw_dir: Path, out_dir: Path) -> dict:
     path = raw_dir / sources.H5AD_FILES[cell_line]
+    # the matrix is not part of the delivered worktree; fetch it if this job does
+    # not already have it (download() verifies length and reuses a complete file)
+    fetch = sources.download(sources.h5ad_url(cell_line), path)
     with h5py.File(path, "r") as h:
         obs = h5ad_io.read_frame(h, "obs")
         var = h5ad_io.read_frame(h, "var")
@@ -62,6 +65,7 @@ def export(cell_line: str, raw_dir: Path, out_dir: Path) -> dict:
     )
     meta = {
         "cell_line": cell_line,
+        "source": {k: fetch.get(k) for k in ("url", "size_bytes", "md5", "reused_existing")},
         "n_cells": int(counts_arr.shape[0]),
         "n_genes": int(counts_arr.shape[1]),
         "barcodes": barcode[picked].tolist(),
@@ -80,9 +84,10 @@ def export(cell_line: str, raw_dir: Path, out_dir: Path) -> dict:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--cell-lines", nargs="*", default=list(paths.CELL_LINES))
     args = ap.parse_args(argv)
     out = Path(args.out) if args.out else paths.data_root() / "demo_cells"
-    meta = {cl: export(cl, paths.raw_dir(), out) for cl in paths.CELL_LINES}
+    meta = {cl: export(cl, paths.raw_dir(), out) for cl in args.cell_lines}
     (paths.ensure(out) / "demo_cells.json").write_text(json.dumps(meta, indent=2))
     return 0
 

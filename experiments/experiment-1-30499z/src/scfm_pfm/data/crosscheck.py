@@ -120,8 +120,38 @@ def stream_reference(
     return acc
 
 
+def compact_dir() -> Path | None:
+    """Where a pre-condensed cross-check input lives, if one was shipped."""
+    for cand in (
+        paths.input_root() / "crosscheck_input",
+        paths.repo_dir() / "results" / "handoff" / "crosscheck",
+    ):
+        if (cand / "crosscheck_input_hepg2.npz").exists():
+            return cand
+    return None
+
+
+def load_ours(cell_line: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Our log2 fold changes: (targets, lfc over kept genes, index of those genes).
+
+    Prefers the condensed input built by `crosscheck_input.py`, because a finished
+    job's `effects.npz` is not on the volume this job can mount.
+    """
+    compact = compact_dir()
+    if compact is not None:
+        npz = np.load(compact / f"crosscheck_input_{cell_line}.npz", allow_pickle=False)
+        return np.asarray(npz["targets"]), npz["lfc_within_batch"], npz["gene_index"]
+    npz = np.load(paths.effects_input_dir(cell_line) / "effects.npz", allow_pickle=False)
+    expressed = npz["expressed"].astype(bool)
+    cols = np.flatnonzero(expressed).astype(np.int64)
+    return np.asarray(npz["targets"]), npz["lfc_within_batch"][:, cols], cols
+
+
 def own_estimator_agreement(cell_line: str) -> pd.DataFrame:
     """Within-batch vs batch-pooled, per perturbation: the batch-confounding check."""
+    compact = compact_dir()
+    if compact is not None:
+        return pd.read_parquet(compact / f"own_estimator_agreement_{cell_line}.parquet")
     d = paths.effects_input_dir(cell_line)
     npz = np.load(d / "effects.npz", allow_pickle=False)
     pert = pd.read_parquet(d / "perturbations.parquet")
@@ -168,18 +198,19 @@ def run(out_dir: Path, max_row_groups: int | None = None, sample: int = 40000) -
 
     for cl in paths.CELL_LINES:
         d = paths.effects_input_dir(cl)
-        npz = np.load(d / "effects.npz", allow_pickle=False)
         genes = pd.read_parquet(d / "genes.parquet")
         pert = pd.read_parquet(d / "perturbations.parquet")
-        our_targets = {str(t): i for i, t in enumerate(npz["targets"])}
-        our_lfc = npz["lfc_within_batch"]
-        expressed = npz["expressed"]
+        targets_arr, our_lfc, kept_genes = load_ours(cl)
+        our_targets = {str(t): i for i, t in enumerate(targets_arr)}
+        expressed = kept_genes
+        # our gene index -> column of the (possibly condensed) matrix
+        col_of = {int(g): j for j, g in enumerate(kept_genes)}
 
-        # reference gene symbol -> our row (restricted to expressed genes)
+        # reference gene symbol -> column of our matrix (expressed genes only)
         row_by_name: dict[str, int] = {}
         for name, idx, exp in zip(genes.gene_name, genes.gene_index, genes.expressed):
-            if exp and name not in row_by_name:
-                row_by_name[str(name)] = int(idx)
+            if exp and name not in row_by_name and int(idx) in col_of:
+                row_by_name[str(name)] = col_of[int(idx)]
         shared_feat = [
             (fi, row_by_name[name]) for fi, name in enumerate(feature_names) if name in row_by_name
         ]
@@ -226,7 +257,7 @@ def run(out_dir: Path, max_row_groups: int | None = None, sample: int = 40000) -
         per_line[cl] = {
             "reference_targets_seen": len(a["targets"]),
             "shared_genes": int(fidx.size),
-            "expressed_genes": int(expressed.sum()),
+            "expressed_genes": int(kept_genes.size),
             "matched_pairs": n_pairs,
             "our_retained_perturbations": int(pert.shape[0]),
         }

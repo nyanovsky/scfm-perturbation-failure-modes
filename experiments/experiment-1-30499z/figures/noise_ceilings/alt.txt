@@ -1,0 +1,1 @@
+Median split-half agreement of each perturbation with itself, by effect-size stratum, metric, cell line and split form. This is the ceiling any model prediction of these effects can reach.

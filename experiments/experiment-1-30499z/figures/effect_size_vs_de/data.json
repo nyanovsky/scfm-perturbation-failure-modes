@@ -1,0 +1,46 @@
+{
+  "HepG2": {
+    "S1_lowest": {
+      "n": 496,
+      "median_de": 3.0,
+      "median_effect_l2": 10.464497771214468
+    },
+    "S2": {
+      "n": 495,
+      "median_de": 5.0,
+      "median_effect_l2": 13.606929311646407
+    },
+    "S3": {
+      "n": 496,
+      "median_de": 79.0,
+      "median_effect_l2": 17.00865147906044
+    },
+    "S4_highest": {
+      "n": 495,
+      "median_de": 984.0,
+      "median_effect_l2": 27.60006675941606
+    }
+  },
+  "Jurkat": {
+    "S1_lowest": {
+      "n": 551,
+      "median_de": 4.0,
+      "median_effect_l2": 9.004196355749366
+    },
+    "S2": {
+      "n": 550,
+      "median_de": 31.0,
+      "median_effect_l2": 12.168245969959829
+    },
+    "S3": {
+      "n": 550,
+      "median_de": 130.0,
+      "median_effect_l2": 16.10476556634529
+    },
+    "S4_highest": {
+      "n": 550,
+      "median_de": 448.5,
+      "median_effect_l2": 21.999956289835623
+    }
+  }
+}

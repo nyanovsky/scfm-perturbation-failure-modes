@@ -66,6 +66,9 @@ PERTURBATION_FILTERS = PerturbationFilters()
 EFFECTS = EffectConfig()
 
 #: gate for the external cross-check (see verify.py)
+#: effect-size stratum labels, lowest to highest (mirrors EFFECTS.strata_labels)
+STRATUM_NAMES = EFFECTS.strata_labels
+
 CROSSCHECK_MIN_SPEARMAN = 0.70
 
 CEILING_METRICS = ("pearson_lfc", "cosine_delta", "topk_overlap")

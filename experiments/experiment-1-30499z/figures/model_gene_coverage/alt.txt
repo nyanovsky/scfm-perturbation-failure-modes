@@ -1,0 +1,1 @@
+Vocabulary size, genes resolved to a distinct Ensembl id, and coverage of the measured genes in each cell line, for the four models. The reference line is the shared universe every model can address.
