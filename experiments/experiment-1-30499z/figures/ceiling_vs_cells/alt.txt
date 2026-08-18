@@ -1,0 +1,1 @@
+Per-perturbation split-half agreement against the number of cells the perturbation has, coloured by effect-size stratum, with the median per cell-count bin drawn over it. Cell count alone does not buy reproducibility: the effect size matters more than the depth at this range.

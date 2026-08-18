@@ -1,0 +1,88 @@
+verifying artifacts under /tmp/scfm_mirror
+
+  PASS  effects:hepg2/files                                  5/5 present under /tmp/scfm_mirror/effects/hepg2
+  PASS  effects:hepg2/shapes                                 1982 perturbations x 9624 genes, tables agree
+  PASS  effects:hepg2/finite                                 non-finite entries {'delta_within_batch': 0, 'delta_pooled': 0, 'lfc_within_batch': 0, 'lfc_pooled': 0}
+  PASS  effects:hepg2/min_cells                              smallest retained perturbation has 25 cells (threshold 25)
+  PASS  effects:hepg2/knockdown                              median on-target knockdown 0.8976 over 1795 measured targets
+  PASS  effects:hepg2/de_counts                              median 36.0 DE genes per perturbation, max 2633
+  PASS  effects:hepg2/strata                                 4 strata {'S1_lowest': 496, 'S2': 495, 'S3': 496, 'S4_highest': 495}
+  PASS  effects:hepg2/expressed                              3119 genes above 0.5 CP10K
+  PASS  effects:hepg2/qc_json                                135368 cells retained, 4916 of them non-targeting controls, over 1982 perturbations; provenance and config recorded
+  PASS  effects:hepg2/ceiling_range                          30 ceiling estimates all in (0, 1]
+  PASS  effects:hepg2/ceiling_split_half_cells               pearson_lfc S1_lowest=0.0961 < S4_highest=0.7031
+  PASS  effects:hepg2/ceiling_split_by_batch                 pearson_lfc S1_lowest=0.0934 < S4_highest=0.7044
+  PASS  effects:jurkat/files                                 5/5 present under /tmp/scfm_mirror/effects/jurkat
+  PASS  effects:jurkat/shapes                                2201 perturbations x 8882 genes, tables agree
+  PASS  effects:jurkat/finite                                non-finite entries {'delta_within_batch': 0, 'delta_pooled': 0, 'lfc_within_batch': 0, 'lfc_pooled': 0}
+  PASS  effects:jurkat/min_cells                             smallest retained perturbation has 25 cells (threshold 25)
+  PASS  effects:jurkat/knockdown                             median on-target knockdown 0.8866 over 1978 measured targets
+  PASS  effects:jurkat/de_counts                             median 61.0 DE genes per perturbation, max 2457
+  PASS  effects:jurkat/strata                                4 strata {'S1_lowest': 551, 'S2': 550, 'S3': 550, 'S4_highest': 550}
+  PASS  effects:jurkat/expressed                             3469 genes above 0.5 CP10K
+  PASS  effects:jurkat/qc_json                               259335 cells retained, 12004 of them non-targeting controls, over 2201 perturbations; provenance and config recorded
+  PASS  effects:jurkat/ceiling_range                         30 ceiling estimates all in (0, 1]
+  PASS  effects:jurkat/ceiling_split_half_cells              pearson_lfc S1_lowest=0.1041 < S4_highest=0.4347
+  PASS  effects:jurkat/ceiling_split_by_batch                pearson_lfc S1_lowest=0.0992 < S4_highest=0.4305
+  PASS  universe/files                                       /tmp/scfm_mirror/gene_universe
+  PASS  universe/size                                        7,444 genes present in all four model vocabularies (of 7632 measured in both cell lines)
+  PASS  universe/unique                                      7,444 unique Ensembl ids
+  PASS  universe/positions_scgpt                             positions within [0, 60,697) and unique=True
+  PASS  universe/coverage_scgpt                              covers 9,522/9,624 HepG2 and 8,780/8,882 Jurkat measured genes; 21,338 of 60,697 vocabulary tokens unmapped; identifiers are symbol, order_is_a_model_constraint=False
+  PASS  universe/positions_aido_cell                         positions within [0, 19,264) and unique=True
+  PASS  universe/coverage_aido_cell                          covers 9,296/9,624 HepG2 and 8,548/8,882 Jurkat measured genes; 57 of 19,264 vocabulary tokens unmapped; identifiers are symbol, order_is_a_model_constraint=True
+  PASS  universe/positions_scprint                           positions within [0, 44,756) and unique=True
+  PASS  universe/coverage_scprint                            covers 9,297/9,624 HepG2 and 8,546/8,882 Jurkat measured genes; 25,338 of 44,756 vocabulary tokens unmapped; identifiers are ensembl, order_is_a_model_constraint=True
+  PASS  universe/positions_transcriptformer                  positions within [0, 23,830) and unique=True
+  PASS  universe/coverage_transcriptformer                   covers 9,297/9,624 HepG2 and 8,549/8,882 Jurkat measured genes; 3,962 of 23,830 vocabulary tokens unmapped; identifiers are ensembl, order_is_a_model_constraint=False
+  PASS  universe/round_trip                                  1 Ensembl->symbol->Ensembl and 0 symbol->Ensembl->symbol failures over 10,874 Nadig genes (493 symbols not HGNC-approved); examples [{'gene_id': 'ENSG00000187522', 'gene_name': 'HSPA14'}]
+  PASS  crosscheck/files                                     /tmp/scfm_mirror/crosscheck/summary.json
+  PASS  crosscheck/pooled_spearman                           Spearman 0.9251 vs the tahoebio reference over 8,464,986 (cell line, target, gene) log2FC entries; gate >= 0.7
+  PASS  crosscheck/pairs                                     2877 shared perturbations, median per-perturbation Spearman 0.9449
+  PASS  crosscheck/own_estimators                            batch-matched vs batch-pooled log2FC median Pearson 0.9963
+  PASS  model:scgpt/files                                    all present under /tmp/scfm_mirror/models/scgpt
+  PASS  model:scgpt/response                                 7,444 finite per-gene values over the universe
+  PASS  model:scgpt/contract_input_normalization             191 characters recorded
+  PASS  model:scgpt/contract_output_head                     57 characters recorded
+  PASS  model:scgpt/contract_output_semantics                114 characters recorded
+  PASS  model:scgpt/contract_information_flow                80 characters recorded
+  PASS  model:scgpt/symmetry                                 response_symmetric=False, ordering_dependent=False, cross-entry probe asymmetric (ratio -0.7212)
+  PASS  model:scgpt/jacobian                                 available=True method=central_finite_difference(step=0.5)_on_smooth_binning l2=0.1854882680551837
+  PASS  model:scgpt/jacobian_file                            jacobian_column.parquet written
+  PASS  model:scgpt/environment                              79 pinned packages, image docker.io/library/python:3.11-slim, device cuda
+  PASS  model:scgpt/substitutions                            5 recorded substitution(s): flash-attention not installed (the published checkpoint was trained with scGPT's FlashMHA 
+  PASS  model:aido_cell/files                                all present under /tmp/scfm_mirror/models/aido_cell
+  PASS  model:aido_cell/response                             7,444 finite per-gene values over the universe
+  PASS  model:aido_cell/contract_input_normalization         245 characters recorded
+  PASS  model:aido_cell/contract_output_head                 62 characters recorded
+  PASS  model:aido_cell/contract_output_semantics            212 characters recorded
+  PASS  model:aido_cell/contract_information_flow            64 characters recorded
+  PASS  model:aido_cell/symmetry                             response_symmetric=None, ordering_dependent=False, cross-entry probe not_determined (ratio 0.577)
+  PASS  model:aido_cell/jacobian                             available=True method=central_finite_difference(step=1.97) l2=0.010696881948673593
+  PASS  model:aido_cell/jacobian_file                        jacobian_column.parquet written
+  PASS  model:aido_cell/environment                          79 pinned packages, image docker.io/library/python:3.11-slim, device cuda
+  PASS  model:aido_cell/substitutions                        3 recorded substitution(s): replaced BertSelfFlashAttention.forward with a shape-correct SDPA implementation: the ship
+  PASS  model:scprint/files                                  all present under /tmp/scfm_mirror/models/scprint
+  PASS  model:scprint/response                               7,444 finite per-gene values over the universe
+  PASS  model:scprint/contract_input_normalization           227 characters recorded
+  PASS  model:scprint/contract_output_head                   70 characters recorded
+  PASS  model:scprint/contract_output_semantics              319 characters recorded
+  PASS  model:scprint/contract_information_flow              85 characters recorded
+  PASS  model:scprint/symmetry                               response_symmetric=False, ordering_dependent=False, cross-entry probe asymmetric (ratio 1.374)
+  PASS  model:scprint/jacobian                               available=True method=forward_mode_autodiff_jvp l2=0.7168665969417827
+  PASS  model:scprint/jacobian_file                          jacobian_column.parquet written
+  PASS  model:scprint/environment                            79 pinned packages, image docker.io/library/python:3.11-slim, device cuda
+  PASS  model:scprint/substitutions                          2 recorded substitution(s): simpler_flash.FlashSelfAttention.forward delegated to the package's own pure-torch SelfAtt
+  PASS  model:transcriptformer/files                         all present under /tmp/scfm_mirror/models/transcriptformer
+  PASS  model:transcriptformer/response                      7,444 finite per-gene values over the universe
+  PASS  model:transcriptformer/contract_input_normalization  314 characters recorded
+  PASS  model:transcriptformer/contract_output_head          65 characters recorded
+  PASS  model:transcriptformer/contract_output_semantics     258 characters recorded
+  PASS  model:transcriptformer/contract_information_flow     50 characters recorded
+  PASS  model:transcriptformer/symmetry                      response_symmetric=False, ordering_dependent=True, cross-entry probe not_determined (ratio -10.67)
+  PASS  model:transcriptformer/jacobian                      available=True method=central_finite_difference(step=1)_source_first_ordering l2=1.2887620693390562e-05
+  PASS  model:transcriptformer/jacobian_file                 jacobian_column.parquet written
+  PASS  model:transcriptformer/environment                   79 pinned packages, image docker.io/library/python:3.11-slim, device cuda
+  PASS  model:transcriptformer/substitutions                 1 recorded substitution(s): compile_block_mask disabled (eager flex-attention block mask) so that a single-cell forwar
+
+84/84 checks passed

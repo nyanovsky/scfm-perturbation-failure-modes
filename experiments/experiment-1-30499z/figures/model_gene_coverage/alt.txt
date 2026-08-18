@@ -1,1 +1,1 @@
-Vocabulary size, genes resolved to a distinct Ensembl id, and coverage of the measured genes in each cell line, for the four models. The reference line is the shared universe every model can address.
+Vocabulary size, tokens resolved to a distinct Ensembl gene id, and coverage of the genes measured in each cell line, for the four models. The marked line is the shared universe every model can address. The axis is logarithmic because the vocabularies differ by a factor of three.

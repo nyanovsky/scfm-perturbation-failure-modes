@@ -1,1 +1,1 @@
-Distribution of on-target knockdown per perturbation in both cell lines, medians {'HepG2': 0.8975520941900463, 'Jurkat': 0.8865811578391495}.
+Distribution of on-target knockdown per perturbation in both cell lines. Medians 0.8976 (HepG2) and 0.8866 (Jurkat); the marked line is the detection floor below which a perturbation is flagged.

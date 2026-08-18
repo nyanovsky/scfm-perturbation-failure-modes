@@ -3,44 +3,60 @@
     "S1_lowest": {
       "n": 496,
       "median_de": 3.0,
-      "median_effect_l2": 10.464497771214468
+      "median_effect_l2": 10.464497771214468,
+      "min_effect_l2": 3.9177884253909965,
+      "max_effect_l2": 12.189231298090258
     },
     "S2": {
       "n": 495,
       "median_de": 5.0,
-      "median_effect_l2": 13.606929311646407
+      "median_effect_l2": 13.606929311646407,
+      "min_effect_l2": 12.196021866056464,
+      "max_effect_l2": 15.113756991790051
     },
     "S3": {
       "n": 496,
       "median_de": 79.0,
-      "median_effect_l2": 17.00865147906044
+      "median_effect_l2": 17.00865147906044,
+      "min_effect_l2": 15.113974641006243,
+      "max_effect_l2": 20.828626885438332
     },
     "S4_highest": {
       "n": 495,
       "median_de": 984.0,
-      "median_effect_l2": 27.60006675941606
+      "median_effect_l2": 27.60006675941606,
+      "min_effect_l2": 20.89364276186077,
+      "max_effect_l2": 50.26990343868151
     }
   },
   "Jurkat": {
     "S1_lowest": {
       "n": 551,
       "median_de": 4.0,
-      "median_effect_l2": 9.004196355749366
+      "median_effect_l2": 9.004196355749366,
+      "min_effect_l2": 3.2706019029009816,
+      "max_effect_l2": 10.648866591361516
     },
     "S2": {
       "n": 550,
       "median_de": 31.0,
-      "median_effect_l2": 12.168245969959829
+      "median_effect_l2": 12.168245969959829,
+      "min_effect_l2": 10.663083603694647,
+      "max_effect_l2": 13.901504867649624
     },
     "S3": {
       "n": 550,
       "median_de": 130.0,
-      "median_effect_l2": 16.10476556634529
+      "median_effect_l2": 16.10476556634529,
+      "min_effect_l2": 13.901978644203128,
+      "max_effect_l2": 18.568984121037236
     },
     "S4_highest": {
       "n": 550,
       "median_de": 448.5,
-      "median_effect_l2": 21.999956289835623
+      "median_effect_l2": 21.999956289835623,
+      "min_effect_l2": 18.57885386595779,
+      "max_effect_l2": 45.982227310613645
     }
   }
 }

@@ -1,1 +1,1 @@
-Effect size against the number of differentially expressed genes for every retained perturbation, split by effect-size stratum.
+Effect size against the number of differentially expressed genes for every retained perturbation, coloured by effect-size stratum. The strata are equal-count quartiles of effect size within each cell line, so the colours also show where the quartile boundaries fall. The y-axis is logarithmic and shifted by one so perturbations with no differentially expressed gene appear.

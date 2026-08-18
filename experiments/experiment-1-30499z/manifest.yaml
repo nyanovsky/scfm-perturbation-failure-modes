@@ -12,7 +12,8 @@ outputs:
   gene_universe: "gene_universe/{gene_universe.parquet,vocabulary_<model>.parquet,coverage.json}"
   models: "models/{scgpt,aido_cell,scprint,transcriptformer}/{response_vector,jacobian_column}.parquet + {contract,environment,demo}.json"
   crosscheck: "crosscheck/reference_accumulated.npz; results/crosscheck/*.parquet + summary.json"
-  report: "results/data_preparation_report.md"
+  report: "report/data_preparation_report.html (primary, self-contained; also served as Results); results/data_preparation_report.md (reading copy)"
+  figures: "figures/{filter_funnel,knockdown_distribution,knockdown_vs_effect,effect_size_vs_de,reference_crosscheck,noise_ceilings,ceiling_vs_cells,model_gene_coverage,model_responses_on_one_cell}/"
   provenance: "results/provenance.json"
 results:
   retained_perturbations_hepg2: 1982

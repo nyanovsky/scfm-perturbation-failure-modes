@@ -1,1 +1,1 @@
-Median split-half agreement of each perturbation with itself, by effect-size stratum, metric, cell line and split form. This is the ceiling any model prediction of these effects can reach.
+Median agreement of each perturbation with itself when its cells are split in two, by effect-size stratum, metric, cell line and split form. Hatched bars are the split by sequencing batch, solid bars the split by cell. This is the level a model prediction of these effects is measured against.
