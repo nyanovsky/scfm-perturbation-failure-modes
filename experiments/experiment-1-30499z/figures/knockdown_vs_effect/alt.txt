@@ -1,0 +1,1 @@
+Each retained perturbation's on-target knockdown against the size of its transcriptome-wide response. Strong knockdown does not imply a large downstream response: at knockdown above the detection floor the effect sizes span the full observed range.

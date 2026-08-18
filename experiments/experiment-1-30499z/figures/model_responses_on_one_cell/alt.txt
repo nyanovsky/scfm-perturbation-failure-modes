@@ -1,1 +1,1 @@
-Each model's per-gene response on the same real control cell, against the observed count of that gene. The vertical scales are not comparable: the models emit different quantities.
+Each model's per-gene response on the same real control cell, against the observed count of that gene. The vertical scales are not comparable across panels: the four models emit different quantities, which is the reason the contract records what each one means.

@@ -23,7 +23,7 @@ Two auditable artifacts that every later run in this thread reads through a
 | `src/scfm_pfm/genes/` | gene universe + identifier-map audit |
 | `src/scfm_pfm/models/` | per-model response interfaces (later runs add extractors against `models/base.py`) |
 | `src/scfm_pfm/verify.py` | `--all` asserts and prints the whole done-condition |
-| `figures/` | report figures (plot script + plot-ready data + rendered bundle) |
+| `figures/` | report figures (plot-ready data, rendered bundle, alt text) |
 | `results/` | small reviewable outputs and the pod-side mirror of the artifact store |
 | `scratch/` | probes and one-off checks |
 
@@ -63,7 +63,10 @@ All durable outputs live under the experiment artifact store, rooted at
 | model environments | `models/<model>/environment.json` | pinned packages, image, device, checkpoint revision |
 | reference accumulation | `crosscheck/reference_accumulated.npz` | pooled sums from the 29.8 GB tahoebio release |
 | cross-check result | `results/crosscheck/{summary.json,*.parquet}` | pooled Spearman 0.9251 over 8,464,986 entries |
-| report | `results/data_preparation_report.md` | the data-prep report, every number read from a file above |
+| report (primary) | `report/data_preparation_report.html`, served as this experiment's Results page | self-contained HTML report, all nine figures embedded inline |
+| report (in repo) | `results/data_preparation_report.html` | same page committed so a clone reads it without rebuilding; generated output of `src/scfm_pfm/report/build.py`, rebuild rather than hand-edit |
+| report (reading copy) | `results/data_preparation_report.md` | same content as Markdown, figures linked to their bundles |
+| figure bundles | `figures/<name>/{<name>.html,data.json,alt.txt}` | nine figure bundles, rebuilt with `report.figures` |
 | provenance | `results/provenance.json` | sources, checksums, checkpoint revisions, job ids, file contract |
 
 Source data: GEO GSE264667 (HepG2 h5ad md5 `dfc676e4186b8c8c173ff14e1194cc8a`,

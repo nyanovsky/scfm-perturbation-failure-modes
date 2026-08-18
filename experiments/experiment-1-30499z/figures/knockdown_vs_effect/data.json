@@ -1,0 +1,14 @@
+{
+  "HepG2": {
+    "n": 1795,
+    "spearman_knockdown_vs_effect": 0.07257130091208952,
+    "median_effect_l2_above_floor": 15.647299237715387,
+    "median_effect_l2_below_floor": 12.852954136127874
+  },
+  "Jurkat": {
+    "n": 1978,
+    "spearman_knockdown_vs_effect": -0.12251495385223672,
+    "median_effect_l2_above_floor": 14.509981045564949,
+    "median_effect_l2_below_floor": 13.168580855481965
+  }
+}

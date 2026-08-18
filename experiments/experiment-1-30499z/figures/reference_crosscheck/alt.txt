@@ -1,1 +1,1 @@
-Our per-gene log2 fold changes against the tahoebio reference release (pooled Spearman 0.9251 over 8,464,986 entries), and the distribution of per-perturbation agreement.
+Left: our per-gene log2 fold changes against the published reference release, pooled Spearman 0.9251 over 8,464,986 entries, with the identity line. Right: per-perturbation agreement, ours against the reference and our two control estimators against each other.

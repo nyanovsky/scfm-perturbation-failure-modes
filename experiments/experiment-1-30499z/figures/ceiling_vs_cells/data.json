@@ -1,0 +1,74 @@
+{
+  "HepG2": {
+    "n": 1982,
+    "spearman_cells_vs_ceiling": 0.3836336914023245,
+    "trend": [
+      {
+        "median_cells": 29.0,
+        "median_r": 0.12910543527316723,
+        "n": 352
+      },
+      {
+        "median_cells": 37.0,
+        "median_r": 0.1428220571760531,
+        "n": 340
+      },
+      {
+        "median_cells": 46.0,
+        "median_r": 0.2081052001614613,
+        "n": 318
+      },
+      {
+        "median_cells": 57.0,
+        "median_r": 0.2864092012265985,
+        "n": 321
+      },
+      {
+        "median_cells": 75.0,
+        "median_r": 0.4017164993845125,
+        "n": 327
+      },
+      {
+        "median_cells": 122.0,
+        "median_r": 0.5705618566529956,
+        "n": 324
+      }
+    ]
+  },
+  "Jurkat": {
+    "n": 2201,
+    "spearman_cells_vs_ceiling": 0.26789044053653716,
+    "trend": [
+      {
+        "median_cells": 37.0,
+        "median_r": 0.1723232593487613,
+        "n": 369
+      },
+      {
+        "median_cells": 58.0,
+        "median_r": 0.22879809883695423,
+        "n": 382
+      },
+      {
+        "median_cells": 78.0,
+        "median_r": 0.23068337448560763,
+        "n": 364
+      },
+      {
+        "median_cells": 99.0,
+        "median_r": 0.23254505977967158,
+        "n": 363
+      },
+      {
+        "median_cells": 130.0,
+        "median_r": 0.2804600894773496,
+        "n": 356
+      },
+      {
+        "median_cells": 199.0,
+        "median_r": 0.3840662404652107,
+        "n": 367
+      }
+    ]
+  }
+}
