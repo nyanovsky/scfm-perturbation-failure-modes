@@ -1,0 +1,64 @@
+{
+  "experiment": "exp_01m09d588jez38j6trqk30499z",
+  "title": "Nadig effect matrices and the four-model response contract",
+  "written_at": "2026-08-18T05:58:52Z",
+  "artifact_root": "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/",
+  "sources": {
+    "perturb_seq": {
+      "series": "GEO GSE264667 (Replogle-Nadig CRISPRi Perturb-seq)",
+      "hepg2_h5ad_md5": "dfc676e4186b8c8c173ff14e1194cc8a",
+      "hepg2_h5ad_bytes": 5614460941
+    },
+    "reference_de": {
+      "dataset": "tahoebio/replogle-nadig-de-rhaister",
+      "file": "pdex/all_pdex.parquet",
+      "bytes": 29800000000,
+      "feature_panel": "definition/feature_names.json (6,546 symbols)"
+    },
+    "checkpoints": {
+      "scgpt": "wanglab/scGPT-human @ a24c237737a40f3720f75abb555489e9fe753be6",
+      "aido_cell": "genbio-ai/GB.Cell-100M @ a983b388e1025860f2c413ecef60e76078253c24 (published as AIDO.Cell-100M; 307 redirect)",
+      "scprint": "jkobject/scPRINT medium-v1.5.ckpt @ 8e1ad1a1bc40c1fc2f4f1700fe27923eea9a2bed",
+      "transcriptformer": "czi tf_sapiens.tar.gz (1,819,975,447 bytes)"
+    }
+  },
+  "jobs": {
+    "effect_matrices": "209514077812",
+    "gene_universe": "393902382560",
+    "demo_control_cells": "172313890488",
+    "crosscheck_reference_stage": "334694176457",
+    "model_demos": {
+      "scgpt": "591358479969",
+      "aido_cell": "807222987875",
+      "scprint": "843963170442",
+      "transcriptformer": "110126229432"
+    }
+  },
+  "contract": {
+    "effects": [
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/effects.npz",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/perturbations.parquet",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/genes.parquet",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/noise_ceiling_summary.parquet",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/qc.json"
+    ],
+    "gene_universe": [
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/gene_universe/gene_universe.parquet",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/gene_universe/vocabulary_<model>.parquet",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/gene_universe/coverage.json"
+    ],
+    "models": [
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/models/<model>/response_vector.parquet",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/models/<model>/jacobian_column.parquet",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/models/<model>/contract.json",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/models/<model>/environment.json",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/models/<model>/demo.json"
+    ],
+    "crosscheck": [
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/crosscheck/reference_accumulated.npz",
+      "results/crosscheck/summary.json (pod-side, also uploaded)"
+    ]
+  },
+  "done_condition": "uv run python -m scfm_pfm.verify --all  ->  84/84 checks passed",
+  "seed": 42
+}

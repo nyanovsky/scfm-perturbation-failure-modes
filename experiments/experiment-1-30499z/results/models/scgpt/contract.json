@@ -1,0 +1,38 @@
+{
+  "model": "scgpt",
+  "checkpoint": "wanglab/scGPT-human",
+  "checkpoint_revision": "a24c237737a40f3720f75abb555489e9fe753be6",
+  "checkpoint_md5": null,
+  "input_normalization": "counts -> CP10K -> log1p -> per-cell quantile binning into 51 bins (published path). Gene tokens are vocab.json ids; no <cls> token is prepended (the checkpoint was trained with no_cls=True).",
+  "output_head": "ExprDecoder.fc -> dict['pred'], one scalar per gene token",
+  "output_semantics": "predicted binned expression value for that gene in this cell, on the 51-bin training scale (not counts, not CP10K)",
+  "information_flow": "bidirectional full attention over gene tokens; no positional encoding over genes",
+  "ordering_dependent": false,
+  "response_symmetric": false,
+  "symmetry_evidence": "measured on the demonstration cell: d ENSG00000198786 / d ENSG00000198712 = 2.840805e-02 against d ENSG00000198712 / d ENSG00000198786 = -2.048886e-02 (relative gap 1.721); the two cross entries differ by more than 10%",
+  "differentiable_wrt_input_expression": true,
+  "jacobian_available": true,
+  "jacobian_method": "forward_mode_autodiff_jvp_on_smooth_binning",
+  "jacobian_unavailable_reason": null,
+  "jacobian_check": {
+    "primary_method": "central_finite_difference(step=0.4831)_on_smooth_binning",
+    "cross_check_method": "second central finite difference at step=1",
+    "pearson_primary_vs_cross_check": 0.9992785746971145,
+    "max_abs_difference": 0.17360949516296387,
+    "relative_l2_difference": 0.16155351715245042,
+    "primary_l2": 1.2281407117843628,
+    "cross_check_l2": 1.0497865676879883
+  },
+  "vocabulary_kind": "symbol",
+  "vocabulary_size": 60697,
+  "context_length": 1200,
+  "dtype": "float32",
+  "substitutions": [
+    "flash-attention not installed (the published checkpoint was trained with scGPT's FlashMHA layers, whose API exists only in flash-attn 1.x, which cannot build against this torch); used scGPT's own fallback torch.nn.TransformerEncoder path (use_fast_transformer=False), which changes the attention kernel and therefore the exact numerics",
+    "remapped 24 fused attention tensors from the checkpoint's FlashMHA layout (self_attn.Wqkv) onto torch's packed projection (self_attn.in_proj); both hold [query; key; value] over the same head partition, so the attention computed is the same function of the same weights. Verified numerically at load time (see attention_remap_check)",
+    "imported scgpt.model.model by file path to avoid executing scgpt/__init__ (scvi-tools / torchtext / scib); model source unmodified",
+    "forward-mode AD unavailable (OutOfMemoryError: CUDA out of memory. Tried to allocate 2.70 GiB. GPU 0 has a total capacity of 79.18 GiB of which 2.31 MiB is free. Process 1 has 79.17 GiB memory in use. Of the allocated memory 76.32 GiB is allocated by PyTorch, and 2.19 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)); used central finite differences instead",
+    "forward-mode AD unavailable (OutOfMemoryError: CUDA out of memory. Tried to allocate 2.70 GiB. GPU 0 has a total capacity of 79.18 GiB of which 58.31 MiB is free. Process 1 has 79.11 GiB memory in use. Of the allocated memory 75.64 GiB is allocated by PyTorch, and 2.81 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)); used central finite differences instead"
+  ],
+  "notes": "The published input path bins expression with np.digitize, which has zero derivative almost everywhere: the Jacobian is therefore taken through a piecewise-linear surrogate of the same quantile bin edges. binning_deviation records how far the surrogate moves the output. Checkpoint build flags inferred from the state dict: {'do_mvc': True, 'explicit_zero_prob': False, 'use_batch_labels': False, 'has_dsbn': False}. Sequence length used here is the number of resolved vocabulary genes, which exceeds the training max_seq_len of 1200; scGPT has no positional encoding over genes, so this is a context-length extrapolation rather than an invalid input."
+}

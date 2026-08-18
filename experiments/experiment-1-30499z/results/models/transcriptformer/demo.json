@@ -1,0 +1,115 @@
+{
+  "model": "transcriptformer",
+  "cell_line": "hepg2",
+  "cell_index": 0,
+  "barcode": "AAACCCAAGCTGGAGT-49",
+  "device": "cuda",
+  "image": "docker.io/library/python:3.11-slim",
+  "universe_genes": 7444,
+  "input": {
+    "measured_genes": 9624,
+    "total_counts": 12129.0,
+    "genes_detected": 3637,
+    "universe_genes_with_counts": 3075,
+    "model_input_genes_used": -1,
+    "prepare_notes": {
+      "pad_id": 1,
+      "assay_token": 31,
+      "n_input_genes": 3075,
+      "total_counts": 10820.0,
+      "n_vocab_hits": 23830
+    }
+  },
+  "source_gene": {
+    "gene_id": "ENSG00000198712",
+    "gene_name": "MT-CO2",
+    "input_count": 197.0,
+    "model_position": 16856,
+    "selection": "highest raw count in the demo cell among universe genes"
+  },
+  "response_summary": {
+    "min": 0.00015516392886638641,
+    "median": 0.0003407695621717721,
+    "max": 0.01032987143844366,
+    "l2": 0.04076559541130718,
+    "median_expressed_genes": 0.0003745142894331366,
+    "spearman_response_vs_input": 0.3568910769809041
+  },
+  "jacobian": {
+    "available": true,
+    "method": "central_finite_difference(step=1)_source_first_ordering",
+    "unavailable_reason": null,
+    "column_l2": 1.2887620693390562e-05,
+    "max_abs": 5.745678208768368e-06,
+    "self_entry": -4.0745362639427185e-07,
+    "n_nonzero": 7442,
+    "check": {
+      "primary_method": "central_finite_difference(step=1)",
+      "cross_check_method": "second central finite difference at step=2",
+      "pearson_primary_vs_cross_check": 0.8714248118615572,
+      "max_abs_difference": 0.0007381716277450323,
+      "relative_l2_difference": 0.980286571234537,
+      "primary_l2": 0.00047315197298303246,
+      "cross_check_l2": 0.0011872288305312395,
+      "finite_difference_step": 1.0,
+      "method_note": "counts enter flex-attention through a score_mod closure; forward-mode AD is not defined for that custom attention, so the directional derivative is computed by central finite difference on the count",
+      "column_l2": 0.00047315197298303246,
+      "n_nonzero": 7444
+    },
+    "symmetry_probe": {
+      "source_gene": "ENSG00000198712",
+      "target_gene": "ENSG00000212907",
+      "target_selection": "largest |d response / d source count| among genes present in the cell",
+      "d_target_d_source": 5.745678208768368e-06,
+      "d_source_d_target": -6.128661334514618e-05,
+      "ratio_d_source_d_target_over_d_target_d_source": -10.666558606017627,
+      "relative_gap": 1.09375094976142,
+      "second_column_method": "central_finite_difference(step=1)_source_first_ordering",
+      "jacobian_stability_pearson": 0.8714248118615572,
+      "jacobian_magnitude_relative_l2_gap": 0.980286571234537,
+      "verdict_criterion": "cross-entry gap >10% => asymmetric, but only when the Jacobian estimate is stable (Pearson >= 0.99 and relative L2 difference <= 0.5 between step sizes)",
+      "verdict": "not_determined",
+      "note": "the Jacobian estimate itself is step-dependent here (primary vs cross-check Pearson 0.8714, relative L2 difference 0.9803), so the asymmetry cannot be separated from estimation error"
+    }
+  },
+  "ordering_probe": {
+    "source_gene": "ENSG00000198712",
+    "target_gene": "ENSG00000198938",
+    "source_count": 197.0,
+    "source_count_raised_to": 295.5,
+    "context_genes_between_them": 254,
+    "target_share_source_ahead": 0.01271112821996212,
+    "target_share_change_source_ahead": 0.0015654340386390686,
+    "target_share_source_behind": 0.04123777896165848,
+    "target_share_change_source_behind": 0.0,
+    "interpretation": "raising the source gene's count moves the target's predicted share only when the source precedes it; behind it the change is exactly zero, which is the causal mask rather than a small effect"
+  },
+  "substitutions": [
+    "compile_block_mask disabled (eager flex-attention block mask) so that a single-cell forward pass does not pay a torch.compile warm-up"
+  ],
+  "timings_seconds": {
+    "load": 7.41,
+    "forward": 0.891,
+    "jacobian": 1.03,
+    "total": 12.28
+  },
+  "load_report": {
+    "n_missing_keys": 0,
+    "n_unexpected_keys": 0,
+    "missing_head": [],
+    "unexpected_head": []
+  },
+  "token_alignment": {
+    "checked": 23830,
+    "mismatched": 0,
+    "special_token_order_from_checkpoint": [
+      "unknown",
+      "[PAD]",
+      "[START]",
+      "[END]",
+      "[RD]",
+      "[CELL]",
+      "[MASK]"
+    ]
+  }
+}

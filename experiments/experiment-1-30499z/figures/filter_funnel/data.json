@@ -1,0 +1,86 @@
+[
+  {
+    "cell_line": "HepG2",
+    "step": "raw cells in series file",
+    "cells": 145473,
+    "criterion": ""
+  },
+  {
+    "cell_line": "HepG2",
+    "step": "single target assignment present",
+    "cells": 145473,
+    "criterion": "obs.gene and obs.sgID_AB both non-empty"
+  },
+  {
+    "cell_line": "HepG2",
+    "step": "min counts",
+    "cells": 145473,
+    "criterion": "matrix UMI total >= 2000"
+  },
+  {
+    "cell_line": "HepG2",
+    "step": "min genes detected",
+    "cells": 145473,
+    "criterion": "genes with >=1 count >= 500"
+  },
+  {
+    "cell_line": "HepG2",
+    "step": "max mito fraction",
+    "cells": 142336,
+    "criterion": "obs.mitopercent <= 0.15"
+  },
+  {
+    "cell_line": "HepG2",
+    "step": "min batches per perturbation",
+    "cells": 137420,
+    "criterion": ">= 2 sequencing batches"
+  },
+  {
+    "cell_line": "HepG2",
+    "step": "final working set",
+    "cells": 135368,
+    "criterion": ""
+  },
+  {
+    "cell_line": "Jurkat",
+    "step": "raw cells in series file",
+    "cells": 262956,
+    "criterion": ""
+  },
+  {
+    "cell_line": "Jurkat",
+    "step": "single target assignment present",
+    "cells": 262956,
+    "criterion": "obs.gene and obs.sgID_AB both non-empty"
+  },
+  {
+    "cell_line": "Jurkat",
+    "step": "min counts",
+    "cells": 262325,
+    "criterion": "matrix UMI total >= 2000"
+  },
+  {
+    "cell_line": "Jurkat",
+    "step": "min genes detected",
+    "cells": 262325,
+    "criterion": "genes with >=1 count >= 500"
+  },
+  {
+    "cell_line": "Jurkat",
+    "step": "max mito fraction",
+    "cells": 262325,
+    "criterion": "obs.mitopercent <= 0.15"
+  },
+  {
+    "cell_line": "Jurkat",
+    "step": "min batches per perturbation",
+    "cells": 250321,
+    "criterion": ">= 2 sequencing batches"
+  },
+  {
+    "cell_line": "Jurkat",
+    "step": "final working set",
+    "cells": 259335,
+    "criterion": ""
+  }
+]

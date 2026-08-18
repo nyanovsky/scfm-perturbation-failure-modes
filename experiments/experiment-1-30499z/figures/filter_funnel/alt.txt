@@ -1,0 +1,1 @@
+Cells remaining after each filter step in both cell lines. Per-cell QC removes very little; the working set is set by the perturbation-level thresholds.

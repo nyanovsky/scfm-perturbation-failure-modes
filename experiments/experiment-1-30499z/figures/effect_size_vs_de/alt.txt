@@ -1,0 +1,1 @@
+Effect size against the number of differentially expressed genes for every retained perturbation, split by effect-size stratum.

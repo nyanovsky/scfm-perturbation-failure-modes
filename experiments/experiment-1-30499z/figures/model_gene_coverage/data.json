@@ -1,0 +1,55 @@
+{
+  "per_model": [
+    {
+      "model": "scgpt",
+      "vocabulary": 60697,
+      "resolved to Ensembl": 39251,
+      "covers HepG2 measured": 9522,
+      "covers Jurkat measured": 8780,
+      "identifier_kind": "symbol",
+      "order_is_a_model_constraint": false
+    },
+    {
+      "model": "aido_cell",
+      "vocabulary": 19264,
+      "resolved to Ensembl": 19204,
+      "covers HepG2 measured": 9296,
+      "covers Jurkat measured": 8548,
+      "identifier_kind": "symbol",
+      "order_is_a_model_constraint": true
+    },
+    {
+      "model": "scprint",
+      "vocabulary": 44756,
+      "resolved to Ensembl": 44756,
+      "covers HepG2 measured": 9297,
+      "covers Jurkat measured": 8546,
+      "identifier_kind": "ensembl",
+      "order_is_a_model_constraint": true
+    },
+    {
+      "model": "transcriptformer",
+      "vocabulary": 23830,
+      "resolved to Ensembl": 23830,
+      "covers HepG2 measured": 9297,
+      "covers Jurkat measured": 8549,
+      "identifier_kind": "ensembl",
+      "order_is_a_model_constraint": false
+    }
+  ],
+  "universe_size": 7444,
+  "shared_measured_genes": 7632,
+  "identifier_audit": {
+    "n_nadig_genes": 10874,
+    "ensg_to_symbol_to_ensg_failures": 1,
+    "symbol_to_ensg_to_symbol_failures": 0,
+    "symbols_not_hgnc_approved": 493,
+    "hgnc_table_available": true,
+    "round_trip_failure_examples": [
+      {
+        "gene_id": "ENSG00000187522",
+        "gene_name": "HSPA14"
+      }
+    ]
+  }
+}

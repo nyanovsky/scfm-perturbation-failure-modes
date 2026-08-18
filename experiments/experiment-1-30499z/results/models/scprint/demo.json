@@ -1,0 +1,108 @@
+{
+  "model": "scprint",
+  "cell_line": "hepg2",
+  "cell_index": 0,
+  "barcode": "AAACCCAAGCTGGAGT-49",
+  "device": "cuda",
+  "image": "docker.io/library/python:3.11-slim",
+  "universe_genes": 7444,
+  "input": {
+    "measured_genes": 9624,
+    "total_counts": 12129.0,
+    "genes_detected": 3637,
+    "universe_genes_with_counts": 3075,
+    "model_input_genes_used": 9297,
+    "prepare_notes": {
+      "n_input_genes": 9297,
+      "total_counts": 11943.0
+    }
+  },
+  "source_gene": {
+    "gene_id": "ENSG00000198712",
+    "gene_name": "MT-CO2",
+    "input_count": 197.0,
+    "model_position": 16836,
+    "selection": "highest raw count in the demo cell among universe genes"
+  },
+  "response_summary": {
+    "min": 0.18626736104488373,
+    "median": 0.6259993016719818,
+    "max": 141.94285583496094,
+    "l2": 414.8460514637739,
+    "median_expressed_genes": 0.9294219613075256,
+    "spearman_response_vs_input": 0.5878389761494293
+  },
+  "jacobian": {
+    "available": true,
+    "method": "forward_mode_autodiff_jvp",
+    "unavailable_reason": null,
+    "column_l2": 0.7168665969417827,
+    "max_abs": 0.7167478799819946,
+    "self_entry": 0.7167478799819946,
+    "n_nonzero": 7444,
+    "check": {
+      "primary_method": "forward_mode_autodiff_jvp",
+      "cross_check_method": "central_finite_difference(step=1.73)",
+      "pearson_primary_vs_cross_check": 0.9999999869934212,
+      "max_abs_difference": 0.00014597177505493164,
+      "relative_l2_difference": 0.0002629272370969856,
+      "primary_l2": 0.7062718272209167,
+      "cross_check_l2": 0.706418514251709
+    },
+    "symmetry_probe": {
+      "source_gene": "ENSG00000198712",
+      "target_gene": "ENSG00000198899",
+      "target_selection": "largest |d response / d source count| among genes present in the cell",
+      "d_target_d_source": 0.0049628266133368015,
+      "d_source_d_target": 0.006816679611802101,
+      "ratio_d_source_d_target_over_d_target_d_source": 1.3735478071072171,
+      "relative_gap": 0.2719583586201733,
+      "second_column_method": "forward_mode_autodiff_jvp",
+      "jacobian_stability_pearson": 0.9999999869934212,
+      "jacobian_magnitude_relative_l2_gap": 0.0002629272370969856,
+      "verdict_criterion": "cross-entry gap >10% => asymmetric, but only when the Jacobian estimate is stable (Pearson >= 0.99 and relative L2 difference <= 0.5 between step sizes)",
+      "verdict": "asymmetric",
+      "note": "the two cross entries differ by more than 10%"
+    }
+  },
+  "ordering_probe": null,
+  "substitutions": [
+    "simpler_flash.FlashSelfAttention.forward delegated to the package's own pure-torch SelfAttention: the fused kernel asserts fp16/bf16 and has no forward-mode derivative, so the response and its Jacobian would not be computable in float32. Same weights, same attention, different kernel (upstream forward kept at FlashSelfAttention.forward)",
+    "stubbed scprint.model.utils / scprint.utils / scprint.tasks.* at import time to avoid bionty+lamindb+scdataloader (a configured lamindb instance is not available and is unnecessary for a forward pass); model source unmodified"
+  ],
+  "timings_seconds": {
+    "load": 3.75,
+    "forward": 0.336,
+    "jacobian": 0.65,
+    "total": 6.57
+  },
+  "load_report": {
+    "n_missing_keys": 0,
+    "n_unexpected_keys": 10,
+    "missing_head": [],
+    "unexpected_head": [
+      "grad_reverse_discriminator_loss.decoder.0.weight",
+      "grad_reverse_discriminator_loss.decoder.0.bias",
+      "grad_reverse_discriminator_loss.decoder.1.weight",
+      "grad_reverse_discriminator_loss.decoder.1.bias",
+      "grad_reverse_discriminator_loss.decoder.3.weight",
+      "grad_reverse_discriminator_loss.decoder.3.bias",
+      "grad_reverse_discriminator_loss.decoder.4.weight",
+      "grad_reverse_discriminator_loss.decoder.4.bias",
+      "grad_reverse_discriminator_loss.out_layer.weight",
+      "grad_reverse_discriminator_loss.out_layer.bias"
+    ],
+    "renamed_checkpoint_keys": [
+      "gene_encoder.embedding.weight -> gene_encoder.embeddings.weight"
+    ],
+    "missing_critical_keys": [],
+    "gene_embedding_check": {
+      "shape": [
+        44756,
+        256
+      ],
+      "l2_norm": 234.15306091308594,
+      "loaded_from_checkpoint": true
+    }
+  }
+}

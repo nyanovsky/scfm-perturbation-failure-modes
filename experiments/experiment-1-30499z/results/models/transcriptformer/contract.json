@@ -1,0 +1,38 @@
+{
+  "model": "transcriptformer",
+  "checkpoint": "s3://czi-transcriptformer/weights/tf_sapiens.tar.gz",
+  "checkpoint_revision": "tf_sapiens (public bucket object, unversioned)",
+  "checkpoint_md5": null,
+  "input_normalization": "raw counts, clipped at 30, paired with gene tokens; counts enter the attention score as log1p(count + 1e-6) on the right-shifted sequence, and one auxiliary assay token ('10x 3' v3') is prepended. Sequence length is fixed at 2047 gene tokens plus the assay token, so the gene universe is covered in several passes.",
+  "output_head": "CountDecoderHead 'mu' (zero-truncated Poisson rate), softmax link",
+  "output_semantics": "predicted share of the cell's total counts assigned to that gene, conditioned on the gene's own identity and on the identity and count of every gene earlier in the ordering. Reported as mu / total counts so values are comparable across passes; raw mu is not.",
+  "information_flow": "autoregressive, causal mask over the gene sequence",
+  "ordering_dependent": true,
+  "response_symmetric": false,
+  "symmetry_evidence": "the causal mask makes the response structurally asymmetric: gene j responds to gene i only when i precedes j. Demonstrated by the ordering probe recorded alongside this contract.",
+  "differentiable_wrt_input_expression": true,
+  "jacobian_available": true,
+  "jacobian_method": "central_finite_difference(step=1)_source_first_ordering",
+  "jacobian_unavailable_reason": null,
+  "jacobian_check": {
+    "primary_method": "central_finite_difference(step=1)",
+    "cross_check_method": "second central finite difference at step=2",
+    "pearson_primary_vs_cross_check": 0.8714248118615572,
+    "max_abs_difference": 0.0007381716277450323,
+    "relative_l2_difference": 0.980286571234537,
+    "primary_l2": 0.00047315197298303246,
+    "cross_check_l2": 0.0011872288305312395,
+    "finite_difference_step": 1.0,
+    "method_note": "counts enter flex-attention through a score_mod closure; forward-mode AD is not defined for that custom attention, so the directional derivative is computed by central finite difference on the count",
+    "column_l2": 0.00047315197298303246,
+    "n_nonzero": 7444
+  },
+  "vocabulary_kind": "ensembl",
+  "vocabulary_size": 23830,
+  "context_length": 2048,
+  "dtype": "float32",
+  "substitutions": [
+    "compile_block_mask disabled (eager flex-attention block mask) so that a single-cell forward pass does not pay a torch.compile warm-up"
+  ],
+  "notes": "The gene ordering is descending count in the cell. The universe needs several passes, and each begins with the same 256-gene context block (the highest-count genes, with the source gene at position 0 for the Jacobian pass), so every gene is read against the same prefix and no pass is left without counts to divide. Genes with zero counts in this cell still receive tokens; a zero count is outside the support of the zero-truncated Poisson likelihood the model was trained with, so those entries describe the model's behaviour on a gene it did not observe rather than a fitted prediction. Token-id alignment against the checkpoint's own vocabulary: {'checked': 23830, 'mismatched': 0, 'special_token_order_from_checkpoint': ['unknown', '[PAD]', '[START]', '[END]', '[RD]', '[CELL]', '[MASK]']}."
+}

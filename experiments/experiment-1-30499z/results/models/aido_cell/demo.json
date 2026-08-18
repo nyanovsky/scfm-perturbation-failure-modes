@@ -1,0 +1,90 @@
+{
+  "model": "aido_cell",
+  "cell_line": "hepg2",
+  "cell_index": 0,
+  "barcode": "AAACCCAAGCTGGAGT-49",
+  "device": "cuda",
+  "image": "docker.io/library/python:3.11-slim",
+  "universe_genes": 7444,
+  "input": {
+    "measured_genes": 9624,
+    "total_counts": 12129.0,
+    "genes_detected": 3637,
+    "universe_genes_with_counts": 3075,
+    "model_input_genes_used": 9296,
+    "prepare_notes": {
+      "n_input_genes": 9296,
+      "total_counts": 11946.0
+    }
+  },
+  "source_gene": {
+    "gene_id": "ENSG00000198712",
+    "gene_name": "MT-CO2",
+    "input_count": 197.0,
+    "model_position": 9945,
+    "selection": "highest raw count in the demo cell among universe genes"
+  },
+  "response_summary": {
+    "min": -2.089505672454834,
+    "median": 0.587944507598877,
+    "max": 2.5271596908569336,
+    "l2": 71.86737969680985,
+    "median_expressed_genes": 0.8696830868721008,
+    "spearman_response_vs_input": 0.5539762711635552
+  },
+  "jacobian": {
+    "available": true,
+    "method": "central_finite_difference(step=1.97)",
+    "unavailable_reason": null,
+    "column_l2": 0.010696881948673593,
+    "max_abs": 0.0009983096970245242,
+    "self_entry": -0.0006871779914945364,
+    "n_nonzero": 7444,
+    "check": {
+      "primary_method": "central_finite_difference(step=0.02)",
+      "cross_check_method": "second central finite difference at step=1",
+      "pearson_primary_vs_cross_check": 0.9991165487636084,
+      "max_abs_difference": 2.7886083126068115,
+      "relative_l2_difference": 1.378787487644836,
+      "primary_l2": 3.4165844917297363,
+      "cross_check_l2": 0.6285656690597534
+    },
+    "symmetry_probe": {
+      "source_gene": "ENSG00000198712",
+      "target_gene": "ENSG00000119446",
+      "target_selection": "largest |d response / d source count| among genes present in the cell",
+      "d_target_d_source": -0.0007850869442336261,
+      "d_source_d_target": -0.00045299530029296875,
+      "ratio_d_source_d_target_over_d_target_d_source": 0.5770001700068603,
+      "relative_gap": 0.4229998299931397,
+      "second_column_method": "central_finite_difference(step=0.02)",
+      "jacobian_stability_pearson": 0.9991165487636084,
+      "jacobian_magnitude_relative_l2_gap": 1.378787487644836,
+      "verdict_criterion": "cross-entry gap >10% => asymmetric, but only when the Jacobian estimate is stable (Pearson >= 0.99 and relative L2 difference <= 0.5 between step sizes)",
+      "verdict": "not_determined",
+      "note": "the Jacobian estimate itself is step-dependent here (primary vs cross-check Pearson 0.9991, relative L2 difference 1.3788), so the asymmetry cannot be separated from estimation error"
+    }
+  },
+  "ordering_probe": null,
+  "substitutions": [
+    "replaced BertSelfFlashAttention.forward with a shape-correct SDPA implementation: the shipped non-flash fallback softmaxes across heads instead of across the sequence, and the flash-attention path is fp16/bf16 only with no forward-mode derivative. Weights and attention mathematics are unchanged; the kernel and dtype are not.",
+    "forward-mode AD unavailable (NotImplementedError); used central finite differences",
+    "forward-mode AD unavailable (NotImplementedError); used central finite differences"
+  ],
+  "timings_seconds": {
+    "load": 2.02,
+    "forward": 1.145,
+    "jacobian": 3.81,
+    "total": 12.52
+  },
+  "load_report": {
+    "n_missing_keys": 1,
+    "n_unexpected_keys": 0,
+    "missing_head": [
+      "cls.predictions.decoder.bias"
+    ],
+    "unexpected_head": [],
+    "decoder_bias_tied_to_prediction_bias": true,
+    "missing_critical_keys": []
+  }
+}

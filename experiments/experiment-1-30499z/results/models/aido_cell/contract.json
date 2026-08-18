@@ -1,0 +1,36 @@
+{
+  "model": "aido_cell",
+  "checkpoint": "genbio-ai/GB.Cell-100M (plan alias genbio-ai/AIDO.Cell-100M, upstream rename)",
+  "checkpoint_revision": "a983b388e1025860f2c413ecef60e76078253c24",
+  "checkpoint_md5": null,
+  "input_normalization": "raw counts scattered onto the fixed 19,264-gene order (unmeasured genes = 0), then read-depth-aware scFoundation transform: rd = max(log10(total), 5); x = log1p(x / total * 1e4); x = concat([x, rd, rd]); clamp(x, max=20). Sequence length 19,266.",
+  "output_head": "CellFoundationForMaskedLM.cls.predictions -> Linear(hidden, 1)",
+  "output_semantics": "one scalar per gene position (the model's masked-language-model regression target, i.e. predicted high-read-depth expression on the log1p CP10K scale); the last two positions are read-depth tokens and are dropped",
+  "information_flow": "bidirectional encoder (18 layers) over the full fixed gene order",
+  "ordering_dependent": false,
+  "response_symmetric": null,
+  "symmetry_evidence": "bidirectional attention plus absolute position embeddings over a fixed gene order; every gene sees every other gene, but pairwise symmetry was not measured here Cross-entry measurement inconclusive: the Jacobian estimate itself is step-dependent here (primary vs cross-check Pearson 0.9991, relative L2 difference 1.3788), so the asymmetry cannot be separated from estimation error",
+  "differentiable_wrt_input_expression": true,
+  "jacobian_available": true,
+  "jacobian_method": "central_finite_difference(step=0.02)",
+  "jacobian_unavailable_reason": null,
+  "jacobian_check": {
+    "primary_method": "central_finite_difference(step=0.02)",
+    "cross_check_method": "second central finite difference at step=1",
+    "pearson_primary_vs_cross_check": 0.9991165487636084,
+    "max_abs_difference": 2.7886083126068115,
+    "relative_l2_difference": 1.378787487644836,
+    "primary_l2": 3.4165844917297363,
+    "cross_check_l2": 0.6285656690597534
+  },
+  "vocabulary_kind": "symbol",
+  "vocabulary_size": 19264,
+  "context_length": 19266,
+  "dtype": "float32",
+  "substitutions": [
+    "replaced BertSelfFlashAttention.forward with a shape-correct SDPA implementation: the shipped non-flash fallback softmaxes across heads instead of across the sequence, and the flash-attention path is fp16/bf16 only with no forward-mode derivative. Weights and attention mathematics are unchanged; the kernel and dtype are not.",
+    "forward-mode AD unavailable (NotImplementedError); used central finite differences",
+    "forward-mode AD unavailable (NotImplementedError); used central finite differences"
+  ],
+  "notes": "The gene order is a model constraint, not a choice: position i of the input is gene i of OS_scRNA_gene_index.19264.tsv. Expression enters through GeneEmbedding's auto-discretization (Linear(1, 100) -> softmax -> bin-embedding mixture), which is smooth in the input value, so no binning has to be bypassed. flash-attention 2 importable in this environment: False; published-kernel cross-check: {'ran': False}."
+}
