@@ -31,6 +31,17 @@ def data_root() -> Path:
     return repo_dir() / "results" / "artifacts_mirror"
 
 
+def input_root() -> Path:
+    """Where to READ artifacts a previous job produced.
+
+    On the on-demand fabric a later job mounts the producer's retained volume
+    read-only, so reads and writes have different roots. ``$SCFM_PFM_INPUT_ROOT``
+    points at the mounted copy; without it, reads and writes share one root.
+    """
+    val = os.environ.get("SCFM_PFM_INPUT_ROOT")
+    return Path(val) if val else data_root()
+
+
 def raw_dir() -> Path:
     """Scratch location for the ~15 GB of raw h5ads: job volume, never uploaded."""
     val = os.environ.get("SCFM_PFM_RAW_DIR")
@@ -41,6 +52,14 @@ def raw_dir() -> Path:
 
 def effects_dir(cell_line: str) -> Path:
     return data_root() / "effects" / cell_line
+
+
+def effects_input_dir(cell_line: str) -> Path:
+    return input_root() / "effects" / cell_line
+
+
+def universe_input_dir() -> Path:
+    return input_root() / "gene_universe"
 
 
 def crosscheck_dir() -> Path:

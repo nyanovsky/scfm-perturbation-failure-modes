@@ -26,3 +26,6 @@ __pycache__/
 _raw/
 results/artifacts_mirror/
 scratch/pkgsrc/
+results/artifacts_mirror/
+results/handoff/
+_raw/
