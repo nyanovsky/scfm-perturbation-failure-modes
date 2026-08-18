@@ -30,7 +30,3 @@ results/artifacts_mirror/
 # the model jobs read these, so they must be delivered with the code
 results/handoff/crosscheck/
 results/handoff/effects/
-
-# the self-contained HTML report inlines plotly (~6 MB) and is regenerable with
-# report.build; the durable copy lives in the artifact store and is served as Results
-results/data_preparation_report.html

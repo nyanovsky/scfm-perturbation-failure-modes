@@ -64,6 +64,7 @@ All durable outputs live under the experiment artifact store, rooted at
 | reference accumulation | `crosscheck/reference_accumulated.npz` | pooled sums from the 29.8 GB tahoebio release |
 | cross-check result | `results/crosscheck/{summary.json,*.parquet}` | pooled Spearman 0.9251 over 8,464,986 entries |
 | report (primary) | `report/data_preparation_report.html`, served as this experiment's Results page | self-contained HTML report, all nine figures embedded inline |
+| report (in repo) | `results/data_preparation_report.html` | same page committed so a clone reads it without rebuilding; generated output of `src/scfm_pfm/report/build.py`, rebuild rather than hand-edit |
 | report (reading copy) | `results/data_preparation_report.md` | same content as Markdown, figures linked to their bundles |
 | figure bundles | `figures/<name>/{<name>.html,data.json,alt.txt}` | nine figure bundles, rebuilt with `report.figures` |
 | provenance | `results/provenance.json` | sources, checksums, checkpoint revisions, job ids, file contract |
