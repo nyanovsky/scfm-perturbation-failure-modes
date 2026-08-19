@@ -171,5 +171,171 @@
       "n_universe_genes": 7444
     }
   },
-  "seconds": 24.7
+  "shared_response": {
+    "question": "does a higher floor buy its higher ceiling by narrowing the read-out to the response every perturbation shares?",
+    "baseline": "leave-one-out mean effect vector of the other perturbations in the same stratum, taken from one replicate half and scored against the other half with the ceiling's own Pearson",
+    "by_cell_line_stratum_floor": {
+      "hepg2|S3|0.5": {
+        "ceiling": 0.298,
+        "loo_mean_baseline": 0.2731,
+        "headroom": 0.0249,
+        "cross_perturbation_pearson": 0.0564,
+        "pc1_variance_share_uncentred": 0.1956,
+        "n_genes": 3119
+      },
+      "hepg2|S4_highest|0.5": {
+        "ceiling": 0.7031,
+        "loo_mean_baseline": 0.6032,
+        "headroom": 0.0999,
+        "cross_perturbation_pearson": 0.3206,
+        "pc1_variance_share_uncentred": 0.4767,
+        "n_genes": 3119
+      },
+      "hepg2|S3|1": {
+        "ceiling": 0.4067,
+        "loo_mean_baseline": 0.3305,
+        "headroom": 0.0763,
+        "cross_perturbation_pearson": 0.0797,
+        "pc1_variance_share_uncentred": 0.2426,
+        "n_genes": 1578
+      },
+      "hepg2|S4_highest|1": {
+        "ceiling": 0.788,
+        "loo_mean_baseline": 0.6343,
+        "headroom": 0.1537,
+        "cross_perturbation_pearson": 0.3596,
+        "pc1_variance_share_uncentred": 0.5102,
+        "n_genes": 1578
+      },
+      "hepg2|S3|2": {
+        "ceiling": 0.5212,
+        "loo_mean_baseline": 0.3848,
+        "headroom": 0.1363,
+        "cross_perturbation_pearson": 0.1011,
+        "pc1_variance_share_uncentred": 0.2794,
+        "n_genes": 729
+      },
+      "hepg2|S4_highest|2": {
+        "ceiling": 0.8495,
+        "loo_mean_baseline": 0.6387,
+        "headroom": 0.2108,
+        "cross_perturbation_pearson": 0.3679,
+        "pc1_variance_share_uncentred": 0.51,
+        "n_genes": 729
+      },
+      "hepg2|S3|5": {
+        "ceiling": 0.6345,
+        "loo_mean_baseline": 0.4221,
+        "headroom": 0.2123,
+        "cross_perturbation_pearson": 0.1252,
+        "pc1_variance_share_uncentred": 0.2998,
+        "n_genes": 248
+      },
+      "hepg2|S4_highest|5": {
+        "ceiling": 0.8982,
+        "loo_mean_baseline": 0.6394,
+        "headroom": 0.2588,
+        "cross_perturbation_pearson": 0.3688,
+        "pc1_variance_share_uncentred": 0.4904,
+        "n_genes": 248
+      },
+      "hepg2|S3|10": {
+        "ceiling": 0.7002,
+        "loo_mean_baseline": 0.4482,
+        "headroom": 0.252,
+        "cross_perturbation_pearson": 0.1388,
+        "pc1_variance_share_uncentred": 0.2861,
+        "n_genes": 142
+      },
+      "hepg2|S4_highest|10": {
+        "ceiling": 0.9163,
+        "loo_mean_baseline": 0.6256,
+        "headroom": 0.2907,
+        "cross_perturbation_pearson": 0.3603,
+        "pc1_variance_share_uncentred": 0.4531,
+        "n_genes": 142
+      },
+      "jurkat|S3|0.5": {
+        "ceiling": 0.2933,
+        "loo_mean_baseline": 0.2278,
+        "headroom": 0.0656,
+        "cross_perturbation_pearson": 0.0391,
+        "pc1_variance_share_uncentred": 0.1174,
+        "n_genes": 3469
+      },
+      "jurkat|S4_highest|0.5": {
+        "ceiling": 0.4347,
+        "loo_mean_baseline": 0.3561,
+        "headroom": 0.0786,
+        "cross_perturbation_pearson": 0.1009,
+        "pc1_variance_share_uncentred": 0.2195,
+        "n_genes": 3469
+      },
+      "jurkat|S3|1": {
+        "ceiling": 0.428,
+        "loo_mean_baseline": 0.2688,
+        "headroom": 0.1592,
+        "cross_perturbation_pearson": 0.0527,
+        "pc1_variance_share_uncentred": 0.1581,
+        "n_genes": 1778
+      },
+      "jurkat|S4_highest|1": {
+        "ceiling": 0.5635,
+        "loo_mean_baseline": 0.4003,
+        "headroom": 0.1632,
+        "cross_perturbation_pearson": 0.1261,
+        "pc1_variance_share_uncentred": 0.2741,
+        "n_genes": 1778
+      },
+      "jurkat|S3|2": {
+        "ceiling": 0.5632,
+        "loo_mean_baseline": 0.3049,
+        "headroom": 0.2583,
+        "cross_perturbation_pearson": 0.0693,
+        "pc1_variance_share_uncentred": 0.1953,
+        "n_genes": 804
+      },
+      "jurkat|S4_highest|2": {
+        "ceiling": 0.6791,
+        "loo_mean_baseline": 0.414,
+        "headroom": 0.2652,
+        "cross_perturbation_pearson": 0.1413,
+        "pc1_variance_share_uncentred": 0.3073,
+        "n_genes": 804
+      },
+      "jurkat|S3|5": {
+        "ceiling": 0.7014,
+        "loo_mean_baseline": 0.371,
+        "headroom": 0.3304,
+        "cross_perturbation_pearson": 0.1077,
+        "pc1_variance_share_uncentred": 0.2322,
+        "n_genes": 264
+      },
+      "jurkat|S4_highest|5": {
+        "ceiling": 0.7941,
+        "loo_mean_baseline": 0.442,
+        "headroom": 0.3522,
+        "cross_perturbation_pearson": 0.172,
+        "pc1_variance_share_uncentred": 0.3385,
+        "n_genes": 264
+      },
+      "jurkat|S3|10": {
+        "ceiling": 0.7705,
+        "loo_mean_baseline": 0.4149,
+        "headroom": 0.3555,
+        "cross_perturbation_pearson": 0.1442,
+        "pc1_variance_share_uncentred": 0.336,
+        "n_genes": 143
+      },
+      "jurkat|S4_highest|10": {
+        "ceiling": 0.8557,
+        "loo_mean_baseline": 0.4821,
+        "headroom": 0.3736,
+        "cross_perturbation_pearson": 0.2149,
+        "pc1_variance_share_uncentred": 0.3849,
+        "n_genes": 143
+      }
+    }
+  },
+  "seconds": 31.9
 }

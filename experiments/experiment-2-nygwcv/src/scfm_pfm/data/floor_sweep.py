@@ -76,6 +76,87 @@ def selected_control_level(lfc: np.ndarray, control: np.ndarray, k: int) -> np.n
     return np.median(control[idx], axis=1)
 
 
+def _row_standardize(x: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Rows centred and scaled to unit norm, plus the mask of usable rows."""
+    z = x.astype(np.float64)
+    z = z - z.mean(axis=1, keepdims=True)
+    norm = np.linalg.norm(z, axis=1)
+    ok = norm > 0
+    z[ok] = z[ok] / norm[ok][:, None]
+    return z, ok
+
+
+def shared_response_diagnostics(
+    a: np.ndarray, b: np.ndarray, max_pairs: int = 400
+) -> dict:
+    """How much of a stratum's response is shared across perturbations?
+
+    A higher expression floor removes noisy genes, which lifts the ceiling. It
+    also removes genes, and the ones it keeps are the high-expression ribosomal,
+    mitochondrial and housekeeping transcripts that move in a similar direction
+    whenever an essential gene is knocked down. If that is what a high floor is
+    buying, then a high-floor ceiling is easy to approach without knowing
+    anything perturbation-specific, and a raw correlation there means less than
+    the same number at a low floor.
+
+    Three measurements, all built so predictor and target never share sampling
+    noise -- ``a`` and ``b`` are the two independent replicate halves:
+
+    ``loo_mean_baseline``
+        predict perturbation *i*'s effect vector by the mean of every OTHER
+        perturbation's vector in the same stratum (from half ``a``), and score it
+        against *i*'s own vector from half ``b`` with the same Pearson the
+        ceiling uses. This is the score a model reaches by emitting the stratum's
+        average response and nothing else.
+    ``cross_perturbation_pearson``
+        median Pearson between *different* perturbations, half ``a`` against
+        half ``b``, i.e. how much any two perturbations already look alike.
+    ``pc1_variance_share``
+        share of the total sum of squares of the effect matrix carried by its
+        first singular direction (uncentred, so the common axis is not removed;
+        the perturbation-centred value is reported next to it).
+    """
+    az, aok = _row_standardize(a)
+    bz, bok = _row_standardize(b)
+    ok = aok & bok
+    n = int(ok.sum())
+    if n < 3:
+        return {"n_scored": n}
+    az, bz = az[ok], bz[ok]
+
+    ceiling = np.einsum("ij,ij->i", az, bz)
+
+    # leave-one-out mean of the other perturbations, scored against the held-out half
+    total = az.sum(axis=0)
+    loo = (total[None, :] - az) / (n - 1)
+    loo_z, loo_ok = _row_standardize(loo)
+    baseline = np.full(n, np.nan)
+    baseline[loo_ok] = np.einsum("ij,ij->i", loo_z[loo_ok], bz[loo_ok])
+
+    # cross-perturbation agreement, subsampled when the stratum is large
+    idx = np.arange(n)
+    if n > max_pairs:
+        idx = np.random.default_rng(C.SEED).choice(n, size=max_pairs, replace=False)
+    cross = az[idx] @ bz[idx].T
+    off = ~np.eye(idx.size, dtype=bool)
+
+    effect = (a[ok] + b[ok]) / 2.0
+    sv = np.linalg.svd(effect.astype(np.float64), compute_uv=False)
+    centred = effect - effect.mean(axis=0, keepdims=True)
+    sv_c = np.linalg.svd(centred, compute_uv=False)
+    return {
+        "n_scored": n,
+        "median_ceiling": float(np.nanmedian(ceiling)),
+        "median_loo_mean_baseline": float(np.nanmedian(baseline)),
+        "median_cross_perturbation_pearson": float(np.median(cross[off])),
+        "pc1_variance_share_uncentred": float(sv[0] ** 2 / np.sum(sv**2)),
+        "pc1_variance_share_centred": float(sv_c[0] ** 2 / np.sum(sv_c**2)),
+        "headroom_ceiling_over_baseline": float(
+            np.nanmedian(ceiling) - np.nanmedian(baseline)
+        ),
+    }
+
+
 def sweep_cell_line(
     cell_line: str, vectors_path: Path, genes_path: Path, floors: tuple[float, ...]
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
@@ -91,6 +172,7 @@ def sweep_cell_line(
 
     per_rows: list[dict] = []
     summary_rows: list[dict] = []
+    shared_rows: list[dict] = []
     for floor in floors:
         mask = control >= floor
         n_genes = int(mask.sum())
@@ -115,6 +197,21 @@ def sweep_cell_line(
                         "median_control_cp10k_topk_lfc": float(sel[i]),
                     }
                 )
+            for s in C.PERTURBED_STRATA:
+                rows = stratum == s
+                if not rows.any():
+                    continue
+                diag = shared_response_diagnostics(l0[rows], l1[rows])
+                shared_rows.append(
+                    {
+                        "cell_line": cell_line,
+                        "floor_cp10k": float(floor),
+                        "split": split,
+                        "effect_stratum": s,
+                        "n_expressed_genes": n_genes,
+                        **diag,
+                    }
+                )
             for s in sorted(set(stratum.tolist())):
                 rows = stratum == s
                 summary_rows.append(
@@ -134,6 +231,7 @@ def sweep_cell_line(
                 )
     per = pd.DataFrame(per_rows)
     summary = pd.DataFrame(summary_rows)
+    shared = pd.DataFrame(shared_rows)
     meta = {
         "cell_line": cell_line,
         "vectors": str(vectors_path),
@@ -144,7 +242,7 @@ def sweep_cell_line(
             f"{floor:g}": int((control >= floor).sum()) for floor in floors
         },
     }
-    return per, summary, meta
+    return per, summary, meta, shared
 
 
 def choose_floor(summary: pd.DataFrame, cell_line: str) -> dict:
@@ -249,18 +347,22 @@ def main(argv: list[str] | None = None) -> int:
     universe = pd.read_parquet(paths.universe_dir() / "gene_universe.parquet")
     started = time.time()
 
-    pers, summaries, metas, decisions = [], [], {}, {}
+    pers, summaries, shareds, metas, decisions = [], [], [], {}, {}
     for cell_line in C.CELL_LINES:
         vectors = Path(args.vectors_dir) / f"shv_{cell_line}.npz"
         genes_path = paths.effects_dir(cell_line) / "genes.parquet"
-        per, summary, meta = sweep_cell_line(cell_line, vectors, genes_path, C.FLOOR_GRID_CP10K)
+        per, summary, meta, shared = sweep_cell_line(
+            cell_line, vectors, genes_path, C.FLOOR_GRID_CP10K
+        )
         pers.append(per)
         summaries.append(summary)
+        shareds.append(shared)
         metas[cell_line] = meta
         print(f"[floor] {cell_line}: {meta['n_perturbations']} perturbations", flush=True)
 
     summary = pd.concat(summaries, ignore_index=True)
     per = pd.concat(pers, ignore_index=True)
+    shared = pd.concat(shareds, ignore_index=True)
     for cell_line in C.CELL_LINES:
         decision = choose_floor(summary, cell_line)
         frame = readout_genes(cell_line, decision["chosen_floor_cp10k"], paths.effects_dir(cell_line) / "genes.parquet", universe)
@@ -276,6 +378,8 @@ def main(argv: list[str] | None = None) -> int:
 
     summary.to_parquet(out / "floor_ceiling_summary.parquet", index=False)
     per.to_parquet(out / "floor_ceiling_per_perturbation.parquet", index=False)
+    shared.to_parquet(out / "floor_shared_response.parquet", index=False)
+    primary = shared[shared.split == SPLITS[0]]
     payload = {
         "stage": "expression-floor sensitivity of the replicate-split ceiling",
         "floors_cp10k": list(C.FLOOR_GRID_CP10K),
@@ -286,6 +390,28 @@ def main(argv: list[str] | None = None) -> int:
         "log2 fold-change vectors over the genes surviving the floor",
         "inputs": metas,
         "decisions": decisions,
+        "shared_response": {
+            "question": "does a higher floor buy its higher ceiling by narrowing the "
+            "read-out to the response every perturbation shares?",
+            "baseline": "leave-one-out mean effect vector of the other perturbations in "
+            "the same stratum, taken from one replicate half and scored against the "
+            "other half with the ceiling's own Pearson",
+            "by_cell_line_stratum_floor": {
+                f"{row.cell_line}|{row.effect_stratum}|{row.floor_cp10k:g}": {
+                    "ceiling": round(float(row.median_ceiling), 4),
+                    "loo_mean_baseline": round(float(row.median_loo_mean_baseline), 4),
+                    "headroom": round(float(row.headroom_ceiling_over_baseline), 4),
+                    "cross_perturbation_pearson": round(
+                        float(row.median_cross_perturbation_pearson), 4
+                    ),
+                    "pc1_variance_share_uncentred": round(
+                        float(row.pc1_variance_share_uncentred), 4
+                    ),
+                    "n_genes": int(row.n_expressed_genes),
+                }
+                for row in primary.itertuples()
+            },
+        },
         "seconds": round(time.time() - started, 1),
     }
     (out / "floor_decision.json").write_text(json.dumps(payload, indent=2))
