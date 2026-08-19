@@ -17,14 +17,49 @@
       "input_order": "ascending vocabulary position; the model carries no gene positional encoding, so the order is a convention, not a constraint"
     },
     "scope": {
-      "n_perturbed": 250,
-      "n_perturbed_cells_anchor": 60,
-      "n_perturbed_masked": 60,
+      "n_perturbed": 524,
+      "n_perturbed_cells_anchor": 524,
+      "n_perturbed_masked": 524,
       "n_step_sweep": 50,
       "strata": [
         "S3",
         "S4_highest"
       ]
+    },
+    "coverage": {
+      "mode": "full",
+      "n_perturbed": 524,
+      "n_in_scope": 524,
+      "fraction_of_scope": 1.0,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ],
+      "by_stratum": {
+        "S3": {
+          "in_scope": 240,
+          "selected": 240
+        },
+        "S4_highest": {
+          "in_scope": 284,
+          "selected": 284
+        }
+      },
+      "n_perturbed_cells_anchor": 524,
+      "n_perturbed_masked": 524,
+      "n_step_sweep": 50,
+      "scope_requested": {
+        "n_perturbed": 0,
+        "n_perturbed_cells_anchor": 0,
+        "n_perturbed_masked": 0,
+        "strata": [
+          "S3",
+          "S4_highest"
+        ]
+      },
+      "selection_rule": "every in-scope perturbation",
+      "in_scope_definition": "perturbations in strata S3, S4_highest whose target gene is also a read-out gene of this cell line, so it can be perturbed at all",
+      "comparability_note": "a block at partial coverage and a block at full coverage share the perturbed genes of the smaller one but not its row order; join on perturbed_gene_id, never on row index, and do not compare a per-block aggregate across two different coverages"
     },
     "value_grid_cp10k": [
       0.0,
@@ -61,62 +96,62 @@
         "cells": [
           "uniform"
         ],
-        "n_perturbed": 250,
+        "n_perturbed": 524,
         "step": 0.02,
         "forms": {
           "vvp": {
             "raw": [
-              250,
+              524,
               5,
               2721
             ],
             "standardized": [
-              250,
+              524,
               5,
               2721
             ],
             "recentred": [
-              250,
+              524,
               5,
               2721
             ],
             "log2fc": [
-              250,
+              524,
               5,
               2721
             ]
           },
           "zero_out": {
             "raw": [
-              250,
+              524,
               2721
             ],
             "standardized": [
-              250,
+              524,
               2721
             ],
             "recentred": [
-              250,
+              524,
               2721
             ],
             "log2fc": [
-              250,
+              524,
               2721
             ]
           },
           "gdt": {
             "raw": [
-              250,
+              524,
               5,
               2721
             ],
             "standardized": [
-              250,
+              524,
               5,
               2721
             ],
             "recentred": [
-              250,
+              524,
               5,
               2721
             ]
@@ -125,42 +160,47 @@
         "n_cells_averaged": 1,
         "zero_out_value_index": 0,
         "gdt_source": "forward_mode_autodiff_jvp",
-        "seconds": 56.6,
+        "forward_mode": {
+          "attempted": true,
+          "available": true,
+          "reason_unavailable": null
+        },
+        "seconds": 119.5,
         "exact_vs_finite_difference": {
           "per_value": [
             {
               "value_cp10k": 0.0,
               "one_sided": true,
-              "pearson": 0.9288597352578503,
-              "relative_l2": 0.37742159812789045
+              "pearson": 0.9287538611664851,
+              "relative_l2": 0.38244479990808544
             },
             {
               "value_cp10k": 1.0,
               "one_sided": false,
-              "pearson": 0.999669057120252,
-              "relative_l2": 0.02575312712766637
+              "pearson": 0.9996166807367459,
+              "relative_l2": 0.027890141308930607
             },
             {
               "value_cp10k": 4.0,
               "one_sided": false,
-              "pearson": 0.9999735222482442,
-              "relative_l2": 0.007289004548104208
+              "pearson": 0.9999759766864427,
+              "relative_l2": 0.00694025878660683
             },
             {
               "value_cp10k": 16.0,
               "one_sided": false,
-              "pearson": 0.9998653904808998,
-              "relative_l2": 0.016406654972133845
+              "pearson": 0.9998735447937511,
+              "relative_l2": 0.015902199516740028
             },
             {
               "value_cp10k": 64.0,
               "one_sided": false,
-              "pearson": 0.9990297461297869,
-              "relative_l2": 0.04405444875289388
+              "pearson": 0.999122273498884,
+              "relative_l2": 0.041893299852062596
             }
           ],
-          "median_pearson_two_sided": 0.9997672238005759,
-          "median_relative_l2_two_sided": 0.021079891049900108,
+          "median_pearson_two_sided": 0.9997451127652486,
+          "median_relative_l2_two_sided": 0.021896170412835318,
           "step": 0.02,
           "note": "the exact forward-mode derivative is the feature; the central difference at the selected step is the cross-check. A value whose difference would cross the input floor is marked one_sided and excluded from the medians"
         }
@@ -170,62 +210,62 @@
         "cells": [
           "mean_control"
         ],
-        "n_perturbed": 250,
+        "n_perturbed": 524,
         "step": 0.02,
         "forms": {
           "vvp": {
             "raw": [
-              250,
+              524,
               5,
               2721
             ],
             "standardized": [
-              250,
+              524,
               5,
               2721
             ],
             "recentred": [
-              250,
+              524,
               5,
               2721
             ],
             "log2fc": [
-              250,
+              524,
               5,
               2721
             ]
           },
           "zero_out": {
             "raw": [
-              250,
+              524,
               2721
             ],
             "standardized": [
-              250,
+              524,
               2721
             ],
             "recentred": [
-              250,
+              524,
               2721
             ],
             "log2fc": [
-              250,
+              524,
               2721
             ]
           },
           "gdt": {
             "raw": [
-              250,
+              524,
               5,
               2721
             ],
             "standardized": [
-              250,
+              524,
               5,
               2721
             ],
             "recentred": [
-              250,
+              524,
               5,
               2721
             ]
@@ -234,42 +274,47 @@
         "n_cells_averaged": 1,
         "zero_out_value_index": 0,
         "gdt_source": "forward_mode_autodiff_jvp",
-        "seconds": 56.1,
+        "forward_mode": {
+          "attempted": true,
+          "available": true,
+          "reason_unavailable": null
+        },
+        "seconds": 118.8,
         "exact_vs_finite_difference": {
           "per_value": [
             {
               "value_cp10k": 0.0,
               "one_sided": true,
-              "pearson": 0.8875881737642575,
-              "relative_l2": 0.4964484906329984
+              "pearson": 0.8986164281676708,
+              "relative_l2": 0.46040206156775376
             },
             {
               "value_cp10k": 1.0,
               "one_sided": false,
-              "pearson": 0.9999025824763628,
-              "relative_l2": 0.014011806901127147
+              "pearson": 0.999908802605055,
+              "relative_l2": 0.01355692521151049
             },
             {
               "value_cp10k": 4.0,
               "one_sided": false,
-              "pearson": 0.9999390668076618,
-              "relative_l2": 0.011037134007235197
+              "pearson": 0.9999337239693329,
+              "relative_l2": 0.011511637177533092
             },
             {
               "value_cp10k": 16.0,
               "one_sided": false,
-              "pearson": 0.9997551882027321,
-              "relative_l2": 0.02213336474310057
+              "pearson": 0.9997657871120083,
+              "relative_l2": 0.021639574780601523
             },
             {
               "value_cp10k": 64.0,
               "one_sided": false,
-              "pearson": 0.994713433073199,
-              "relative_l2": 0.10280966758848693
+              "pearson": 0.9950096270301725,
+              "relative_l2": 0.10000986339652788
             }
           ],
-          "median_pearson_two_sided": 0.9998288853395474,
-          "median_relative_l2_two_sided": 0.01807258582211386,
+          "median_pearson_two_sided": 0.9998372948585317,
+          "median_relative_l2_two_sided": 0.017598249996056005,
           "step": 0.02,
           "note": "the exact forward-mode derivative is the feature; the central difference at the selected step is the cross-check. A value whose difference would cross the input floor is marked one_sided and excluded from the medians"
         }
@@ -282,62 +327,62 @@
           "AAACCCATCATCAGTG-11",
           "AAACGAAAGACTACGG-38"
         ],
-        "n_perturbed": 60,
+        "n_perturbed": 524,
         "step": 0.02,
         "forms": {
           "vvp": {
             "raw": [
-              60,
+              524,
               5,
               2721
             ],
             "standardized": [
-              60,
+              524,
               5,
               2721
             ],
             "recentred": [
-              60,
+              524,
               5,
               2721
             ],
             "log2fc": [
-              60,
+              524,
               5,
               2721
             ]
           },
           "zero_out": {
             "raw": [
-              60,
+              524,
               2721
             ],
             "standardized": [
-              60,
+              524,
               2721
             ],
             "recentred": [
-              60,
+              524,
               2721
             ],
             "log2fc": [
-              60,
+              524,
               2721
             ]
           },
           "gdt": {
             "raw": [
-              60,
+              524,
               5,
               2721
             ],
             "standardized": [
-              60,
+              524,
               5,
               2721
             ],
             "recentred": [
-              60,
+              524,
               5,
               2721
             ]
@@ -346,42 +391,47 @@
         "n_cells_averaged": 4,
         "zero_out_value_index": 0,
         "gdt_source": "forward_mode_autodiff_jvp",
-        "seconds": 54.1,
+        "forward_mode": {
+          "attempted": true,
+          "available": true,
+          "reason_unavailable": null
+        },
+        "seconds": 475.2,
         "exact_vs_finite_difference": {
           "per_value": [
             {
               "value_cp10k": 0.0,
               "one_sided": true,
-              "pearson": 0.9868192086755945,
-              "relative_l2": 0.1674877168178016
+              "pearson": 0.9818145939479354,
+              "relative_l2": 0.19471159578450492
             },
             {
               "value_cp10k": 1.0,
               "one_sided": false,
-              "pearson": 0.9999654324855067,
-              "relative_l2": 0.008352268900857388
+              "pearson": 0.9999591847489683,
+              "relative_l2": 0.009050952073268007
             },
             {
               "value_cp10k": 4.0,
               "one_sided": false,
-              "pearson": 0.9999858801994725,
-              "relative_l2": 0.005362641269572774
+              "pearson": 0.9999862961454646,
+              "relative_l2": 0.005234689937172016
             },
             {
               "value_cp10k": 16.0,
               "one_sided": false,
-              "pearson": 0.9999713738116541,
-              "relative_l2": 0.007566561228370579
+              "pearson": 0.9999622918011457,
+              "relative_l2": 0.008681838245454992
             },
             {
               "value_cp10k": 64.0,
               "one_sided": false,
-              "pearson": 0.998881795499699,
-              "relative_l2": 0.04727864282128751
+              "pearson": 0.9988439683732354,
+              "relative_l2": 0.048096526846151205
             }
           ],
-          "median_pearson_two_sided": 0.9999684031485805,
-          "median_relative_l2_two_sided": 0.007959415064613984,
+          "median_pearson_two_sided": 0.999960738275057,
+          "median_relative_l2_two_sided": 0.008866395159361499,
           "step": 0.02,
           "note": "the exact forward-mode derivative is the feature; the central difference at the selected step is the cross-check. A value whose difference would cross the input floor is marked one_sided and excluded from the medians"
         },
@@ -408,6 +458,7 @@
       "jacobian_available": true,
       "jacobian_method": "forward_mode_autodiff_jvp",
       "jacobian_unavailable_reason": null,
+      "forward_mode_autodiff": "not probed in the process that wrote this contract",
       "jacobian_check": {},
       "vocabulary_kind": "ensembl",
       "vocabulary_size": 44756,
@@ -439,41 +490,41 @@
           {
             "step": 0.02,
             "next_step": 0.05,
-            "median_pearson_adjacent": 0.9999864913258081,
-            "median_relative_l2_adjacent": 0.00547779710836197,
-            "median_abs_value": 0.00016689300537109546,
+            "median_pearson_adjacent": 0.9999862061396365,
+            "median_relative_l2_adjacent": 0.005522249611578778,
+            "median_abs_value": 0.00016093254089355634,
             "n_genes": 50
           },
           {
             "step": 0.05,
             "next_step": 0.1,
-            "median_pearson_adjacent": 0.9999974177933538,
-            "median_relative_l2_adjacent": 0.002443309128155751,
-            "median_abs_value": 0.00015020370483398492,
+            "median_pearson_adjacent": 0.9999973399002056,
+            "median_relative_l2_adjacent": 0.002578141159964135,
+            "median_abs_value": 0.00014305114746093801,
             "n_genes": 50
           },
           {
             "step": 0.1,
             "next_step": 0.25,
-            "median_pearson_adjacent": 0.9999993185953944,
-            "median_relative_l2_adjacent": 0.003551147556381076,
-            "median_abs_value": 0.00014901161193847675,
+            "median_pearson_adjacent": 0.9999992701763254,
+            "median_relative_l2_adjacent": 0.003987668306537652,
+            "median_abs_value": 0.00014066696166992206,
             "n_genes": 50
           },
           {
             "step": 0.25,
             "next_step": 0.5,
-            "median_pearson_adjacent": 0.9999998363584268,
-            "median_relative_l2_adjacent": 0.02927506486912964,
-            "median_abs_value": 0.00014734268188476562,
+            "median_pearson_adjacent": 0.9999998196960201,
+            "median_relative_l2_adjacent": 0.028290807565822654,
+            "median_abs_value": 0.00014019012451171875,
             "n_genes": 50
           },
           {
             "step": 0.5,
             "next_step": 1.0,
-            "median_pearson_adjacent": 0.9999996300815034,
-            "median_relative_l2_adjacent": 0.07335911139990667,
-            "median_abs_value": 0.00014209747314453125,
+            "median_pearson_adjacent": 0.9999993410956267,
+            "median_relative_l2_adjacent": 0.0724931175012788,
+            "median_abs_value": 0.0001361370086669922,
             "n_genes": 50
           }
         ]
@@ -497,41 +548,41 @@
           {
             "step": 0.02,
             "next_step": 0.05,
-            "median_pearson_adjacent": 0.999945248046102,
-            "median_relative_l2_adjacent": 0.010656431594736582,
-            "median_abs_value": 0.00014156103134155417,
+            "median_pearson_adjacent": 0.999946914763935,
+            "median_relative_l2_adjacent": 0.010423367611172444,
+            "median_abs_value": 0.00017285346984863457,
             "n_genes": 50
           },
           {
             "step": 0.05,
             "next_step": 0.1,
-            "median_pearson_adjacent": 0.9999904831948161,
-            "median_relative_l2_adjacent": 0.0048023167504071835,
-            "median_abs_value": 0.00013828277587890674,
+            "median_pearson_adjacent": 0.9999898812516366,
+            "median_relative_l2_adjacent": 0.004916035613166182,
+            "median_abs_value": 0.00016927719116210997,
             "n_genes": 50
           },
           {
             "step": 0.1,
             "next_step": 0.25,
-            "median_pearson_adjacent": 0.9999969796000989,
-            "median_relative_l2_adjacent": 0.006063579394365345,
-            "median_abs_value": 0.0001379847526550295,
+            "median_pearson_adjacent": 0.9999966649923453,
+            "median_relative_l2_adjacent": 0.0035702168327659085,
+            "median_abs_value": 0.00016838312149047873,
             "n_genes": 50
           },
           {
             "step": 0.25,
             "next_step": 0.5,
-            "median_pearson_adjacent": 0.9999975856514519,
-            "median_relative_l2_adjacent": 0.027883866342939316,
-            "median_abs_value": 0.0001373291015625,
+            "median_pearson_adjacent": 0.9999966596689956,
+            "median_relative_l2_adjacent": 0.027451483694638085,
+            "median_abs_value": 0.00016832351684570312,
             "n_genes": 50
           },
           {
             "step": 0.5,
             "next_step": 1.0,
-            "median_pearson_adjacent": 0.9999891519434421,
-            "median_relative_l2_adjacent": 0.0636443243738512,
-            "median_abs_value": 0.00013494491577148438,
+            "median_pearson_adjacent": 0.9999835286709975,
+            "median_relative_l2_adjacent": 0.06556333073882065,
+            "median_abs_value": 0.0001659989356994629,
             "n_genes": 50
           }
         ]
@@ -555,41 +606,41 @@
           {
             "step": 0.02,
             "next_step": 0.05,
-            "median_pearson_adjacent": 0.9999543214588447,
-            "median_relative_l2_adjacent": 0.009685208247847025,
-            "median_abs_value": 0.00016838312149048022,
+            "median_pearson_adjacent": 0.999952723287437,
+            "median_relative_l2_adjacent": 0.009805523590724091,
+            "median_abs_value": 0.00018179416656494328,
             "n_genes": 50
           },
           {
             "step": 0.05,
             "next_step": 0.1,
-            "median_pearson_adjacent": 0.9999925569599537,
-            "median_relative_l2_adjacent": 0.004534091118762514,
-            "median_abs_value": 0.00016570091247558653,
+            "median_pearson_adjacent": 0.9999917881397459,
+            "median_relative_l2_adjacent": 0.004619232750817047,
+            "median_abs_value": 0.00017940998077392643,
             "n_genes": 50
           },
           {
             "step": 0.1,
             "next_step": 0.25,
-            "median_pearson_adjacent": 0.9999976433769089,
-            "median_relative_l2_adjacent": 0.003896831487092638,
-            "median_abs_value": 0.00016450881958007834,
+            "median_pearson_adjacent": 0.9999976240311254,
+            "median_relative_l2_adjacent": 0.005247757631754767,
+            "median_abs_value": 0.00017940998077392603,
             "n_genes": 50
           },
           {
             "step": 0.25,
             "next_step": 0.5,
-            "median_pearson_adjacent": 0.9999974675192382,
-            "median_relative_l2_adjacent": 0.029715460500060034,
-            "median_abs_value": 0.00016450881958007812,
+            "median_pearson_adjacent": 0.9999973975450784,
+            "median_relative_l2_adjacent": 0.029710393141078834,
+            "median_abs_value": 0.00017881393432617188,
             "n_genes": 50
           },
           {
             "step": 0.5,
             "next_step": 1.0,
-            "median_pearson_adjacent": 0.9999851139330937,
-            "median_relative_l2_adjacent": 0.0641552417906546,
-            "median_abs_value": 0.00016105175018310547,
+            "median_pearson_adjacent": 0.9999883947626195,
+            "median_relative_l2_adjacent": 0.06709924917819127,
+            "median_abs_value": 0.00017568469047546387,
             "n_genes": 50
           }
         ]
@@ -597,7 +648,7 @@
     },
     "wiring_checks": {
       "uniform_virtual": {
-        "n_genes": 250,
+        "n_genes": 524,
         "value_low_cp10k": 1.0,
         "value_high_cp10k": 64.0,
         "sign_check_pass_fraction": 1.0,
@@ -610,7 +661,7 @@
         "threshold": 0.95
       },
       "mean_control": {
-        "n_genes": 250,
+        "n_genes": 524,
         "value_low_cp10k": 1.0,
         "value_high_cp10k": 64.0,
         "sign_check_pass_fraction": 1.0,
@@ -623,7 +674,7 @@
         "threshold": 0.95
       },
       "individual_cells": {
-        "n_genes": 60,
+        "n_genes": 524,
         "value_low_cp10k": 1.0,
         "value_high_cp10k": 64.0,
         "sign_check_pass_fraction": 1.0,
@@ -652,22 +703,22 @@
         "median": 3.0,
         "max": 3
       },
-      "n_perturbed": 60,
+      "n_perturbed": 524,
       "value_grid_cp10k": [
         0.0,
         4.0,
         64.0
       ],
-      "seconds": 28.4,
+      "seconds": 248.6,
       "note": "responses are read only at masked positions, averaged over cycles; the unmasked block at the same anchor is the comparison"
     }
   },
   "n_readout": 2721,
-  "n_perturbed": 250,
+  "n_perturbed": 524,
   "blocks": {
     "individual_cells/zero_out": {
       "shape": [
-        60,
+        524,
         2721
       ],
       "finite": true,
@@ -677,14 +728,14 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.0003523826599121094,
-      "abs_p99": 0.07339160144329071,
+      "abs_median": 0.00029106438159942627,
+      "abs_p99": 0.051234962642192815,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 60
+      "n_response_vectors": 524
     },
     "individual_cells/vvp": {
       "shape": [
-        60,
+        524,
         5,
         2721
       ],
@@ -695,14 +746,14 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.0007209405303001404,
-      "abs_p99": 0.09361574053764343,
+      "abs_median": 0.0007129460573196411,
+      "abs_p99": 0.10223712265491464,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 300
+      "n_response_vectors": 2620
     },
     "individual_cells/gdt": {
       "shape": [
-        60,
+        524,
         5,
         2721
       ],
@@ -712,14 +763,14 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.00018468929920345545,
-      "abs_p99": 0.06219431385397911,
+      "abs_median": 0.00018555490532889962,
+      "abs_p99": 0.049973106943070625,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 300
+      "n_response_vectors": 2620
     },
     "mean_control/zero_out": {
       "shape": [
-        250,
+        524,
         2721
       ],
       "finite": true,
@@ -729,14 +780,14 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.0022287368774414062,
-      "abs_p99": 0.38341084122657776,
+      "abs_median": 0.0020666122436523438,
+      "abs_p99": 0.3703459435701353,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 250
+      "n_response_vectors": 524
     },
     "mean_control/vvp": {
       "shape": [
-        250,
+        524,
         5,
         2721
       ],
@@ -747,14 +798,14 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.0010427236557006836,
-      "abs_p99": 0.2329382449388504,
+      "abs_median": 0.0010611414909362793,
+      "abs_p99": 0.22787056088447566,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 1250
+      "n_response_vectors": 2620
     },
     "mean_control/gdt": {
       "shape": [
-        250,
+        524,
         5,
         2721
       ],
@@ -764,14 +815,14 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.00022581111988984048,
-      "abs_p99": 0.3857811689376831,
+      "abs_median": 0.00023005297407507896,
+      "abs_p99": 0.3227328348159788,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 1250
+      "n_response_vectors": 2620
     },
     "mean_control_masked/zero_out": {
       "shape": [
-        60,
+        524,
         2721
       ],
       "finite": true,
@@ -781,14 +832,14 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.00021677216864190996,
-      "abs_p99": 0.04474528878927231,
+      "abs_median": 0.00019137065100949258,
+      "abs_p99": 0.03910235404968243,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 60
+      "n_response_vectors": 524
     },
     "mean_control_masked/vvp": {
       "shape": [
-        60,
+        524,
         3,
         2721
       ],
@@ -799,14 +850,14 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.0011828342685475945,
-      "abs_p99": 0.41140836477279663,
+      "abs_median": 0.0012208422413095832,
+      "abs_p99": 0.46114494502544073,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 180
+      "n_response_vectors": 1572
     },
     "uniform_virtual/zero_out": {
       "shape": [
-        250,
+        524,
         2721
       ],
       "finite": true,
@@ -816,14 +867,14 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.002840757369995117,
-      "abs_p99": 0.3302735388278961,
+      "abs_median": 0.002653837203979492,
+      "abs_p99": 0.3129556059837339,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 250
+      "n_response_vectors": 524
     },
     "uniform_virtual/vvp": {
       "shape": [
-        250,
+        524,
         5,
         2721
       ],
@@ -834,14 +885,14 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.002366781234741211,
-      "abs_p99": 0.3218899071216583,
+      "abs_median": 0.002185821533203125,
+      "abs_p99": 0.3133055615425093,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 1250
+      "n_response_vectors": 2620
     },
     "uniform_virtual/gdt": {
       "shape": [
-        250,
+        524,
         5,
         2721
       ],
@@ -851,166 +902,166 @@
         "recentred",
         "standardized"
       ],
-      "abs_median": 0.0007520244689658284,
-      "abs_p99": 0.2962130904197693,
+      "abs_median": 0.0007480113417841494,
+      "abs_p99": 0.28606682240962916,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 1250
+      "n_response_vectors": 2620
     }
   },
   "query_summary": {
     "individual_cells": [
       {
         "value_cp10k": 0.0,
-        "cross_gene_mean": -0.0005962602336894761,
-        "cross_gene_sd": 0.008415818602195393,
-        "max_abs": 0.38930144906044006,
-        "self_delta": 8.940696716308594e-08,
+        "cross_gene_mean": -0.0005710783665428176,
+        "cross_gene_sd": 0.00698880381655115,
+        "max_abs": 0.32610005140304565,
+        "self_delta": 0.0,
         "self_rank_median": 0.0,
-        "n_queries": 240,
-        "n_no_op_queries": 16
+        "n_queries": 2096,
+        "n_no_op_queries": 126
       },
       {
         "value_cp10k": 1.0,
-        "cross_gene_mean": -0.00022870935266923047,
-        "cross_gene_sd": 0.010128949423259592,
-        "max_abs": 0.5282594263553619,
-        "self_delta": -0.5282594263553619,
+        "cross_gene_mean": -0.00020360292778519838,
+        "cross_gene_sd": 0.009790180861645226,
+        "max_abs": 0.5091186761856079,
+        "self_delta": -0.5091186761856079,
         "self_rank_median": 0.0,
-        "n_queries": 240,
+        "n_queries": 2096,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 4.0,
-        "cross_gene_mean": 0.0008738518352676779,
-        "cross_gene_sd": 0.039148881581792944,
-        "max_abs": 2.0379423797130585,
-        "self_delta": 1.585193157196045,
+        "cross_gene_mean": 0.0008989191808844261,
+        "cross_gene_sd": 0.037432562149158743,
+        "max_abs": 1.9472095668315887,
+        "self_delta": 1.62360280752182,
         "self_rank_median": 0.0,
-        "n_queries": 240,
+        "n_queries": 2096,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 16.0,
-        "cross_gene_mean": 0.005283910292380437,
-        "cross_gene_sd": 0.2096405803200456,
-        "max_abs": 10.929912716150284,
-        "self_delta": 10.764506757259369,
+        "cross_gene_mean": 0.0053090934848049375,
+        "cross_gene_sd": 0.20923993037760094,
+        "max_abs": 10.88173496723175,
+        "self_delta": 10.776056289672852,
         "self_rank_median": 0.0,
-        "n_queries": 240,
+        "n_queries": 2096,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 64.0,
-        "cross_gene_mean": 0.02292449914195528,
-        "cross_gene_sd": 0.9299517207266987,
-        "max_abs": 48.29111981391907,
-        "self_delta": 48.29111981391907,
+        "cross_gene_mean": 0.022949664667659454,
+        "cross_gene_sd": 0.920866661690333,
+        "max_abs": 47.73359954357147,
+        "self_delta": 47.73359954357147,
         "self_rank_median": 0.0,
-        "n_queries": 240,
+        "n_queries": 2096,
         "n_no_op_queries": 0
       }
     ],
     "mean_control": [
       {
         "value_cp10k": 0.0,
-        "cross_gene_mean": -0.0004894604406037869,
-        "cross_gene_sd": 0.021545785573920173,
-        "max_abs": 0.6971113197505474,
-        "self_delta": -0.02080431580543518,
+        "cross_gene_mean": -0.0004778779832285496,
+        "cross_gene_sd": 0.019956631376395674,
+        "max_abs": 0.6185952723026276,
+        "self_delta": -0.014676719903945923,
         "self_rank_median": 2.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 1.0,
-        "cross_gene_mean": -0.00012222124083609057,
-        "cross_gene_sd": 0.002667105813533836,
-        "max_abs": 0.13167160749435425,
-        "self_delta": -0.13167160749435425,
+        "cross_gene_mean": -0.00011030903023772711,
+        "cross_gene_sd": 0.002844975659777162,
+        "max_abs": 0.14314508438110352,
+        "self_delta": -0.1303747594356537,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 4.0,
-        "cross_gene_mean": 0.0009804023994500477,
-        "cross_gene_sd": 0.04490418703619552,
-        "max_abs": 2.3396688997745514,
-        "self_delta": 2.1414099633693695,
+        "cross_gene_mean": 0.000992093529608354,
+        "cross_gene_sd": 0.04459362850476729,
+        "max_abs": 2.3217999041080475,
+        "self_delta": 2.121428459882736,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 16.0,
-        "cross_gene_mean": 0.005390543834289528,
-        "cross_gene_sd": 0.24762135023892784,
-        "max_abs": 12.888762354850769,
-        "self_delta": 12.716935992240906,
+        "cross_gene_mean": 0.0054023375913352925,
+        "cross_gene_sd": 0.24809312691720242,
+        "max_abs": 12.890896528959274,
+        "self_delta": 12.733464479446411,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 64.0,
-        "cross_gene_mean": 0.02303108888397932,
-        "cross_gene_sd": 1.0527482588931922,
-        "max_abs": 54.303929537534714,
-        "self_delta": 54.303929537534714,
+        "cross_gene_mean": 0.023043079461213728,
+        "cross_gene_sd": 1.049353228785869,
+        "max_abs": 54.1019968688488,
+        "self_delta": 54.1019968688488,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       }
     ],
     "uniform_virtual": [
       {
         "value_cp10k": 0.0,
-        "cross_gene_mean": -0.0013506877339092172,
-        "cross_gene_sd": 0.02752890736626156,
-        "max_abs": 1.0611519813537598,
-        "self_delta": -0.29094696044921875,
+        "cross_gene_mean": -0.00135068904823435,
+        "cross_gene_sd": 0.026621165990297443,
+        "max_abs": 1.0547891855239868,
+        "self_delta": -0.42247116565704346,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 1.0,
-        "cross_gene_mean": -0.000983187706318904,
-        "cross_gene_sd": 0.03943964458266988,
-        "max_abs": 2.0428417921066284,
-        "self_delta": -2.0428417921066284,
+        "cross_gene_mean": -0.000983175702149357,
+        "cross_gene_sd": 0.039384188801156766,
+        "max_abs": 2.037848472595215,
+        "self_delta": -2.037848472595215,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 4.0,
-        "cross_gene_mean": 0.00011934339452517116,
-        "cross_gene_sd": 0.0067048242773478485,
-        "max_abs": 0.34859704971313477,
-        "self_delta": 0.34859704971313477,
+        "cross_gene_mean": 0.00011934378882271101,
+        "cross_gene_sd": 0.006725596511933331,
+        "max_abs": 0.3506065607070923,
+        "self_delta": 0.3506065607070923,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 16.0,
-        "cross_gene_mean": 0.004529471784687708,
-        "cross_gene_sd": 0.2507353783606241,
-        "max_abs": 12.876765012741089,
-        "self_delta": 12.876765012741089,
+        "cross_gene_mean": 0.0045294836136139036,
+        "cross_gene_sd": 0.25071979777184833,
+        "max_abs": 12.924375295639038,
+        "self_delta": 12.924375295639038,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 64.0,
-        "cross_gene_mean": 0.022170062299074388,
-        "cross_gene_sd": 1.2921224785959575,
+        "cross_gene_mean": 0.022170070338363115,
+        "cross_gene_sd": 1.292212844547085,
         "max_abs": 67.11308526992798,
         "self_delta": 67.11308526992798,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       }
     ]
@@ -1019,135 +1070,135 @@
     {
       "step": 0.02,
       "next_step": 0.05,
-      "median_pearson_adjacent": 0.9999864913258081,
-      "median_relative_l2_adjacent": 0.00547779710836197,
-      "median_abs_value": 0.00016689300537109546,
+      "median_pearson_adjacent": 0.9999862061396365,
+      "median_relative_l2_adjacent": 0.005522249611578778,
+      "median_abs_value": 0.00016093254089355634,
       "n_genes": 50,
       "anchor": "uniform_virtual"
     },
     {
       "step": 0.05,
       "next_step": 0.1,
-      "median_pearson_adjacent": 0.9999974177933538,
-      "median_relative_l2_adjacent": 0.002443309128155751,
-      "median_abs_value": 0.00015020370483398492,
+      "median_pearson_adjacent": 0.9999973399002056,
+      "median_relative_l2_adjacent": 0.002578141159964135,
+      "median_abs_value": 0.00014305114746093801,
       "n_genes": 50,
       "anchor": "uniform_virtual"
     },
     {
       "step": 0.1,
       "next_step": 0.25,
-      "median_pearson_adjacent": 0.9999993185953944,
-      "median_relative_l2_adjacent": 0.003551147556381076,
-      "median_abs_value": 0.00014901161193847675,
+      "median_pearson_adjacent": 0.9999992701763254,
+      "median_relative_l2_adjacent": 0.003987668306537652,
+      "median_abs_value": 0.00014066696166992206,
       "n_genes": 50,
       "anchor": "uniform_virtual"
     },
     {
       "step": 0.25,
       "next_step": 0.5,
-      "median_pearson_adjacent": 0.9999998363584268,
-      "median_relative_l2_adjacent": 0.02927506486912964,
-      "median_abs_value": 0.00014734268188476562,
+      "median_pearson_adjacent": 0.9999998196960201,
+      "median_relative_l2_adjacent": 0.028290807565822654,
+      "median_abs_value": 0.00014019012451171875,
       "n_genes": 50,
       "anchor": "uniform_virtual"
     },
     {
       "step": 0.5,
       "next_step": 1.0,
-      "median_pearson_adjacent": 0.9999996300815034,
-      "median_relative_l2_adjacent": 0.07335911139990667,
-      "median_abs_value": 0.00014209747314453125,
+      "median_pearson_adjacent": 0.9999993410956267,
+      "median_relative_l2_adjacent": 0.0724931175012788,
+      "median_abs_value": 0.0001361370086669922,
       "n_genes": 50,
       "anchor": "uniform_virtual"
     },
     {
       "step": 0.02,
       "next_step": 0.05,
-      "median_pearson_adjacent": 0.999945248046102,
-      "median_relative_l2_adjacent": 0.010656431594736582,
-      "median_abs_value": 0.00014156103134155417,
+      "median_pearson_adjacent": 0.999946914763935,
+      "median_relative_l2_adjacent": 0.010423367611172444,
+      "median_abs_value": 0.00017285346984863457,
       "n_genes": 50,
       "anchor": "mean_control"
     },
     {
       "step": 0.05,
       "next_step": 0.1,
-      "median_pearson_adjacent": 0.9999904831948161,
-      "median_relative_l2_adjacent": 0.0048023167504071835,
-      "median_abs_value": 0.00013828277587890674,
+      "median_pearson_adjacent": 0.9999898812516366,
+      "median_relative_l2_adjacent": 0.004916035613166182,
+      "median_abs_value": 0.00016927719116210997,
       "n_genes": 50,
       "anchor": "mean_control"
     },
     {
       "step": 0.1,
       "next_step": 0.25,
-      "median_pearson_adjacent": 0.9999969796000989,
-      "median_relative_l2_adjacent": 0.006063579394365345,
-      "median_abs_value": 0.0001379847526550295,
+      "median_pearson_adjacent": 0.9999966649923453,
+      "median_relative_l2_adjacent": 0.0035702168327659085,
+      "median_abs_value": 0.00016838312149047873,
       "n_genes": 50,
       "anchor": "mean_control"
     },
     {
       "step": 0.25,
       "next_step": 0.5,
-      "median_pearson_adjacent": 0.9999975856514519,
-      "median_relative_l2_adjacent": 0.027883866342939316,
-      "median_abs_value": 0.0001373291015625,
+      "median_pearson_adjacent": 0.9999966596689956,
+      "median_relative_l2_adjacent": 0.027451483694638085,
+      "median_abs_value": 0.00016832351684570312,
       "n_genes": 50,
       "anchor": "mean_control"
     },
     {
       "step": 0.5,
       "next_step": 1.0,
-      "median_pearson_adjacent": 0.9999891519434421,
-      "median_relative_l2_adjacent": 0.0636443243738512,
-      "median_abs_value": 0.00013494491577148438,
+      "median_pearson_adjacent": 0.9999835286709975,
+      "median_relative_l2_adjacent": 0.06556333073882065,
+      "median_abs_value": 0.0001659989356994629,
       "n_genes": 50,
       "anchor": "mean_control"
     },
     {
       "step": 0.02,
       "next_step": 0.05,
-      "median_pearson_adjacent": 0.9999543214588447,
-      "median_relative_l2_adjacent": 0.009685208247847025,
-      "median_abs_value": 0.00016838312149048022,
+      "median_pearson_adjacent": 0.999952723287437,
+      "median_relative_l2_adjacent": 0.009805523590724091,
+      "median_abs_value": 0.00018179416656494328,
       "n_genes": 50,
       "anchor": "individual_cells"
     },
     {
       "step": 0.05,
       "next_step": 0.1,
-      "median_pearson_adjacent": 0.9999925569599537,
-      "median_relative_l2_adjacent": 0.004534091118762514,
-      "median_abs_value": 0.00016570091247558653,
+      "median_pearson_adjacent": 0.9999917881397459,
+      "median_relative_l2_adjacent": 0.004619232750817047,
+      "median_abs_value": 0.00017940998077392643,
       "n_genes": 50,
       "anchor": "individual_cells"
     },
     {
       "step": 0.1,
       "next_step": 0.25,
-      "median_pearson_adjacent": 0.9999976433769089,
-      "median_relative_l2_adjacent": 0.003896831487092638,
-      "median_abs_value": 0.00016450881958007834,
+      "median_pearson_adjacent": 0.9999976240311254,
+      "median_relative_l2_adjacent": 0.005247757631754767,
+      "median_abs_value": 0.00017940998077392603,
       "n_genes": 50,
       "anchor": "individual_cells"
     },
     {
       "step": 0.25,
       "next_step": 0.5,
-      "median_pearson_adjacent": 0.9999974675192382,
-      "median_relative_l2_adjacent": 0.029715460500060034,
-      "median_abs_value": 0.00016450881958007812,
+      "median_pearson_adjacent": 0.9999973975450784,
+      "median_relative_l2_adjacent": 0.029710393141078834,
+      "median_abs_value": 0.00017881393432617188,
       "n_genes": 50,
       "anchor": "individual_cells"
     },
     {
       "step": 0.5,
       "next_step": 1.0,
-      "median_pearson_adjacent": 0.9999851139330937,
-      "median_relative_l2_adjacent": 0.0641552417906546,
-      "median_abs_value": 0.00016105175018310547,
+      "median_pearson_adjacent": 0.9999883947626195,
+      "median_relative_l2_adjacent": 0.06709924917819127,
+      "median_abs_value": 0.00017568469047546387,
       "n_genes": 50,
       "anchor": "individual_cells"
     }
@@ -1155,16 +1206,16 @@
   "anchor_cell_spread": {
     "individual_cells": {
       "n_cells": 4,
-      "median_cv_of_response_size": 0.26966788275465775,
-      "p90_cv_of_response_size": 1.0775045069334088
+      "median_cv_of_response_size": 0.25048287062234587,
+      "p90_cv_of_response_size": 1.1338893944224842
     }
   },
   "wiring_detail": [
     {
       "bin": "at or below the top of the value grid",
-      "n": 249,
+      "n": 523,
       "pass_fraction": 1.0,
-      "median_anchor_cp10k": 1.3177029796072
+      "median_anchor_cp10k": 1.2991156682244784
     },
     {
       "bin": "above the top of the value grid",
@@ -1176,16 +1227,16 @@
   "alignment": [
     {
       "anchor": "uniform_virtual",
-      "n_perturbed": 250,
+      "n_perturbed": 524,
       "n_readout": 2721,
       "own_largest": 1.0,
       "own_largest_null": 0.0,
       "self_rank_median": 0.0,
       "self_rank_median_fraction": 0.0,
-      "self_rank_median_null": 1316.0,
-      "self_rank_median_fraction_null": 0.4838235294117647,
+      "self_rank_median_null": 1255.5,
+      "self_rank_median_fraction_null": 0.4615808823529412,
       "sign_rate": 1.0,
-      "sign_rate_null": 0.468,
+      "sign_rate_null": 0.4675572519083969,
       "separated_by": [
         "own_largest",
         "self_rank",
@@ -1195,16 +1246,16 @@
     },
     {
       "anchor": "mean_control",
-      "n_perturbed": 250,
+      "n_perturbed": 524,
       "n_readout": 2721,
       "own_largest": 1.0,
       "own_largest_null": 0.0,
       "self_rank_median": 0.0,
       "self_rank_median_fraction": 0.0,
-      "self_rank_median_null": 1312.0,
-      "self_rank_median_fraction_null": 0.4823529411764706,
+      "self_rank_median_null": 1310.5,
+      "self_rank_median_fraction_null": 0.4818014705882353,
       "sign_rate": 1.0,
-      "sign_rate_null": 0.636,
+      "sign_rate_null": 0.648854961832061,
       "separated_by": [
         "own_largest",
         "self_rank",
@@ -1214,16 +1265,16 @@
     },
     {
       "anchor": "individual_cells",
-      "n_perturbed": 60,
+      "n_perturbed": 524,
       "n_readout": 2721,
       "own_largest": 1.0,
       "own_largest_null": 0.0,
       "self_rank_median": 0.0,
       "self_rank_median_fraction": 0.0,
-      "self_rank_median_null": 1610.5,
-      "self_rank_median_fraction_null": 0.5920955882352941,
+      "self_rank_median_null": 1412.0,
+      "self_rank_median_fraction_null": 0.5191176470588236,
       "sign_rate": 1.0,
-      "sign_rate_null": 0.5666666666666667,
+      "sign_rate_null": 0.601145038167939,
       "separated_by": [
         "own_largest",
         "self_rank",
@@ -1243,7 +1294,7 @@
       "section": "scprint/hepg2",
       "check": "individual_cells/zero_out/shape_and_finite",
       "ok": true,
-      "detail": "raw (60, 2721) (expected (60, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1261,7 +1312,7 @@
       "section": "scprint/hepg2",
       "check": "individual_cells/vvp/shape_and_finite",
       "ok": true,
-      "detail": "raw (60, 5, 2721) (expected (60, 5, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1279,7 +1330,7 @@
       "section": "scprint/hepg2",
       "check": "individual_cells/gdt/shape_and_finite",
       "ok": true,
-      "detail": "raw (60, 5, 2721) (expected (60, 5, 2721)), finite=True, variants ['raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1291,7 +1342,7 @@
       "section": "scprint/hepg2",
       "check": "individual_cells/softmax_coupling",
       "ok": true,
-      "detail": "median |cross-gene mean| / sd = 0.02649 (tolerance 0.05); raising one gene's share must lower others"
+      "detail": "median |cross-gene mean| / sd = 0.02678 (tolerance 0.05); raising one gene's share must lower others"
     },
     {
       "section": "scprint/hepg2",
@@ -1303,7 +1354,7 @@
       "section": "scprint/hepg2",
       "check": "mean_control/zero_out/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 2721) (expected (250, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1321,7 +1372,7 @@
       "section": "scprint/hepg2",
       "check": "mean_control/vvp/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 5, 2721) (expected (250, 5, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1339,7 +1390,7 @@
       "section": "scprint/hepg2",
       "check": "mean_control/gdt/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 5, 2721) (expected (250, 5, 2721)), finite=True, variants ['raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1351,7 +1402,7 @@
       "section": "scprint/hepg2",
       "check": "mean_control/softmax_coupling",
       "ok": true,
-      "detail": "median |cross-gene mean| / sd = 0.02282 (tolerance 0.05); raising one gene's share must lower others"
+      "detail": "median |cross-gene mean| / sd = 0.02285 (tolerance 0.05); raising one gene's share must lower others"
     },
     {
       "section": "scprint/hepg2",
@@ -1363,7 +1414,7 @@
       "section": "scprint/hepg2",
       "check": "mean_control_masked/zero_out/shape_and_finite",
       "ok": true,
-      "detail": "raw (60, 2721) (expected (60, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1381,7 +1432,7 @@
       "section": "scprint/hepg2",
       "check": "mean_control_masked/vvp/shape_and_finite",
       "ok": true,
-      "detail": "raw (60, 3, 2721) (expected (60, 3, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 3, 2721) (expected (524, 3, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1399,7 +1450,7 @@
       "section": "scprint/hepg2",
       "check": "uniform_virtual/zero_out/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 2721) (expected (250, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1417,7 +1468,7 @@
       "section": "scprint/hepg2",
       "check": "uniform_virtual/vvp/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 5, 2721) (expected (250, 5, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1435,7 +1486,7 @@
       "section": "scprint/hepg2",
       "check": "uniform_virtual/gdt/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 5, 2721) (expected (250, 5, 2721)), finite=True, variants ['raw', 'recentred', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'recentred', 'standardized']"
     },
     {
       "section": "scprint/hepg2",
@@ -1447,7 +1498,13 @@
       "section": "scprint/hepg2",
       "check": "uniform_virtual/softmax_coupling",
       "ok": true,
-      "detail": "median |cross-gene mean| / sd = 0.01905 (tolerance 0.05); raising one gene's share must lower others"
+      "detail": "median |cross-gene mean| / sd = 0.01908 (tolerance 0.05); raising one gene's share must lower others"
+    },
+    {
+      "section": "scprint/hepg2",
+      "check": "coverage_recorded",
+      "ok": true,
+      "detail": "full coverage: 524 of 524 in-scope perturbations (1.0), strata ['S3', 'S4_highest']; perturbed table has 524 rows"
     },
     {
       "section": "scprint/hepg2",
@@ -1459,49 +1516,49 @@
       "section": "scprint/hepg2",
       "check": "uniform_virtual/exact_vs_finite_difference",
       "ok": true,
-      "detail": "median over two-sided values: pearson 0.999767, relative L2 0.02108 at step 0.02 (tolerances 0.99, 0.25); 0 CP10K one-sided pearson 0.9289; 1 CP10K pearson 0.9997; 4 CP10K pearson 1.0000; 16 CP10K pearson 0.9999; 64 CP10K pearson 0.9990; 1 value(s) sit on the input floor, where the difference is one-sided and is excluded from the medians"
+      "detail": "median over two-sided values: pearson 0.999745, relative L2 0.0219 at step 0.02 (tolerances 0.99, 0.25); 0 CP10K one-sided pearson 0.9288; 1 CP10K pearson 0.9996; 4 CP10K pearson 1.0000; 16 CP10K pearson 0.9999; 64 CP10K pearson 0.9991; 1 value(s) sit on the input floor, where the difference is one-sided and is excluded from the medians"
     },
     {
       "section": "scprint/hepg2",
       "check": "mean_control/exact_vs_finite_difference",
       "ok": true,
-      "detail": "median over two-sided values: pearson 0.999829, relative L2 0.01807 at step 0.02 (tolerances 0.99, 0.25); 0 CP10K one-sided pearson 0.8876; 1 CP10K pearson 0.9999; 4 CP10K pearson 0.9999; 16 CP10K pearson 0.9998; 64 CP10K pearson 0.9947; 1 value(s) sit on the input floor, where the difference is one-sided and is excluded from the medians"
+      "detail": "median over two-sided values: pearson 0.999837, relative L2 0.0176 at step 0.02 (tolerances 0.99, 0.25); 0 CP10K one-sided pearson 0.8986; 1 CP10K pearson 0.9999; 4 CP10K pearson 0.9999; 16 CP10K pearson 0.9998; 64 CP10K pearson 0.9950; 1 value(s) sit on the input floor, where the difference is one-sided and is excluded from the medians"
     },
     {
       "section": "scprint/hepg2",
       "check": "individual_cells/exact_vs_finite_difference",
       "ok": true,
-      "detail": "median over two-sided values: pearson 0.999968, relative L2 0.007959 at step 0.02 (tolerances 0.99, 0.25); 0 CP10K one-sided pearson 0.9868; 1 CP10K pearson 1.0000; 4 CP10K pearson 1.0000; 16 CP10K pearson 1.0000; 64 CP10K pearson 0.9989; 1 value(s) sit on the input floor, where the difference is one-sided and is excluded from the medians"
+      "detail": "median over two-sided values: pearson 0.999961, relative L2 0.008866 at step 0.02 (tolerances 0.99, 0.25); 0 CP10K one-sided pearson 0.9818; 1 CP10K pearson 1.0000; 4 CP10K pearson 1.0000; 16 CP10K pearson 1.0000; 64 CP10K pearson 0.9988; 1 value(s) sit on the input floor, where the difference is one-sided and is excluded from the medians"
     },
     {
       "section": "scprint/hepg2",
       "check": "wiring_by_anchor_level",
       "ok": true,
-      "detail": "own-entry-largest rate by the perturbed gene's own anchor level: at or below the top of the value grid (249 genes) 1.000; above the top of the value grid (1 genes) 1.000; the value grid tops out at 64 CP10K, so a gene whose anchor sits far above it is barely moved by the query"
+      "detail": "own-entry-largest rate by the perturbed gene's own anchor level: at or below the top of the value grid (523 genes) 1.000; above the top of the value grid (1 genes) 1.000; the value grid tops out at 64 CP10K, so a gene whose anchor sits far above it is barely moved by the query"
     },
     {
       "section": "scprint/hepg2",
       "check": "uniform_virtual/alignment_vs_permutation",
       "ok": true,
-      "detail": "read-out order is aligned with the query on own_largest, self_rank, sign: own entry largest 1.000 (null 0.000); median self-rank 0 of 2721 (null 1316); own output moves the expected way 1.000 (null 0.468)"
+      "detail": "read-out order is aligned with the query on own_largest, self_rank, sign: own entry largest 1.000 (null 0.000); median self-rank 0 of 2721 (null 1256); own output moves the expected way 1.000 (null 0.468)"
     },
     {
       "section": "scprint/hepg2",
       "check": "mean_control/alignment_vs_permutation",
       "ok": true,
-      "detail": "read-out order is aligned with the query on own_largest, self_rank, sign: own entry largest 1.000 (null 0.000); median self-rank 0 of 2721 (null 1312); own output moves the expected way 1.000 (null 0.636)"
+      "detail": "read-out order is aligned with the query on own_largest, self_rank, sign: own entry largest 1.000 (null 0.000); median self-rank 0 of 2721 (null 1310); own output moves the expected way 1.000 (null 0.649)"
     },
     {
       "section": "scprint/hepg2",
       "check": "individual_cells/alignment_vs_permutation",
       "ok": true,
-      "detail": "read-out order is aligned with the query on own_largest, self_rank, sign: own entry largest 1.000 (null 0.000); median self-rank 0 of 2721 (null 1610); own output moves the expected way 1.000 (null 0.567)"
+      "detail": "read-out order is aligned with the query on own_largest, self_rank, sign: own entry largest 1.000 (null 0.000); median self-rank 0 of 2721 (null 1412); own output moves the expected way 1.000 (null 0.601)"
     },
     {
       "section": "scprint/hepg2",
       "check": "uniform_virtual/wiring_magnitude",
       "ok": true,
-      "detail": "the perturbed gene's own entry is the largest response for 100.0% of 250 sampled genes (threshold 95%); sign version 100.0%"
+      "detail": "the perturbed gene's own entry is the largest response for 100.0% of 524 sampled genes (threshold 95%); sign version 100.0%"
     },
     {
       "section": "scprint/hepg2",
@@ -1513,7 +1570,7 @@
       "section": "scprint/hepg2",
       "check": "mean_control/wiring_magnitude",
       "ok": true,
-      "detail": "the perturbed gene's own entry is the largest response for 100.0% of 250 sampled genes (threshold 95%); sign version 100.0%"
+      "detail": "the perturbed gene's own entry is the largest response for 100.0% of 524 sampled genes (threshold 95%); sign version 100.0%"
     },
     {
       "section": "scprint/hepg2",
@@ -1525,7 +1582,7 @@
       "section": "scprint/hepg2",
       "check": "individual_cells/wiring_magnitude",
       "ok": true,
-      "detail": "the perturbed gene's own entry is the largest response for 100.0% of 60 sampled genes (threshold 95%); sign version 100.0%"
+      "detail": "the perturbed gene's own entry is the largest response for 100.0% of 524 sampled genes (threshold 95%); sign version 100.0%"
     },
     {
       "section": "scprint/hepg2",

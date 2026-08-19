@@ -181,6 +181,9 @@ are import plumbing, three swap a fused half-precision attention kernel for the 
 float32, and one remaps scGPT's fused query-key-value tensors onto torch's packed projection
 (verified numerically at load time).
 
-Cost, on one H100, for the three anchors of one (model, cell line): scGPT 89-114 s, scPRINT
-167-176 s, TranscriptFormer about 1,085 s, AIDO.Cell about 10,573 s. Size run 3 against the last
-number, not the first.
+Cost, on one H100, for the three anchors of one (model, cell line), at the coverage each block
+shipped: scGPT 372 s (524 perturbed genes) and 643 s (705), scPRINT 714 s and 1,196 s,
+TranscriptFormer 4,621 s and 6,232 s, AIDO.Cell 10,575 s and 10,571 s at 250 genes. The masked
+variant costs roughly as much again as one anchor. Size run 3 against the last number, not the
+first: AIDO.Cell runs about 0.88 s per forward pass at every batch size tried, so full coverage
+for it would be 44,484 s on HepG2 and 59,874 s on Jurkat.

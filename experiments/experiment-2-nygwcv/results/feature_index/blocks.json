@@ -1,0 +1,154 @@
+{
+  "written_by": "scfm_pfm.features.feature_index",
+  "what": "the canonical response-feature block per (model, cell line) for this thread",
+  "how_to_read": "paths are relative to this experiment's artifact root. Matrix rows follow the block's perturbed_genes.parquet and columns follow readout_genes.parquet; join two blocks on perturbed_gene_id, never on row index, because blocks at different coverage do not share a row order.",
+  "coverage_mix": [
+    {
+      "mode": "full",
+      "n_perturbed": 524
+    },
+    {
+      "mode": "full",
+      "n_perturbed": 705
+    },
+    {
+      "mode": "subset",
+      "n_perturbed": 250
+    }
+  ],
+  "coverage_warning": "this tree mixes coverages on purpose: the three cheap models cover every in-scope perturbation and AIDO.Cell covers a subset of them, because its measured cost per forward pass makes full coverage tens of GPU hours. Do not compare a per-block aggregate across two different coverages; restrict to the shared perturbed genes first.",
+  "strata": [
+    "S3",
+    "S4_highest"
+  ],
+  "blocks": [
+    {
+      "model": "aido_cell",
+      "cell_line": "hepg2",
+      "block": "features/aido_cell/hepg2",
+      "coverage_mode": "subset",
+      "n_perturbed": 250,
+      "n_in_scope": 524,
+      "fraction_of_scope": 0.477099,
+      "n_readout": 2721,
+      "anchors": "individual_cells,mean_control,uniform_virtual",
+      "has_masked": true,
+      "n_perturbed_masked": 60,
+      "supersedes": null,
+      "hidden_readout": "features/aido_cell/hepg2/hidden_readout",
+      "gdt_source": "central_finite_difference(step=0.02)"
+    },
+    {
+      "model": "aido_cell",
+      "cell_line": "jurkat",
+      "block": "features/aido_cell/jurkat",
+      "coverage_mode": "subset",
+      "n_perturbed": 250,
+      "n_in_scope": 705,
+      "fraction_of_scope": 0.35461,
+      "n_readout": 3247,
+      "anchors": "individual_cells,mean_control,uniform_virtual",
+      "has_masked": true,
+      "n_perturbed_masked": 60,
+      "supersedes": null,
+      "hidden_readout": "features/aido_cell/jurkat/hidden_readout",
+      "gdt_source": "central_finite_difference(step=0.02)"
+    },
+    {
+      "model": "scgpt",
+      "cell_line": "hepg2",
+      "block": "features_full_scope/scgpt/hepg2",
+      "coverage_mode": "full",
+      "n_perturbed": 524,
+      "n_in_scope": 524,
+      "fraction_of_scope": 1.0,
+      "n_readout": 2721,
+      "anchors": "individual_cells,mean_control,uniform_virtual",
+      "has_masked": true,
+      "n_perturbed_masked": 524,
+      "supersedes": "features/scgpt/hepg2",
+      "hidden_readout": "features/scgpt/hepg2/hidden_readout",
+      "gdt_source": "central_finite_difference(step=0.02)"
+    },
+    {
+      "model": "scgpt",
+      "cell_line": "jurkat",
+      "block": "features_full_scope/scgpt/jurkat",
+      "coverage_mode": "full",
+      "n_perturbed": 705,
+      "n_in_scope": 705,
+      "fraction_of_scope": 1.0,
+      "n_readout": 3247,
+      "anchors": "individual_cells,mean_control,uniform_virtual",
+      "has_masked": true,
+      "n_perturbed_masked": 705,
+      "supersedes": "features/scgpt/jurkat",
+      "hidden_readout": "features/scgpt/jurkat/hidden_readout",
+      "gdt_source": "central_finite_difference(step=0.02)"
+    },
+    {
+      "model": "scprint",
+      "cell_line": "hepg2",
+      "block": "features_full_scope/scprint/hepg2",
+      "coverage_mode": "full",
+      "n_perturbed": 524,
+      "n_in_scope": 524,
+      "fraction_of_scope": 1.0,
+      "n_readout": 2721,
+      "anchors": "individual_cells,mean_control,uniform_virtual",
+      "has_masked": true,
+      "n_perturbed_masked": 524,
+      "supersedes": "features/scprint/hepg2",
+      "hidden_readout": "features/scprint/hepg2/hidden_readout",
+      "gdt_source": "forward_mode_autodiff_jvp"
+    },
+    {
+      "model": "scprint",
+      "cell_line": "jurkat",
+      "block": "features_full_scope/scprint/jurkat",
+      "coverage_mode": "full",
+      "n_perturbed": 705,
+      "n_in_scope": 705,
+      "fraction_of_scope": 1.0,
+      "n_readout": 3247,
+      "anchors": "individual_cells,mean_control,uniform_virtual",
+      "has_masked": true,
+      "n_perturbed_masked": 705,
+      "supersedes": "features/scprint/jurkat",
+      "hidden_readout": "features/scprint/jurkat/hidden_readout",
+      "gdt_source": "forward_mode_autodiff_jvp"
+    },
+    {
+      "model": "transcriptformer",
+      "cell_line": "hepg2",
+      "block": "features_full_scope/transcriptformer/hepg2",
+      "coverage_mode": "full",
+      "n_perturbed": 524,
+      "n_in_scope": 524,
+      "fraction_of_scope": 1.0,
+      "n_readout": 2721,
+      "anchors": "individual_cells,mean_control,uniform_virtual",
+      "has_masked": false,
+      "n_perturbed_masked": null,
+      "supersedes": "features/transcriptformer/hepg2",
+      "hidden_readout": null,
+      "gdt_source": "central_finite_difference(step=1)"
+    },
+    {
+      "model": "transcriptformer",
+      "cell_line": "jurkat",
+      "block": "features_full_scope/transcriptformer/jurkat",
+      "coverage_mode": "full",
+      "n_perturbed": 705,
+      "n_in_scope": 705,
+      "fraction_of_scope": 1.0,
+      "n_readout": 3247,
+      "anchors": "individual_cells,mean_control,uniform_virtual",
+      "has_masked": false,
+      "n_perturbed_masked": null,
+      "supersedes": "features/transcriptformer/jurkat",
+      "hidden_readout": null,
+      "gdt_source": "central_finite_difference(step=1)"
+    }
+  ]
+}

@@ -22,14 +22,49 @@
       "tile_note": "every pass carries the same highest-expression prefix; when the perturbed gene is not already in a pass it is appended to it, so the context differs between queries by exactly one gene"
     },
     "scope": {
-      "n_perturbed": 250,
-      "n_perturbed_cells_anchor": 60,
-      "n_perturbed_masked": 60,
+      "n_perturbed": 524,
+      "n_perturbed_cells_anchor": 524,
+      "n_perturbed_masked": 524,
       "n_step_sweep": 50,
       "strata": [
         "S3",
         "S4_highest"
       ]
+    },
+    "coverage": {
+      "mode": "full",
+      "n_perturbed": 524,
+      "n_in_scope": 524,
+      "fraction_of_scope": 1.0,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ],
+      "by_stratum": {
+        "S3": {
+          "in_scope": 240,
+          "selected": 240
+        },
+        "S4_highest": {
+          "in_scope": 284,
+          "selected": 284
+        }
+      },
+      "n_perturbed_cells_anchor": 524,
+      "n_perturbed_masked": 524,
+      "n_step_sweep": 50,
+      "scope_requested": {
+        "n_perturbed": 0,
+        "n_perturbed_cells_anchor": 0,
+        "n_perturbed_masked": 0,
+        "strata": [
+          "S3",
+          "S4_highest"
+        ]
+      },
+      "selection_rule": "every in-scope perturbation",
+      "in_scope_definition": "perturbations in strata S3, S4_highest whose target gene is also a read-out gene of this cell line, so it can be perturbed at all",
+      "comparability_note": "a block at partial coverage and a block at full coverage share the perturbed genes of the smaller one but not its row order; join on perturbed_gene_id, never on row index, and do not compare a per-block aggregate across two different coverages"
     },
     "value_grid_cp10k": [
       0.0,
@@ -71,39 +106,39 @@
         "cells": [
           "uniform"
         ],
-        "n_perturbed": 250,
+        "n_perturbed": 524,
         "step": 0.05,
         "forms": {
           "vvp": {
             "raw": [
-              250,
+              524,
               5,
               2721
             ],
             "standardized": [
-              250,
+              524,
               5,
               2721
             ]
           },
           "zero_out": {
             "raw": [
-              250,
+              524,
               2721
             ],
             "standardized": [
-              250,
+              524,
               2721
             ]
           },
           "gdt": {
             "raw": [
-              250,
+              524,
               5,
               2721
             ],
             "standardized": [
-              250,
+              524,
               5,
               2721
             ]
@@ -112,46 +147,51 @@
         "n_cells_averaged": 1,
         "zero_out_value_index": 0,
         "gdt_source": "central_finite_difference(step=0.05)",
-        "seconds": 30.2
+        "forward_mode": {
+          "attempted": true,
+          "available": false,
+          "reason_unavailable": "the tiled layout delivers a query in 3 pass(es) over a padded supplied set, so it is not one differentiable function of the input; the untiled layout is differentiable and is cross-checked separately"
+        },
+        "seconds": 62.3
       },
       "mean_control": {
         "description": "the pooled non-targeting control mean expression profile of this cell line, restricted to the read-out genes; the on-distribution counterpart",
         "cells": [
           "mean_control"
         ],
-        "n_perturbed": 250,
+        "n_perturbed": 524,
         "step": 0.02,
         "forms": {
           "vvp": {
             "raw": [
-              250,
+              524,
               5,
               2721
             ],
             "standardized": [
-              250,
+              524,
               5,
               2721
             ]
           },
           "zero_out": {
             "raw": [
-              250,
+              524,
               2721
             ],
             "standardized": [
-              250,
+              524,
               2721
             ]
           },
           "gdt": {
             "raw": [
-              250,
+              524,
               5,
               2721
             ],
             "standardized": [
-              250,
+              524,
               5,
               2721
             ]
@@ -160,7 +200,12 @@
         "n_cells_averaged": 1,
         "zero_out_value_index": 0,
         "gdt_source": "central_finite_difference(step=0.02)",
-        "seconds": 30.1
+        "forward_mode": {
+          "attempted": true,
+          "available": false,
+          "reason_unavailable": "the tiled layout delivers a query in 3 pass(es) over a padded supplied set, so it is not one differentiable function of the input; the untiled layout is differentiable and is cross-checked separately"
+        },
+        "seconds": 62.2
       },
       "individual_cells": {
         "description": "4 real non-targeting control cells, each converted to CP10K so every anchor sits at one depth; responses are averaged over the cells and their spread is recorded",
@@ -170,39 +215,39 @@
           "AAACCCATCATCAGTG-11",
           "AAACGAAAGACTACGG-38"
         ],
-        "n_perturbed": 60,
+        "n_perturbed": 524,
         "step": 0.02,
         "forms": {
           "vvp": {
             "raw": [
-              60,
+              524,
               5,
               2721
             ],
             "standardized": [
-              60,
+              524,
               5,
               2721
             ]
           },
           "zero_out": {
             "raw": [
-              60,
+              524,
               2721
             ],
             "standardized": [
-              60,
+              524,
               2721
             ]
           },
           "gdt": {
             "raw": [
-              60,
+              524,
               5,
               2721
             ],
             "standardized": [
-              60,
+              524,
               5,
               2721
             ]
@@ -211,7 +256,12 @@
         "n_cells_averaged": 4,
         "zero_out_value_index": 0,
         "gdt_source": "central_finite_difference(step=0.02)",
-        "seconds": 28.8,
+        "forward_mode": {
+          "attempted": true,
+          "available": false,
+          "reason_unavailable": "the tiled layout delivers a query in 3 pass(es) over a padded supplied set, so it is not one differentiable function of the input; the untiled layout is differentiable and is cross-checked separately"
+        },
+        "seconds": 247.7,
         "per_cell_spread": "responses averaged over cells; see summary rows"
       }
     },
@@ -236,6 +286,7 @@
       "jacobian_available": true,
       "jacobian_method": "forward_mode_autodiff_jvp_on_smooth_binning",
       "jacobian_unavailable_reason": null,
+      "forward_mode_autodiff": "not probed in the process that wrote this contract",
       "jacobian_check": {},
       "vocabulary_kind": "symbol",
       "vocabulary_size": 60697,
@@ -268,41 +319,41 @@
           {
             "step": 0.02,
             "next_step": 0.05,
-            "median_pearson_adjacent": 0.9984327252510237,
-            "median_relative_l2_adjacent": 0.1037369932570778,
+            "median_pearson_adjacent": 0.998599403937787,
+            "median_relative_l2_adjacent": 0.07693198489446755,
             "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.05,
             "next_step": 0.1,
-            "median_pearson_adjacent": 0.9995686659925007,
-            "median_relative_l2_adjacent": 0.07234367281755069,
-            "median_abs_value": 1.9073486328126084e-05,
+            "median_pearson_adjacent": 0.9996173347503756,
+            "median_relative_l2_adjacent": 0.04072628421180043,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.1,
             "next_step": 0.25,
-            "median_pearson_adjacent": 0.9995060722206779,
-            "median_relative_l2_adjacent": 0.1212946591250379,
-            "median_abs_value": 1.907348632812473e-05,
+            "median_pearson_adjacent": 0.9994141843791788,
+            "median_relative_l2_adjacent": 0.11256516029901947,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.25,
             "next_step": 0.5,
-            "median_pearson_adjacent": 0.9975312485317133,
-            "median_relative_l2_adjacent": 0.21636200982322645,
-            "median_abs_value": 1.9073486328125e-05,
+            "median_pearson_adjacent": 0.9979839838907427,
+            "median_relative_l2_adjacent": 0.1863250760788288,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.5,
             "next_step": 1.0,
-            "median_pearson_adjacent": 0.9765233117185427,
-            "median_relative_l2_adjacent": 0.4918648984931482,
-            "median_abs_value": 2.47955322265625e-05,
+            "median_pearson_adjacent": 0.9842506412845814,
+            "median_relative_l2_adjacent": 0.3688557556909655,
+            "median_abs_value": 0.0,
             "n_genes": 50
           }
         ]
@@ -326,41 +377,41 @@
           {
             "step": 0.02,
             "next_step": 0.05,
-            "median_pearson_adjacent": 0.9995517073882043,
-            "median_relative_l2_adjacent": 0.02768551876164778,
-            "median_abs_value": 4.7683715820305046e-05,
+            "median_pearson_adjacent": 0.9995846005777504,
+            "median_relative_l2_adjacent": 0.032156984952693875,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.05,
             "next_step": 0.1,
-            "median_pearson_adjacent": 0.9998330734191887,
-            "median_relative_l2_adjacent": 0.019270894545016033,
-            "median_abs_value": 5.722045898437825e-05,
+            "median_pearson_adjacent": 0.9998491200177172,
+            "median_relative_l2_adjacent": 0.020189110727121314,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.1,
             "next_step": 0.25,
-            "median_pearson_adjacent": 0.9995620954498379,
-            "median_relative_l2_adjacent": 0.04122839552558759,
-            "median_abs_value": 6.675720214843655e-05,
+            "median_pearson_adjacent": 0.9996326756390026,
+            "median_relative_l2_adjacent": 0.03795308266430318,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.25,
             "next_step": 0.5,
-            "median_pearson_adjacent": 0.9993641197895045,
-            "median_relative_l2_adjacent": 0.040185931897319324,
-            "median_abs_value": 6.103515625e-05,
+            "median_pearson_adjacent": 0.9993754633767573,
+            "median_relative_l2_adjacent": 0.0448432620932384,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.5,
             "next_step": 1.0,
-            "median_pearson_adjacent": 0.9986541384812853,
-            "median_relative_l2_adjacent": 0.06375263979070184,
-            "median_abs_value": 6.103515625e-05,
+            "median_pearson_adjacent": 0.9984762372167347,
+            "median_relative_l2_adjacent": 0.06335723095464516,
+            "median_abs_value": 0.0,
             "n_genes": 50
           }
         ]
@@ -384,41 +435,41 @@
           {
             "step": 0.02,
             "next_step": 0.05,
-            "median_pearson_adjacent": 0.9994750491478657,
-            "median_relative_l2_adjacent": 0.03515967105598458,
-            "median_abs_value": 4.7683715820305046e-05,
+            "median_pearson_adjacent": 0.9996026413038931,
+            "median_relative_l2_adjacent": 0.03079390760947577,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.05,
             "next_step": 0.1,
-            "median_pearson_adjacent": 0.9997510214099035,
-            "median_relative_l2_adjacent": 0.028205660377108626,
-            "median_abs_value": 5.722045898437825e-05,
+            "median_pearson_adjacent": 0.9998284534905533,
+            "median_relative_l2_adjacent": 0.0219810593438972,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.1,
             "next_step": 0.25,
-            "median_pearson_adjacent": 0.9995871266940554,
-            "median_relative_l2_adjacent": 0.03996303465072186,
-            "median_abs_value": 5.722045898437419e-05,
+            "median_pearson_adjacent": 0.9995484595202802,
+            "median_relative_l2_adjacent": 0.0400367872108907,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.25,
             "next_step": 0.5,
-            "median_pearson_adjacent": 0.9995087789386937,
-            "median_relative_l2_adjacent": 0.053336016848570686,
-            "median_abs_value": 5.340576171875e-05,
+            "median_pearson_adjacent": 0.9993985924287896,
+            "median_relative_l2_adjacent": 0.05430878661642512,
+            "median_abs_value": 0.0,
             "n_genes": 50
           },
           {
             "step": 0.5,
             "next_step": 1.0,
-            "median_pearson_adjacent": 0.9982760243404876,
-            "median_relative_l2_adjacent": 0.0825627600225986,
-            "median_abs_value": 5.7220458984375e-05,
+            "median_pearson_adjacent": 0.9988470288817577,
+            "median_relative_l2_adjacent": 0.06645599222986268,
+            "median_abs_value": 0.0,
             "n_genes": 50
           }
         ]
@@ -426,12 +477,12 @@
     },
     "wiring_checks": {
       "uniform_virtual": {
-        "n_genes": 250,
+        "n_genes": 524,
         "value_low_cp10k": 1.0,
         "value_high_cp10k": 64.0,
-        "sign_check_pass_fraction": 0.884,
+        "sign_check_pass_fraction": 0.8721374045801527,
         "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
-        "magnitude_check_pass_fraction": 0.832,
+        "magnitude_check_pass_fraction": 0.8492366412213741,
         "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
         "median_self_rank": 0.0,
         "permuted_magnitude_pass_fraction": 0.0,
@@ -439,12 +490,12 @@
         "threshold": 0.95
       },
       "mean_control": {
-        "n_genes": 250,
+        "n_genes": 524,
         "value_low_cp10k": 1.0,
         "value_high_cp10k": 64.0,
-        "sign_check_pass_fraction": 0.944,
+        "sign_check_pass_fraction": 0.9217557251908397,
         "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
-        "magnitude_check_pass_fraction": 0.9,
+        "magnitude_check_pass_fraction": 0.8969465648854962,
         "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
         "median_self_rank": 0.0,
         "permuted_magnitude_pass_fraction": 0.0,
@@ -452,12 +503,12 @@
         "threshold": 0.95
       },
       "individual_cells": {
-        "n_genes": 60,
+        "n_genes": 524,
         "value_low_cp10k": 1.0,
         "value_high_cp10k": 64.0,
-        "sign_check_pass_fraction": 0.9666666666666667,
+        "sign_check_pass_fraction": 0.9541984732824428,
         "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
-        "magnitude_check_pass_fraction": 0.85,
+        "magnitude_check_pass_fraction": 0.9179389312977099,
         "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
         "median_self_rank": 0.0,
         "permuted_magnitude_pass_fraction": 0.0,
@@ -486,13 +537,13 @@
         "median": 3.0,
         "max": 3
       },
-      "n_perturbed": 60,
+      "n_perturbed": 524,
       "value_grid_cp10k": [
         0.0,
         4.0,
         64.0
       ],
-      "seconds": 37.2,
+      "seconds": 269.0,
       "note": "responses are read only at masked positions, averaged over cycles; the unmasked block at the same anchor is the comparison"
     },
     "context_comparison": {
@@ -505,16 +556,16 @@
       },
       "agreement": {
         "readout_vs_universe": {
-          "median_pearson": 0.968616616800323,
-          "median_relative_l2": 0.8099972709148981
+          "median_pearson": 0.9811233699169337,
+          "median_relative_l2": 0.702570935598122
         },
         "readout_vs_tiled": {
-          "median_pearson": 0.737425853604056,
-          "median_relative_l2": 0.9382222165977978
+          "median_pearson": 0.770559605734854,
+          "median_relative_l2": 1.0546996892338716
         },
         "universe_vs_tiled": {
-          "median_pearson": 0.7843681871423058,
-          "median_relative_l2": 1.1215648266719782
+          "median_pearson": 0.76614302561962,
+          "median_relative_l2": 1.2313313240163666
         }
       },
       "production_mode": "tiled"
@@ -528,44 +579,44 @@
         {
           "value_cp10k": 0.0,
           "one_sided": true,
-          "pearson": 0.9967612298030321,
-          "relative_l2": 0.08526176837131802
+          "pearson": 0.9971533383211062,
+          "relative_l2": 0.07602114233539976
         },
         {
           "value_cp10k": 1.0,
           "one_sided": false,
-          "pearson": 0.9991652780313292,
-          "relative_l2": 0.04099869205755594
+          "pearson": 0.9992954060386047,
+          "relative_l2": 0.03758869535168319
         },
         {
           "value_cp10k": 4.0,
           "one_sided": false,
-          "pearson": 0.9995733834839479,
-          "relative_l2": 0.028993455191367496
+          "pearson": 0.9992002239309807,
+          "relative_l2": 0.039831274497849026
         },
         {
           "value_cp10k": 16.0,
           "one_sided": false,
-          "pearson": 0.9997728773227686,
-          "relative_l2": 0.020749196675457146
+          "pearson": 0.9997010893130017,
+          "relative_l2": 0.02446704555830057
         },
         {
           "value_cp10k": 64.0,
           "one_sided": false,
-          "pearson": 0.9997711729619412,
-          "relative_l2": 0.022205895596480837
+          "pearson": 0.999802398308286,
+          "relative_l2": 0.020375146273116127
         }
       ],
-      "median_pearson_two_sided": 0.9996722782229446,
-      "median_relative_l2_two_sided": 0.025599675393924166
+      "median_pearson_two_sided": 0.9994982476758032,
+      "median_relative_l2_two_sided": 0.031027870454991877
     }
   },
   "n_readout": 2721,
-  "n_perturbed": 250,
+  "n_perturbed": 524,
   "blocks": {
     "individual_cells/zero_out": {
       "shape": [
-        60,
+        524,
         2721
       ],
       "finite": true,
@@ -573,14 +624,14 @@
         "raw",
         "standardized"
       ],
-      "abs_median": 0.002192974090576172,
-      "abs_p99": 0.11702742427587509,
-      "all_zero_fraction": 0.0,
-      "n_response_vectors": 60
+      "abs_median": 0.0019192695617675781,
+      "abs_p99": 0.10255669116973876,
+      "all_zero_fraction": 0.003816793893129771,
+      "n_response_vectors": 524
     },
     "individual_cells/vvp": {
       "shape": [
-        60,
+        524,
         5,
         2721
       ],
@@ -589,14 +640,14 @@
         "raw",
         "standardized"
       ],
-      "abs_median": 0.004009723663330078,
-      "abs_p99": 0.09140880405902863,
-      "all_zero_fraction": 0.0,
-      "n_response_vectors": 300
+      "abs_median": 0.003589153289794922,
+      "abs_p99": 0.07925787448883037,
+      "all_zero_fraction": 0.0007633587786259542,
+      "n_response_vectors": 2620
     },
     "individual_cells/gdt": {
       "shape": [
-        60,
+        524,
         5,
         2721
       ],
@@ -605,14 +656,14 @@
         "raw",
         "standardized"
       ],
-      "abs_median": 0.0013709068298339844,
-      "abs_p99": 0.03986382484436035,
+      "abs_median": 0.0012159347534179688,
+      "abs_p99": 0.032258033752441406,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 300
+      "n_response_vectors": 2620
     },
     "mean_control/zero_out": {
       "shape": [
-        250,
+        524,
         2721
       ],
       "finite": true,
@@ -620,14 +671,14 @@
         "raw",
         "standardized"
       ],
-      "abs_median": 0.0038909912109375,
-      "abs_p99": 0.08694267272949219,
+      "abs_median": 0.003978729248046875,
+      "abs_p99": 0.09265321731567377,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 250
+      "n_response_vectors": 524
     },
     "mean_control/vvp": {
       "shape": [
-        250,
+        524,
         5,
         2721
       ],
@@ -636,14 +687,14 @@
         "raw",
         "standardized"
       ],
-      "abs_median": 0.0063953399658203125,
-      "abs_p99": 0.12149429321289062,
+      "abs_median": 0.0066242218017578125,
+      "abs_p99": 0.1219329833984375,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 1250
+      "n_response_vectors": 2620
     },
     "mean_control/gdt": {
       "shape": [
-        250,
+        524,
         5,
         2721
       ],
@@ -653,13 +704,13 @@
         "standardized"
       ],
       "abs_median": 0.001811981201171875,
-      "abs_p99": 0.0396728515625,
+      "abs_p99": 0.040435791015625,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 1250
+      "n_response_vectors": 2620
     },
     "mean_control_masked/zero_out": {
       "shape": [
-        60,
+        524,
         2721
       ],
       "finite": true,
@@ -667,14 +718,14 @@
         "raw",
         "standardized"
       ],
-      "abs_median": 0.0022792816162109375,
-      "abs_p99": 0.03029901534318924,
+      "abs_median": 0.0021864573936909437,
+      "abs_p99": 0.026678720489144325,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 60
+      "n_response_vectors": 524
     },
     "mean_control_masked/vvp": {
       "shape": [
-        60,
+        524,
         3,
         2721
       ],
@@ -683,14 +734,14 @@
         "raw",
         "standardized"
       ],
-      "abs_median": 0.003063201904296875,
-      "abs_p99": 0.046513937413692474,
+      "abs_median": 0.0030231475830078125,
+      "abs_p99": 0.042483576759695794,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 180
+      "n_response_vectors": 1572
     },
     "uniform_virtual/zero_out": {
       "shape": [
-        250,
+        524,
         2721
       ],
       "finite": true,
@@ -698,14 +749,14 @@
         "raw",
         "standardized"
       ],
-      "abs_median": 0.0033817291259765625,
-      "abs_p99": 0.03277875855565071,
+      "abs_median": 0.003170013427734375,
+      "abs_p99": 0.030862808227539062,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 250
+      "n_response_vectors": 524
     },
     "uniform_virtual/vvp": {
       "shape": [
-        250,
+        524,
         5,
         2721
       ],
@@ -714,14 +765,14 @@
         "raw",
         "standardized"
       ],
-      "abs_median": 0.0046482086181640625,
-      "abs_p99": 0.030391693115234375,
+      "abs_median": 0.0045223236083984375,
+      "abs_p99": 0.029254913330078125,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 1250
+      "n_response_vectors": 2620
     },
     "uniform_virtual/gdt": {
       "shape": [
-        250,
+        524,
         5,
         2721
       ],
@@ -731,165 +782,165 @@
         "standardized"
       ],
       "abs_median": 0.000743865966796875,
-      "abs_p99": 0.031280517578125,
+      "abs_p99": 0.0299835205078125,
       "all_zero_fraction": 0.0,
-      "n_response_vectors": 1250
+      "n_response_vectors": 2620
     }
   },
   "query_summary": {
     "individual_cells": [
       {
         "value_cp10k": 0.0,
-        "cross_gene_mean": -0.00040872427349097586,
-        "cross_gene_sd": 0.01899135648115989,
-        "max_abs": 0.7151985168457031,
-        "self_delta": -0.4770851135253906,
+        "cross_gene_mean": 0.0,
+        "cross_gene_sd": 0.015790745265916194,
+        "max_abs": 0.6380691528320312,
+        "self_delta": -0.3900442123413086,
         "self_rank_median": 0.0,
-        "n_queries": 240,
-        "n_no_op_queries": 37
+        "n_queries": 2096,
+        "n_no_op_queries": 379
       },
       {
         "value_cp10k": 1.0,
-        "cross_gene_mean": -0.002738307390700189,
-        "cross_gene_sd": 0.021166748400433196,
-        "max_abs": 0.7381649017333984,
-        "self_delta": -0.5357809066772461,
+        "cross_gene_mean": -0.0023073924021526364,
+        "cross_gene_sd": 0.017312761918326917,
+        "max_abs": 0.6045522689819336,
+        "self_delta": -0.4948616027832031,
         "self_rank_median": 0.0,
-        "n_queries": 240,
+        "n_queries": 2096,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 4.0,
-        "cross_gene_mean": -0.0006172438834967397,
-        "cross_gene_sd": 0.02380633362052123,
-        "max_abs": 0.5698261260986328,
-        "self_delta": 0.5174179077148438,
+        "cross_gene_mean": -0.000377402328384663,
+        "cross_gene_sd": 0.020757060695752158,
+        "max_abs": 0.5635042190551758,
+        "self_delta": 0.5355949401855469,
         "self_rank_median": 0.0,
-        "n_queries": 240,
+        "n_queries": 2096,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 16.0,
-        "cross_gene_mean": 0.0005259803006509699,
-        "cross_gene_sd": 0.02490152951690723,
-        "max_abs": 0.5923967361450195,
-        "self_delta": 0.5418310165405273,
+        "cross_gene_mean": -7.938839240531543e-05,
+        "cross_gene_sd": 0.025436372854601565,
+        "max_abs": 0.5900812149047852,
+        "self_delta": 0.512054443359375,
         "self_rank_median": 0.0,
-        "n_queries": 240,
+        "n_queries": 2096,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 64.0,
-        "cross_gene_mean": 0.0008875662156300964,
-        "cross_gene_sd": 0.02774951213048571,
-        "max_abs": 0.5986795425415039,
-        "self_delta": 0.38469982147216797,
+        "cross_gene_mean": 0.000387399260588579,
+        "cross_gene_sd": 0.02781232425076864,
+        "max_abs": 0.5720720291137695,
+        "self_delta": 0.37253856658935547,
         "self_rank_median": 0.0,
-        "n_queries": 240,
+        "n_queries": 2096,
         "n_no_op_queries": 0
       }
     ],
     "mean_control": [
       {
         "value_cp10k": 0.0,
-        "cross_gene_mean": 0.001171639192546829,
-        "cross_gene_sd": 0.028676642683520402,
-        "max_abs": 1.0681390762329102,
-        "self_delta": -0.022954940795898438,
+        "cross_gene_mean": 0.0010042670718539686,
+        "cross_gene_sd": 0.028684702587680105,
+        "max_abs": 1.0234241485595703,
+        "self_delta": -0.02197742462158203,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 1.0,
-        "cross_gene_mean": -0.000451339601112262,
-        "cross_gene_sd": 0.023862178793898608,
-        "max_abs": 0.705108642578125,
-        "self_delta": 0.10790252685546875,
+        "cross_gene_mean": -0.0006095068895479459,
+        "cross_gene_sd": 0.023523321203232764,
+        "max_abs": 0.686711311340332,
+        "self_delta": 0.09787750244140625,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 4.0,
-        "cross_gene_mean": 0.0015666916807624007,
-        "cross_gene_sd": 0.032723321715282,
-        "max_abs": 1.2931804656982422,
-        "self_delta": 1.2931804656982422,
+        "cross_gene_mean": 0.001575975372527549,
+        "cross_gene_sd": 0.03265136054481248,
+        "max_abs": 1.222635269165039,
+        "self_delta": 1.2192955017089844,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 16.0,
-        "cross_gene_mean": 0.006186637752242756,
-        "cross_gene_sd": 0.037868513201930694,
-        "max_abs": 1.1326971054077148,
-        "self_delta": 1.1214447021484375,
+        "cross_gene_mean": 0.006153882667011569,
+        "cross_gene_sd": 0.037810233616204544,
+        "max_abs": 1.0803375244140625,
+        "self_delta": 1.060460090637207,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 64.0,
-        "cross_gene_mean": 0.008322932360059241,
-        "cross_gene_sd": 0.04000615546726706,
-        "max_abs": 1.0691251754760742,
-        "self_delta": 1.020268440246582,
+        "cross_gene_mean": 0.008258617699737719,
+        "cross_gene_sd": 0.04026187607747053,
+        "max_abs": 0.9713973999023438,
+        "self_delta": 0.9164018630981445,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       }
     ],
     "uniform_virtual": [
       {
         "value_cp10k": 0.0,
-        "cross_gene_mean": -0.004037540916658771,
-        "cross_gene_sd": 0.007140617745908394,
-        "max_abs": 0.1986083984375,
-        "self_delta": -0.13920879364013672,
+        "cross_gene_mean": -0.003774758955434332,
+        "cross_gene_sd": 0.00680791598985352,
+        "max_abs": 0.2006855010986328,
+        "self_delta": -0.14748573303222656,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 1.0,
-        "cross_gene_mean": -0.006777174899526398,
-        "cross_gene_sd": 0.00826325760925832,
-        "max_abs": 0.2348499298095703,
-        "self_delta": 0.23279762268066406,
+        "cross_gene_mean": -0.006662637247227869,
+        "cross_gene_sd": 0.007981471744373296,
+        "max_abs": 0.22168636322021484,
+        "self_delta": 0.21617889404296875,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 4.0,
-        "cross_gene_mean": 7.53819789136433e-05,
-        "cross_gene_sd": 0.00046176107116394115,
-        "max_abs": 0.021776199340820312,
-        "self_delta": 0.016016006469726562,
+        "cross_gene_mean": 8.108299560995497e-05,
+        "cross_gene_sd": 0.0004599853798533261,
+        "max_abs": 0.022159576416015625,
+        "self_delta": 0.01633930206298828,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 16.0,
-        "cross_gene_mean": 0.007398505808456291,
-        "cross_gene_sd": 0.008575793453193883,
-        "max_abs": 0.4218883514404297,
-        "self_delta": 0.4218883514404297,
+        "cross_gene_mean": 0.007310110608780484,
+        "cross_gene_sd": 0.00828376922392607,
+        "max_abs": 0.3953208923339844,
+        "self_delta": 0.3953208923339844,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       },
       {
         "value_cp10k": 64.0,
-        "cross_gene_mean": 0.007382986607774134,
-        "cross_gene_sd": 0.009014941244725409,
-        "max_abs": 0.42193126678466797,
-        "self_delta": 0.42193126678466797,
+        "cross_gene_mean": 0.007410728331218525,
+        "cross_gene_sd": 0.008894426738463555,
+        "max_abs": 0.3998422622680664,
+        "self_delta": 0.3998422622680664,
         "self_rank_median": 0.0,
-        "n_queries": 250,
+        "n_queries": 524,
         "n_no_op_queries": 0
       }
     ]
@@ -898,8 +949,8 @@
     {
       "step": 0.02,
       "next_step": 0.05,
-      "median_pearson_adjacent": 0.9984327252510237,
-      "median_relative_l2_adjacent": 0.1037369932570778,
+      "median_pearson_adjacent": 0.998599403937787,
+      "median_relative_l2_adjacent": 0.07693198489446755,
       "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "uniform_virtual"
@@ -907,126 +958,126 @@
     {
       "step": 0.05,
       "next_step": 0.1,
-      "median_pearson_adjacent": 0.9995686659925007,
-      "median_relative_l2_adjacent": 0.07234367281755069,
-      "median_abs_value": 1.9073486328126084e-05,
+      "median_pearson_adjacent": 0.9996173347503756,
+      "median_relative_l2_adjacent": 0.04072628421180043,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "uniform_virtual"
     },
     {
       "step": 0.1,
       "next_step": 0.25,
-      "median_pearson_adjacent": 0.9995060722206779,
-      "median_relative_l2_adjacent": 0.1212946591250379,
-      "median_abs_value": 1.907348632812473e-05,
+      "median_pearson_adjacent": 0.9994141843791788,
+      "median_relative_l2_adjacent": 0.11256516029901947,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "uniform_virtual"
     },
     {
       "step": 0.25,
       "next_step": 0.5,
-      "median_pearson_adjacent": 0.9975312485317133,
-      "median_relative_l2_adjacent": 0.21636200982322645,
-      "median_abs_value": 1.9073486328125e-05,
+      "median_pearson_adjacent": 0.9979839838907427,
+      "median_relative_l2_adjacent": 0.1863250760788288,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "uniform_virtual"
     },
     {
       "step": 0.5,
       "next_step": 1.0,
-      "median_pearson_adjacent": 0.9765233117185427,
-      "median_relative_l2_adjacent": 0.4918648984931482,
-      "median_abs_value": 2.47955322265625e-05,
+      "median_pearson_adjacent": 0.9842506412845814,
+      "median_relative_l2_adjacent": 0.3688557556909655,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "uniform_virtual"
     },
     {
       "step": 0.02,
       "next_step": 0.05,
-      "median_pearson_adjacent": 0.9995517073882043,
-      "median_relative_l2_adjacent": 0.02768551876164778,
-      "median_abs_value": 4.7683715820305046e-05,
+      "median_pearson_adjacent": 0.9995846005777504,
+      "median_relative_l2_adjacent": 0.032156984952693875,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "mean_control"
     },
     {
       "step": 0.05,
       "next_step": 0.1,
-      "median_pearson_adjacent": 0.9998330734191887,
-      "median_relative_l2_adjacent": 0.019270894545016033,
-      "median_abs_value": 5.722045898437825e-05,
+      "median_pearson_adjacent": 0.9998491200177172,
+      "median_relative_l2_adjacent": 0.020189110727121314,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "mean_control"
     },
     {
       "step": 0.1,
       "next_step": 0.25,
-      "median_pearson_adjacent": 0.9995620954498379,
-      "median_relative_l2_adjacent": 0.04122839552558759,
-      "median_abs_value": 6.675720214843655e-05,
+      "median_pearson_adjacent": 0.9996326756390026,
+      "median_relative_l2_adjacent": 0.03795308266430318,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "mean_control"
     },
     {
       "step": 0.25,
       "next_step": 0.5,
-      "median_pearson_adjacent": 0.9993641197895045,
-      "median_relative_l2_adjacent": 0.040185931897319324,
-      "median_abs_value": 6.103515625e-05,
+      "median_pearson_adjacent": 0.9993754633767573,
+      "median_relative_l2_adjacent": 0.0448432620932384,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "mean_control"
     },
     {
       "step": 0.5,
       "next_step": 1.0,
-      "median_pearson_adjacent": 0.9986541384812853,
-      "median_relative_l2_adjacent": 0.06375263979070184,
-      "median_abs_value": 6.103515625e-05,
+      "median_pearson_adjacent": 0.9984762372167347,
+      "median_relative_l2_adjacent": 0.06335723095464516,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "mean_control"
     },
     {
       "step": 0.02,
       "next_step": 0.05,
-      "median_pearson_adjacent": 0.9994750491478657,
-      "median_relative_l2_adjacent": 0.03515967105598458,
-      "median_abs_value": 4.7683715820305046e-05,
+      "median_pearson_adjacent": 0.9996026413038931,
+      "median_relative_l2_adjacent": 0.03079390760947577,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "individual_cells"
     },
     {
       "step": 0.05,
       "next_step": 0.1,
-      "median_pearson_adjacent": 0.9997510214099035,
-      "median_relative_l2_adjacent": 0.028205660377108626,
-      "median_abs_value": 5.722045898437825e-05,
+      "median_pearson_adjacent": 0.9998284534905533,
+      "median_relative_l2_adjacent": 0.0219810593438972,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "individual_cells"
     },
     {
       "step": 0.1,
       "next_step": 0.25,
-      "median_pearson_adjacent": 0.9995871266940554,
-      "median_relative_l2_adjacent": 0.03996303465072186,
-      "median_abs_value": 5.722045898437419e-05,
+      "median_pearson_adjacent": 0.9995484595202802,
+      "median_relative_l2_adjacent": 0.0400367872108907,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "individual_cells"
     },
     {
       "step": 0.25,
       "next_step": 0.5,
-      "median_pearson_adjacent": 0.9995087789386937,
-      "median_relative_l2_adjacent": 0.053336016848570686,
-      "median_abs_value": 5.340576171875e-05,
+      "median_pearson_adjacent": 0.9993985924287896,
+      "median_relative_l2_adjacent": 0.05430878661642512,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "individual_cells"
     },
     {
       "step": 0.5,
       "next_step": 1.0,
-      "median_pearson_adjacent": 0.9982760243404876,
-      "median_relative_l2_adjacent": 0.0825627600225986,
-      "median_abs_value": 5.7220458984375e-05,
+      "median_pearson_adjacent": 0.9988470288817577,
+      "median_relative_l2_adjacent": 0.06645599222986268,
+      "median_abs_value": 0.0,
       "n_genes": 50,
       "anchor": "individual_cells"
     }
@@ -1034,16 +1085,16 @@
   "anchor_cell_spread": {
     "individual_cells": {
       "n_cells": 4,
-      "median_cv_of_response_size": 0.4028720857140105,
-      "p90_cv_of_response_size": 0.8315801936133769
+      "median_cv_of_response_size": 0.39105978194561547,
+      "p90_cv_of_response_size": 0.9106434761185241
     }
   },
   "wiring_detail": [
     {
       "bin": "at or below the top of the value grid",
-      "n": 249,
-      "pass_fraction": 0.8995983935742972,
-      "median_anchor_cp10k": 1.3177029796072
+      "n": 523,
+      "pass_fraction": 0.8967495219885278,
+      "median_anchor_cp10k": 1.2991156682244784
     },
     {
       "bin": "above the top of the value grid",
@@ -1055,16 +1106,16 @@
   "alignment": [
     {
       "anchor": "uniform_virtual",
-      "n_perturbed": 250,
+      "n_perturbed": 524,
       "n_readout": 2721,
-      "own_largest": 0.832,
+      "own_largest": 0.8492366412213741,
       "own_largest_null": 0.0,
       "self_rank_median": 0.0,
       "self_rank_median_fraction": 0.0,
-      "self_rank_median_null": 1401.5,
-      "self_rank_median_fraction_null": 0.5152573529411765,
-      "sign_rate": 0.884,
-      "sign_rate_null": 0.96,
+      "self_rank_median_null": 1305.0,
+      "self_rank_median_fraction_null": 0.4797794117647059,
+      "sign_rate": 0.8721374045801527,
+      "sign_rate_null": 0.9694656488549618,
       "separated_by": [
         "self_rank"
       ],
@@ -1072,16 +1123,16 @@
     },
     {
       "anchor": "mean_control",
-      "n_perturbed": 250,
+      "n_perturbed": 524,
       "n_readout": 2721,
-      "own_largest": 0.9,
+      "own_largest": 0.8969465648854962,
       "own_largest_null": 0.0,
       "self_rank_median": 0.0,
       "self_rank_median_fraction": 0.0,
-      "self_rank_median_null": 1451.5,
-      "self_rank_median_fraction_null": 0.533639705882353,
-      "sign_rate": 0.944,
-      "sign_rate_null": 0.608,
+      "self_rank_median_null": 1389.0,
+      "self_rank_median_fraction_null": 0.5106617647058823,
+      "sign_rate": 0.9217557251908397,
+      "sign_rate_null": 0.5935114503816794,
       "separated_by": [
         "self_rank",
         "sign"
@@ -1090,18 +1141,19 @@
     },
     {
       "anchor": "individual_cells",
-      "n_perturbed": 60,
+      "n_perturbed": 524,
       "n_readout": 2721,
-      "own_largest": 0.85,
+      "own_largest": 0.9179389312977099,
       "own_largest_null": 0.0,
       "self_rank_median": 0.0,
       "self_rank_median_fraction": 0.0,
-      "self_rank_median_null": 1354.5,
-      "self_rank_median_fraction_null": 0.4979779411764706,
-      "sign_rate": 0.9666666666666667,
-      "sign_rate_null": 0.6833333333333333,
+      "self_rank_median_null": 1447.5,
+      "self_rank_median_fraction_null": 0.5321691176470589,
+      "sign_rate": 0.9541984732824428,
+      "sign_rate_null": 0.5954198473282443,
       "separated_by": [
-        "self_rank"
+        "self_rank",
+        "sign"
       ],
       "aligned": true
     }
@@ -1117,7 +1169,7 @@
       "section": "scgpt/hepg2",
       "check": "individual_cells/zero_out/shape_and_finite",
       "ok": true,
-      "detail": "raw (60, 2721) (expected (60, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['raw', 'standardized']"
     },
     {
       "section": "scgpt/hepg2",
@@ -1129,7 +1181,7 @@
       "section": "scgpt/hepg2",
       "check": "individual_cells/vvp/shape_and_finite",
       "ok": true,
-      "detail": "raw (60, 5, 2721) (expected (60, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
     },
     {
       "section": "scgpt/hepg2",
@@ -1141,7 +1193,7 @@
       "section": "scgpt/hepg2",
       "check": "individual_cells/gdt/shape_and_finite",
       "ok": true,
-      "detail": "raw (60, 5, 2721) (expected (60, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
     },
     {
       "section": "scgpt/hepg2",
@@ -1153,7 +1205,7 @@
       "section": "scgpt/hepg2",
       "check": "mean_control/zero_out/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 2721) (expected (250, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['raw', 'standardized']"
     },
     {
       "section": "scgpt/hepg2",
@@ -1165,7 +1217,7 @@
       "section": "scgpt/hepg2",
       "check": "mean_control/vvp/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 5, 2721) (expected (250, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
     },
     {
       "section": "scgpt/hepg2",
@@ -1177,7 +1229,7 @@
       "section": "scgpt/hepg2",
       "check": "mean_control/gdt/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 5, 2721) (expected (250, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
     },
     {
       "section": "scgpt/hepg2",
@@ -1189,7 +1241,7 @@
       "section": "scgpt/hepg2",
       "check": "mean_control_masked/zero_out/shape_and_finite",
       "ok": true,
-      "detail": "raw (60, 2721) (expected (60, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['raw', 'standardized']"
     },
     {
       "section": "scgpt/hepg2",
@@ -1201,7 +1253,7 @@
       "section": "scgpt/hepg2",
       "check": "mean_control_masked/vvp/shape_and_finite",
       "ok": true,
-      "detail": "raw (60, 3, 2721) (expected (60, 3, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 3, 2721) (expected (524, 3, 2721)), finite=True, variants ['raw', 'standardized']"
     },
     {
       "section": "scgpt/hepg2",
@@ -1213,7 +1265,7 @@
       "section": "scgpt/hepg2",
       "check": "uniform_virtual/zero_out/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 2721) (expected (250, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['raw', 'standardized']"
     },
     {
       "section": "scgpt/hepg2",
@@ -1225,7 +1277,7 @@
       "section": "scgpt/hepg2",
       "check": "uniform_virtual/vvp/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 5, 2721) (expected (250, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
     },
     {
       "section": "scgpt/hepg2",
@@ -1237,7 +1289,13 @@
       "section": "scgpt/hepg2",
       "check": "uniform_virtual/gdt/shape_and_finite",
       "ok": true,
-      "detail": "raw (250, 5, 2721) (expected (250, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "coverage_recorded",
+      "ok": true,
+      "detail": "full coverage: 524 of 524 in-scope perturbations (1.0), strata ['S3', 'S4_highest']; perturbed table has 524 rows"
     },
     {
       "section": "scgpt/hepg2",
@@ -1249,37 +1307,37 @@
       "section": "scgpt/hepg2",
       "check": "untiled_exact_derivative",
       "ok": true,
-      "detail": "in the untiled layout the exact forward-mode derivative agrees with the central difference at step 0.02 over 20 genes: median pearson 0.999672, relative L2 0.0256"
+      "detail": "in the untiled layout the exact forward-mode derivative agrees with the central difference at step 0.02 over 20 genes: median pearson 0.999498, relative L2 0.03103"
     },
     {
       "section": "scgpt/hepg2",
       "check": "wiring_by_anchor_level",
       "ok": true,
-      "detail": "own-entry-largest rate by the perturbed gene's own anchor level: at or below the top of the value grid (249 genes) 0.900; above the top of the value grid (1 genes) 1.000; the value grid tops out at 64 CP10K, so a gene whose anchor sits far above it is barely moved by the query"
+      "detail": "own-entry-largest rate by the perturbed gene's own anchor level: at or below the top of the value grid (523 genes) 0.897; above the top of the value grid (1 genes) 1.000; the value grid tops out at 64 CP10K, so a gene whose anchor sits far above it is barely moved by the query"
     },
     {
       "section": "scgpt/hepg2",
       "check": "uniform_virtual/alignment_vs_permutation",
       "ok": true,
-      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.832 (null 0.000); median self-rank 0 of 2721 (null 1402); own output moves the expected way 0.884 (null 0.960)"
+      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.849 (null 0.000); median self-rank 0 of 2721 (null 1305); own output moves the expected way 0.872 (null 0.969)"
     },
     {
       "section": "scgpt/hepg2",
       "check": "mean_control/alignment_vs_permutation",
       "ok": true,
-      "detail": "read-out order is aligned with the query on self_rank, sign: own entry largest 0.900 (null 0.000); median self-rank 0 of 2721 (null 1452); own output moves the expected way 0.944 (null 0.608)"
+      "detail": "read-out order is aligned with the query on self_rank, sign: own entry largest 0.897 (null 0.000); median self-rank 0 of 2721 (null 1389); own output moves the expected way 0.922 (null 0.594)"
     },
     {
       "section": "scgpt/hepg2",
       "check": "individual_cells/alignment_vs_permutation",
       "ok": true,
-      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.850 (null 0.000); median self-rank 0 of 2721 (null 1354); own output moves the expected way 0.967 (null 0.683)"
+      "detail": "read-out order is aligned with the query on self_rank, sign: own entry largest 0.918 (null 0.000); median self-rank 0 of 2721 (null 1448); own output moves the expected way 0.954 (null 0.595)"
     },
     {
       "section": "scgpt/hepg2",
       "check": "uniform_virtual/wiring_magnitude",
       "ok": false,
-      "detail": "the perturbed gene's own entry is the largest response for 83.2% of 250 sampled genes (threshold 95%); sign version 88.4%"
+      "detail": "the perturbed gene's own entry is the largest response for 84.9% of 524 sampled genes (threshold 95%); sign version 87.2%"
     },
     {
       "section": "scgpt/hepg2",
@@ -1291,7 +1349,7 @@
       "section": "scgpt/hepg2",
       "check": "mean_control/wiring_magnitude",
       "ok": false,
-      "detail": "the perturbed gene's own entry is the largest response for 90.0% of 250 sampled genes (threshold 95%); sign version 94.4%"
+      "detail": "the perturbed gene's own entry is the largest response for 89.7% of 524 sampled genes (threshold 95%); sign version 92.2%"
     },
     {
       "section": "scgpt/hepg2",
@@ -1303,7 +1361,7 @@
       "section": "scgpt/hepg2",
       "check": "individual_cells/wiring_magnitude",
       "ok": false,
-      "detail": "the perturbed gene's own entry is the largest response for 85.0% of 60 sampled genes (threshold 95%); sign version 96.7%"
+      "detail": "the perturbed gene's own entry is the largest response for 91.8% of 524 sampled genes (threshold 95%); sign version 95.4%"
     },
     {
       "section": "scgpt/hepg2",
@@ -1321,7 +1379,7 @@
       "section": "scgpt/hepg2",
       "check": "scgpt/context_comparison",
       "ok": true,
-      "detail": "40 common genes; readout_vs_universe pearson 0.9686 relative L2 0.8100; readout_vs_tiled pearson 0.7374 relative L2 0.9382; universe_vs_tiled pearson 0.7844 relative L2 1.1216; production width tiled"
+      "detail": "40 common genes; readout_vs_universe pearson 0.9811 relative L2 0.7026; readout_vs_tiled pearson 0.7706 relative L2 1.0547; universe_vs_tiled pearson 0.7661 relative L2 1.2313; production width tiled"
     },
     {
       "section": "scgpt/hepg2",
