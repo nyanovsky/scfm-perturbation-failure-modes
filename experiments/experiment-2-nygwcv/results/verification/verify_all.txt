@@ -38,16 +38,16 @@
 [PASS] coverage/transcriptformer/jurkat/forms: forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table
 [PASS] alignment/transcriptformer/jurkat: uniform_virtual on sign; mean_control on self_rank; individual_cells on self_rank
 [FAIL] block_checks/transcriptformer/jurkat: 46 block-level checks, 6 failed: ['individual_cells/softmax_coupling', 'mean_control/softmax_coupling', 'uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
-[PASS] hidden_readout/aido_cell/hepg2: 60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 1.973; median_substituted_over_visible 1.14; median_substituted_over_masked 0.5779; 0/0 own checks passed
-[FAIL] hidden_readout/aido_cell/jurkat: no visible / masked / median-substituted comparison for a model whose masked variant ran
+[PASS] hidden_readout/aido_cell/hepg2: 60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 1.973; median_substituted_over_visible 1.14; median_substituted_over_masked 0.5779; 8/8 own checks passed
+[PASS] hidden_readout/aido_cell/jurkat: 60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 1.579; median_substituted_over_visible 1.11; median_substituted_over_masked 0.7026; 8/8 own checks passed
 [PASS] hidden_readout/scgpt/hepg2: 60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 0.7624; median_substituted_over_visible 1.028; median_substituted_over_masked 1.348; 8/8 own checks passed
-[PASS] hidden_readout/scgpt/jurkat: 60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 0.7778; median_substituted_over_visible 0.9374; median_substituted_over_masked 1.205; 0/0 own checks passed
-[PASS] hidden_readout/scprint/hepg2: 60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 0.0685; median_substituted_over_visible 0.3132; median_substituted_over_masked 4.573; 0/0 own checks passed
-[PASS] hidden_readout/scprint/jurkat: 60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 0.05729; median_substituted_over_visible 0.3127; median_substituted_over_masked 5.458; 0/0 own checks passed
+[PASS] hidden_readout/scgpt/jurkat: 60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 0.7778; median_substituted_over_visible 0.9374; median_substituted_over_masked 1.205; 8/8 own checks passed
+[PASS] hidden_readout/scprint/hepg2: 60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 0.0685; median_substituted_over_visible 0.3132; median_substituted_over_masked 4.573; 8/8 own checks passed
+[PASS] hidden_readout/scprint/jurkat: 60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 0.05729; median_substituted_over_visible 0.3127; median_substituted_over_masked 5.458; 8/8 own checks passed
 [PASS] floor_sweep/grid_complete: 20 (cell line, split, floor) cells computed over floors [0.5, 1.0, 2.0, 5.0, 10.0]
 [PASS] floor_sweep/hepg2/readout_matches_floor: 2721 read-out genes, all at or above the selected 0.5 CP10K floor (plateau found: False)
 [PASS] floor_sweep/hepg2/shared_response_recorded: 10 (stratum, floor) cells carry ceiling, mean-effect baseline, cross-perturbation correlation and PC1 share
 [PASS] floor_sweep/jurkat/readout_matches_floor: 3247 read-out genes, all at or above the selected 0.5 CP10K floor (plateau found: False)
 [PASS] floor_sweep/jurkat/shared_response_recorded: 10 (stratum, floor) cells carry ceiling, mean-effect baseline, cross-perturbation correlation and PC1 share
 
-43/51 checks passed
+44/51 checks passed

@@ -1,0 +1,182 @@
+{
+  "model": "aido_cell",
+  "cell_line": "jurkat",
+  "kind": "hidden_readout_comparison",
+  "question": "does the masking effect survive replacing the mask token with an uninformative in-distribution value, which would make it information removal rather than an off-distribution query",
+  "anchor": "mean_control",
+  "layout": {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "n_readout_genes": 3247,
+    "n_supplied_genes": 19264,
+    "supplied_mode": "fixed_transcriptome",
+    "forward_passes_per_query": 1,
+    "context_block_genes": 0,
+    "gene_order": "OS_scRNA_gene_index.19264.tsv, a model constraint",
+    "unsupplied_positions": "left at zero, as an unmeasured gene is",
+    "sequence_length": 19266,
+    "hidden_size": 640,
+    "num_hidden_layers": 18
+  },
+  "conditions": {
+    "visible": "the read-out gene sees its own input value",
+    "masked": "the read-out gene's input replaced by the model's own mask convention (transformed_input_value, value -1.0)",
+    "median_substituted": "the read-out gene's input replaced by one uninformative in-distribution level, the same scalar for every hidden gene"
+  },
+  "substitute_level": {
+    "statistic": "median",
+    "value_cp10k": 1.027846046251402,
+    "over": "the pooled non-targeting control level of the read-out genes of this cell line",
+    "quantile_of_readout_levels": 0.5001539882968894,
+    "n_readout": 3247,
+    "why": "one scalar for every hidden gene, so it carries no gene-specific information, and a level half the read-out set already sits below, so no input value leaves the distribution the model was trained to read"
+  },
+  "substitute_native": 1.027846097946167,
+  "mask_spec": {
+    "kind": "transformed_input_value",
+    "value": -1.0,
+    "rate": 0.15,
+    "source": "config.json: mask_token_id; the checkpoint records no pretraining mask rate, so 0.15 is used and recorded as a fallback"
+  },
+  "read_depth": {
+    "anchor_total_cp10k": 8213.44267372143,
+    "substituted_total_cp10k_median": 7515.725838060342,
+    "relative_shift_median": -0.08494815917975607,
+    "note": "the mask convention leaves the input's total unchanged, the substitution does not; both the baseline and the perturbed pass of a condition carry the same total, so the response difference is taken at one fixed background"
+  },
+  "value_grid_cp10k": [
+    0.0,
+    4.0,
+    64.0
+  ],
+  "value_grid_note": "the zero-out query the comparison is about, plus the top of the production grid so the reading is not specific to zero-out",
+  "n_perturbed": 60,
+  "perturbed_subset": "the in_masked subset of run 2's 250-gene block, reproduced from the same seed (42) and scope, so the numbers sit beside the masked block already extracted",
+  "coverage": {
+    "mode": "subset",
+    "n_perturbed": 250,
+    "n_in_scope": 705,
+    "fraction_of_scope": 0.35461,
+    "strata": [
+      "S3",
+      "S4_highest"
+    ],
+    "by_stratum": {
+      "S3": {
+        "in_scope": 354,
+        "selected": 125
+      },
+      "S4_highest": {
+        "in_scope": 351,
+        "selected": 125
+      }
+    },
+    "n_perturbed_cells_anchor": 60,
+    "n_perturbed_masked": 60,
+    "n_step_sweep": 50,
+    "scope_requested": {
+      "n_perturbed": 250,
+      "n_perturbed_cells_anchor": 60,
+      "n_perturbed_masked": 60,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ]
+    },
+    "selection_rule": "stratified sample of 250 at seed 42, 125 per stratum, drawn from the in-scope set; the individual-cell and masked subsets are nested inside it",
+    "in_scope_definition": "perturbations in strata S3, S4_highest whose target gene is also a read-out gene of this cell line, so it can be perturbed at all",
+    "comparability_note": "a block at partial coverage and a block at full coverage share the perturbed genes of the smaller one but not its row order; join on perturbed_gene_id, never on row index, and do not compare a per-block aggregate across two different coverages"
+  },
+  "mask_blocks": {
+    "per_cycle": 7,
+    "cycles": 3,
+    "total": 21
+  },
+  "estimator_correction": "a mask block that also hides the perturbed gene overwrites the perturbation, so that pass contributes exactly zero; those passes are skipped here and averaged in by run 2's masked block, whose estimator is reproduced as abs_median_run2_diluted_estimator",
+  "summary": {
+    "visible": {
+      "abs_median": 0.00014138221740722656,
+      "abs_median_covered_only": 0.00014138221740722656,
+      "abs_p99": 0.016351770162582387,
+      "abs_median_run2_diluted_estimator": 0.00014138221740722656,
+      "cross_gene_sd_median": 0.002032807874245396,
+      "n_response_vectors": 60,
+      "read_coverage": {
+        "min": 3,
+        "median": 3.0,
+        "max": 3,
+        "cycles": 3,
+        "mean_over_entries": 3.0,
+        "uncovered_entries": 0,
+        "uncovered_fraction": 0.0
+      },
+      "dilution_factor_vs_run2_estimator": 1.0,
+      "seconds": 160.8,
+      "n_forward_passes": 181,
+      "note": "the read-out gene's own value is visible; no block cycling is needed because the response does not depend on the mask partition"
+    },
+    "masked": {
+      "abs_median": 0.00022325913111368814,
+      "abs_median_covered_only": 0.00022459030151367188,
+      "abs_p99": 0.009212846755981441,
+      "abs_median_run2_diluted_estimator": 0.00018667181332906085,
+      "cross_gene_sd_median": 0.00044252770563484067,
+      "n_response_vectors": 60,
+      "read_coverage": {
+        "min": 0,
+        "median": 3.0,
+        "max": 3,
+        "cycles": 3,
+        "mean_over_entries": 2.5714505697566983,
+        "uncovered_entries": 638,
+        "uncovered_fraction": 0.0032748177805153474
+      },
+      "dilution_factor_vs_run2_estimator": 0.8571501899188995,
+      "seconds": 2888.4,
+      "n_forward_passes": 3261,
+      "note": "read only where the gene is hidden, averaged over the cycles in which the perturbed gene was not hidden in the same block"
+    },
+    "median_substituted": {
+      "abs_median": 0.00015686949094136554,
+      "abs_median_covered_only": 0.00015803178151448569,
+      "abs_p99": 0.0154564599196116,
+      "abs_median_run2_diluted_estimator": 0.00013196468353271484,
+      "cross_gene_sd_median": 0.00027394151289383963,
+      "n_response_vectors": 60,
+      "read_coverage": {
+        "min": 0,
+        "median": 3.0,
+        "max": 3,
+        "cycles": 3,
+        "mean_over_entries": 2.5714505697566983,
+        "uncovered_entries": 638,
+        "uncovered_fraction": 0.0032748177805153474
+      },
+      "dilution_factor_vs_run2_estimator": 0.8571501899188995,
+      "seconds": 2888.5,
+      "n_forward_passes": 3261,
+      "note": "read only where the gene is hidden, averaged over the cycles in which the perturbed gene was not hidden in the same block"
+    }
+  },
+  "ratios": {
+    "masked_over_visible": 1.5791174817313096,
+    "median_substituted_over_visible": 1.1095418774592467,
+    "median_substituted_over_masked": 0.7026341550235827
+  },
+  "agreement": {
+    "visible_vs_masked": {
+      "median_pearson_per_gene": 0.31359877797388025,
+      "n_genes": 60
+    },
+    "visible_vs_median_substituted": {
+      "median_pearson_per_gene": 0.7041921755130957,
+      "n_genes": 60
+    },
+    "masked_vs_median_substituted": {
+      "median_pearson_per_gene": 0.4178657257254603,
+      "n_genes": 60
+    }
+  },
+  "seed": 42,
+  "seconds": 5942.9
+}

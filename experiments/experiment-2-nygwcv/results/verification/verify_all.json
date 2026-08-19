@@ -244,13 +244,13 @@
       "section": "hidden_readout",
       "check": "aido_cell/hepg2",
       "ok": true,
-      "detail": "60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 1.973; median_substituted_over_visible 1.14; median_substituted_over_masked 0.5779; 0/0 own checks passed"
+      "detail": "60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 1.973; median_substituted_over_visible 1.14; median_substituted_over_masked 0.5779; 8/8 own checks passed"
     },
     {
       "section": "hidden_readout",
       "check": "aido_cell/jurkat",
-      "ok": false,
-      "detail": "no visible / masked / median-substituted comparison for a model whose masked variant ran"
+      "ok": true,
+      "detail": "60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 1.579; median_substituted_over_visible 1.11; median_substituted_over_masked 0.7026; 8/8 own checks passed"
     },
     {
       "section": "hidden_readout",
@@ -262,19 +262,19 @@
       "section": "hidden_readout",
       "check": "scgpt/jurkat",
       "ok": true,
-      "detail": "60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 0.7778; median_substituted_over_visible 0.9374; median_substituted_over_masked 1.205; 0/0 own checks passed"
+      "detail": "60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 0.7778; median_substituted_over_visible 0.9374; median_substituted_over_masked 1.205; 8/8 own checks passed"
     },
     {
       "section": "hidden_readout",
       "check": "scprint/hepg2",
       "ok": true,
-      "detail": "60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 0.0685; median_substituted_over_visible 0.3132; median_substituted_over_masked 4.573; 0/0 own checks passed"
+      "detail": "60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 0.0685; median_substituted_over_visible 0.3132; median_substituted_over_masked 4.573; 8/8 own checks passed"
     },
     {
       "section": "hidden_readout",
       "check": "scprint/jurkat",
       "ok": true,
-      "detail": "60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 0.05729; median_substituted_over_visible 0.3127; median_substituted_over_masked 5.458; 0/0 own checks passed"
+      "detail": "60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 0.05729; median_substituted_over_visible 0.3127; median_substituted_over_masked 5.458; 8/8 own checks passed"
     },
     {
       "section": "floor_sweep",

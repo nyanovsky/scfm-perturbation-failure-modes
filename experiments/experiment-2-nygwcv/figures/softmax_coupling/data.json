@@ -3,61 +3,61 @@
     "model": "scgpt",
     "cell_line": "hepg2",
     "query": "uniform virtual, 0",
-    "abs_mean_over_sd": 0.5654330003832371
+    "abs_mean_over_sd": 0.5544661480929277
   },
   {
     "model": "scgpt",
     "cell_line": "hepg2",
     "query": "uniform virtual, 1",
-    "abs_mean_over_sd": 0.8201577658589652
+    "abs_mean_over_sd": 0.8347629936702882
   },
   {
     "model": "scgpt",
     "cell_line": "hepg2",
     "query": "uniform virtual, 4",
-    "abs_mean_over_sd": 0.16324888263887471
+    "abs_mean_over_sd": 0.1762729842322589
   },
   {
     "model": "scgpt",
     "cell_line": "hepg2",
     "query": "uniform virtual, 16",
-    "abs_mean_over_sd": 0.8627196828884521
+    "abs_mean_over_sd": 0.8824618855468159
   },
   {
     "model": "scgpt",
     "cell_line": "hepg2",
     "query": "uniform virtual, 64",
-    "abs_mean_over_sd": 0.818972238126774
+    "abs_mean_over_sd": 0.833187854498948
   },
   {
     "model": "scgpt",
     "cell_line": "hepg2",
     "query": "mean control, 0",
-    "abs_mean_over_sd": 0.040856916392801264
+    "abs_mean_over_sd": 0.035010545038221694
   },
   {
     "model": "scgpt",
     "cell_line": "hepg2",
     "query": "mean control, 1",
-    "abs_mean_over_sd": 0.01891443379963553
+    "abs_mean_over_sd": 0.025910749773895982
   },
   {
     "model": "scgpt",
     "cell_line": "hepg2",
     "query": "mean control, 4",
-    "abs_mean_over_sd": 0.04787691464802443
+    "abs_mean_over_sd": 0.04826675967651014
   },
   {
     "model": "scgpt",
     "cell_line": "hepg2",
     "query": "mean control, 16",
-    "abs_mean_over_sd": 0.16337155143253249
+    "abs_mean_over_sd": 0.16275706544098592
   },
   {
     "model": "scgpt",
     "cell_line": "hepg2",
     "query": "mean control, 64",
-    "abs_mean_over_sd": 0.20804129421706227
+    "abs_mean_over_sd": 0.20512252543440268
   },
   {
     "model": "aido_cell",
@@ -123,181 +123,181 @@
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "uniform virtual, 0",
-    "abs_mean_over_sd": 0.04906434229077219
+    "abs_mean_over_sd": 0.05073741130372098
   },
   {
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "uniform virtual, 1",
-    "abs_mean_over_sd": 0.024928919028619368
+    "abs_mean_over_sd": 0.024963715949901193
   },
   {
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "uniform virtual, 4",
-    "abs_mean_over_sd": 0.017799630473295337
+    "abs_mean_over_sd": 0.01774471433291567
   },
   {
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "uniform virtual, 16",
-    "abs_mean_over_sd": 0.018064749435451125
+    "abs_mean_over_sd": 0.018065919220849377
   },
   {
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "uniform virtual, 64",
-    "abs_mean_over_sd": 0.017157864417903138
+    "abs_mean_over_sd": 0.017156670769770618
   },
   {
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "mean control, 0",
-    "abs_mean_over_sd": 0.022717224160823737
+    "abs_mean_over_sd": 0.023945824032896385
   },
   {
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "mean control, 1",
-    "abs_mean_over_sd": 0.04582541878012371
+    "abs_mean_over_sd": 0.038773277324406795
   },
   {
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "mean control, 4",
-    "abs_mean_over_sd": 0.021833206748844678
+    "abs_mean_over_sd": 0.022247427780008846
   },
   {
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "mean control, 16",
-    "abs_mean_over_sd": 0.021769301512524007
+    "abs_mean_over_sd": 0.02177544238514212
   },
   {
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "mean control, 64",
-    "abs_mean_over_sd": 0.021877109450832124
+    "abs_mean_over_sd": 0.02195931629988428
   },
   {
     "model": "transcriptformer",
     "cell_line": "hepg2",
     "query": "uniform virtual, 0",
-    "abs_mean_over_sd": 0.04287113406616114
+    "abs_mean_over_sd": 0.039954556700161015
   },
   {
     "model": "transcriptformer",
     "cell_line": "hepg2",
     "query": "uniform virtual, 1",
-    "abs_mean_over_sd": 0.037678565610218304
+    "abs_mean_over_sd": 0.0347894333253817
   },
   {
     "model": "transcriptformer",
     "cell_line": "hepg2",
     "query": "uniform virtual, 4",
-    "abs_mean_over_sd": 0.05187736364072472
+    "abs_mean_over_sd": 0.0449771723187919
   },
   {
     "model": "transcriptformer",
     "cell_line": "hepg2",
     "query": "uniform virtual, 16",
-    "abs_mean_over_sd": 0.18735741300516384
+    "abs_mean_over_sd": 0.18564691870397926
   },
   {
     "model": "transcriptformer",
     "cell_line": "hepg2",
     "query": "uniform virtual, 64",
-    "abs_mean_over_sd": 0.2433332040931701
+    "abs_mean_over_sd": 0.24264327317169923
   },
   {
     "model": "transcriptformer",
     "cell_line": "hepg2",
     "query": "mean control, 0",
-    "abs_mean_over_sd": 0.01372830135240986
+    "abs_mean_over_sd": 0.013111759297343099
   },
   {
     "model": "transcriptformer",
     "cell_line": "hepg2",
     "query": "mean control, 1",
-    "abs_mean_over_sd": 0.0004404565395822858
+    "abs_mean_over_sd": 0.001746368905530777
   },
   {
     "model": "transcriptformer",
     "cell_line": "hepg2",
     "query": "mean control, 4",
-    "abs_mean_over_sd": 0.041478442164512394
+    "abs_mean_over_sd": 0.04323905737669474
   },
   {
     "model": "transcriptformer",
     "cell_line": "hepg2",
     "query": "mean control, 16",
-    "abs_mean_over_sd": 0.08219072365884678
+    "abs_mean_over_sd": 0.08406538336087527
   },
   {
     "model": "transcriptformer",
     "cell_line": "hepg2",
     "query": "mean control, 64",
-    "abs_mean_over_sd": 0.09256353166687671
+    "abs_mean_over_sd": 0.09289265706035317
   },
   {
     "model": "scgpt",
     "cell_line": "jurkat",
     "query": "uniform virtual, 0",
-    "abs_mean_over_sd": 0.4143905553669355
+    "abs_mean_over_sd": 0.49187208775549135
   },
   {
     "model": "scgpt",
     "cell_line": "jurkat",
     "query": "uniform virtual, 1",
-    "abs_mean_over_sd": 1.2555057552885092
+    "abs_mean_over_sd": 1.2910494720652994
   },
   {
     "model": "scgpt",
     "cell_line": "jurkat",
     "query": "uniform virtual, 4",
-    "abs_mean_over_sd": 0.2718415782302502
+    "abs_mean_over_sd": 0.29384429825148933
   },
   {
     "model": "scgpt",
     "cell_line": "jurkat",
     "query": "uniform virtual, 16",
-    "abs_mean_over_sd": 0.41077640379442004
+    "abs_mean_over_sd": 0.38193957952584306
   },
   {
     "model": "scgpt",
     "cell_line": "jurkat",
     "query": "uniform virtual, 64",
-    "abs_mean_over_sd": 0.3888482244820533
+    "abs_mean_over_sd": 0.3712827287114227
   },
   {
     "model": "scgpt",
     "cell_line": "jurkat",
     "query": "mean control, 0",
-    "abs_mean_over_sd": 0.03094807803751259
+    "abs_mean_over_sd": 0.037439738008513086
   },
   {
     "model": "scgpt",
     "cell_line": "jurkat",
     "query": "mean control, 1",
-    "abs_mean_over_sd": 0.02593615124567212
+    "abs_mean_over_sd": 0.018466124281170115
   },
   {
     "model": "scgpt",
     "cell_line": "jurkat",
     "query": "mean control, 4",
-    "abs_mean_over_sd": 0.15960663752670023
+    "abs_mean_over_sd": 0.13000335654211098
   },
   {
     "model": "scgpt",
     "cell_line": "jurkat",
     "query": "mean control, 16",
-    "abs_mean_over_sd": 0.3075103666975757
+    "abs_mean_over_sd": 0.27549802215072094
   },
   {
     "model": "scgpt",
     "cell_line": "jurkat",
     "query": "mean control, 64",
-    "abs_mean_over_sd": 0.3425479030959275
+    "abs_mean_over_sd": 0.3056773999753745
   },
   {
     "model": "aido_cell",
@@ -363,120 +363,120 @@
     "model": "scprint",
     "cell_line": "jurkat",
     "query": "uniform virtual, 0",
-    "abs_mean_over_sd": 0.04725281995270736
+    "abs_mean_over_sd": 0.04519000938606595
   },
   {
     "model": "scprint",
     "cell_line": "jurkat",
     "query": "uniform virtual, 1",
-    "abs_mean_over_sd": 0.022943074137229378
+    "abs_mean_over_sd": 0.02293073862677356
   },
   {
     "model": "scprint",
     "cell_line": "jurkat",
     "query": "uniform virtual, 4",
-    "abs_mean_over_sd": 0.019641346714106816
+    "abs_mean_over_sd": 0.019530873046120386
   },
   {
     "model": "scprint",
     "cell_line": "jurkat",
     "query": "uniform virtual, 16",
-    "abs_mean_over_sd": 0.016855328063564944
+    "abs_mean_over_sd": 0.016931321515495448
   },
   {
     "model": "scprint",
     "cell_line": "jurkat",
     "query": "uniform virtual, 64",
-    "abs_mean_over_sd": 0.015847731683400448
+    "abs_mean_over_sd": 0.015869975424874932
   },
   {
     "model": "scprint",
     "cell_line": "jurkat",
     "query": "mean control, 0",
-    "abs_mean_over_sd": 0.028565949525379955
+    "abs_mean_over_sd": 0.02852897702244772
   },
   {
     "model": "scprint",
     "cell_line": "jurkat",
     "query": "mean control, 1",
-    "abs_mean_over_sd": 0.05637111418692612
+    "abs_mean_over_sd": 0.038204189518216664
   },
   {
     "model": "scprint",
     "cell_line": "jurkat",
     "query": "mean control, 4",
-    "abs_mean_over_sd": 0.022156035995909963
+    "abs_mean_over_sd": 0.021038859421456346
   },
   {
     "model": "scprint",
     "cell_line": "jurkat",
     "query": "mean control, 16",
-    "abs_mean_over_sd": 0.02051078799755871
+    "abs_mean_over_sd": 0.02042592365013549
   },
   {
     "model": "scprint",
     "cell_line": "jurkat",
     "query": "mean control, 64",
-    "abs_mean_over_sd": 0.019961936120794666
+    "abs_mean_over_sd": 0.01997634933131
   },
   {
     "model": "transcriptformer",
     "cell_line": "jurkat",
     "query": "uniform virtual, 0",
-    "abs_mean_over_sd": 0.03812151530950857
+    "abs_mean_over_sd": 0.027339605944719486
   },
   {
     "model": "transcriptformer",
     "cell_line": "jurkat",
     "query": "uniform virtual, 1",
-    "abs_mean_over_sd": 0.04167030103103873
+    "abs_mean_over_sd": 0.03203732479820835
   },
   {
     "model": "transcriptformer",
     "cell_line": "jurkat",
     "query": "uniform virtual, 4",
-    "abs_mean_over_sd": 0.03515586973250261
+    "abs_mean_over_sd": 0.031089132314590387
   },
   {
     "model": "transcriptformer",
     "cell_line": "jurkat",
     "query": "uniform virtual, 16",
-    "abs_mean_over_sd": 0.13779049321387002
+    "abs_mean_over_sd": 0.12682656596807415
   },
   {
     "model": "transcriptformer",
     "cell_line": "jurkat",
     "query": "uniform virtual, 64",
-    "abs_mean_over_sd": 0.2021681780704893
+    "abs_mean_over_sd": 0.19748935814047475
   },
   {
     "model": "transcriptformer",
     "cell_line": "jurkat",
     "query": "mean control, 0",
-    "abs_mean_over_sd": 0.03737580244437713
+    "abs_mean_over_sd": 0.033484222392896834
   },
   {
     "model": "transcriptformer",
     "cell_line": "jurkat",
     "query": "mean control, 1",
-    "abs_mean_over_sd": 0.014313638330829943
+    "abs_mean_over_sd": 0.014620207362842159
   },
   {
     "model": "transcriptformer",
     "cell_line": "jurkat",
     "query": "mean control, 4",
-    "abs_mean_over_sd": 0.057437787609143684
+    "abs_mean_over_sd": 0.053643570717616836
   },
   {
     "model": "transcriptformer",
     "cell_line": "jurkat",
     "query": "mean control, 16",
-    "abs_mean_over_sd": 0.09868851545655861
+    "abs_mean_over_sd": 0.09654005654205008
   },
   {
     "model": "transcriptformer",
     "cell_line": "jurkat",
     "query": "mean control, 64",
-    "abs_mean_over_sd": 0.10459825938494313
+    "abs_mean_over_sd": 0.10314312908703552
   }
 ]
