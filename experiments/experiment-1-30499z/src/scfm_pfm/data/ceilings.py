@@ -17,6 +17,9 @@ Three metrics per split, matching what later runs will score models with:
 per-perturbation correlation across genes (on log2FC), cosine similarity to the
 other split's delta vector (on the linear CP10K delta), and top-k
 differentially expressed gene overlap (by |log2FC|).
+
+``ceilings_grid`` extends the third metric to a grid of k with chance levels and
+an adaptive k, reusing :func:`side_vectors` so both read the same split.
 """
 
 from __future__ import annotations
@@ -31,17 +34,18 @@ from ..stats import cosine, pearson, topk_overlap
 
 MIN_CELLS_PER_SIDE = 5
 
-_HALF_PARTS = {0: (0, 1), 1: (2, 3)}
-_BATCHSET_PARTS = {0: (0, 2), 1: (1, 3)}
+HALF_PARTS = {0: (0, 1), 1: (2, 3)}
+BATCHSET_PARTS = {0: (0, 2), 1: (1, 3)}
 
 
-def _side(
+def side_vectors(
     t_lin_t: np.ndarray,
     n_tb_side: np.ndarray,
     parts: tuple[int, int],
     ctrl_mean_per_batch: np.ndarray,
     lfc_fn: Callable[[np.ndarray, np.ndarray], np.ndarray],
 ) -> tuple[np.ndarray, np.ndarray, int]:
+    """One side of a split: (delta, log2FC, cells), or (None, None, n) if too small."""
     n = int(n_tb_side.sum())
     if n < MIN_CELLS_PER_SIDE:
         return None, None, n  # type: ignore[return-value]
@@ -71,14 +75,14 @@ def compute_ceilings(
     for row_i, t in enumerate(keep_t):
         rec: dict[str, object] = {"target": target_labels[row_i]}
         for split, parts_map in (
-            ("split_half_cells", _HALF_PARTS),
-            ("split_by_batch", _BATCHSET_PARTS),
+            ("split_half_cells", HALF_PARTS),
+            ("split_by_batch", BATCHSET_PARTS),
         ):
             sides = {}
             for s, parts in parts_map.items():
                 n_tb_side = n_tbp[t][:, list(parts)].sum(1)
                 ctrl = ctrl_mean_half[s] if split == "split_half_cells" else ctrl_mean_per_batch
-                sides[s] = _side(t_lin[t], n_tb_side, parts, ctrl, lfc_fn)
+                sides[s] = side_vectors(t_lin[t], n_tb_side, parts, ctrl, lfc_fn)
             (d0, l0, n0), (d1, l1, n1) = sides[0], sides[1]
             rec[f"{split}__n_side0"] = n0
             rec[f"{split}__n_side1"] = n1

@@ -1,0 +1,19 @@
+# Data-track stack for the ceiling recompute, resolved inside the job image
+# docker.io/library/python:3.12-slim
+# (digest sha256:2c941e860699f878900b0edc2403613c234d4b32eda3cc9fa7036991a2a63c4a,
+# Python 3.12.14). These are the four packages src/scfm_pfm/data imports plus
+# their transitive dependencies, so the job installs with --no-deps and nothing
+# is resolved at job time. The base image ships no compiled scientific package,
+# so nothing here replaces an image-owned build.
+#
+# numpy, pandas and h5py match the versions recorded in the environment block of
+# the published effects/<cell_line>/qc.json, i.e. the run that produced the
+# effect matrices these ceilings belong to.
+h5py==3.15.1
+numpy==2.2.6
+pandas==2.3.3
+pyarrow==17.0.0
+python-dateutil==2.9.0.post0
+pytz==2026.3.post1
+six==1.17.0
+tzdata==2026.3
