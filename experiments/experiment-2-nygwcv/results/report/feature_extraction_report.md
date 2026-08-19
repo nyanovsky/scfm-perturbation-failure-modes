@@ -15,12 +15,14 @@ A model's **response** at read-out gene j is the single scalar it emits for that
 
 | model | cell line | read-out genes | perturbed genes | supplied set | supplied genes | passes per query | GPU seconds, 3 anchors |
 |---|---|---|---|---|---|---|---|
-| scGPT | HepG2 | 2,721 | 250 | tiled | 2,721 | 3 | 89.1 |
+| AIDO.Cell | HepG2 | 2,721 | 250 | fixed_transcriptome | 19,264 | 1 | 10,575 |
+| AIDO.Cell | Jurkat | 3,247 | 250 | fixed_transcriptome | 19,264 | 1 | 10,571 |
+| scGPT | HepG2 | 2,721 | 250 | tiled | 2,721 | 3 | 89 |
 | scGPT | Jurkat | 3,247 | 250 | tiled | 3,247 | 4 | 114 |
 | scPRINT | HepG2 | 2,721 | 250 | readout | 2,721 | 1 | 167 |
 | scPRINT | Jurkat | 3,247 | 250 | readout | 3,247 | 1 | 176 |
-| TranscriptFormer | HepG2 | 2,721 | 250 | readout_in_passes | 2,721 | 2 | 1.08e+03 |
-| TranscriptFormer | Jurkat | 3,247 | 250 | readout_in_passes | 3,247 | 2 | 1.09e+03 |
+| TranscriptFormer | HepG2 | 2,721 | 250 | readout_in_passes | 2,721 | 2 | 1,084 |
+| TranscriptFormer | Jurkat | 3,247 | 250 | readout_in_passes | 3,247 | 2 | 1,086 |
 
 The last column is the wall clock spent producing the three anchors' zero-out, virtual-value and gradient features for that block, on one H100. It excludes the masked block, the step sweep and the layout side checks, and it is the number to size run 3 against: the four models differ in cost by two orders of magnitude for the same query.
 
@@ -62,12 +64,14 @@ Every feature is computed at all three anchors and the three are kept separate. 
 
 **Figure 3: Size of the response at each virtual value** — Median across queries of the standard deviation of the response difference over read-out genes, in each model's own output units, which are not comparable between models (log axis). The four scales differ by orders of magnitude, which is why every block also ships a per-query standardized form. (`figures/response_by_value/`)
 
-Two forward passes that differ only in the perturbed gene's input value are identical when that value equals the gene's own level in the anchor, so the response has to be smallest at the grid point nearest that level. It is, which is the cheapest available check that a query means what it says. At the uniform-virtual anchor, where every gene sits at the same constant (3.0798 and 3.6751 CP10K), the smallest response is at the 4 CP10K query in all 6 blocks, between 1.66 and 21.6 times smaller than the median over the other four values. At the mean-control anchor the minimum moves to the 1 CP10K query in all 6 blocks, and the perturbed genes' median pooled control level is 1.333 CP10K in HepG2 and 1.258 CP10K in Jurkat. At the individual-cells anchor it sits at 0 CP10K for scGPT, scPRINT; 1 CP10K for TranscriptFormer. Of the perturbed gene and cell pairs, 12.5% in HepG2 and 17.5% in Jurkat are at exactly zero counts, so the 0 CP10K query is already a no-op for a sizeable share of them.
+Two forward passes that differ only in the perturbed gene's input value are identical when that value equals the gene's own level in the anchor, so the response has to be smallest at the grid point nearest that level. It is, which is the cheapest available check that a query means what it says. At the uniform-virtual anchor, where every gene sits at the same constant (3.0798 and 3.6751 CP10K), the smallest response is at the 4 CP10K query in all 8 blocks, between 1.66 and 22.3 times smaller than the median over the other four values. At the mean-control anchor the minimum moves to the 1 CP10K query in all 8 blocks, and the perturbed genes' median pooled control level is 1.333 CP10K in HepG2 and 1.258 CP10K in Jurkat. At the individual-cells anchor it sits at 0 CP10K for scGPT, scPRINT; 1 CP10K for AIDO.Cell, TranscriptFormer. Of the perturbed gene and cell pairs, 12.5% in HepG2 and 17.5% in Jurkat are at exactly zero counts, so the 0 CP10K query is already a no-op for a sizeable share of them.
 
 A related quantity run 3 needs is how many queries the model could not see at all. When the value asked for is the value the input already carried, the two passes are the same call and the response is identically zero rather than small. It happens almost only at the 0 CP10K query, at the individual-cells anchor, where a gene that already reads zero in that cell is unchanged by being set to zero:
 
 | model | cell line | anchor | value (CP10K) | no-op queries | fraction |
 |---|---|---|---|---|---|
+| AIDO.Cell | HepG2 | individual cells | 0 | 30 of 240 | 0.125 |
+| AIDO.Cell | Jurkat | individual cells | 0 | 42 of 240 | 0.175 |
 | scGPT | HepG2 | individual cells | 0 | 37 of 240 | 0.154 |
 | scGPT | Jurkat | individual cells | 0 | 46 of 240 | 0.192 |
 | scPRINT | HepG2 | individual cells | 0 | 16 of 240 | 0.067 |
@@ -76,7 +80,22 @@ A related quantity run 3 needs is how many queries the model could not see at al
 | TranscriptFormer | HepG2 | individual cells | 64 | 1 of 240 | 0.004 |
 | TranscriptFormer | Jurkat | individual cells | 0 | 10 of 240 | 0.042 |
 
-The count is model-specific because it is set by how each model encodes the input, not by the cell. Of the perturbed gene and cell pairs, 37 of 240 in HepG2 and 46 of 240 in Jurkat sit below the 0.5 CP10K read-out floor and are therefore delivered as zero. scGPT's no-op count is exactly that number in both lines, so every below-floor pair collapses into its lowest bin. scPRINT and TranscriptFormer record fewer, so for them some below-floor pairs still differ from an explicit zero. The single TranscriptFormer no-op at the 64 CP10K query is recorded and not explained: it is not that model's 30 CP10K count clip, which 9 HepG2 pairs sit at or above.
+The count is set by how each model encodes its input rather than by the cell, and the three distinct counts land on two interpretable numbers. Of the perturbed gene and cell pairs, 30 of 240 in HepG2 and 42 of 240 in Jurkat read exactly zero counts, and 37 in HepG2 and 46 in Jurkat sit below the 0.5 CP10K read-out floor. AIDO.Cell matches the first number exactly in both lines, which is what a raw-count input predicts: only a gene already at zero is unchanged by being set to zero. scGPT matches the second exactly, which is what a binned input predicts: every below-floor pair falls in its lowest bin. scPRINT and TranscriptFormer record fewer than either, so for them even an already-zero gene is not always delivered the same way as an explicit zero. The single TranscriptFormer no-op at the 64 CP10K query is recorded and not explained: it is not that model's 30 CP10K count clip, which 9 HepG2 pairs sit at or above.
+
+The other thing that anchor hides is how much the choice of cell matters. The stored block is the average over the four cells, so the spread across them is recorded separately: per perturbed gene, the coefficient of variation of the response size over the four cells.
+
+| model | cell line | cells | median CV over cells | 90th percentile |
+|---|---|---|---|---|
+| AIDO.Cell | HepG2 | 4 | 0.281 | 0.921 |
+| AIDO.Cell | Jurkat | 4 | 0.352 | 1.1 |
+| scGPT | HepG2 | 4 | 0.403 | 0.832 |
+| scGPT | Jurkat | 4 | 0.39 | 0.92 |
+| scPRINT | HepG2 | 4 | 0.27 | 1.08 |
+| scPRINT | Jurkat | 4 | 0.317 | 1.13 |
+| TranscriptFormer | HepG2 | 4 | 0.228 | 0.89 |
+| TranscriptFormer | Jurkat | 4 | 0.259 | 1.03 |
+
+The median gene's response size moves by 0.228 to 0.403 of itself between cells, and the tail is wider still. Four cells is enough to average out a no-op but not enough to make the anchor a stable quantity, so a run 3 result that rests on the individual-cells anchor should be read as a four-cell sample rather than as the model's response in a real cell.
 
 Nothing in the stored features exposes this. No stored response vector is identically zero, because the stored individual-cells block averages over the four cells and a no-op in one cell is diluted by the other three. A consumer that averages over these pairs is averaging a structural zero in with real effects, so run 3 should read the per-query record and drop them rather than treat a zero as a small response.
 
@@ -88,6 +107,7 @@ Three of the four models are bidirectional and see the read-out gene's own input
 
 | model | mask kind | mask value | rate | coverage | source |
 |---|---|---|---|---|---|
+| AIDO.Cell | transformed input value | -1 | 0.15 | 3 cycles of 7 disjoint blocks | config.json: mask_token_id; the checkpoint records no pretraining mask rate, so 0.15 is used and recorded as a fallback |
 | scGPT | input value | -1 | 0.25 | 3 cycles of 4 disjoint blocks | scGPT args.json: mask_value and mask_ratio; the mildest pretraining rate is used |
 | scPRINT | boolean mask argument | n/a | 0.15 | 3 cycles of 7 disjoint blocks | scPrint.forward(mask=...); the value encoder zeroes the expression embedding at masked positions. The checkpoint records no pretraining mask rate, so 0.15 is used and recorded as a fallback |
 | TranscriptFormer | none | n/a | n/a | not applicable | the model is autoregressive: a gene never sees its own value, so it is natively in the masked regime and a masked variant would be the same query |
@@ -96,11 +116,11 @@ Masking a random subset independently per pass would leave the unluckiest gene u
 
 ### Findings
 
-**Figure 4: Masking the read-out gene, at the same anchor** — Median absolute zero-out response at the mean control anchor, with the read-out gene's own input value visible and with it replaced by each model's own mask convention (log axis, each model in its own output units). TranscriptFormer has no masked variant: it is autoregressive, so a gene never sees its own value. Masking shrinks the response for both bidirectional models, by about a factor of two for scGPT and by an order of magnitude for scPRINT. Removing the gene's own value made the model less sensitive to the perturbed gene, not more. (`figures/masked_regime/`)
+**Figure 4: Masking the read-out gene, at the same anchor** — Median absolute zero-out response at the mean control anchor, with the read-out gene's own input value visible and with it replaced by each model's own mask convention (log axis, each model in its own output units). TranscriptFormer has no masked variant: it is autoregressive, so a gene never sees its own value. The direction of the change is model-specific. Masking shrinks the response for scGPT, scPRINT, down to a factor of 0.136. It grows the response for AIDO.Cell, up to a factor of 1.42. Masked and unmasked are two features, not one with a common offset. (`figures/masked_regime/`)
 
-Masking the read-out gene's own input value shrinks the response at the same anchor. Median absolute zero-out response, unmasked against masked: scGPT: 0.00389 to 0.00228 in HepG2 (a factor of 0.586); 0.0036 to 0.002 in Jurkat (a factor of 0.556). scPRINT: 0.00223 to 0.000217 in HepG2 (a factor of 0.097); 0.00111 to 0.000151 in Jurkat (a factor of 0.136). The two variants are therefore materially different features at one anchor, which is what the masked block was extracted to establish, and the size of the gap differs by model rather than being a fixed offset.
+Masking the read-out gene's own input value changes the response at the same anchor, and by enough that the two are different features rather than the same one with noise. Median absolute zero-out response, unmasked against masked: scGPT: 0.00389 to 0.00228 in HepG2 (a factor of 0.586); 0.0036 to 0.002 in Jurkat (a factor of 0.556). AIDO.Cell: 0.000176 to 0.000312 in HepG2 (a factor of 1.773); 0.000131 to 0.000186 in Jurkat (a factor of 1.423). scPRINT: 0.00223 to 0.000217 in HepG2 (a factor of 0.097); 0.00111 to 0.000151 in Jurkat (a factor of 0.136). The size of the gap differs by model rather than being a fixed offset, which is what the masked block was extracted to establish.
 
-The direction is worth stating plainly because it is not the naive one: taking away the gene's own value made the model less sensitive to the perturbed gene, not more. Run 2 records the effect and does not explain it. Two accounts are consistent with it, a masked prediction falling back on a population prior that no single other gene moves much, and the mask token itself being off the distribution the model was trained to read, and nothing here separates them.
+The direction is not the same for all of them, which is the part worth stating plainly. For AIDO.Cell the response grows when the gene's own value is taken away, up to a factor of 1.773, which is the naive expectation: a model that cannot see the answer has to infer it from the rest of the cell, so the rest of the cell matters more. For scGPT, scPRINT it shrinks instead, by as much as a factor of 0.097: removing the gene's own value made those models less sensitive to the perturbed gene, not more. Run 2 records the split and does not explain it. Two accounts are consistent with the shrinking direction, a masked prediction falling back on a population prior that no single other gene moves much, and the mask token itself being off the distribution the model was trained to read, and nothing here separates them. A consumer should treat masked and unmasked as two features and not assume a common sign of the effect across models.
 
 ## Gradient trajectories and the finite-difference step
 
@@ -112,10 +132,16 @@ A gradient-trajectory feature is a magnitude, so a step-dependent derivative wou
 
 **Figure 5: Finite-difference step stability** — Each point compares the gradient column computed at that step with the column at the next larger step, as the median Pearson correlation over 50 perturbed genes at a 4 CP10K base value. A step is selected only if it also agrees in magnitude (median relative L2 difference at or below 0.10). Where the curve sits on the threshold line the gradient is a property of the model rather than of the step; where it falls away, the block's gradient features are usable for direction and ranking but not magnitude. (`figures/step_stability/`)
 
-12 of the 18 block and anchor pairs converge and 6 do not, and the split is by model rather than by anchor: every failure is TranscriptFormer. Its adjacent-step agreement climbs steadily without ever reaching the threshold, from 0.2441 at step 0.05 to 0.9742 at step 1, so the rule falls back on the step with the best direction agreement (1) and flags the block. The reason is visible in the size of the numbers: across its swept steps the gradient columns being differenced have a median absolute value of 1.39e-08, close enough to float noise that the difference between two nearby steps is dominated by it. Those gradient features are usable for direction and ranking and not for magnitude, and a consumer reads that verdict out of `step_selection.json` rather than inferring it.
+18 of the 24 block and anchor pairs converge and 6 do not, and the split is by model rather than by anchor: every failure is TranscriptFormer. Its adjacent-step agreement climbs steadily without ever reaching the threshold, from 0.2441 at step 0.05 to 0.9742 at step 1, so the rule falls back on the step with the best direction agreement (1) and flags the block. The reason is visible in the size of the numbers: across its swept steps the gradient columns being differenced have a median absolute value of 1.39e-08, close enough to float noise that the difference between two nearby steps is dominated by it. Those gradient features are usable for direction and ranking and not for magnitude, and a consumer reads that verdict out of `step_selection.json` rather than inferring it.
 
 | model | cell line | anchor | selected step | verdict | gradient source |
 |---|---|---|---|---|---|
+| AIDO.Cell | HepG2 | uniform virtual | 0.02 | stable in direction and magnitude | central_finite_difference(step=0.02) |
+| AIDO.Cell | HepG2 | mean control | 0.02 | stable in direction and magnitude | central_finite_difference(step=0.02) |
+| AIDO.Cell | HepG2 | individual cells | 0.02 | stable in direction and magnitude | central_finite_difference(step=0.02) |
+| AIDO.Cell | Jurkat | uniform virtual | 0.02 | stable in direction and magnitude | central_finite_difference(step=0.02) |
+| AIDO.Cell | Jurkat | mean control | 0.02 | stable in direction and magnitude | central_finite_difference(step=0.02) |
+| AIDO.Cell | Jurkat | individual cells | 0.02 | stable in direction and magnitude | central_finite_difference(step=0.02) |
 | scGPT | HepG2 | uniform virtual | 0.05 | stable in direction and magnitude | central_finite_difference(step=0.05) |
 | scGPT | HepG2 | mean control | 0.02 | stable in direction and magnitude | central_finite_difference(step=0.02) |
 | scGPT | HepG2 | individual cells | 0.02 | stable in direction and magnitude | central_finite_difference(step=0.02) |
@@ -148,25 +174,27 @@ Where an exact derivative exists it is the feature, and the central difference a
 | scPRINT | Jurkat | mean control | production | 0.999848 | 0.01672 | 0.02 |
 | scPRINT | Jurkat | individual cells | production | 0.999954 | 0.009871 | 0.02 |
 
+AIDO.Cell is absent from that table, and the absence is a gap in run 2 rather than a property of the model. Its contract records a forward-mode derivative as available and its query is one differentiable function of the input, but this run's adapter does not implement that path, so its gradient trajectories are central differences at the selected step with no exact cross-check behind them. Its magnitude evidence is the step sweep alone, which it passes at the smallest swept step in every anchor and both cell lines.
+
 ## Normalization, which is not cosmetic here
 
 ### Procedure
 
-The four models emit values on four incommensurable scales, and two of them end in a softmax across the genes supplied in the same forward pass. Three consequences are handled explicitly: the supplied gene set is fixed per model and cell line and recorded; the cross-gene mean response is measured per query and a recentred variant is emitted beside the raw one for the softmax models; and every block also carries a per-query standardized form, z-scored across read-out genes, so the comparison run can use features that are invariant to each model's output scale.
+The four models emit values on four incommensurable scales, and two of them end in a softmax across the genes supplied in the same forward pass. Three consequences are handled explicitly: the supplied gene set is fixed per model and cell line and recorded; the cross-gene mean response is measured per query and a recentred variant is emitted beside the raw one wherever the output has a bridge to a linear expression scale, which is every model except scGPT; and every block also carries a per-query standardized form, z-scored across read-out genes, so the comparison run can use features that are invariant to each model's output scale.
 
 A predicted log fold change is emitted only where a defensible bridge to a linear expression scale exists: AIDO.Cell's head predicts log1p CP10K, so the bridge is expm1; scPRINT and TranscriptFormer predict a share of the cell's counts, which is proportional to CP10K. scGPT's output is a per-cell quantile bin index, which is not an expression level and has no cell-independent inverse, so the bridge is declined rather than invented.
 
 ### Findings
 
-**Figure 6: How much of each response is redistribution** — For a model whose head ends in a softmax across the supplied genes, raising one gene's share must lower the others, so the response differences sum to about zero by construction. The bars show the median cross-gene mean divided by the cross-gene spread (log axis). scPRINT sits below the tolerance at every query, which is the signature of exact redistribution. TranscriptFormer sits below it at the low values and rises above it at the top of the grid: its read-out set is delivered in two separately normalized passes, so the shares sum to one inside a pass and not across the union. scGPT, whose head is not a softmax over the supplied genes, sits well above. (`figures/softmax_coupling/`)
+**Figure 6: How much of each response is redistribution** — For a model whose head ends in a softmax across the supplied genes, raising one gene's share must lower the others, so the response differences sum to about zero by construction. The bars show the median cross-gene mean divided by the cross-gene spread (log axis). scPRINT sits below the tolerance at every query, which is the signature of exact redistribution. TranscriptFormer sits below it at the low values and rises above it at the top of the grid: its read-out set is delivered in two separately normalized passes, so the shares sum to one inside a pass and not across the union. AIDO.Cell sits in the same range without a softmax head, because one gene's query barely moves a 19,264-gene prediction on average, so a small ratio is not by itself evidence of redistribution. scGPT, whose output is a per-cell bin index, is the only one clearly above. (`figures/softmax_coupling/`)
 
-The redistribution identity holds where the head is a softmax over the supplied genes and not otherwise. Ratio of the absolute cross-gene mean response to its cross-gene spread, over every query in both cell lines: scGPT median 0.161, worst 1.26; scPRINT median 0.0226, worst 0.0725; TranscriptFormer median 0.0444, worst 0.243.
+Ratio of the absolute cross-gene mean response to its cross-gene spread, over every query in both cell lines: scGPT median 0.161, worst 1.26; AIDO.Cell median 0.063, worst 1.09; scPRINT median 0.0226, worst 0.0725; TranscriptFormer median 0.0444, worst 0.243. The check is applied only to the two models whose head is a softmax over the supplied genes, scPRINT and TranscriptFormer. The reading is one-directional: a small ratio is what redistribution produces, but it is not by itself evidence of a softmax. AIDO.Cell, whose head is a per-gene regression over the full transcriptome, sits in the same range simply because one gene's query moves a 19,264-gene prediction very little on average. scGPT, whose output is a per-cell bin index, is the only one clearly above.
 
 TranscriptFormer misses the 0.05 tolerance on 4 of its 6 anchor and cell-line pairs, at 0.09089, 0.063, 0.06497, 0.05795. The cause is the layout rather than the head. Its read-out set does not fit in one pass, so it is delivered in two, each normalized by that pass's own total; the shares sum to one inside a pass and not across the union of the two, which leaves exactly this kind of small residual offset. Every block ships a recentred variant beside the raw one, and the recentred variant removes it. A consumer that cares about the identity should read `recentred`.
 
 **Figure 7: The four output scales, per feature form** — Median and 99th percentile of the absolute raw feature value at the mean control anchor, in each model's own output units (log axis). Circles are medians, diamonds 99th percentiles; both cell lines are shown. Raw features are not comparable across models, which is what the standardized and, where defensible, predicted log fold-change forms are for. (`figures/feature_scale/`)
 
-The four raw scales are not comparable, and the gap is not small. Median absolute zero-out response at the mean-control anchor: scGPT 0.0036 to 0.00389; scPRINT 0.00111 to 0.00223; TranscriptFormer 2.09e-06 to 3.14e-06, about 1,858-fold between the extremes, which reflects each head's units rather than anything biological. The comparison run should read the standardized form by default and treat a raw cross-model magnitude comparison as meaningless.
+The four raw scales are not comparable, and the gap is not small. Median absolute zero-out response at the mean-control anchor: scGPT 0.0036 to 0.00389; AIDO.Cell 0.000131 to 0.000176; scPRINT 0.00111 to 0.00223; TranscriptFormer 2.09e-06 to 3.14e-06, about 1,858-fold between the extremes, which reflects each head's units rather than anything biological. The comparison run should read the standardized form by default and treat a raw cross-model magnitude comparison as meaningless.
 
 ## Two architectural constraints that shape the query
 
@@ -198,10 +226,16 @@ The pre-registered guard turns out to have no power for an autoregressive model.
 
 ### Findings
 
-**Figure 9: Read-out order alignment, each statistic against its permuted null** — At the mean control anchor, over the perturbed genes sampled in each block. Each statistic is shown beside the same statistic computed after relabelling the perturbed gene's own read-out column at random (the pale bar). 'Own entry largest' is the pre-registered guard; 'own entry high in the vector' is one minus the median rank of the own entry as a fraction of the vector; 'own output moves as expected' is the sign reading. scPRINT saturates the pre-registered guard on both lines. scGPT misses its 0.95 threshold while its own entry still ranks first for the median gene. TranscriptFormer scores exactly zero on that guard, and so does its null: with the perturbed gene placed first, an autoregressive model never conditions on its own value, so the guard cannot have power there. The other two statistics do, and TranscriptFormer separates from its null on at least one of them at every anchor. (`figures/wiring_checks/`)
+**Figure 9: Read-out order alignment, each statistic against its permuted null** — At the mean control anchor, over the perturbed genes sampled in each block. Each statistic is shown beside the same statistic computed after relabelling the perturbed gene's own read-out column at random (the pale bar). 'Own entry largest' is the pre-registered guard; 'own entry high in the vector' is one minus the median rank of the own entry as a fraction of the vector; 'own output moves as expected' is the sign reading. scPRINT saturates the pre-registered guard on both lines. scGPT and AIDO.Cell miss its 0.95 threshold while the own entry still ranks first for the median gene, so the rank statistic is what establishes their alignment. TranscriptFormer scores exactly zero on that guard, and so does its null: with the perturbed gene placed first, an autoregressive model never conditions on its own value, so the guard cannot have power there. Every block separates from its null on at least one statistic at every anchor. (`figures/wiring_checks/`)
 
 | model | cell line | anchor | perturbed genes sampled | own entry largest (null) | median self-rank (null) | own output moves as expected (null) | separated on |
 |---|---|---|---|---|---|---|---|
+| AIDO.Cell | HepG2 | uniform virtual | 250 | 0.628 (0.000) | 0 of 2,721 (1,362.5) | 0.184 (0.176) | self_rank |
+| AIDO.Cell | HepG2 | mean control | 250 | 0.536 (0.000) | 0 of 2,721 (1,175.5) | 0.244 (0.744) | self_rank |
+| AIDO.Cell | HepG2 | individual cells | 60 | 0.500 (0.000) | 0.5 of 2,721 (1,389.5) | 0.283 (0.767) | self_rank |
+| AIDO.Cell | Jurkat | uniform virtual | 250 | 0.736 (0.000) | 0 of 3,247 (1,674) | 0.084 (0.120) | self_rank |
+| AIDO.Cell | Jurkat | mean control | 250 | 0.688 (0.000) | 0 of 3,247 (1,592) | 0.104 (0.820) | self_rank |
+| AIDO.Cell | Jurkat | individual cells | 60 | 0.667 (0.000) | 0 of 3,247 (1,736.5) | 0.100 (0.817) | self_rank |
 | scGPT | HepG2 | uniform virtual | 250 | 0.832 (0.000) | 0 of 2,721 (1,401.5) | 0.884 (0.960) | self_rank |
 | scGPT | HepG2 | mean control | 250 | 0.900 (0.000) | 0 of 2,721 (1,451.5) | 0.944 (0.608) | self_rank, sign |
 | scGPT | HepG2 | individual cells | 60 | 0.850 (0.000) | 0 of 2,721 (1,354.5) | 0.967 (0.683) | self_rank |
@@ -221,9 +255,11 @@ The pre-registered guard turns out to have no power for an autoregressive model.
 | TranscriptFormer | Jurkat | mean control | 250 | 0.000 (0.000) | 80.5 of 3,247 (1,616) | 0.976 (0.840) | self_rank |
 | TranscriptFormer | Jurkat | individual cells | 60 | 0.000 (0.000) | 75 of 3,247 (1,616.5) | 0.967 (0.783) | self_rank |
 
-Each cell gives the observed statistic with its permuted null in parentheses. The last column names the statistics that separate widely enough to establish alignment for that block. All 18 block and anchor pairs separate from their null on at least one statistic.
+Each cell gives the observed statistic with its permuted null in parentheses. The last column names the statistics that separate widely enough to establish alignment for that block. All 24 block and anchor pairs separate from their null on at least one statistic.
 
-The pre-registered guard is reported as it stands and is not retro-fitted to the result. It is met by scPRINT at every anchor in both cell lines and it is not met by scGPT or TranscriptFormer, so for those two models the alignment conclusion rests on the permutation-controlled statistics rather than on the threshold written before the data existed. What the guard would have caught the replacements also catch: a misalignment relabels the own entry at random, which is exactly the permutation, and it would drive all three statistics to their nulls at once.
+The pre-registered guard is reported as it stands and is not retro-fitted to the result. It is met by scPRINT at every anchor in both cell lines and it is not met by scGPT, AIDO.Cell and TranscriptFormer, so for those models the alignment conclusion rests on the permutation-controlled statistics rather than on the threshold written before the data existed. What the guard would have caught the replacements also catch: a misalignment relabels the own entry at random, which is exactly the permutation, and it would drive all three statistics to their nulls at once.
+
+One reading in that table is a finding rather than a check. For AIDO.Cell the sign statistic does not merely miss its threshold, it inverts: at worst, the perturbed gene's own predicted output rises with its input value for only 10% of sampled genes, against 81.7% when that same column is relabelled at random. The inversion is specific to the gene's own entry, which is why it is evidence of correct alignment and not of a mix-up: other genes move the ordinary way. It is the behaviour of a head trained to reconstruct expression from context, which pulls an artificially raised gene back toward the level the rest of the cell implies. Run 3 should not assume the own-entry sign is positive, and any summary that averages the own entry together with the rest of the vector will partly cancel.
 
 ## What run 3 reads
 
@@ -246,22 +282,46 @@ features/<model>/<cell_line>/
 
 ```
 
-Each npz carries `raw`, `standardized`, `recentred` where the model's head ends in a softmax, and `log2fc` where a scale bridge exists, plus the perturbed and read-out gene identifiers and the value grid, so a block is self-describing.
+Each npz carries `raw` and `standardized` always, and `recentred` and `log2fc` wherever the model's output has a bridge to a linear expression scale, plus the perturbed and read-out gene identifiers and the value grid, so a block is self-describing.
+
+### Checkpoints, and where model code had to be changed
+
+| model | checkpoint | revision |
+|---|---|---|
+| scGPT | `wanglab/scGPT-human` | `a24c237737a40f3720f75abb555489e9fe753be6` |
+| AIDO.Cell | `genbio-ai/GB.Cell-100M (plan alias genbio-ai/AIDO.Cell-100M, upstream rename)` | `a983b388e1025860f2c413ecef60e76078253c24` |
+| scPRINT | `jkobject/scPRINT:medium-v1.5.ckpt` | `8e1ad1a1bc40c1fc2f4f1700fe27923eea9a2bed` |
+| TranscriptFormer | `s3://czi-transcriptformer/weights/tf_sapiens.tar.gz` | `tf_sapiens (public bucket object, unversioned)` |
+
+Both cell lines of a model load the same checkpoint at the same revision, and each block's `manifest.json` records it. Every model needed some change to its shipped code to run here, 7 in total, and each block records its own verbatim. They are worth reading because several of them touch numerics:
+
+| model | substitution |
+|---|---|
+| scGPT | flash-attention not installed (the published checkpoint was trained with scGPT's FlashMHA layers, whose API exists only in flash-attn 1.x, which cannot build against this torch); used scGPT's own fallback torch.nn.TransformerEncoder path (use_fast_transformer=False), which changes the attention kernel and therefore the exact numerics |
+| scGPT | remapped 24 fused attention tensors from the checkpoint's FlashMHA layout (self_attn.Wqkv) onto torch's packed projection (self_attn.in_proj); both hold [query; key; value] over the same head partition, so the attention computed is the same function of the same weights. Verified numerically at load time (see attention_remap_check) |
+| scGPT | imported scgpt.model.model by file path to avoid executing scgpt/__init__ (scvi-tools / torchtext / scib); model source unmodified |
+| AIDO.Cell | replaced BertSelfFlashAttention.forward with a shape-correct SDPA implementation: the shipped non-flash fallback softmaxes across heads instead of across the sequence, and the flash-attention path is fp16/bf16 only with no forward-mode derivative. Weights and attention mathematics are unchanged; the kernel and dtype are not. |
+| scPRINT | simpler_flash.FlashSelfAttention.forward delegated to the package's own pure-torch SelfAttention: the fused kernel asserts fp16/bf16 and has no forward-mode derivative, so the response and its Jacobian would not be computable in float32. Same weights, same attention, different kernel (upstream forward kept at FlashSelfAttention.forward) |
+| scPRINT | stubbed scprint.model.utils / scprint.utils / scprint.tasks.* at import time to avoid bionty+lamindb+scdataloader (a configured lamindb instance is not available and is unnecessary for a forward pass); model source unmodified |
+| TranscriptFormer | compile_block_mask disabled (eager flex-attention block mask) so that a single-cell forward pass does not pay a torch.compile warm-up |
+
+They fall into three kinds. Three are import plumbing, working around packages that will not install or configure here, and leave the model itself untouched. Three replace a fused half-precision attention kernel with the same attention in float32, because the fused kernel refuses float32 or carries no forward-mode derivative; the weights and the attention function are unchanged, the kernel and the dtype are not, so exact numerics differ from a flash-attention run. AIDO.Cell's is in that second group and also repairs a bug: its packaged non-flash fallback softmaxes across heads rather than across the sequence, which is not the attention the weights were trained with. No cross-check against the published kernel was possible for it, because that kernel does not import in this environment. The last one remaps scGPT's fused query-key-value tensors onto torch's packed projection, which is the only change that moves checkpoint weights, and it was verified numerically at load time.
 
 ## Verification
 
-Verification runs at two levels. Every block is checked inside a job that mounts the volume the extraction wrote, against that block's own npz files rather than against a summary: 272 checks over 6 blocks, 256 passed. The roll-up then reads the 6 per-block records together and adds coverage and alignment checks: 30 checks, 25 passed. Both outputs ship with the report, and the failures are listed here rather than summarised away.
+Verification runs at two levels. Every block is checked inside a job that mounts the volume the extraction wrote, against that block's own npz files rather than against a summary: 344 checks over 8 blocks, 322 passed. The roll-up then reads the 8 per-block records together and adds coverage and alignment checks: 38 checks, 32 passed. Both outputs ship with the report, and the failures are listed here rather than summarised away.
 
 | failing check | blocks | what it means |
 |---|---|---|
 | softmax_coupling | 4 anchor and block pairs in transcriptformer/hepg2, transcriptformer/jurkat | the redistribution identity, missed by a small margin because the read-out set is delivered in two separately normalized passes. The recentred variant that ships in every block removes the offset. |
-| wiring_magnitude | 12 anchor and block pairs in scgpt/hepg2, scgpt/jurkat, transcriptformer/hepg2, transcriptformer/jurkat | the pre-registered 95% own-entry-largest guard. Reported as it stands; the permutation-controlled statistics in the wiring section establish alignment for these blocks instead. |
+| wiring_magnitude | 18 anchor and block pairs in aido_cell/hepg2, aido_cell/jurkat, scgpt/hepg2, scgpt/jurkat, transcriptformer/hepg2, transcriptformer/jurkat | the pre-registered 95% own-entry-largest guard. Reported as it stands; the permutation-controlled statistics in the wiring section establish alignment for these blocks instead. |
 
 The roll-up's own failures, which are the per-block failures restated plus anything missing from the tree:
 
 | check | detail |
 |---|---|
-| coverage/model_x_cell_line | 6/8 blocks present; missing [('aido_cell', 'hepg2'), ('aido_cell', 'jurkat')] |
+| block_checks/aido_cell/hepg2 | 36 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude'] |
+| block_checks/aido_cell/jurkat | 36 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude'] |
 | block_checks/scgpt/hepg2 | 38 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude'] |
 | block_checks/scgpt/jurkat | 38 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude'] |
 | block_checks/transcriptformer/hepg2 | 45 block-level checks, 4 failed: ['uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude'] |

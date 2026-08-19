@@ -485,7 +485,10 @@ def fig_softmax_coupling(bundles: dict, out: Path) -> Fig:
             "of exact redistribution. TranscriptFormer sits below it at the low values and rises "
             "above it at the top of the grid: its read-out set is delivered in two separately "
             "normalized passes, so the shares sum to one inside a pass and not across the union. "
-            "scGPT, whose head is not a softmax over the supplied genes, sits well above.",
+            "AIDO.Cell sits in the same range without a softmax head, because one gene's query "
+            "barely moves a 19,264-gene prediction on average, so a small ratio is not by itself "
+            "evidence of redistribution. scGPT, whose output is a per-cell bin index, is the only "
+            "one clearly above.",
             "sources": "experiments/experiment-2-nygwcv/results/report/bundles",
         },
     )
@@ -535,6 +538,23 @@ def fig_masked_regime(bundles: dict, out: Path) -> Fig:
         fig.update_yaxes(title_text="median |zero-out response| (log, model units)", type="log",
                          dtick=1, row=1, col=ci)
     apply_theme(fig, height=460)
+    ratios = {
+        MODEL_LABEL[r["model"]]: r["ratio"] for r in rows if r["ratio"]
+    }
+    up = sorted(n for n, v in ratios.items() if v > 1)
+    down = sorted(n for n, v in ratios.items() if v < 1)
+    findings = "The direction of the change is model-specific. "
+    if down:
+        findings += (
+            f"Masking shrinks the response for {', '.join(down)}, down to a factor of "
+            f"{min(v for v in ratios.values()):.3g}. "
+        )
+    if up:
+        findings += (
+            f"It grows the response for {', '.join(up)}, up to a factor of "
+            f"{max(v for v in ratios.values()):.3g}. "
+        )
+    findings += "Masked and unmasked are two features, not one with a common offset."
     return Fig(
         name="masked_regime",
         figure=fig,
@@ -546,9 +566,7 @@ def fig_masked_regime(bundles: dict, out: Path) -> Fig:
             "read-out gene's own input value visible and with it replaced by each model's own mask "
             "convention (log axis, each model in its own output units). TranscriptFormer has no "
             "masked variant: it is autoregressive, so a gene never sees its own value.",
-            "findings": "Masking shrinks the response for both bidirectional models, by about a "
-            "factor of two for scGPT and by an order of magnitude for scPRINT. Removing the "
-            "gene's own value made the model less sensitive to the perturbed gene, not more.",
+            "findings": findings,
             "sources": "experiments/experiment-2-nygwcv/results/report/bundles",
         },
     )
@@ -624,12 +642,13 @@ def fig_wiring(bundles: dict, out: Path) -> Fig:
             "largest' is the pre-registered guard; 'own entry high in the vector' is one minus "
             "the median rank of the own entry as a fraction of the vector; 'own output moves as "
             "expected' is the sign reading.",
-            "findings": "scPRINT saturates the pre-registered guard on both lines. scGPT misses "
-            "its 0.95 threshold while its own entry still ranks first for the median gene. "
+            "findings": "scPRINT saturates the pre-registered guard on both lines. scGPT and "
+            "AIDO.Cell miss its 0.95 threshold while the own entry still ranks first for the "
+            "median gene, so the rank statistic is what establishes their alignment. "
             "TranscriptFormer scores exactly zero on that guard, and so does its null: with the "
             "perturbed gene placed first, an autoregressive model never conditions on its own "
-            "value, so the guard cannot have power there. The other two statistics do, and "
-            "TranscriptFormer separates from its null on at least one of them at every anchor.",
+            "value, so the guard cannot have power there. Every block separates from its null on "
+            "at least one statistic at every anchor.",
             "sources": "experiments/experiment-2-nygwcv/results/report/bundles",
         },
     )

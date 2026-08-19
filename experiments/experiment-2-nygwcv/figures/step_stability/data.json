@@ -45,6 +45,51 @@
     "median_relative_l2_adjacent": 0.4918648984931482
   },
   {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "uniform_virtual",
+    "step": 0.02,
+    "next_step": 0.05,
+    "median_pearson_adjacent": 0.9991437838167597,
+    "median_relative_l2_adjacent": 0.042272501456215
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "uniform_virtual",
+    "step": 0.05,
+    "next_step": 0.1,
+    "median_pearson_adjacent": 0.9998047006908453,
+    "median_relative_l2_adjacent": 0.020222714978974016
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "uniform_virtual",
+    "step": 0.1,
+    "next_step": 0.25,
+    "median_pearson_adjacent": 0.9999419373013625,
+    "median_relative_l2_adjacent": 0.011785240156384326
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "uniform_virtual",
+    "step": 0.25,
+    "next_step": 0.5,
+    "median_pearson_adjacent": 0.9999503270062837,
+    "median_relative_l2_adjacent": 0.013336571294559495
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "uniform_virtual",
+    "step": 0.5,
+    "next_step": 1.0,
+    "median_pearson_adjacent": 0.9995265004130889,
+    "median_relative_l2_adjacent": 0.044594326513601235
+  },
+  {
     "model": "scprint",
     "cell_line": "hepg2",
     "anchor": "uniform_virtual",
@@ -178,6 +223,51 @@
     "next_step": 1.0,
     "median_pearson_adjacent": 0.9982492839422166,
     "median_relative_l2_adjacent": 0.15749279524951137
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "uniform_virtual",
+    "step": 0.02,
+    "next_step": 0.05,
+    "median_pearson_adjacent": 0.9993381126509793,
+    "median_relative_l2_adjacent": 0.036339176904013754
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "uniform_virtual",
+    "step": 0.05,
+    "next_step": 0.1,
+    "median_pearson_adjacent": 0.9998610487589441,
+    "median_relative_l2_adjacent": 0.016763416614998375
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "uniform_virtual",
+    "step": 0.1,
+    "next_step": 0.25,
+    "median_pearson_adjacent": 0.9999657082152074,
+    "median_relative_l2_adjacent": 0.009124898258087823
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "uniform_virtual",
+    "step": 0.25,
+    "next_step": 0.5,
+    "median_pearson_adjacent": 0.9999645723842026,
+    "median_relative_l2_adjacent": 0.012675586963363048
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "uniform_virtual",
+    "step": 0.5,
+    "next_step": 1.0,
+    "median_pearson_adjacent": 0.999693662629699,
+    "median_relative_l2_adjacent": 0.044058190265746686
   },
   {
     "model": "scprint",
@@ -315,6 +405,51 @@
     "median_relative_l2_adjacent": 0.06375263979070184
   },
   {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "mean_control",
+    "step": 0.02,
+    "next_step": 0.05,
+    "median_pearson_adjacent": 0.9995130953105608,
+    "median_relative_l2_adjacent": 0.02720155989469343
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "mean_control",
+    "step": 0.05,
+    "next_step": 0.1,
+    "median_pearson_adjacent": 0.9999156908703452,
+    "median_relative_l2_adjacent": 0.011539017290871569
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "mean_control",
+    "step": 0.1,
+    "next_step": 0.25,
+    "median_pearson_adjacent": 0.9999767353807834,
+    "median_relative_l2_adjacent": 0.006134080333051305
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "mean_control",
+    "step": 0.25,
+    "next_step": 0.5,
+    "median_pearson_adjacent": 0.999985814576396,
+    "median_relative_l2_adjacent": 0.0061257408141453884
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "mean_control",
+    "step": 0.5,
+    "next_step": 1.0,
+    "median_pearson_adjacent": 0.9998664780635041,
+    "median_relative_l2_adjacent": 0.017158141429463206
+  },
+  {
     "model": "scprint",
     "cell_line": "hepg2",
     "anchor": "mean_control",
@@ -448,6 +583,51 @@
     "next_step": 1.0,
     "median_pearson_adjacent": 0.9986593960535247,
     "median_relative_l2_adjacent": 0.07702973214232241
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "mean_control",
+    "step": 0.02,
+    "next_step": 0.05,
+    "median_pearson_adjacent": 0.9996216668632611,
+    "median_relative_l2_adjacent": 0.02337055476302341
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "mean_control",
+    "step": 0.05,
+    "next_step": 0.1,
+    "median_pearson_adjacent": 0.999929384623502,
+    "median_relative_l2_adjacent": 0.01041628368330529
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "mean_control",
+    "step": 0.1,
+    "next_step": 0.25,
+    "median_pearson_adjacent": 0.9999781470953684,
+    "median_relative_l2_adjacent": 0.0070889288273140744
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "mean_control",
+    "step": 0.25,
+    "next_step": 0.5,
+    "median_pearson_adjacent": 0.999984327170614,
+    "median_relative_l2_adjacent": 0.008004775567408303
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "mean_control",
+    "step": 0.5,
+    "next_step": 1.0,
+    "median_pearson_adjacent": 0.999831406888943,
+    "median_relative_l2_adjacent": 0.024593473846197478
   },
   {
     "model": "scprint",
@@ -585,6 +765,51 @@
     "median_relative_l2_adjacent": 0.0825627600225986
   },
   {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "individual_cells",
+    "step": 0.02,
+    "next_step": 0.05,
+    "median_pearson_adjacent": 0.9993685760067325,
+    "median_relative_l2_adjacent": 0.032716178149105976
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "individual_cells",
+    "step": 0.05,
+    "next_step": 0.1,
+    "median_pearson_adjacent": 0.9998747233826433,
+    "median_relative_l2_adjacent": 0.015108786417788582
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "individual_cells",
+    "step": 0.1,
+    "next_step": 0.25,
+    "median_pearson_adjacent": 0.9999636013367339,
+    "median_relative_l2_adjacent": 0.008481580072391578
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "individual_cells",
+    "step": 0.25,
+    "next_step": 0.5,
+    "median_pearson_adjacent": 0.9999780185831344,
+    "median_relative_l2_adjacent": 0.006901493282042807
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "individual_cells",
+    "step": 0.5,
+    "next_step": 1.0,
+    "median_pearson_adjacent": 0.9998791714723455,
+    "median_relative_l2_adjacent": 0.017937190031161843
+  },
+  {
     "model": "scprint",
     "cell_line": "hepg2",
     "anchor": "individual_cells",
@@ -718,6 +943,51 @@
     "next_step": 1.0,
     "median_pearson_adjacent": 0.9983552573053969,
     "median_relative_l2_adjacent": 0.0750774493989539
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "individual_cells",
+    "step": 0.02,
+    "next_step": 0.05,
+    "median_pearson_adjacent": 0.9994790818659433,
+    "median_relative_l2_adjacent": 0.027020471796418633
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "individual_cells",
+    "step": 0.05,
+    "next_step": 0.1,
+    "median_pearson_adjacent": 0.9999066031461843,
+    "median_relative_l2_adjacent": 0.01206436077527043
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "individual_cells",
+    "step": 0.1,
+    "next_step": 0.25,
+    "median_pearson_adjacent": 0.9999676396365547,
+    "median_relative_l2_adjacent": 0.007392946316617941
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "individual_cells",
+    "step": 0.25,
+    "next_step": 0.5,
+    "median_pearson_adjacent": 0.9999791581054421,
+    "median_relative_l2_adjacent": 0.006755348586270573
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "individual_cells",
+    "step": 0.5,
+    "next_step": 1.0,
+    "median_pearson_adjacent": 0.999824262137383,
+    "median_relative_l2_adjacent": 0.022065412731042892
   },
   {
     "model": "scprint",

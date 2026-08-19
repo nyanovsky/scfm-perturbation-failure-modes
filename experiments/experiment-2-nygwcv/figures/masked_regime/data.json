@@ -7,6 +7,13 @@
     "ratio": 0.5857843137254902
   },
   {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "unmasked_abs_median": 0.00017588213086128235,
+    "masked_abs_median": 0.00031178194331005216,
+    "ratio": 1.7726754945671743
+  },
+  {
     "model": "scprint",
     "cell_line": "hepg2",
     "unmasked_abs_median": 0.0022287368774414062,
@@ -26,6 +33,13 @@
     "unmasked_abs_median": 0.00360107421875,
     "masked_abs_median": 0.0020039875525981188,
     "ratio": 0.556497153589281
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "unmasked_abs_median": 0.0001308917999267578,
+    "masked_abs_median": 0.00018624961376190186,
+    "ratio": 1.4229280510018214
   },
   {
     "model": "scprint",

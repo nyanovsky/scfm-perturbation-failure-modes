@@ -86,6 +86,11 @@ def _inline(text: str) -> str:
     return out
 
 
+def _cell(text: str) -> str:
+    """One table cell: no pipes or newlines, which would break the Markdown table."""
+    return re.sub(r"\s+", " ", str(text)).replace("|", "/").strip()
+
+
 def fmt(x, digits: int = 4) -> str:
     if x is None or (isinstance(x, float) and not np.isfinite(x)):
         return "n/a"
@@ -139,6 +144,7 @@ def anchor_levels(cell_line: str, clip_cp10k: float | None = None) -> dict | Non
         subset = cp10k[cols[pg["in_cells_anchor"].to_numpy()]]
         out["cells_median_cp10k"] = float(np.median(subset))
         out["cells_zero_fraction"] = float((subset == 0).mean())
+        out["cells_zero_n"] = int((subset == 0).sum())
         # a pair below the read-out floor is delivered to every model as zero, so the
         # 0 CP10K query cannot change it either
         out["cells_below_floor_n"] = int((subset < C.RUN1_FLOOR_CP10K).sum())
@@ -172,6 +178,18 @@ def response_minima(bundles: dict) -> dict:
                 }
             )
     return out
+
+
+def _join(names: list[str]) -> str:
+    """'a', 'a and b', 'a, b and c'."""
+    names = list(names)
+    if len(names) <= 1:
+        return "".join(names)
+    return ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def pct(x, digits: int = 3) -> str:
+    return f"{fmt(100 * float(x), digits)}%"
 
 
 def _agree(rows: list, key: str) -> str:
@@ -253,7 +271,7 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                     m["layout"]["supplied_mode"],
                     fmt(m["layout"]["n_supplied_genes"]),
                     m["layout"]["forward_passes_per_query"],
-                    fmt(sum(a.get("seconds", 0.0) for a in m["anchors"].values()), 3),
+                    f"{round(sum(a.get('seconds', 0.0) for a in m['anchors'].values())):,}",
                 ]
             )
         s.blocks += [
@@ -496,18 +514,26 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         if floor_counts:
             s.blocks.append(
                 Para(
-                    "The count is model-specific because it is set by how each model encodes "
-                    "the input, not by the cell. Of the perturbed gene and cell pairs, "
+                    "The count is set by how each model encodes its input rather than by the "
+                    "cell, and the three distinct counts land on two interpretable numbers. Of "
+                    "the perturbed gene and cell pairs, "
                     + " and ".join(
-                        f"{fmt(floor_counts[cl]['cells_below_floor_n'])} of "
+                        f"{fmt(floor_counts[cl]['cells_zero_n'])} of "
                         f"{fmt(floor_counts[cl]['cells_n_pairs'])} in {LABEL[cl]}"
                         for cl in LINES if cl in floor_counts
                     )
-                    + f" sit below the {fmt(C.RUN1_FLOOR_CP10K)} CP10K read-out floor and are "
-                    "therefore delivered as zero. scGPT's no-op count is exactly that number in "
-                    "both lines, so every below-floor pair collapses into its lowest bin. "
-                    "scPRINT and TranscriptFormer record fewer, so for them some below-floor "
-                    "pairs still differ from an explicit zero."
+                    + " read exactly zero counts, and "
+                    + " and ".join(
+                        f"{fmt(floor_counts[cl]['cells_below_floor_n'])} in {LABEL[cl]}"
+                        for cl in LINES if cl in floor_counts
+                    )
+                    + f" sit below the {fmt(C.RUN1_FLOOR_CP10K)} CP10K read-out floor. AIDO.Cell "
+                    "matches the first number exactly in both lines, which is what a raw-count "
+                    "input predicts: only a gene already at zero is unchanged by being set to "
+                    "zero. scGPT matches the second exactly, which is what a binned input "
+                    "predicts: every below-floor pair falls in its lowest bin. scPRINT and "
+                    "TranscriptFormer record fewer than either, so for them even an "
+                    "already-zero gene is not always delivered the same way as an explicit zero."
                     + (
                         " The single TranscriptFormer no-op at the 64 CP10K query is recorded "
                         "and not explained: it is not that model's "
@@ -519,6 +545,40 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                     )
                 )
             )
+        spread_rows = [
+            [
+                MODEL_LABEL[model],
+                LABEL[cl],
+                fmt(sp["n_cells"]),
+                fmt(sp["median_cv_of_response_size"], 3),
+                fmt(sp["p90_cv_of_response_size"], 3),
+            ]
+            for (model, cl), b in sorted(bundles.items())
+            for anchor, sp in b.get("anchor_cell_spread", {}).items()
+            if sp.get("median_cv_of_response_size") is not None
+        ]
+        if spread_rows:
+            cvs = [float(r[3]) for r in spread_rows]
+            s.blocks += [
+                Para(
+                    "The other thing that anchor hides is how much the choice of cell matters. "
+                    "The stored block is the average over the four cells, so the spread across "
+                    "them is recorded separately: per perturbed gene, the coefficient of "
+                    "variation of the response size over the four cells."
+                ),
+                Table(
+                    ["model", "cell line", "cells", "median CV over cells", "90th percentile"],
+                    spread_rows,
+                ),
+                Para(
+                    f"The median gene's response size moves by {rate(min(cvs))} to "
+                    f"{rate(max(cvs))} of itself between cells, and the tail is wider still. "
+                    "Four cells is enough to average out a no-op but not enough to make the "
+                    "anchor a stable quantity, so a run 3 result that rests on the "
+                    "individual-cells anchor should be read as a four-cell sample rather than "
+                    "as the model's response in a real cell."
+                ),
+            ]
         s.blocks.append(
             Para(
                 "Nothing in the stored features exposes this. "
@@ -592,7 +652,7 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         Head(3, "Findings"),
         FigRef("masked_regime"),
     ]
-    mask_findings = []
+    mask_findings, shrink, grow = [], [], []
     for model in MODELS:
         pieces = []
         for cl in LINES:
@@ -605,25 +665,44 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                 pieces.append(
                     f"{fmt(un, 3)} to {fmt(ma, 3)} in {LABEL[cl]} (a factor of {rate(ma / un)})"
                 )
+                (shrink if ma < un else grow).append((MODEL_LABEL[model], ma / un))
         if pieces:
             mask_findings.append(f"{MODEL_LABEL[model]}: " + "; ".join(pieces))
     if mask_findings:
+        names = lambda rows: ", ".join(sorted({n for n, _ in rows}))  # noqa: E731
         s.blocks += [
             Para(
-                "Masking the read-out gene's own input value shrinks the response at the same "
-                "anchor. Median absolute zero-out response, unmasked against masked: "
+                "Masking the read-out gene's own input value changes the response at the same "
+                "anchor, and by enough that the two are different features rather than the same "
+                "one with noise. Median absolute zero-out response, unmasked against masked: "
                 + ". ".join(mask_findings)
-                + ". The two variants are therefore materially different features at one anchor, "
-                "which is what the masked block was extracted to establish, and the size of the "
-                "gap differs by model rather than being a fixed offset."
+                + ". The size of the gap differs by model rather than being a fixed offset, "
+                "which is what the masked block was extracted to establish."
             ),
             Para(
-                "The direction is worth stating plainly because it is not the naive one: taking "
-                "away the gene's own value made the model less sensitive to the perturbed gene, "
-                "not more. Run 2 records the effect and does not explain it. Two accounts are "
-                "consistent with it, a masked prediction falling back on a population prior that "
-                "no single other gene moves much, and the mask token itself being off the "
-                "distribution the model was trained to read, and nothing here separates them."
+                "The direction is not the same for all of them, which is the part worth stating "
+                "plainly. "
+                + (
+                    f"For {names(grow)} the response grows when the gene's own value is taken "
+                    f"away, up to a factor of {rate(max(r for _, r in grow))}, which is the "
+                    "naive expectation: a model that cannot see the answer has to infer it from "
+                    "the rest of the cell, so the rest of the cell matters more. "
+                    if grow
+                    else ""
+                )
+                + (
+                    f"For {names(shrink)} it shrinks instead, by as much as a factor of "
+                    f"{rate(min(r for _, r in shrink))}: removing the gene's own value made "
+                    "those models less sensitive to the perturbed gene, not more. "
+                    if shrink
+                    else ""
+                )
+                + "Run 2 records the split and does not explain it. Two accounts are consistent "
+                "with the shrinking direction, a masked prediction falling back on a population "
+                "prior that no single other gene moves much, and the mask token itself being off "
+                "the distribution the model was trained to read, and nothing here separates "
+                "them. A consumer should treat masked and unmasked as two features and not "
+                "assume a common sign of the effect across models."
             ),
         ]
     sections.append(s)
@@ -756,6 +835,15 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                  "median relative L2", "step"],
                 exact_rows,
             ),
+            Para(
+                "AIDO.Cell is absent from that table, and the absence is a gap in run 2 rather "
+                "than a property of the model. Its contract records a forward-mode derivative as "
+                "available and its query is one differentiable function of the input, but this "
+                "run's adapter does not implement that path, so its gradient trajectories are "
+                "central differences at the selected step with no exact cross-check behind them. "
+                "Its magnitude evidence is the step sweep alone, which it passes at the smallest "
+                "swept step in every anchor and both cell lines."
+            ),
         ]
     sections.append(s)
 
@@ -769,7 +857,8 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
             "a softmax across the genes supplied in the same forward pass. Three consequences are "
             "handled explicitly: the supplied gene set is fixed per model and cell line and "
             "recorded; the cross-gene mean response is measured per query and a recentred variant "
-            "is emitted beside the raw one for the softmax models; and every block also carries a "
+            "is emitted beside the raw one wherever the output has a bridge to a linear "
+            "expression scale, which is every model except scGPT; and every block also carries a "
             "per-query standardized form, z-scored across read-out genes, so the comparison run "
             "can use features that are invariant to each model's output scale."
         ),
@@ -800,14 +889,21 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
     if coupling:
         s.blocks.append(
             Para(
-                "The redistribution identity holds where the head is a softmax over the supplied "
-                "genes and not otherwise. Ratio of the absolute cross-gene mean response to its "
-                "cross-gene spread, over every query in both cell lines: "
+                "Ratio of the absolute cross-gene mean response to its cross-gene spread, over "
+                "every query in both cell lines: "
                 + "; ".join(
                     f"{MODEL_LABEL[m]} median {fmt(med, 3)}, worst {fmt(hi, 3)}"
                     for m, med, hi in coupling
                 )
-                + "."
+                + ". The check is applied only to the two models whose head is a softmax over "
+                "the supplied genes, "
+                + _join([MODEL_LABEL[m] for m in vf.SOFTMAX_MODELS])
+                + ". The reading is one-directional: a small ratio is what "
+                "redistribution produces, but it is not by itself evidence of a softmax. "
+                f"{MODEL_LABEL['aido_cell']}, whose head is a per-gene regression over the full "
+                "transcriptome, sits in the same range simply because one gene's query moves a "
+                "19,264-gene prediction very little on average. scGPT, whose output is a "
+                "per-cell bin index, is the only one clearly above."
             )
         )
     tf_fail = [
@@ -972,6 +1068,17 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                     ", ".join(r["separated_by"]) or "none",
                 ]
             )
+    guard_met, guard_missed = [], []
+    for model in MODELS:
+        rows_m = [
+            r
+            for cl in LINES
+            for r in (bundles.get((model, cl)) or {}).get("alignment", [])
+        ]
+        if not rows_m:
+            continue
+        (guard_met if all(r["own_largest"] >= C.SELF_RESPONSE_MIN_PASS for r in rows_m)
+         else guard_missed).append(MODEL_LABEL[model])
     if wire_rows:
         separated = [r for r in wire_rows if r[-1] != "none"]
         tally = (
@@ -995,15 +1102,46 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
             ),
             Para(
                 "The pre-registered guard is reported as it stands and is not retro-fitted to "
-                "the result. It is met by scPRINT at every anchor in both cell lines and it is "
-                "not met by scGPT or TranscriptFormer, so for those two models the alignment "
-                "conclusion rests on the permutation-controlled statistics rather than on the "
-                "threshold written before the data existed. What the guard would have caught "
-                "the replacements also catch: a misalignment relabels the own entry at random, "
-                "which is exactly the permutation, and it would drive all three statistics to "
-                "their nulls at once."
+                "the result. "
+                + (
+                    f"It is met by {_join(guard_met)} at every anchor in both cell lines and "
+                    f"it is not met by {_join(guard_missed)}, so for those models the "
+                    "alignment conclusion rests on the permutation-controlled statistics rather "
+                    "than on the threshold written before the data existed. "
+                    if guard_met and guard_missed
+                    else ""
+                )
+                + "What the guard would have caught the replacements also catch: a misalignment "
+                "relabels the own entry at random, which is exactly the permutation, and it "
+                "would drive all three statistics to their nulls at once."
             ),
         ]
+        anti = [
+            (MODEL_LABEL[model], LABEL[cl], r)
+            for (model, cl), b in sorted(bundles.items())
+            for r in b.get("alignment", [])
+            if r["sign_rate"] < 0.5 and r["sign_rate_null"] > 0.5
+        ]
+        if anti:
+            worst = min(anti, key=lambda t: t[2]["sign_rate"])
+            names = sorted({n for n, _, _ in anti})
+            s.blocks.append(
+                Para(
+                    "One reading in that table is a finding rather than a check. For "
+                    f"{_join(names)} the sign statistic does not merely miss its threshold, it "
+                    "inverts: at worst, the perturbed gene's own predicted output rises with its "
+                    f"input value for only {pct(worst[2]['sign_rate'])} of sampled genes, against "
+                    f"{pct(worst[2]['sign_rate_null'])} when that same column is relabelled at "
+                    "random. The inversion is specific to the "
+                    "gene's own entry, which is why it is evidence of correct alignment and not "
+                    "of a mix-up: other genes move the ordinary way. It is the behaviour of a "
+                    "head trained to reconstruct expression from context, which pulls an "
+                    "artificially raised gene back toward the level the rest of the cell "
+                    "implies. Run 3 should not assume the own-entry sign is positive, and any "
+                    "summary that averages the own entry together with the rest of the vector "
+                    "will partly cancel."
+                )
+            )
     sections.append(s)
 
     # ---- 9. the file contract
@@ -1030,11 +1168,68 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
             "  anchor=mean_control_masked/       the masked counterpart, where it applies\n"
         ),
         Para(
-            "Each npz carries `raw`, `standardized`, `recentred` where the model's head ends in a "
-            "softmax, and `log2fc` where a scale bridge exists, plus the perturbed and read-out "
-            "gene identifiers and the value grid, so a block is self-describing."
+            "Each npz carries `raw` and `standardized` always, and `recentred` and `log2fc` "
+            "wherever the model's output has a bridge to a linear expression scale, plus the "
+            "perturbed and read-out gene identifiers and the value grid, so a block is "
+            "self-describing."
+        ),
+        Head(3, "Checkpoints, and where model code had to be changed"),
+        Table(
+            ["model", "checkpoint", "revision"],
+            [
+                [
+                    MODEL_LABEL[model],
+                    f"`{b['manifest']['contract']['checkpoint']}`",
+                    f"`{b['manifest']['contract']['checkpoint_revision']}`",
+                ]
+                for model in MODELS
+                for b in [next((bundles[(model, cl)] for cl in LINES
+                                if (model, cl) in bundles), None)]
+                if b
+            ],
         ),
     ]
+    subs = [
+        (MODEL_LABEL[model], sub)
+        for model in MODELS
+        for b in [next((bundles[(model, cl)] for cl in LINES if (model, cl) in bundles), None)]
+        if b
+        for sub in b["manifest"].get("substitutions", [])
+    ]
+    s.blocks.append(
+        Para(
+            "Both cell lines of a model load the same checkpoint at the same revision, and each "
+            "block's `manifest.json` records it. "
+            + (
+                f"Every model needed some change to its shipped code to run here, {len(subs)} "
+                "in total, and each block records its own verbatim. They are worth reading "
+                "because several of them touch numerics:"
+                if len({n for n, _ in subs}) == len([m for m in MODELS if any(
+                    (m, cl) in bundles for cl in LINES)])
+                else f"{_join(sorted({n for n, _ in subs}))} needed a change to the shipped "
+                f"model code, {len(subs)} in total:"
+            )
+        )
+    )
+    if subs:
+        s.blocks += [
+            Table(["model", "substitution"], [[n, _cell(t)] for n, t in subs]),
+            Para(
+                "They fall into three kinds. Three are import plumbing, working around packages "
+                "that will not install or configure here, and leave the model itself untouched. "
+                "Three replace a fused half-precision attention kernel with the same attention "
+                "in float32, because the fused kernel refuses float32 or carries no forward-mode "
+                "derivative; the weights and the attention function are unchanged, the kernel and "
+                "the dtype are not, so exact numerics differ from a flash-attention run. "
+                "AIDO.Cell's is in that second group and also repairs a bug: "
+                "its packaged non-flash fallback softmaxes across heads rather than across the "
+                "sequence, which is not the attention the weights were trained with. No "
+                "cross-check against the published kernel was possible for it, because that "
+                "kernel does not import in this environment. The last one remaps scGPT's fused "
+                "query-key-value tensors onto torch's packed projection, which is the only change "
+                "that moves checkpoint weights, and it was verified numerically at load time."
+            ),
+        ]
     if verification:
         checks = verification["checks"]
         ok = sum(1 for r in checks if r["ok"])

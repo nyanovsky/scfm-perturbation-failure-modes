@@ -1,4 +1,12 @@
-[FAIL] coverage/model_x_cell_line: 6/8 blocks present; missing [('aido_cell', 'hepg2'), ('aido_cell', 'jurkat')]
+[PASS] coverage/model_x_cell_line: 8/8 blocks present; missing none
+[PASS] coverage/aido_cell/hepg2/anchors: anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']
+[PASS] coverage/aido_cell/hepg2/forms: forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table
+[PASS] alignment/aido_cell/hepg2: uniform_virtual on self_rank; mean_control on self_rank; individual_cells on self_rank
+[FAIL] block_checks/aido_cell/hepg2: 36 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
+[PASS] coverage/aido_cell/jurkat/anchors: anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']
+[PASS] coverage/aido_cell/jurkat/forms: forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table
+[PASS] alignment/aido_cell/jurkat: uniform_virtual on self_rank; mean_control on self_rank; individual_cells on self_rank
+[FAIL] block_checks/aido_cell/jurkat: 36 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
 [PASS] coverage/scgpt/hepg2/anchors: anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']
 [PASS] coverage/scgpt/hepg2/forms: forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table
 [PASS] alignment/scgpt/hepg2: uniform_virtual on self_rank; mean_control on self_rank+sign; individual_cells on self_rank
@@ -29,4 +37,4 @@
 [PASS] floor_sweep/jurkat/readout_matches_floor: 3247 read-out genes, all at or above the selected 0.5 CP10K floor (plateau found: False)
 [PASS] floor_sweep/jurkat/shared_response_recorded: 10 (stratum, floor) cells carry ceiling, mean-effect baseline, cross-perturbation correlation and PC1 share
 
-25/30 checks passed
+32/38 checks passed

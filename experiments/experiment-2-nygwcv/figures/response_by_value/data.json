@@ -45,6 +45,51 @@
     "max_abs": 0.42193126678466797
   },
   {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "uniform_virtual",
+    "value_cp10k": 0.0,
+    "cross_gene_sd": 0.0005531856027040471,
+    "cross_gene_mean": 1.3517696740367928e-05,
+    "max_abs": 0.026188552379608154
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "uniform_virtual",
+    "value_cp10k": 1.0,
+    "cross_gene_sd": 0.0004925531951157603,
+    "cross_gene_mean": 2.777554746477624e-06,
+    "max_abs": 0.02168351411819458
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "uniform_virtual",
+    "value_cp10k": 4.0,
+    "cross_gene_sd": 5.629097825472251e-05,
+    "cross_gene_mean": 2.2218399398776373e-06,
+    "max_abs": 0.0021225810050964355
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "uniform_virtual",
+    "value_cp10k": 16.0,
+    "cross_gene_sd": 0.0019587771300488524,
+    "cross_gene_mean": -0.0003847645637426951,
+    "max_abs": 0.05455058813095093
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "uniform_virtual",
+    "value_cp10k": 64.0,
+    "cross_gene_sd": 0.006867863859690253,
+    "cross_gene_mean": -0.004302153749564626,
+    "max_abs": 0.15008056163787842
+  },
+  {
     "model": "scprint",
     "cell_line": "hepg2",
     "anchor": "uniform_virtual",
@@ -178,6 +223,51 @@
     "cross_gene_sd": 0.014719663581844143,
     "cross_gene_mean": 0.005723715048773236,
     "max_abs": 0.6625194549560547
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "uniform_virtual",
+    "value_cp10k": 0.0,
+    "cross_gene_sd": 0.0004973213151896557,
+    "cross_gene_mean": 2.6389199828492116e-05,
+    "max_abs": 0.025605380535125732
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "uniform_virtual",
+    "value_cp10k": 1.0,
+    "cross_gene_sd": 0.0004035663712200274,
+    "cross_gene_mean": 1.5228773055074396e-05,
+    "max_abs": 0.02093362808227539
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "uniform_virtual",
+    "value_cp10k": 4.0,
+    "cross_gene_sd": 0.00015272434350446765,
+    "cross_gene_mean": 7.440787798850985e-06,
+    "max_abs": 0.0062163472175598145
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "uniform_virtual",
+    "value_cp10k": 16.0,
+    "cross_gene_sd": 0.001751356364903906,
+    "cross_gene_mean": -0.00022872468450315774,
+    "max_abs": 0.0465644896030426
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "uniform_virtual",
+    "value_cp10k": 64.0,
+    "cross_gene_sd": 0.0058400499589406855,
+    "cross_gene_mean": -0.00457628057052906,
+    "max_abs": 0.14493733644485474
   },
   {
     "model": "scprint",
@@ -315,6 +405,51 @@
     "max_abs": 1.0691251754760742
   },
   {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "mean_control",
+    "value_cp10k": 0.0,
+    "cross_gene_sd": 0.001412794507354295,
+    "cross_gene_mean": -9.246315301910387e-06,
+    "max_abs": 0.05412876605987549
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "mean_control",
+    "value_cp10k": 1.0,
+    "cross_gene_sd": 0.0006151442278901709,
+    "cross_gene_mean": 7.092474231777801e-06,
+    "max_abs": 0.018726110458374023
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "mean_control",
+    "value_cp10k": 4.0,
+    "cross_gene_sd": 0.0019009468962112308,
+    "cross_gene_mean": 0.00018104867861140346,
+    "max_abs": 0.049261271953582764
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "mean_control",
+    "value_cp10k": 16.0,
+    "cross_gene_sd": 0.006142341084887808,
+    "cross_gene_mean": 0.0037757558032777195,
+    "max_abs": 0.0847444236278534
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "anchor": "mean_control",
+    "value_cp10k": 64.0,
+    "cross_gene_sd": 0.015899155416321614,
+    "cross_gene_mean": 0.010499107249242686,
+    "max_abs": 0.17195549607276917
+  },
+  {
     "model": "scprint",
     "cell_line": "hepg2",
     "anchor": "mean_control",
@@ -448,6 +583,51 @@
     "cross_gene_sd": 0.03997183887950681,
     "cross_gene_mean": 0.013692269591063325,
     "max_abs": 0.8577404022216797
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "mean_control",
+    "value_cp10k": 0.0,
+    "cross_gene_sd": 0.0018891891931208384,
+    "cross_gene_mean": 1.2539739312944245e-05,
+    "max_abs": 0.08475729823112488
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "mean_control",
+    "value_cp10k": 1.0,
+    "cross_gene_sd": 0.0011708424457284815,
+    "cross_gene_mean": -1.0275909826870803e-06,
+    "max_abs": 0.051743507385253906
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "mean_control",
+    "value_cp10k": 4.0,
+    "cross_gene_sd": 0.0027907981920510107,
+    "cross_gene_mean": 0.0002594232762276594,
+    "max_abs": 0.12491931021213531
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "mean_control",
+    "value_cp10k": 16.0,
+    "cross_gene_sd": 0.00897593775386456,
+    "cross_gene_mean": 0.007516328883301416,
+    "max_abs": 0.1855589747428894
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "anchor": "mean_control",
+    "value_cp10k": 64.0,
+    "cross_gene_sd": 0.028608657475025626,
+    "cross_gene_mean": 0.031104653039709086,
+    "max_abs": 0.26230308413505554
   },
   {
     "model": "scprint",

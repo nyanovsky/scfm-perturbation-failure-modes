@@ -60,6 +60,66 @@
     "abs_mean_over_sd": 0.20804129421706227
   },
   {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "query": "uniform virtual, 0",
+    "abs_mean_over_sd": 0.02443609644627693
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "query": "uniform virtual, 1",
+    "abs_mean_over_sd": 0.005639095988048236
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "query": "uniform virtual, 4",
+    "abs_mean_over_sd": 0.0394706222695861
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "query": "uniform virtual, 16",
+    "abs_mean_over_sd": 0.19643100679509107
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "query": "uniform virtual, 64",
+    "abs_mean_over_sd": 0.6264180300392059
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "query": "mean control, 0",
+    "abs_mean_over_sd": 0.006544699355623721
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "query": "mean control, 1",
+    "abs_mean_over_sd": 0.01152977449874423
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "query": "mean control, 4",
+    "abs_mean_over_sd": 0.09524131314359745
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "query": "mean control, 16",
+    "abs_mean_over_sd": 0.614709562868029
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "query": "mean control, 64",
+    "abs_mean_over_sd": 0.6603562877600785
+  },
+  {
     "model": "scprint",
     "cell_line": "hepg2",
     "query": "uniform virtual, 0",
@@ -238,6 +298,66 @@
     "cell_line": "jurkat",
     "query": "mean control, 64",
     "abs_mean_over_sd": 0.3425479030959275
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "query": "uniform virtual, 0",
+    "abs_mean_over_sd": 0.053062676025515766
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "query": "uniform virtual, 1",
+    "abs_mean_over_sd": 0.037735485761700285
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "query": "uniform virtual, 4",
+    "abs_mean_over_sd": 0.048720378350379484
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "query": "uniform virtual, 16",
+    "abs_mean_over_sd": 0.130598597228216
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "query": "uniform virtual, 64",
+    "abs_mean_over_sd": 0.7836029833140575
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "query": "mean control, 0",
+    "abs_mean_over_sd": 0.006637630237673164
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "query": "mean control, 1",
+    "abs_mean_over_sd": 0.0008776509482005735
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "query": "mean control, 4",
+    "abs_mean_over_sd": 0.09295665912589843
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "query": "mean control, 16",
+    "abs_mean_over_sd": 0.8373864758660213
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "query": "mean control, 64",
+    "abs_mean_over_sd": 1.0872461620005196
   },
   {
     "model": "scprint",

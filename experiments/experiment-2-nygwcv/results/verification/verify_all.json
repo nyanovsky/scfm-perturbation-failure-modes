@@ -3,8 +3,56 @@
     {
       "section": "coverage",
       "check": "model_x_cell_line",
+      "ok": true,
+      "detail": "8/8 blocks present; missing none"
+    },
+    {
+      "section": "coverage",
+      "check": "aido_cell/hepg2/anchors",
+      "ok": true,
+      "detail": "anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']"
+    },
+    {
+      "section": "coverage",
+      "check": "aido_cell/hepg2/forms",
+      "ok": true,
+      "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
+    },
+    {
+      "section": "alignment",
+      "check": "aido_cell/hepg2",
+      "ok": true,
+      "detail": "uniform_virtual on self_rank; mean_control on self_rank; individual_cells on self_rank"
+    },
+    {
+      "section": "block_checks",
+      "check": "aido_cell/hepg2",
       "ok": false,
-      "detail": "6/8 blocks present; missing [('aido_cell', 'hepg2'), ('aido_cell', 'jurkat')]"
+      "detail": "36 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+    },
+    {
+      "section": "coverage",
+      "check": "aido_cell/jurkat/anchors",
+      "ok": true,
+      "detail": "anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']"
+    },
+    {
+      "section": "coverage",
+      "check": "aido_cell/jurkat/forms",
+      "ok": true,
+      "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
+    },
+    {
+      "section": "alignment",
+      "check": "aido_cell/jurkat",
+      "ok": true,
+      "detail": "uniform_virtual on self_rank; mean_control on self_rank; individual_cells on self_rank"
+    },
+    {
+      "section": "block_checks",
+      "check": "aido_cell/jurkat",
+      "ok": false,
+      "detail": "36 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
     },
     {
       "section": "coverage",
