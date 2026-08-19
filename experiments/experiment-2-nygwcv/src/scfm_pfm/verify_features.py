@@ -145,6 +145,9 @@ def verify_block(block_dir: Path, ch: Checks) -> dict:
                     self_delta=("self_delta", "median"),
                     self_rank_median=("self_rank_by_abs", "median"),
                     n_queries=("cross_gene_mean", "size"),
+                    # a query the model could not see: the value asked for was the value
+                    # the input already carried, so the two passes were the same call
+                    n_no_op_queries=("max_abs", lambda s: int((s == 0).sum())),
                 )
                 .reset_index()
                 .to_dict(orient="records")

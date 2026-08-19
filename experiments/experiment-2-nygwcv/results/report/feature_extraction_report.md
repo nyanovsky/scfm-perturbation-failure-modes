@@ -64,6 +64,22 @@ Every feature is computed at all three anchors and the three are kept separate. 
 
 Two forward passes that differ only in the perturbed gene's input value are identical when that value equals the gene's own level in the anchor, so the response has to be smallest at the grid point nearest that level. It is, which is the cheapest available check that a query means what it says. At the uniform-virtual anchor, where every gene sits at the same constant (3.0798 and 3.6751 CP10K), the smallest response is at the 4 CP10K query in all 6 blocks, between 1.66 and 21.6 times smaller than the median over the other four values. At the mean-control anchor the minimum moves to the 1 CP10K query in all 6 blocks, and the perturbed genes' median pooled control level is 1.333 CP10K in HepG2 and 1.258 CP10K in Jurkat. At the individual-cells anchor it sits at 0 CP10K for scGPT, scPRINT; 1 CP10K for TranscriptFormer. Of the perturbed gene and cell pairs, 12.5% in HepG2 and 17.5% in Jurkat are at exactly zero counts, so the 0 CP10K query is already a no-op for a sizeable share of them.
 
+A related quantity run 3 needs is how many queries the model could not see at all. When the value asked for is the value the input already carried, the two passes are the same call and the response is identically zero rather than small. It happens almost only at the 0 CP10K query, at the individual-cells anchor, where a gene that already reads zero in that cell is unchanged by being set to zero:
+
+| model | cell line | anchor | value (CP10K) | no-op queries | fraction |
+|---|---|---|---|---|---|
+| scGPT | HepG2 | individual cells | 0 | 37 of 240 | 0.154 |
+| scGPT | Jurkat | individual cells | 0 | 46 of 240 | 0.192 |
+| scPRINT | HepG2 | individual cells | 0 | 16 of 240 | 0.067 |
+| scPRINT | Jurkat | individual cells | 0 | 16 of 240 | 0.067 |
+| TranscriptFormer | HepG2 | individual cells | 0 | 5 of 240 | 0.021 |
+| TranscriptFormer | HepG2 | individual cells | 64 | 1 of 240 | 0.004 |
+| TranscriptFormer | Jurkat | individual cells | 0 | 10 of 240 | 0.042 |
+
+The count is model-specific because it is set by how each model encodes the input, not by the cell. Of the perturbed gene and cell pairs, 37 of 240 in HepG2 and 46 of 240 in Jurkat sit below the 0.5 CP10K read-out floor and are therefore delivered as zero. scGPT's no-op count is exactly that number in both lines, so every below-floor pair collapses into its lowest bin. scPRINT and TranscriptFormer record fewer, so for them some below-floor pairs still differ from an explicit zero. The single TranscriptFormer no-op at the 64 CP10K query is recorded and not explained: it is not that model's 30 CP10K count clip, which 9 HepG2 pairs sit at or above.
+
+Nothing in the stored features exposes this. No stored response vector is identically zero, because the stored individual-cells block averages over the four cells and a no-op in one cell is diluted by the other three. A consumer that averages over these pairs is averaging a structural zero in with real effects, so run 3 should read the per-query record and drop them rather than treat a zero as a small response.
+
 ## The masking regime, separated from the anchor
 
 ### Procedure
@@ -166,13 +182,13 @@ scGPT was trained at a maximum sequence length of 1,200 but carries no positiona
 
 **Figure 8: scGPT: what the supplied-set width changes** — Zero-out response differences for the same perturbed genes at the mean control anchor, computed with three supplied widths: the expressed read-out set, run 1's full 7,444-gene universe, and tiles of at most 1,200 genes sharing a fixed prefix. A relative L2 difference of 0 means identical vectors, 2 means opposite. Directions largely agree and magnitudes do not, so the width is a measurement choice rather than a detail; the production sweep uses the tiled width, which is the one inside scGPT's training length. (`figures/scgpt_context/`)
 
-The three widths do not agree closely, so the production sweep uses the tiled width (tiled), the one inside scGPT's training length. The cost is that a tiled query is several forward passes rather than one differentiable function of the input, so scGPT's production gradients are central differences at the selected step; the exact forward-mode derivative is available in the untiled layout and was validated against a central difference there.
+The three widths do not agree closely, so the production sweep uses the tiled width, the one inside scGPT's training length. The cost is that a tiled query is several forward passes rather than one differentiable function of the input, so scGPT's production gradients are central differences at the selected step; the exact forward-mode derivative is available in the untiled layout and was validated against a central difference there.
 
 ### TranscriptFormer: ordering
 
 TranscriptFormer is autoregressive with a causal mask, so gene j responds to gene i only when i precedes it. The perturbed gene is placed at position 0 of every pass, which makes every read-out gene measurable; the cost is that the context differs between queries by that one gene. Under a single fixed ordering 50% of ordered pairs would be structurally unmeasurable, which is a property of the model rather than of this run. Each pass opens with the same 256-gene prefix and its shares are normalized by that pass's own total, so values from different passes are comparable.
 
-## Wiring checks
+## Read-out order alignment
 
 ### Procedure
 
@@ -182,28 +198,28 @@ The pre-registered guard turns out to have no power for an autoregressive model.
 
 ### Findings
 
-**Figure 9: Is the read-out order aligned with the query?** — At the mean control anchor, over the perturbed genes sampled in each block. Each statistic is shown beside the same statistic computed after relabelling the perturbed gene's own read-out column at random (the pale bar). 'Own entry largest' is the pre-registered guard; 'own entry high in the vector' is one minus the median rank of the own entry as a fraction of the vector; 'own output moves as expected' is the sign reading. scPRINT saturates the pre-registered guard on both lines. scGPT misses its 0.95 threshold while its own entry still ranks first for the median gene. TranscriptFormer scores exactly zero on that guard, and so does its null: with the perturbed gene placed first, an autoregressive model never conditions on its own value, so the guard cannot have power there. The other two statistics do, and TranscriptFormer separates from its null on at least one of them at every anchor. (`figures/wiring_checks/`)
+**Figure 9: Read-out order alignment, each statistic against its permuted null** — At the mean control anchor, over the perturbed genes sampled in each block. Each statistic is shown beside the same statistic computed after relabelling the perturbed gene's own read-out column at random (the pale bar). 'Own entry largest' is the pre-registered guard; 'own entry high in the vector' is one minus the median rank of the own entry as a fraction of the vector; 'own output moves as expected' is the sign reading. scPRINT saturates the pre-registered guard on both lines. scGPT misses its 0.95 threshold while its own entry still ranks first for the median gene. TranscriptFormer scores exactly zero on that guard, and so does its null: with the perturbed gene placed first, an autoregressive model never conditions on its own value, so the guard cannot have power there. The other two statistics do, and TranscriptFormer separates from its null on at least one of them at every anchor. (`figures/wiring_checks/`)
 
 | model | cell line | anchor | perturbed genes sampled | own entry largest (null) | median self-rank (null) | own output moves as expected (null) | separated on |
 |---|---|---|---|---|---|---|---|
-| scGPT | HepG2 | uniform virtual | 250 | 0.832 (0.000) | 0 of 2,721 (1402) | 0.884 (0.960) | self_rank |
-| scGPT | HepG2 | mean control | 250 | 0.900 (0.000) | 0 of 2,721 (1452) | 0.944 (0.608) | self_rank, sign |
-| scGPT | HepG2 | individual cells | 60 | 0.850 (0.000) | 0 of 2,721 (1354) | 0.967 (0.683) | self_rank |
-| scGPT | Jurkat | uniform virtual | 250 | 0.920 (0.000) | 0 of 3,247 (1560) | 0.992 (0.924) | self_rank |
-| scGPT | Jurkat | mean control | 250 | 0.932 (0.000) | 0 of 3,247 (1540) | 0.816 (0.652) | self_rank |
-| scGPT | Jurkat | individual cells | 60 | 0.933 (0.000) | 0 of 3,247 (1670) | 0.967 (0.633) | self_rank, sign |
-| scPRINT | HepG2 | uniform virtual | 250 | 1.000 (0.000) | 0 of 2,721 (1316) | 1.000 (0.468) | own_largest, self_rank, sign |
-| scPRINT | HepG2 | mean control | 250 | 1.000 (0.000) | 0 of 2,721 (1312) | 1.000 (0.636) | own_largest, self_rank, sign |
-| scPRINT | HepG2 | individual cells | 60 | 1.000 (0.000) | 0 of 2,721 (1610) | 1.000 (0.567) | own_largest, self_rank, sign |
-| scPRINT | Jurkat | uniform virtual | 250 | 1.000 (0.000) | 0 of 3,247 (1626) | 1.000 (0.508) | own_largest, self_rank, sign |
-| scPRINT | Jurkat | mean control | 250 | 1.000 (0.000) | 0 of 3,247 (1609) | 1.000 (0.728) | own_largest, self_rank |
-| scPRINT | Jurkat | individual cells | 60 | 1.000 (0.000) | 0 of 3,247 (1478) | 1.000 (0.783) | own_largest, self_rank |
-| TranscriptFormer | HepG2 | uniform virtual | 250 | 0.000 (0.000) | 909 of 2,721 (1557) | 0.936 (0.636) | sign |
-| TranscriptFormer | HepG2 | mean control | 250 | 0.000 (0.004) | 66.5 of 2,721 (1474) | 0.904 (0.736) | self_rank |
-| TranscriptFormer | HepG2 | individual cells | 60 | 0.000 (0.000) | 56.5 of 2,721 (1507) | 0.850 (0.750) | self_rank |
-| TranscriptFormer | Jurkat | uniform virtual | 250 | 0.000 (0.000) | 614.5 of 3,247 (1768) | 0.976 (0.600) | sign |
-| TranscriptFormer | Jurkat | mean control | 250 | 0.000 (0.000) | 80.5 of 3,247 (1616) | 0.976 (0.840) | self_rank |
-| TranscriptFormer | Jurkat | individual cells | 60 | 0.000 (0.000) | 75 of 3,247 (1616) | 0.967 (0.783) | self_rank |
+| scGPT | HepG2 | uniform virtual | 250 | 0.832 (0.000) | 0 of 2,721 (1,401.5) | 0.884 (0.960) | self_rank |
+| scGPT | HepG2 | mean control | 250 | 0.900 (0.000) | 0 of 2,721 (1,451.5) | 0.944 (0.608) | self_rank, sign |
+| scGPT | HepG2 | individual cells | 60 | 0.850 (0.000) | 0 of 2,721 (1,354.5) | 0.967 (0.683) | self_rank |
+| scGPT | Jurkat | uniform virtual | 250 | 0.920 (0.000) | 0 of 3,247 (1,560.5) | 0.992 (0.924) | self_rank |
+| scGPT | Jurkat | mean control | 250 | 0.932 (0.000) | 0 of 3,247 (1,539.5) | 0.816 (0.652) | self_rank |
+| scGPT | Jurkat | individual cells | 60 | 0.933 (0.000) | 0 of 3,247 (1,669.5) | 0.967 (0.633) | self_rank, sign |
+| scPRINT | HepG2 | uniform virtual | 250 | 1.000 (0.000) | 0 of 2,721 (1,316) | 1.000 (0.468) | own_largest, self_rank, sign |
+| scPRINT | HepG2 | mean control | 250 | 1.000 (0.000) | 0 of 2,721 (1,312) | 1.000 (0.636) | own_largest, self_rank, sign |
+| scPRINT | HepG2 | individual cells | 60 | 1.000 (0.000) | 0 of 2,721 (1,610.5) | 1.000 (0.567) | own_largest, self_rank, sign |
+| scPRINT | Jurkat | uniform virtual | 250 | 1.000 (0.000) | 0 of 3,247 (1,626) | 1.000 (0.508) | own_largest, self_rank, sign |
+| scPRINT | Jurkat | mean control | 250 | 1.000 (0.000) | 0 of 3,247 (1,609) | 1.000 (0.728) | own_largest, self_rank |
+| scPRINT | Jurkat | individual cells | 60 | 1.000 (0.000) | 0 of 3,247 (1,478.5) | 1.000 (0.783) | own_largest, self_rank |
+| TranscriptFormer | HepG2 | uniform virtual | 250 | 0.000 (0.000) | 909 of 2,721 (1,557) | 0.936 (0.636) | sign |
+| TranscriptFormer | HepG2 | mean control | 250 | 0.000 (0.004) | 66.5 of 2,721 (1,474.5) | 0.904 (0.736) | self_rank |
+| TranscriptFormer | HepG2 | individual cells | 60 | 0.000 (0.000) | 56.5 of 2,721 (1,507) | 0.850 (0.750) | self_rank |
+| TranscriptFormer | Jurkat | uniform virtual | 250 | 0.000 (0.000) | 614.5 of 3,247 (1,768.5) | 0.976 (0.600) | sign |
+| TranscriptFormer | Jurkat | mean control | 250 | 0.000 (0.000) | 80.5 of 3,247 (1,616) | 0.976 (0.840) | self_rank |
+| TranscriptFormer | Jurkat | individual cells | 60 | 0.000 (0.000) | 75 of 3,247 (1,616.5) | 0.967 (0.783) | self_rank |
 
 Each cell gives the observed statistic with its permuted null in parentheses. The last column names the statistics that separate widely enough to establish alignment for that block. All 18 block and anchor pairs separate from their null on at least one statistic.
 

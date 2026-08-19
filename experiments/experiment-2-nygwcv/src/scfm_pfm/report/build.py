@@ -101,7 +101,16 @@ def rate(x, digits: int = 3) -> str:
     return f"{float(x):.{digits}f}"
 
 
-def anchor_levels(cell_line: str) -> dict | None:
+def rank(x) -> str:
+    """A position in a vector: an integer where it is one, a half where a median lands
+    between two."""
+    if x is None or (isinstance(x, float) and not np.isfinite(x)):
+        return "n/a"
+    x = float(x)
+    return f"{int(x):,}" if x == int(x) else f"{x:,.1f}"
+
+
+def anchor_levels(cell_line: str, clip_cp10k: float | None = None) -> dict | None:
     """Where the perturbed genes already sit, per anchor, from the shipped tables.
 
     The response difference vanishes when the queried value equals the gene's own
@@ -130,6 +139,13 @@ def anchor_levels(cell_line: str) -> dict | None:
         subset = cp10k[cols[pg["in_cells_anchor"].to_numpy()]]
         out["cells_median_cp10k"] = float(np.median(subset))
         out["cells_zero_fraction"] = float((subset == 0).mean())
+        # a pair below the read-out floor is delivered to every model as zero, so the
+        # 0 CP10K query cannot change it either
+        out["cells_below_floor_n"] = int((subset < C.RUN1_FLOOR_CP10K).sum())
+        out["cells_n_pairs"] = int(subset.size)
+        if clip_cp10k is not None:
+            out["cells_above_clip_n"] = int((subset >= clip_cp10k).sum())
+            out["cells_clip_cp10k"] = float(clip_cp10k)
     return out
 
 
@@ -371,7 +387,15 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         FigRef("response_by_value"),
     ]
     minima = response_minima(bundles)
-    levels = {cl: anchor_levels(cl) for cl in LINES}
+    clip = next(
+        (
+            b["manifest"]["layout"]["count_clip"]
+            for b in bundles.values()
+            if b["manifest"]["layout"].get("count_clip") is not None
+        ),
+        None,
+    )
+    levels = {cl: anchor_levels(cl, clip) for cl in LINES}
     if minima:
         parts = []
         uni = minima.get("uniform_virtual", [])
@@ -427,31 +451,87 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                 "is the cheapest available check that a query means what it says. " + " ".join(parts)
             )
         )
-    degenerate = []
+    no_op_rows = []
     for (model, cl), b in sorted(bundles.items()):
-        for key, blk in b.get("blocks", {}).items():
-            frac = blk.get("all_zero_fraction")
-            if frac:
-                degenerate.append((model, cl, key, frac, blk["n_response_vectors"]))
-    if degenerate:
-        worst = max(degenerate, key=lambda t: t[3])
-        by_model = {}
-        for model, cl, key, frac, _ in degenerate:
-            by_model.setdefault(model, []).append(frac)
+        for anchor, queries in b.get("query_summary", {}).items():
+            for r in queries:
+                n_zero = r.get("n_no_op_queries")
+                if n_zero:
+                    no_op_rows.append(
+                        [
+                            MODEL_LABEL[model],
+                            LABEL[cl],
+                            ANCHOR_LABEL.get(anchor, anchor),
+                            fmt(r["value_cp10k"]),
+                            f"{fmt(n_zero)} of {fmt(r['n_queries'])}",
+                            rate(n_zero / r["n_queries"]),
+                        ]
+                    )
+    stored_zero = [
+        blk
+        for b in bundles.values()
+        for blk in b.get("blocks", {}).values()
+        if blk.get("all_zero_fraction")
+    ]
+    if no_op_rows:
+        floor_counts = {
+            cl: levels[cl]
+            for cl in LINES
+            if levels.get(cl) and levels[cl].get("cells_below_floor_n") is not None
+        }
+        s.blocks += [
+            Para(
+                "A related quantity run 3 needs is how many queries the model could not see at "
+                "all. When the value asked for is the value the input already carried, the two "
+                "passes are the same call and the response is identically zero rather than "
+                "small. It happens almost only at the 0 CP10K query, at the individual-cells "
+                "anchor, where a gene that already reads zero in that cell is unchanged by "
+                "being set to zero:"
+            ),
+            Table(
+                ["model", "cell line", "anchor", "value (CP10K)", "no-op queries", "fraction"],
+                no_op_rows,
+            ),
+        ]
+        if floor_counts:
+            s.blocks.append(
+                Para(
+                    "The count is model-specific because it is set by how each model encodes "
+                    "the input, not by the cell. Of the perturbed gene and cell pairs, "
+                    + " and ".join(
+                        f"{fmt(floor_counts[cl]['cells_below_floor_n'])} of "
+                        f"{fmt(floor_counts[cl]['cells_n_pairs'])} in {LABEL[cl]}"
+                        for cl in LINES if cl in floor_counts
+                    )
+                    + f" sit below the {fmt(C.RUN1_FLOOR_CP10K)} CP10K read-out floor and are "
+                    "therefore delivered as zero. scGPT's no-op count is exactly that number in "
+                    "both lines, so every below-floor pair collapses into its lowest bin. "
+                    "scPRINT and TranscriptFormer record fewer, so for them some below-floor "
+                    "pairs still differ from an explicit zero."
+                    + (
+                        " The single TranscriptFormer no-op at the 64 CP10K query is recorded "
+                        "and not explained: it is not that model's "
+                        f"{fmt(floor_counts[LINES[0]]['cells_clip_cp10k'])} CP10K count clip, "
+                        f"which {fmt(floor_counts[LINES[0]]['cells_above_clip_n'])} "
+                        f"{LABEL[LINES[0]]} pairs sit at or above."
+                        if floor_counts.get(LINES[0], {}).get("cells_above_clip_n")
+                        else ""
+                    )
+                )
+            )
         s.blocks.append(
             Para(
-                "One consequence of a quantized input is worth carrying into run 3. When the "
-                "queried value falls in the same bin the input already sat in, the two forward "
-                "passes are the same call and the response is identically zero, not small. "
-                + "; ".join(
-                    f"{MODEL_LABEL[m]} {fmt(100 * min(v), 3)}% to {fmt(100 * max(v), 3)}% of "
-                    f"response vectors" for m, v in sorted(by_model.items())
+                "Nothing in the stored features exposes this. "
+                + (
+                    "No stored response vector is identically zero, because the stored "
+                    "individual-cells block averages over the four cells and a no-op in one "
+                    "cell is diluted by the other three. "
+                    if not stored_zero
+                    else ""
                 )
-                + f" are exactly zero, the worst being {MODEL_LABEL[worst[0]]} at "
-                f"{worst[2].split('/')[0].replace('_', ' ')} in {LABEL[worst[1]]} "
-                f"({fmt(100 * worst[3], 3)}% of {fmt(worst[4])}). Averaging over those pairs "
-                "dilutes a score rather than measuring anything, so run 3 should drop them per "
-                "model rather than treat a zero as a small effect."
+                + "A consumer that averages over these pairs is averaging a structural zero in "
+                "with real effects, so run 3 should read the per-query record and drop them "
+                "rather than treat a zero as a small response."
             )
         )
     sections.append(s)
@@ -817,8 +897,8 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
             ),
             FigRef("scgpt_context"),
             Para(
-                "The three widths do not agree closely, so the production sweep uses the tiled "
-                f"width ({cc['production_mode']}), the one inside scGPT's training length. The "
+                "The three widths do not agree closely, so the production sweep uses the "
+                f"{cc['production_mode']} width, the one inside scGPT's training length. The "
                 "cost is that a tiled query is several forward passes rather than one "
                 "differentiable function of the input, so scGPT's production gradients are "
                 "central differences at the selected step; the exact forward-mode derivative is "
@@ -852,7 +932,7 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
     # ---- 8. wiring
     s = Section()
     s.blocks += [
-        Head(2, "Wiring checks"),
+        Head(2, "Read-out order alignment"),
         Head(3, "Procedure"),
         Para(
             "The failure that would silently invalidate everything is a gene-index misalignment "
@@ -886,8 +966,8 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                     ANCHOR_LABEL.get(r["anchor"], r["anchor"]),
                     fmt(r["n_perturbed"]),
                     f"{rate(r['own_largest'])} ({rate(r['own_largest_null'])})",
-                    f"{fmt(r['self_rank_median'])} of {fmt(b['n_readout'])} "
-                    f"({fmt(r['self_rank_median_null'])})",
+                    f"{rank(r['self_rank_median'])} of {fmt(b['n_readout'])} "
+                    f"({rank(r['self_rank_median_null'])})",
                     f"{rate(r['sign_rate'])} ({rate(r['sign_rate_null'])})",
                     ", ".join(r["separated_by"]) or "none",
                 ]
@@ -1199,6 +1279,24 @@ def main(argv: list[str] | None = None) -> int:
     floor = json.loads((repo / "results" / "floor_sweep" / "floor_decision.json").read_text())
     vpath = repo / "results" / "verification" / "verify_all.json"
     verification = json.loads(vpath.read_text()) if vpath.exists() else None
+
+    # a small machine-readable side output: which (model, cell line, anchor, value)
+    # queries were no-ops, so run 3 can drop them instead of averaging structural zeros
+    pd.DataFrame(
+        [
+            {
+                "model": model,
+                "cell_line": cl,
+                "anchor": anchor,
+                "value_cp10k": r["value_cp10k"],
+                "n_queries": r["n_queries"],
+                "n_no_op_queries": r.get("n_no_op_queries", 0),
+            }
+            for (model, cl), b in sorted(bundles.items())
+            for anchor, queries in b.get("query_summary", {}).items()
+            for r in queries
+        ]
+    ).to_csv(out / "no_op_queries.csv", index=False)
 
     figs = figmod.build_all(bundles, repo)
     sections = build_sections(bundles, floor, verification)

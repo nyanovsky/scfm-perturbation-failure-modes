@@ -11,5 +11,8 @@
   "AIDO.Cell": "#7495AB",
   "ceiling": "#C4650D",
   "mean-effect baseline": "#4E728A",
-  "cross-perturbation": "#2E6E4E"
+  "cross-perturbation": "#2E6E4E",
+  "read-out gene visible": "#84713A",
+  "read-out gene masked": "#31362E",
+  "permuted read-out null": "#31362E"
 }

@@ -378,7 +378,9 @@ def fig_response_by_value(bundles: dict, out: Path) -> Fig:
                 s = pd.DataFrame(b["query_summary"][anchor]).sort_values("value_cp10k")
                 fig.add_trace(
                     go.Scatter(
-                        x=s.value_cp10k,
+                        # the grid is roughly geometric and includes 0, so it reads as
+                        # ordered categories rather than on a linear or log axis
+                        x=[f"{v:g}" for v in s.value_cp10k],
                         y=s.cross_gene_sd,
                         name=MODEL_LABEL[model] if (ri == 1 and ci == 1) else None,
                         legendgroup=model,
@@ -405,9 +407,11 @@ def fig_response_by_value(bundles: dict, out: Path) -> Fig:
                 ]
     for ci in (1, 2):
         fig.update_xaxes(title_text="virtual value for the perturbed gene (CP10K)",
-                         row=len(anchors), col=ci)
+                         type="category", row=len(anchors), col=ci)
         for ri in range(1, len(anchors) + 1):
-            fig.update_yaxes(title_text="response spread (log, model units)", type="log", row=ri, col=ci)
+            fig.update_xaxes(type="category", row=ri, col=ci)
+            fig.update_yaxes(title_text="response spread (log, model units)", type="log",
+                             dtick=1, row=ri, col=ci)
     apply_theme(fig, height=620)
     return Fig(
         name="response_by_value",
@@ -529,7 +533,7 @@ def fig_masked_regime(bundles: dict, out: Path) -> Fig:
     for ci in (1, 2):
         fig.update_xaxes(title_text="model", row=1, col=ci)
         fig.update_yaxes(title_text="median |zero-out response| (log, model units)", type="log",
-                         row=1, col=ci)
+                         dtick=1, row=1, col=ci)
     apply_theme(fig, height=460)
     return Fig(
         name="masked_regime",
@@ -613,7 +617,7 @@ def fig_wiring(bundles: dict, out: Path) -> Fig:
         alt="Three alignment statistics per model beside their permuted nulls; every model "
         "separates from its null on at least one of them.",
         meta={
-            "title": "Is the read-out order aligned with the query?",
+            "title": "Read-out order alignment, each statistic against its permuted null",
             "description": "At the mean control anchor, over the perturbed genes sampled in each "
             "block. Each statistic is shown beside the same statistic computed after relabelling "
             "the perturbed gene's own read-out column at random (the pale bar). 'Own entry "
@@ -717,9 +721,11 @@ def fig_feature_scale(bundles: dict, out: Path) -> Fig:
                     row=ri, col=1,
                 )
     fig.update_xaxes(title_text="absolute feature value (log, model units)", type="log",
-                     row=len(forms), col=1)
+                     dtick=1, row=len(forms), col=1)
     for ri in range(1, len(forms) + 1):
-        fig.update_yaxes(title_text="model", row=ri, col=1)
+        fig.update_yaxes(title_text="", row=ri, col=1)
+        # decade ticks only; the axis title (and its "log scale" note) stays on the last row
+        fig.update_xaxes(dtick=1, row=ri, col=1)
     apply_theme(fig, height=700)
     return Fig(
         name="feature_scale",
