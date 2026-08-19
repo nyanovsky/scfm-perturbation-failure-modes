@@ -1,0 +1,1282 @@
+{
+  "model": "transcriptformer",
+  "cell_line": "jurkat",
+  "manifest": {
+    "model": "transcriptformer",
+    "cell_line": "jurkat",
+    "layout": {
+      "model": "transcriptformer",
+      "cell_line": "jurkat",
+      "n_readout_genes": 3247,
+      "n_supplied_genes": 3247,
+      "supplied_mode": "readout_in_passes",
+      "forward_passes_per_query": 2,
+      "context_block_genes": 256,
+      "ordering": "descending anchor expression, gene id as tie-break, with the perturbed gene moved to position 0",
+      "seq_len": 2047,
+      "softmax_over": "the tokens of the same pass; the response is mu divided by that pass's total count, so passes are comparable",
+      "count_clip": 30.0,
+      "count_clip_note": "the model's own training-time clip; a query value above it saturates",
+      "unmeasurable_fraction_under_fixed_ordering": 0.5,
+      "masked_variant": "not applicable: a causal mask means a gene never sees its own value, so this model is natively in the masked regime"
+    },
+    "scope": {
+      "n_perturbed": 250,
+      "n_perturbed_cells_anchor": 60,
+      "n_perturbed_masked": 60,
+      "n_step_sweep": 50,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ]
+    },
+    "value_grid_cp10k": [
+      0.0,
+      1.0,
+      4.0,
+      16.0,
+      64.0
+    ],
+    "gdt_base_grid_cp10k": [
+      0.0,
+      1.0,
+      4.0,
+      16.0,
+      64.0
+    ],
+    "sign_convention": "perturbed minus baseline; a positive entry means raising the perturbed gene raises the model's prediction for the read-out gene. Zero-out uses this convention, not the paper's reversed one",
+    "expression_floor_cp10k": 0.5,
+    "expression_floor_note": "the read-out set is the inclusive floor; each gene's pooled control level travels with the block so a higher floor is a column mask",
+    "gene_embedding_source": "Transcriptformer.gene_embeddings.embedding, the ESM2-derived gene embedding table",
+    "gene_embedding_shape": [
+      3247,
+      2560
+    ],
+    "mask_spec": null,
+    "seed": 42,
+    "anchors": {
+      "uniform_virtual": {
+        "description": "every supplied gene pinned at 3.0798 CP10K, the uniform share of a 10,000-count virtual cell; the paper's construction, and far off the distribution the models were trained on",
+        "cells": [
+          "uniform"
+        ],
+        "n_perturbed": 250,
+        "step": 1.0,
+        "forms": {
+          "vvp": {
+            "raw": [
+              250,
+              5,
+              3247
+            ],
+            "standardized": [
+              250,
+              5,
+              3247
+            ],
+            "recentred": [
+              250,
+              5,
+              3247
+            ],
+            "log2fc": [
+              250,
+              5,
+              3247
+            ]
+          },
+          "zero_out": {
+            "raw": [
+              250,
+              3247
+            ],
+            "standardized": [
+              250,
+              3247
+            ],
+            "recentred": [
+              250,
+              3247
+            ],
+            "log2fc": [
+              250,
+              3247
+            ]
+          },
+          "gdt": {
+            "raw": [
+              250,
+              5,
+              3247
+            ],
+            "standardized": [
+              250,
+              5,
+              3247
+            ],
+            "recentred": [
+              250,
+              5,
+              3247
+            ]
+          }
+        },
+        "n_cells_averaged": 1,
+        "zero_out_value_index": 0,
+        "gdt_source": "central_finite_difference(step=1)",
+        "seconds": 367.0
+      },
+      "mean_control": {
+        "description": "the pooled non-targeting control mean expression profile of this cell line, restricted to the read-out genes; the on-distribution counterpart",
+        "cells": [
+          "mean_control"
+        ],
+        "n_perturbed": 250,
+        "step": 1.0,
+        "forms": {
+          "vvp": {
+            "raw": [
+              250,
+              5,
+              3247
+            ],
+            "standardized": [
+              250,
+              5,
+              3247
+            ],
+            "recentred": [
+              250,
+              5,
+              3247
+            ],
+            "log2fc": [
+              250,
+              5,
+              3247
+            ]
+          },
+          "zero_out": {
+            "raw": [
+              250,
+              3247
+            ],
+            "standardized": [
+              250,
+              3247
+            ],
+            "recentred": [
+              250,
+              3247
+            ],
+            "log2fc": [
+              250,
+              3247
+            ]
+          },
+          "gdt": {
+            "raw": [
+              250,
+              5,
+              3247
+            ],
+            "standardized": [
+              250,
+              5,
+              3247
+            ],
+            "recentred": [
+              250,
+              5,
+              3247
+            ]
+          }
+        },
+        "n_cells_averaged": 1,
+        "zero_out_value_index": 0,
+        "gdt_source": "central_finite_difference(step=1)",
+        "seconds": 367.0
+      },
+      "individual_cells": {
+        "description": "4 real non-targeting control cells, each converted to CP10K so every anchor sits at one depth; responses are averaged over the cells and their spread is recorded",
+        "cells": [
+          "AAACCCAAGCTGGAGT-37",
+          "AAACCCAAGGGCCTCT-51",
+          "AAACCCACAAAGAGTT-20",
+          "AAACCCACATTGCTTT-48"
+        ],
+        "n_perturbed": 60,
+        "step": 1.0,
+        "forms": {
+          "vvp": {
+            "raw": [
+              60,
+              5,
+              3247
+            ],
+            "standardized": [
+              60,
+              5,
+              3247
+            ],
+            "recentred": [
+              60,
+              5,
+              3247
+            ],
+            "log2fc": [
+              60,
+              5,
+              3247
+            ]
+          },
+          "zero_out": {
+            "raw": [
+              60,
+              3247
+            ],
+            "standardized": [
+              60,
+              3247
+            ],
+            "recentred": [
+              60,
+              3247
+            ],
+            "log2fc": [
+              60,
+              3247
+            ]
+          },
+          "gdt": {
+            "raw": [
+              60,
+              5,
+              3247
+            ],
+            "standardized": [
+              60,
+              5,
+              3247
+            ],
+            "recentred": [
+              60,
+              5,
+              3247
+            ]
+          }
+        },
+        "n_cells_averaged": 4,
+        "zero_out_value_index": 0,
+        "gdt_source": "central_finite_difference(step=1)",
+        "seconds": 352.3,
+        "per_cell_spread": "responses averaged over cells; see summary rows"
+      }
+    },
+    "substitutions": [
+      "compile_block_mask disabled (eager flex-attention block mask) so that a single-cell forward pass does not pay a torch.compile warm-up"
+    ],
+    "contract": {
+      "model": "transcriptformer",
+      "checkpoint": "s3://czi-transcriptformer/weights/tf_sapiens.tar.gz",
+      "checkpoint_revision": "tf_sapiens (public bucket object, unversioned)",
+      "checkpoint_md5": null,
+      "input_normalization": "raw counts, clipped at 30, paired with gene tokens; counts enter the attention score as log1p(count + 1e-6) on the right-shifted sequence, and one auxiliary assay token ('10x 3' v3') is prepended. Sequence length is fixed at 2047 gene tokens plus the assay token, so the gene universe is covered in several passes.",
+      "output_head": "CountDecoderHead 'mu' (zero-truncated Poisson rate), softmax link",
+      "output_semantics": "predicted share of the cell's total counts assigned to that gene, conditioned on the gene's own identity and on the identity and count of every gene earlier in the ordering. Reported as mu / total counts so values are comparable across passes; raw mu is not.",
+      "information_flow": "autoregressive, causal mask over the gene sequence",
+      "ordering_dependent": true,
+      "response_symmetric": false,
+      "symmetry_evidence": "the causal mask makes the response structurally asymmetric: gene j responds to gene i only when i precedes j. Demonstrated by the ordering probe recorded alongside this contract.",
+      "differentiable_wrt_input_expression": true,
+      "jacobian_available": true,
+      "jacobian_method": "central_finite_difference",
+      "jacobian_unavailable_reason": null,
+      "jacobian_check": {},
+      "vocabulary_kind": "ensembl",
+      "vocabulary_size": 23830,
+      "context_length": 2048,
+      "dtype": "float32",
+      "substitutions": [
+        "compile_block_mask disabled (eager flex-attention block mask) so that a single-cell forward pass does not pay a torch.compile warm-up"
+      ],
+      "notes": "The gene ordering is descending count in the cell. The universe needs several passes, and each begins with the same 256-gene context block (the highest-count genes, with the source gene at position 0 for the Jacobian pass), so every gene is read against the same prefix and no pass is left without counts to divide. Genes with zero counts in this cell still receive tokens; a zero count is outside the support of the zero-truncated Poisson likelihood the model was trained with, so those entries describe the model's behaviour on a gene it did not observe rather than a fitted prediction. Token-id alignment against the checkpoint's own vocabulary: {'checked': 23830, 'mismatched': 0, 'special_token_order_from_checkpoint': ['unknown', '[PAD]', '[START]', '[END]', '[RD]', '[CELL]', '[MASK]']}."
+    },
+    "step_selection": {
+      "uniform_virtual": {
+        "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+        "steps_swept": [
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ],
+        "base_value_cp10k": 4.0,
+        "n_genes": 50,
+        "selected_step": 1.0,
+        "verdict": "magnitude_unstable",
+        "gradient_features_usable_for": "direction and ranking only; magnitudes move with the step",
+        "adjacent_agreement": [
+          {
+            "step": 0.05,
+            "next_step": 0.1,
+            "median_pearson_adjacent": 0.2143700512608096,
+            "median_relative_l2_adjacent": 1.3330333228405664,
+            "median_abs_value": 1.6298145055770934e-08,
+            "n_genes": 50
+          },
+          {
+            "step": 0.1,
+            "next_step": 0.25,
+            "median_pearson_adjacent": 0.38783544016753246,
+            "median_relative_l2_adjacent": 1.2018691616700117,
+            "median_abs_value": 1.2660166248679178e-08,
+            "n_genes": 50
+          },
+          {
+            "step": 0.25,
+            "next_step": 0.5,
+            "median_pearson_adjacent": 0.6688863379080296,
+            "median_relative_l2_adjacent": 0.8787712446721037,
+            "median_abs_value": 1.1059455573558807e-08,
+            "n_genes": 50
+          },
+          {
+            "step": 0.5,
+            "next_step": 1.0,
+            "median_pearson_adjacent": 0.837020728870971,
+            "median_relative_l2_adjacent": 0.5904208493658202,
+            "median_abs_value": 9.720679372549057e-09,
+            "n_genes": 50
+          },
+          {
+            "step": 1.0,
+            "next_step": 2.0,
+            "median_pearson_adjacent": 0.9429309041865502,
+            "median_relative_l2_adjacent": 0.3491806428227817,
+            "median_abs_value": 8.60018189996481e-09,
+            "n_genes": 50
+          }
+        ]
+      },
+      "mean_control": {
+        "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+        "steps_swept": [
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ],
+        "base_value_cp10k": 4.0,
+        "n_genes": 50,
+        "selected_step": 1.0,
+        "verdict": "magnitude_unstable",
+        "gradient_features_usable_for": "direction and ranking only; magnitudes move with the step",
+        "adjacent_agreement": [
+          {
+            "step": 0.05,
+            "next_step": 0.1,
+            "median_pearson_adjacent": 0.2251108098633342,
+            "median_relative_l2_adjacent": 1.3084205538683857,
+            "median_abs_value": 1.0477378964424171e-08,
+            "n_genes": 50
+          },
+          {
+            "step": 0.1,
+            "next_step": 0.25,
+            "median_pearson_adjacent": 0.4872726774072761,
+            "median_relative_l2_adjacent": 1.0965136817268584,
+            "median_abs_value": 1.0331859812140478e-08,
+            "n_genes": 50
+          },
+          {
+            "step": 0.25,
+            "next_step": 0.5,
+            "median_pearson_adjacent": 0.7657639076802927,
+            "median_relative_l2_adjacent": 0.710456526143646,
+            "median_abs_value": 8.41100700199604e-09,
+            "n_genes": 50
+          },
+          {
+            "step": 0.5,
+            "next_step": 1.0,
+            "median_pearson_adjacent": 0.9013627303271687,
+            "median_relative_l2_adjacent": 0.4482151398409321,
+            "median_abs_value": 7.683411240577698e-09,
+            "n_genes": 50
+          },
+          {
+            "step": 1.0,
+            "next_step": 2.0,
+            "median_pearson_adjacent": 0.9672236060804826,
+            "median_relative_l2_adjacent": 0.2591665458832867,
+            "median_abs_value": 7.290509529411793e-09,
+            "n_genes": 50
+          }
+        ]
+      },
+      "individual_cells": {
+        "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+        "steps_swept": [
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0,
+          2.0
+        ],
+        "base_value_cp10k": 4.0,
+        "n_genes": 50,
+        "selected_step": 1.0,
+        "verdict": "magnitude_unstable",
+        "gradient_features_usable_for": "direction and ranking only; magnitudes move with the step",
+        "adjacent_agreement": [
+          {
+            "step": 0.05,
+            "next_step": 0.1,
+            "median_pearson_adjacent": 0.25375279420553665,
+            "median_relative_l2_adjacent": 1.292929412710491,
+            "median_abs_value": 1.2223608791828199e-08,
+            "n_genes": 50
+          },
+          {
+            "step": 0.1,
+            "next_step": 0.25,
+            "median_pearson_adjacent": 0.48320980843993744,
+            "median_relative_l2_adjacent": 1.102581077434637,
+            "median_abs_value": 1.0477378964424147e-08,
+            "n_genes": 50
+          },
+          {
+            "step": 0.25,
+            "next_step": 0.5,
+            "median_pearson_adjacent": 0.7454738527749853,
+            "median_relative_l2_adjacent": 0.7297089703203359,
+            "median_abs_value": 9.19681042432785e-09,
+            "n_genes": 50
+          },
+          {
+            "step": 0.5,
+            "next_step": 1.0,
+            "median_pearson_adjacent": 0.8988307652868552,
+            "median_relative_l2_adjacent": 0.45726146074661583,
+            "median_abs_value": 8.440110832452774e-09,
+            "n_genes": 50
+          },
+          {
+            "step": 1.0,
+            "next_step": 2.0,
+            "median_pearson_adjacent": 0.96636958485846,
+            "median_relative_l2_adjacent": 0.2637687594836094,
+            "median_abs_value": 7.952621672302485e-09,
+            "n_genes": 50
+          }
+        ]
+      }
+    },
+    "wiring_checks": {
+      "uniform_virtual": {
+        "n_genes": 250,
+        "value_low_cp10k": 1.0,
+        "value_high_cp10k": 64.0,
+        "sign_check_pass_fraction": 0.976,
+        "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+        "magnitude_check_pass_fraction": 0.0,
+        "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+        "median_self_rank": 614.5,
+        "permuted_magnitude_pass_fraction": 0.0,
+        "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+        "threshold": 0.95
+      },
+      "mean_control": {
+        "n_genes": 250,
+        "value_low_cp10k": 1.0,
+        "value_high_cp10k": 64.0,
+        "sign_check_pass_fraction": 0.976,
+        "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+        "magnitude_check_pass_fraction": 0.0,
+        "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+        "median_self_rank": 80.5,
+        "permuted_magnitude_pass_fraction": 0.0,
+        "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+        "threshold": 0.95
+      },
+      "individual_cells": {
+        "n_genes": 60,
+        "value_low_cp10k": 1.0,
+        "value_high_cp10k": 64.0,
+        "sign_check_pass_fraction": 0.9666666666666667,
+        "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+        "magnitude_check_pass_fraction": 0.0,
+        "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+        "median_self_rank": 75.0,
+        "permuted_magnitude_pass_fraction": 0.0,
+        "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+        "threshold": 0.95
+      }
+    },
+    "masked": {
+      "ran": false,
+      "reason": "the model is autoregressive: a gene never sees its own value, so it is natively in the masked regime and a masked variant would be the same query"
+    }
+  },
+  "n_readout": 3247,
+  "n_perturbed": 250,
+  "blocks": {
+    "individual_cells/zero_out": {
+      "shape": [
+        60,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 2.0761581254191697e-06,
+      "abs_p99": 5.648260048474185e-05
+    },
+    "individual_cells/vvp": {
+      "shape": [
+        60,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 5.3370204113889486e-06,
+      "abs_p99": 0.00014657824067398906
+    },
+    "individual_cells/gdt": {
+      "shape": [
+        60,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 1.3888766261516139e-06,
+      "abs_p99": 1.728045208437834e-05
+    },
+    "mean_control/zero_out": {
+      "shape": [
+        250,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 2.094544470310211e-06,
+      "abs_p99": 4.276210893294774e-05
+    },
+    "mean_control/vvp": {
+      "shape": [
+        250,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 5.492649506777525e-06,
+      "abs_p99": 0.00015068883658386767
+    },
+    "mean_control/gdt": {
+      "shape": [
+        250,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 1.5039695426821709e-06,
+      "abs_p99": 1.6100653738249093e-05
+    },
+    "uniform_virtual/zero_out": {
+      "shape": [
+        250,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 8.419461664743721e-06,
+      "abs_p99": 6.0124944866402075e-05
+    },
+    "uniform_virtual/vvp": {
+      "shape": [
+        250,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 9.00737359188497e-06,
+      "abs_p99": 0.0001231855567311868
+    },
+    "uniform_virtual/gdt": {
+      "shape": [
+        250,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 1.8111313693225384e-06,
+      "abs_p99": 1.8147300579585135e-05
+    }
+  },
+  "query_summary": {
+    "individual_cells": [
+      {
+        "value_cp10k": 0.0,
+        "cross_gene_mean": -5.151281971505934e-07,
+        "cross_gene_sd": 1.9892629339107234e-05,
+        "max_abs": 0.0007463842921424657,
+        "self_delta": 0.0,
+        "self_rank_median": 200.0,
+        "n_queries": 240
+      },
+      {
+        "value_cp10k": 1.0,
+        "cross_gene_mean": -1.9971120613964155e-07,
+        "cross_gene_sd": 1.465451644316849e-05,
+        "max_abs": 0.0005550719797611237,
+        "self_delta": -2.0315928850322962e-07,
+        "self_rank_median": 192.5,
+        "n_queries": 240
+      },
+      {
+        "value_cp10k": 4.0,
+        "cross_gene_mean": 2.1665473468601704e-06,
+        "cross_gene_sd": 4.724625176809593e-05,
+        "max_abs": 0.0017778825422283262,
+        "self_delta": 1.5929850633256137e-05,
+        "self_rank_median": 89.5,
+        "n_queries": 240
+      },
+      {
+        "value_cp10k": 16.0,
+        "cross_gene_mean": 1.3742263840981406e-05,
+        "cross_gene_sd": 0.00014777742803714352,
+        "max_abs": 0.0033638414461165667,
+        "self_delta": 0.00012120610335841775,
+        "self_rank_median": 66.0,
+        "n_queries": 240
+      },
+      {
+        "value_cp10k": 64.0,
+        "cross_gene_mean": 1.9897330345878933e-05,
+        "cross_gene_sd": 0.00020129495180683024,
+        "max_abs": 0.004289569798856974,
+        "self_delta": 0.00016206606233026832,
+        "self_rank_median": 75.0,
+        "n_queries": 240
+      }
+    ],
+    "mean_control": [
+      {
+        "value_cp10k": 0.0,
+        "cross_gene_mean": -6.548498991233205e-07,
+        "cross_gene_sd": 1.7520691364362588e-05,
+        "max_abs": 0.0007329278741963208,
+        "self_delta": -8.261122275143862e-07,
+        "self_rank_median": 231.5,
+        "n_queries": 250
+      },
+      {
+        "value_cp10k": 1.0,
+        "cross_gene_mean": -8.240391061881349e-08,
+        "cross_gene_sd": 5.757020592124706e-06,
+        "max_abs": 0.00023616355611011386,
+        "self_delta": 7.182825356721878e-08,
+        "self_rank_median": 148.5,
+        "n_queries": 250
+      },
+      {
+        "value_cp10k": 4.0,
+        "cross_gene_mean": 2.504466414346334e-06,
+        "cross_gene_sd": 4.36031142318518e-05,
+        "max_abs": 0.0016992981545627117,
+        "self_delta": 2.1982952603138983e-05,
+        "self_rank_median": 69.0,
+        "n_queries": 250
+      },
+      {
+        "value_cp10k": 16.0,
+        "cross_gene_mean": 1.4184493837855305e-05,
+        "cross_gene_sd": 0.00014372993425054744,
+        "max_abs": 0.0033158769365400076,
+        "self_delta": 0.0001256717077922076,
+        "self_rank_median": 62.0,
+        "n_queries": 250
+      },
+      {
+        "value_cp10k": 64.0,
+        "cross_gene_mean": 2.042565961297536e-05,
+        "cross_gene_sd": 0.00019527724202182684,
+        "max_abs": 0.004236919456161559,
+        "self_delta": 0.00016214916831813753,
+        "self_rank_median": 76.0,
+        "n_queries": 250
+      }
+    ],
+    "uniform_virtual": [
+      {
+        "value_cp10k": 0.0,
+        "cross_gene_mean": -1.0858666515080352e-06,
+        "cross_gene_sd": 2.8484351754957383e-05,
+        "max_abs": 0.0007297867559827864,
+        "self_delta": -8.26717950985767e-06,
+        "self_rank_median": 1307.5,
+        "n_queries": 250
+      },
+      {
+        "value_cp10k": 1.0,
+        "cross_gene_mean": -7.393708075352977e-07,
+        "cross_gene_sd": 1.7743351721519042e-05,
+        "max_abs": 0.00040727376472204924,
+        "self_delta": -6.700905942125246e-06,
+        "self_rank_median": 1197.5,
+        "n_queries": 250
+      },
+      {
+        "value_cp10k": 4.0,
+        "cross_gene_mean": 2.507995755733933e-07,
+        "cross_gene_sd": 7.1339317582441105e-06,
+        "max_abs": 0.00017529382603242993,
+        "self_delta": 3.3461728889960796e-06,
+        "self_rank_median": 1176.5,
+        "n_queries": 250
+      },
+      {
+        "value_cp10k": 16.0,
+        "cross_gene_mean": 7.223409375505397e-06,
+        "cross_gene_sd": 5.242313317141307e-05,
+        "max_abs": 0.0011554088559933007,
+        "self_delta": 4.2983749153790995e-05,
+        "self_rank_median": 568.0,
+        "n_queries": 250
+      },
+      {
+        "value_cp10k": 64.0,
+        "cross_gene_mean": 1.5376450115886725e-05,
+        "cross_gene_sd": 7.605771720673799e-05,
+        "max_abs": 0.0013040192134212703,
+        "self_delta": 5.718861211789772e-05,
+        "self_rank_median": 720.0,
+        "n_queries": 250
+      }
+    ]
+  },
+  "step_sweep": [
+    {
+      "step": 0.05,
+      "next_step": 0.1,
+      "median_pearson_adjacent": 0.2143700512608096,
+      "median_relative_l2_adjacent": 1.3330333228405664,
+      "median_abs_value": 1.6298145055770934e-08,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.1,
+      "next_step": 0.25,
+      "median_pearson_adjacent": 0.38783544016753246,
+      "median_relative_l2_adjacent": 1.2018691616700117,
+      "median_abs_value": 1.2660166248679178e-08,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.25,
+      "next_step": 0.5,
+      "median_pearson_adjacent": 0.6688863379080296,
+      "median_relative_l2_adjacent": 0.8787712446721037,
+      "median_abs_value": 1.1059455573558807e-08,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.5,
+      "next_step": 1.0,
+      "median_pearson_adjacent": 0.837020728870971,
+      "median_relative_l2_adjacent": 0.5904208493658202,
+      "median_abs_value": 9.720679372549057e-09,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 1.0,
+      "next_step": 2.0,
+      "median_pearson_adjacent": 0.9429309041865502,
+      "median_relative_l2_adjacent": 0.3491806428227817,
+      "median_abs_value": 8.60018189996481e-09,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.05,
+      "next_step": 0.1,
+      "median_pearson_adjacent": 0.2251108098633342,
+      "median_relative_l2_adjacent": 1.3084205538683857,
+      "median_abs_value": 1.0477378964424171e-08,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.1,
+      "next_step": 0.25,
+      "median_pearson_adjacent": 0.4872726774072761,
+      "median_relative_l2_adjacent": 1.0965136817268584,
+      "median_abs_value": 1.0331859812140478e-08,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.25,
+      "next_step": 0.5,
+      "median_pearson_adjacent": 0.7657639076802927,
+      "median_relative_l2_adjacent": 0.710456526143646,
+      "median_abs_value": 8.41100700199604e-09,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.5,
+      "next_step": 1.0,
+      "median_pearson_adjacent": 0.9013627303271687,
+      "median_relative_l2_adjacent": 0.4482151398409321,
+      "median_abs_value": 7.683411240577698e-09,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 1.0,
+      "next_step": 2.0,
+      "median_pearson_adjacent": 0.9672236060804826,
+      "median_relative_l2_adjacent": 0.2591665458832867,
+      "median_abs_value": 7.290509529411793e-09,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.05,
+      "next_step": 0.1,
+      "median_pearson_adjacent": 0.25375279420553665,
+      "median_relative_l2_adjacent": 1.292929412710491,
+      "median_abs_value": 1.2223608791828199e-08,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.1,
+      "next_step": 0.25,
+      "median_pearson_adjacent": 0.48320980843993744,
+      "median_relative_l2_adjacent": 1.102581077434637,
+      "median_abs_value": 1.0477378964424147e-08,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.25,
+      "next_step": 0.5,
+      "median_pearson_adjacent": 0.7454738527749853,
+      "median_relative_l2_adjacent": 0.7297089703203359,
+      "median_abs_value": 9.19681042432785e-09,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.5,
+      "next_step": 1.0,
+      "median_pearson_adjacent": 0.8988307652868552,
+      "median_relative_l2_adjacent": 0.45726146074661583,
+      "median_abs_value": 8.440110832452774e-09,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 1.0,
+      "next_step": 2.0,
+      "median_pearson_adjacent": 0.96636958485846,
+      "median_relative_l2_adjacent": 0.2637687594836094,
+      "median_abs_value": 7.952621672302485e-09,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    }
+  ],
+  "wiring_detail": [
+    {
+      "bin": "at or below the top of the value grid",
+      "n": 250,
+      "pass_fraction": 0.0,
+      "median_anchor_cp10k": 1.258144520925124
+    }
+  ],
+  "alignment": [
+    {
+      "anchor": "uniform_virtual",
+      "n_perturbed": 250,
+      "n_readout": 3247,
+      "own_largest": 0.0,
+      "own_largest_null": 0.0,
+      "self_rank_median": 614.5,
+      "self_rank_median_fraction": 0.18930991990141713,
+      "self_rank_median_null": 1768.5,
+      "self_rank_median_fraction_null": 0.5448243992606284,
+      "sign_rate": 0.976,
+      "sign_rate_null": 0.6,
+      "separated_by": [
+        "sign"
+      ],
+      "aligned": true
+    },
+    {
+      "anchor": "mean_control",
+      "n_perturbed": 250,
+      "n_readout": 3247,
+      "own_largest": 0.0,
+      "own_largest_null": 0.0,
+      "self_rank_median": 80.5,
+      "self_rank_median_fraction": 0.024799753542821934,
+      "self_rank_median_null": 1616.0,
+      "self_rank_median_fraction_null": 0.49784349969192854,
+      "sign_rate": 0.976,
+      "sign_rate_null": 0.84,
+      "separated_by": [
+        "self_rank"
+      ],
+      "aligned": true
+    },
+    {
+      "anchor": "individual_cells",
+      "n_perturbed": 60,
+      "n_readout": 3247,
+      "own_largest": 0.0,
+      "own_largest_null": 0.0,
+      "self_rank_median": 75.0,
+      "self_rank_median_fraction": 0.02310536044362292,
+      "self_rank_median_null": 1616.5,
+      "self_rank_median_fraction_null": 0.49799753542821934,
+      "sign_rate": 0.9666666666666667,
+      "sign_rate_null": 0.7833333333333333,
+      "separated_by": [
+        "self_rank"
+      ],
+      "aligned": true
+    }
+  ],
+  "checks": [
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 3247) (expected (60, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/zero_out/recentred_present",
+      "ok": true,
+      "detail": "the recentred variant sits beside the raw one for a softmax model"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 5, 3247) (expected (60, 5, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/vvp/recentred_present",
+      "ok": true,
+      "detail": "the recentred variant sits beside the raw one for a softmax model"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 5, 3247) (expected (60, 5, 3247)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/gdt/recentred_present",
+      "ok": true,
+      "detail": "the recentred variant sits beside the raw one for a softmax model"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/softmax_coupling",
+      "ok": false,
+      "detail": "median |cross-gene mean| / sd = 0.063 (tolerance 0.05); raising one gene's share must lower others"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 3247) (expected (250, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/zero_out/recentred_present",
+      "ok": true,
+      "detail": "the recentred variant sits beside the raw one for a softmax model"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/vvp/recentred_present",
+      "ok": true,
+      "detail": "the recentred variant sits beside the raw one for a softmax model"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/gdt/recentred_present",
+      "ok": true,
+      "detail": "the recentred variant sits beside the raw one for a softmax model"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/softmax_coupling",
+      "ok": false,
+      "detail": "median |cross-gene mean| / sd = 0.06497 (tolerance 0.05); raising one gene's share must lower others"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 3247) (expected (250, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/zero_out/recentred_present",
+      "ok": true,
+      "detail": "the recentred variant sits beside the raw one for a softmax model"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/vvp/recentred_present",
+      "ok": true,
+      "detail": "the recentred variant sits beside the raw one for a softmax model"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/gdt/recentred_present",
+      "ok": true,
+      "detail": "the recentred variant sits beside the raw one for a softmax model"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/softmax_coupling",
+      "ok": false,
+      "detail": "median |cross-gene mean| / sd = 0.05795 (tolerance 0.05); raising one gene's share must lower others"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "step_selection",
+      "ok": true,
+      "detail": "selected step and adjacent-step agreement recorded for every anchor; magnitude-unstable anchors: ['uniform_virtual', 'mean_control', 'individual_cells']"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "wiring_by_anchor_level",
+      "ok": true,
+      "detail": "own-entry-largest rate by the perturbed gene's own anchor level: at or below the top of the value grid (250 genes) 0.000; the value grid tops out at 64 CP10K, so a gene whose anchor sits far above it is barely moved by the query"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on sign: own entry largest 0.000 (null 0.000); median self-rank 614 of 3247 (null 1768); own output moves the expected way 0.976 (null 0.600)"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.000 (null 0.000); median self-rank 80 of 3247 (null 1616); own output moves the expected way 0.976 (null 0.840)"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.000 (null 0.000); median self-rank 75 of 3247 (null 1616); own output moves the expected way 0.967 (null 0.783)"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 0.0% of 250 sampled genes (threshold 95%); sign version 97.6%"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "uniform_virtual/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 0.0% of 250 sampled genes (threshold 95%); sign version 97.6%"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "mean_control/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 0.0% of 60 sampled genes (threshold 95%); sign version 96.7%"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "individual_cells/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "supplied_set_recorded",
+      "ok": true,
+      "detail": "3247 genes, mode readout_in_passes, 2 pass(es) per query; fixed for every query in this (model, cell line)"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "transcriptformer/ordering",
+      "ok": true,
+      "detail": "perturbed-gene-first ordering gave finite features for every pair; shared 256-gene prefix; per-pass shares normalized by the pass total; 0.5 of ordered pairs would be unmeasurable under one fixed ordering"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "masked_variant",
+      "ok": true,
+      "detail": "no masked variant: the model is autoregressive: a gene never sees its own value, so it is natively in the masked regime and a masked variant would be the same query"
+    },
+    {
+      "section": "transcriptformer/jurkat",
+      "check": "manifest_complete",
+      "ok": true,
+      "detail": "{\"checkpoint\": \"s3://czi-transcriptformer/weights/tf_sapiens.tar.gz\", \"checkpoint_revision\": \"tf_sapiens (public bucket object, unversioned)\", \"anchors\": [\"individual_cells\", \"mean_control\", \"uniform_virtual\"], \"value_grid_cp10k\": [0.0, 1.0, 4.0, 16.0, 64.0], \"expression_floor_cp10k\": 0.5, \"n_substitutions\": 1}"
+    }
+  ]
+}
