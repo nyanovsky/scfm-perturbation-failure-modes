@@ -70,6 +70,15 @@ UNIFORM_ANCHOR_TOTAL_CP10K = 1.0e4
 #: number of real control cells averaged for the individual-cell anchor
 N_INDIVIDUAL_CELLS = 4
 
+#: the masked variant is a diagnostic, not a production feature, so it runs on a
+#: reduced value grid: zero-out, a mid value and the top of the grid
+MASKED_VALUE_GRID_CP10K = (0.0, 4.0, 64.0)
+
+#: scGPT context-width comparison
+N_CONTEXT_COMPARE_GENES = 40
+#: which supplied width the production sweep uses (set from the comparison)
+SCGPT_PRODUCTION_MODE = "tiled"
+
 # --------------------------------------------------------------------------- #
 # step 5 — finite-difference step selection
 # --------------------------------------------------------------------------- #

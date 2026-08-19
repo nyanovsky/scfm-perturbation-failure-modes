@@ -1,9 +1,9 @@
 """The batched query interface run 2 needs, on top of run 1's four response adapters.
 
 Run 1 answered "what does this model predict for one cell, and what is one
-Jacobian column". Run 2 asks the same model tens of thousands of questions that
-differ in a single input coordinate, so the interface it needs is different in
-three ways:
+Jacobian column". Run 2 asks each model tens of thousands of questions that
+differ in a single input coordinate, so the interface it needs differs in three
+ways:
 
 * **batched** -- a value grid and its finite-difference neighbours go through in
   one forward pass rather than one at a time;
@@ -14,23 +14,37 @@ three ways:
   (model, cell line) and recorded, because two of these models end in a softmax
   across exactly those genes.
 
-The driver in :mod:`scfm_pfm.features.extract` only ever calls the methods
-declared here, so it is model-agnostic and the model-specific parts stay in one
-class each. Run 1's classes are subclassed, not edited: the loading path, the
-attention substitutions and the recorded contract are inherited unchanged.
+The driver in :mod:`scfm_pfm.features.extract` only calls the methods declared on
+:class:`QueryModel`, so it is model-agnostic. Run 1's classes are subclassed, not
+edited: their loading path, attention substitutions and recorded contract are
+inherited unchanged.
 
 The CP10K map, per model
 ------------------------
-``aido_cell``, ``scprint``, ``transcriptformer``
-    the input is a raw count, and the anchor is a virtual cell of 10,000 counts,
-    so a CP10K value *is* the count. TranscriptFormer additionally clips at 30,
-    which is its own training-time clip and is recorded as saturation rather
-    than hidden.
+``aido_cell``, ``scprint``
+    the input is a raw count and the query is a virtual cell of 10,000 counts,
+    so a CP10K value *is* the count.
+``transcriptformer``
+    the same, then clipped at 30, which is the model's own training-time clip
+    (``data_config.clip_counts``). Values above 30 saturate, and that is recorded
+    rather than hidden.
 ``scgpt``
     the input is a quantile bin index. The bin edges are built once per cell line
     from that line's mean control profile and then held fixed for every query, so
-    the CP10K to bin map is one recorded monotone function rather than a
-    per-query re-binning (which would make two queries incomparable).
+    the CP10K-to-bin map is one recorded monotone function instead of a per-query
+    re-binning, which would make two queries incomparable.
+
+Masking regimes, read from each checkpoint rather than assumed
+--------------------------------------------------------------
+``scgpt``    input value ``-1`` (``args.json: mask_value``); pretraining rates
+             ``[0.25, 0.5, 0.75]``, and the mildest is used.
+``aido_cell`` transformed input value ``-1`` (``config.json: mask_token_id``),
+             applied after the read-depth transform, which is where the model's
+             ``GeneEmbedding`` looks for it.
+``scprint``  a boolean ``mask`` argument to ``forward``; the value encoder zeroes
+             the expression embedding at those positions.
+``transcriptformer``  none: it is autoregressive, so a gene never sees its own
+             value and is natively in the masked regime.
 """
 
 from __future__ import annotations
@@ -45,7 +59,9 @@ import torch
 from .aido_model import AidoCellResponse, N_GENES as AIDO_N_GENES
 from .scgpt_model import ScGPTResponse, quantile_bin_edges
 from .scprint_model import ScPrintResponse
-from .transcriptformer_model import TranscriptFormerResponse
+from .transcriptformer_model import ASSAY_LABEL, TranscriptFormerResponse
+
+DEFAULT_MASK_RATE = 0.15
 
 
 @dataclass
@@ -57,27 +73,38 @@ class QueryLayout:
     n_readout: int
     n_supplied: int
     supplied_mode: str
-    #: how the supplied set is split across forward passes, when it is
     n_passes: int = 1
     context_block: int = 0
-    #: model-specific notes that belong in the block manifest
     notes: dict = field(default_factory=dict)
+
+    def as_dict(self) -> dict:
+        return {
+            "model": self.model,
+            "cell_line": self.cell_line,
+            "n_readout_genes": self.n_readout,
+            "n_supplied_genes": self.n_supplied,
+            "supplied_mode": self.supplied_mode,
+            "forward_passes_per_query": self.n_passes,
+            "context_block_genes": self.context_block,
+            **self.notes,
+        }
 
 
 class QueryModel:
-    """Methods the extraction driver relies on. Implemented once per model."""
+    """Methods the extraction driver relies on. One implementation per model."""
 
-    #: default number of queries per forward batch; tuned per model at run time
     batch_size = 8
-    #: does raising an input value raise that gene's own predicted output at all?
-    #: false for an autoregressive model, whose first-position gene cannot see
-    #: its own count
+    #: can raising a gene's own input change its own predicted output at all?
     self_response_defined = True
+    #: does the response depend on where the perturbed gene sits in the input?
+    ordering_dependent = False
+    #: how to read the model's output as a linear expression level, or None
+    linear_scale: str | None = None
 
     def configure(self, readout: pd.DataFrame, anchor_cp10k: np.ndarray, cell_line: str) -> QueryLayout:
         raise NotImplementedError
 
-    def to_native(self, cp10k: np.ndarray) -> np.ndarray:
+    def to_native(self, cp10k) -> np.ndarray:
         """Elementwise CP10K -> this model's own input scale."""
         raise NotImplementedError
 
@@ -91,18 +118,14 @@ class QueryModel:
         raise NotImplementedError
 
     def mask_spec(self) -> dict | None:
-        """How this model marks a value as unknown, or None if it cannot."""
         return None
 
     def gene_embeddings(self) -> tuple[np.ndarray, str]:
-        """(n_readout, d) vocabulary embedding for the read-out genes, and its source."""
         raise NotImplementedError
 
     def exact_jvp(self, x_native: np.ndarray, col: int) -> np.ndarray | None:
-        """Forward-mode derivative of the response w.r.t. input coordinate ``col``."""
         return None
 
-    # -- shared helpers ----------------------------------------------------
     def _batches(self, x: np.ndarray, size: int | None = None):
         size = int(size or self.batch_size)
         for start in range(0, x.shape[0], size):
@@ -115,16 +138,16 @@ class QueryModel:
 class ScGPTQuery(ScGPTResponse, QueryModel):
     """scGPT with fixed quantile bin edges and a choice of supplied-set width.
 
-    scGPT was trained at a maximum sequence length of 1,200 but carries no
-    positional encoding over genes, so a longer input is architecturally
-    admissible and run 1 used the whole 7,444-gene universe. Run 2 treats the
-    width as a measured choice: ``readout`` (the expressed set), ``universe``
-    (run 1's width) and ``tiled`` (passes of at most 1,200 sharing a fixed
-    prefix) all produce a full response vector, and the extraction reports how
-    far apart they are before the production sweep commits to one.
+    scGPT was trained at a maximum sequence length of 1,200 but has no positional
+    encoding over genes, so a longer input is architecturally admissible and run
+    1 supplied the whole 7,444-gene universe. Run 2 treats the width as a
+    measured choice: ``readout``, ``universe`` and ``tiled`` (passes of at most
+    1,200 sharing a fixed prefix) each produce a full response vector, and the
+    extraction reports how far apart they are before the sweep commits to one.
     """
 
     batch_size = 8
+    linear_scale = None  # a per-cell quantile bin index is not an expression level
     TILE_LIMIT = 1200
     TILE_PREFIX = 256
 
@@ -134,36 +157,36 @@ class ScGPTQuery(ScGPTResponse, QueryModel):
         anchor_cp10k: np.ndarray,
         cell_line: str,
         supplied_mode: str = "readout",
+        universe_anchor_cp10k: np.ndarray | None = None,
     ) -> QueryLayout:
         self.cell_line = cell_line
         self.supplied_mode = supplied_mode
         self.readout_tokens = readout["scgpt_position"].to_numpy(dtype=np.int64)
         self.n_readout = int(self.readout_tokens.size)
 
-        # bin edges: fixed once per cell line from the anchor profile, so the
-        # CP10K -> bin map is the same function for every query
         log_anchor = np.log1p(np.asarray(anchor_cp10k, dtype=np.float64))
         self.bin_edges = quantile_bin_edges(log_anchor, self.n_bins)
         self.bin_source = (
-            f"{self.n_bins}-bin quantile edges of log1p(mean control CP10K) over the "
-            f"{self.n_readout} read-out genes of {cell_line}, held fixed for every query"
+            f"{self.n_bins}-bin quantile edges of log1p(anchor CP10K) over the "
+            f"{self.n_readout} read-out genes of {cell_line}, fixed for every query"
         )
+        self.tiles: list[np.ndarray] | None = None
+        self.tile_owned: list[np.ndarray] | None = None
+        self.universe_base_native = None
 
         if supplied_mode == "universe":
             self.supplied_tokens = self.universe["scgpt_position"].to_numpy(dtype=np.int64)
-            token_to_slot = {int(t): i for i, t in enumerate(self.supplied_tokens)}
+            slot_of = {int(t): i for i, t in enumerate(self.supplied_tokens)}
             self.readout_slots = np.array(
-                [token_to_slot[int(t)] for t in self.readout_tokens], dtype=np.int64
+                [slot_of[int(t)] for t in self.readout_tokens], dtype=np.int64
             )
-            # universe genes outside the read-out set enter at their anchor value,
-            # which for a gene the read-out set excludes is its own control level
-            self.universe_anchor_native = None
-            self.tiles = None
+            if universe_anchor_cp10k is None:
+                raise ValueError("supplied_mode='universe' needs universe_anchor_cp10k")
+            self.universe_base_native = self.to_native(universe_anchor_cp10k)
             n_supplied, n_passes = int(self.supplied_tokens.size), 1
         elif supplied_mode == "readout":
             self.supplied_tokens = self.readout_tokens
             self.readout_slots = np.arange(self.n_readout, dtype=np.int64)
-            self.tiles = None
             n_supplied, n_passes = self.n_readout, 1
         elif supplied_mode == "tiled":
             order = np.argsort(-np.asarray(anchor_cp10k, dtype=np.float64), kind="stable")
@@ -173,6 +196,9 @@ class ScGPTQuery(ScGPTResponse, QueryModel):
             self.tiles = [
                 np.concatenate([prefix, body[s : s + per]]) for s in range(0, body.size, per)
             ] or [prefix]
+            self.tile_owned = [np.arange(self.tiles[0].size)] + [
+                np.arange(self.TILE_PREFIX, t.size) for t in self.tiles[1:]
+            ]
             self.supplied_tokens = self.readout_tokens
             self.readout_slots = np.arange(self.n_readout, dtype=np.int64)
             n_supplied, n_passes = self.n_readout, len(self.tiles)
@@ -192,20 +218,20 @@ class ScGPTQuery(ScGPTResponse, QueryModel):
                 "positional_encoding_over_genes": False,
                 "bin_edges_source": self.bin_source,
                 "n_bins": int(self.n_bins),
+                "context_extrapolation_factor": round(n_supplied / 1200.0, 3),
                 "tile_limit": self.TILE_LIMIT if supplied_mode == "tiled" else None,
                 "tile_prefix_genes": self.TILE_PREFIX if supplied_mode == "tiled" else None,
                 "tile_note": (
-                    "every pass opens with the same highest-expression prefix and the "
-                    "perturbed gene is placed at slot 0 of that prefix, so the context "
-                    "differs between queries by exactly one gene"
+                    "every pass carries the same highest-expression prefix; when the "
+                    "perturbed gene is not already in a pass it is appended to it, so "
+                    "the context differs between queries by exactly one gene"
                     if supplied_mode == "tiled"
                     else None
                 ),
             },
         )
 
-    def to_native(self, cp10k: np.ndarray) -> np.ndarray:
-        """CP10K -> smooth (differentiable) quantile bin index on the fixed edges."""
+    def to_native(self, cp10k) -> np.ndarray:
         v = np.log1p(np.asarray(cp10k, dtype=np.float64))
         edges = self.bin_edges
         return np.interp(v, edges, np.arange(1, edges.size + 1), left=0.0).astype(np.float32)
@@ -215,82 +241,83 @@ class ScGPTQuery(ScGPTResponse, QueryModel):
         out = self.model._encode(tokens, values, pad)
         return self.model.decoder(out)["pred"]
 
+    def _predict(self, tokens: np.ndarray, values: np.ndarray) -> np.ndarray:
+        """(B, L) values over the given token list -> (B, L) predictions."""
+        tok = torch.as_tensor(tokens, device=self.device, dtype=torch.long)
+        out = np.empty(values.shape, dtype=np.float32)
+        for start, chunk in self._batches(values):
+            t = tok.unsqueeze(0).expand(chunk.shape[0], -1)
+            v = torch.as_tensor(chunk, device=self.device, dtype=torch.float32)
+            with torch.no_grad():
+                out[start : start + chunk.shape[0]] = self._run(t, v).float().cpu().numpy()
+        return out
+
     def forward_batch(
         self, x_native: np.ndarray, perturbed_col: int | None = None, mask: np.ndarray | None = None
     ) -> np.ndarray:
         x = np.atleast_2d(np.asarray(x_native, dtype=np.float32))
         b = x.shape[0]
-        out = np.empty((b, self.n_readout), dtype=np.float32)
         mask_value = float(self.mask_spec()["value"])  # type: ignore[index]
 
         if self.tiles is None:
-            tokens = torch.as_tensor(self.supplied_tokens, device=self.device)
             if self.supplied_mode == "universe":
-                values_full = np.repeat(self.universe_base_native[None, :], b, axis=0)
-                values_full[:, self.readout_slots] = x
+                values = np.repeat(self.universe_base_native[None, :], b, axis=0).astype(np.float32)
+                values[:, self.readout_slots] = x
+                if mask is not None:
+                    values[:, self.readout_slots] = np.where(
+                        mask, mask_value, values[:, self.readout_slots]
+                    )
             else:
-                values_full = x.copy()
-            if mask is not None:
-                values_full[:, self.readout_slots] = np.where(
-                    mask, mask_value, values_full[:, self.readout_slots]
-                )
-            for start, chunk in self._batches(values_full):
-                t = tokens.unsqueeze(0).expand(chunk.shape[0], -1)
-                v = torch.as_tensor(chunk, device=self.device)
-                with torch.no_grad():
-                    pred = self._run(t, v).float().cpu().numpy()
-                out[start : start + chunk.shape[0]] = pred[:, self.readout_slots]
-            return out
+                values = x.copy()
+                if mask is not None:
+                    values = np.where(mask, mask_value, values).astype(np.float32)
+            pred = self._predict(self.supplied_tokens, values)
+            return pred[:, self.readout_slots]
 
-        # tiled: each pass carries the shared prefix plus one body chunk
-        filled = np.zeros(self.n_readout, dtype=bool)
-        for tile in self.tiles:
-            cols = tile if perturbed_col is None or perturbed_col in set(tile.tolist()) else np.concatenate(
-                [[perturbed_col], tile[1:]]
-            )
-            tok = torch.as_tensor(self.readout_tokens[cols], device=self.device)
-            vals = x[:, cols].copy()
+        out = np.empty((b, self.n_readout), dtype=np.float32)
+        for tile, owned in zip(self.tiles, self.tile_owned):  # type: ignore[arg-type]
+            cols = tile
+            if perturbed_col is not None and int(perturbed_col) not in set(tile.tolist()):
+                cols = np.concatenate([tile, [int(perturbed_col)]])
+            values = x[:, cols].copy()
             if mask is not None:
-                vals = np.where(mask[:, cols], mask_value, vals)
-            for start, chunk in self._batches(vals):
-                t = tok.unsqueeze(0).expand(chunk.shape[0], -1)
-                v = torch.as_tensor(chunk, device=self.device)
-                with torch.no_grad():
-                    pred = self._run(t, v).float().cpu().numpy()
-                # a gene appearing in several tiles keeps its first pass's value
-                fresh = ~filled[cols]
-                out[start : start + chunk.shape[0]][:, cols[fresh]] = pred[:, fresh]
-            filled[cols] = True
-        if not filled.all():
-            raise RuntimeError(f"{int((~filled).sum())} read-out genes never entered a tile")
+                values = np.where(mask[:, cols], mask_value, values).astype(np.float32)
+            pred = self._predict(self.readout_tokens[cols], values)
+            out[:, cols[owned]] = pred[:, owned]
         return out
 
     def mask_spec(self) -> dict:
+        rates = self.args.get("mask_ratio", [0.25])
+        rates = rates if isinstance(rates, (list, tuple)) else [rates]
         return {
-            "kind": "value",
+            "kind": "input_value",
             "value": float(self.args.get("mask_value", -1)),
-            "rate": float(self.args.get("mask_ratio", 0.4) or 0.4),
-            "source": "scGPT args.json (mask_value / mask_ratio) with the published defaults",
+            "rate": float(min(rates)),
+            "pretraining_rates": [float(r) for r in rates],
+            "source": "scGPT args.json: mask_value and mask_ratio; the mildest "
+            "pretraining rate is used",
         }
 
     def gene_embeddings(self) -> tuple[np.ndarray, str]:
         emb = self.model.encoder.embedding.weight.detach()
+        idx = torch.as_tensor(self.readout_tokens, device=emb.device)
         return (
-            emb[torch.as_tensor(self.readout_tokens, device=emb.device)].float().cpu().numpy(),
-            "TransformerModel.encoder.embedding (gene token embedding table)",
+            emb[idx].float().cpu().numpy(),
+            "TransformerModel.encoder.embedding, the gene token embedding table",
         )
 
     def exact_jvp(self, x_native: np.ndarray, col: int) -> np.ndarray | None:
         from torch.nn.attention import SDPBackend, sdpa_kernel
 
-        if self.tiles is not None:
-            return None  # a tiled pass is not one differentiable function of the input
+        if self.tiles is not None or self.supplied_mode == "universe":
+            return None  # a multi-pass or padded query is not one function of the input
         tokens = torch.as_tensor(self.supplied_tokens, device=self.device).unsqueeze(0)
-        base = torch.as_tensor(np.atleast_2d(x_native), device=self.device, dtype=torch.float32)
-        slots = torch.as_tensor(self.readout_slots, device=self.device)
+        base = torch.as_tensor(
+            np.atleast_2d(np.asarray(x_native, dtype=np.float32)), device=self.device
+        )
 
         def fn(v: torch.Tensor) -> torch.Tensor:
-            return self._run(tokens, v)[0, slots]
+            return self._run(tokens, v)[0]
 
         tangent = torch.zeros_like(base)
         tangent[0, int(col)] = 1.0
@@ -310,17 +337,19 @@ class AidoQuery(AidoCellResponse, QueryModel):
     """AIDO.Cell: the supplied set is the whole transcriptome by construction.
 
     Position *i* of the input is gene *i* of the checkpoint's fixed 19,264-gene
-    order, so there is no gene selection to make: the read-out genes carry their
-    anchor value and every other position stays at zero, exactly as an unmeasured
-    gene does.
+    order, so there is no gene selection to make: read-out genes carry their
+    anchor value and every other position stays at zero, which is what an
+    unmeasured gene is.
     """
 
     batch_size = 4
+    linear_scale = "expm1"  # the head predicts log1p CP10K
 
     def configure(self, readout: pd.DataFrame, anchor_cp10k: np.ndarray, cell_line: str) -> QueryLayout:
         self.cell_line = cell_line
         self.readout_positions = readout["aido_cell_position"].to_numpy(dtype=np.int64)
         self.n_readout = int(self.readout_positions.size)
+        self._out_idx = torch.as_tensor(self.readout_positions, device=self.device)
         return QueryLayout(
             model="aido_cell",
             cell_line=cell_line,
@@ -331,50 +360,64 @@ class AidoQuery(AidoCellResponse, QueryModel):
                 "gene_order": "OS_scRNA_gene_index.19264.tsv, a model constraint",
                 "unsupplied_positions": "left at zero, as an unmeasured gene is",
                 "sequence_length": AIDO_N_GENES + 2,
+                "hidden_size": int(self.config_dict.get("hidden_size", 0)),
+                "num_hidden_layers": int(self.config_dict.get("num_hidden_layers", 0)),
             },
         )
 
-    def to_native(self, cp10k: np.ndarray) -> np.ndarray:
-        return np.asarray(cp10k, dtype=np.float32)  # count of a 10,000-count cell
-
-    def _scatter(self, x: np.ndarray) -> np.ndarray:
-        full = np.zeros((x.shape[0], AIDO_N_GENES), dtype=np.float32)
-        full[:, self.readout_positions] = x
-        return full
+    def to_native(self, cp10k) -> np.ndarray:
+        return np.asarray(cp10k, dtype=np.float32)
 
     def forward_batch(
         self, x_native: np.ndarray, perturbed_col: int | None = None, mask: np.ndarray | None = None
     ) -> np.ndarray:
         x = np.atleast_2d(np.asarray(x_native, dtype=np.float32))
-        if mask is not None:
-            spec = self.mask_spec()
-            if spec is None:
-                raise RuntimeError("aido_cell has no recorded mask convention")
-            x = np.where(mask, float(spec["value"]), x)
-        full = self._scatter(x)
+        full = np.zeros((x.shape[0], AIDO_N_GENES), dtype=np.float32)
+        full[:, self.readout_positions] = x
         out = np.empty((x.shape[0], self.n_readout), dtype=np.float32)
+        mask_value = float(self.mask_spec()["value"])  # type: ignore[index]
         for start, chunk in self._batches(full):
             counts = torch.as_tensor(chunk, device=self.device, dtype=torch.float32)
+            # the read-depth transform runs on the true counts, then the masked
+            # positions are set to the model's own mask id, which is what
+            # GeneEmbedding(mask_id=-1) looks for
+            inputs = self._transform(counts)
+            if mask is not None:
+                block = mask[start : start + chunk.shape[0]]
+                idx = torch.as_tensor(self.readout_positions, device=self.device)
+                m = torch.zeros(inputs.shape, dtype=torch.bool, device=self.device)
+                m[:, idx] = torch.as_tensor(block, device=self.device)
+                inputs = torch.where(m, torch.full_like(inputs, mask_value), inputs)
             with torch.no_grad():
-                logits = self.model(input_ids=self._transform(counts)).logits[:, :-2, 0]
+                logits = self.model(input_ids=inputs).logits[:, :-2, 0]
             out[start : start + chunk.shape[0]] = (
-                logits[:, torch.as_tensor(self.readout_positions, device=self.device)]
-                .float()
-                .cpu()
-                .numpy()
+                logits[:, self._out_idx].float().cpu().numpy()
             )
         return out
 
-    def mask_spec(self) -> dict | None:
-        return getattr(self, "_mask_spec", None)
+    def mask_spec(self) -> dict:
+        return {
+            "kind": "transformed_input_value",
+            "value": float(self.config_dict.get("mask_token_id", -1)),
+            "rate": DEFAULT_MASK_RATE,
+            "source": "config.json: mask_token_id; the checkpoint records no "
+            f"pretraining mask rate, so {DEFAULT_MASK_RATE} is used and recorded as a "
+            "fallback",
+        }
 
     def gene_embeddings(self) -> tuple[np.ndarray, str]:
-        emb = self.model.bert.embeddings.position_embeddings.weight.detach()
-        idx = torch.as_tensor(self.readout_positions, device=emb.device)
+        found = None
+        for name, module in self.model.named_modules():
+            if isinstance(module, torch.nn.Embedding) and module.num_embeddings >= AIDO_N_GENES:
+                found, source = module, name
+                break
+        if found is None:
+            raise RuntimeError("no gene-identity embedding table found on AIDO.Cell")
+        idx = torch.as_tensor(self.readout_positions, device=found.weight.device)
         return (
-            emb[idx].float().cpu().numpy(),
-            "CellFoundation position embedding: gene identity IS the position in the "
-            "fixed 19,264-gene order, so this table is the model's gene embedding",
+            found.weight.detach()[idx].float().cpu().numpy(),
+            f"CellFoundation {source}: gene identity is the position in the fixed "
+            "19,264-gene order, so this table is the model's gene embedding",
         )
 
 
@@ -385,14 +428,15 @@ class ScPrintQuery(ScPrintResponse, QueryModel):
     """scPRINT over a fixed supplied gene set, with its exact forward-mode derivative."""
 
     batch_size = 8
+    linear_scale = "identity"  # a share of the cell's counts is proportional to CP10K
 
     def configure(self, readout: pd.DataFrame, anchor_cp10k: np.ndarray, cell_line: str) -> QueryLayout:
         self.cell_line = cell_line
         pos = readout["scprint_position"].to_numpy(dtype=np.int64)
-        order = np.argsort(pos, kind="stable")  # the model reads a sorted gene list
-        self.seq_positions = pos[order]
-        self.readout_to_seq = np.empty(order.size, dtype=np.int64)
-        self.readout_to_seq[order] = np.arange(order.size)
+        self.seq_order = np.argsort(pos, kind="stable")  # read-out index -> sequence slot
+        self.seq_positions = pos[self.seq_order]
+        self.readout_to_seq = np.empty(self.seq_order.size, dtype=np.int64)
+        self.readout_to_seq[self.seq_order] = np.arange(self.seq_order.size)
         self.n_readout = int(pos.size)
         return QueryLayout(
             model="scprint",
@@ -404,20 +448,25 @@ class ScPrintQuery(ScPrintResponse, QueryModel):
                 "softmax_over": "the supplied gene positions, so a response is a share "
                 "of the cell's counts and depends on which genes were supplied together",
                 "vocabulary_size": len(getattr(self, "genes", [])),
+                "input_order": "ascending vocabulary position; the model carries no gene "
+                "positional encoding, so the order is a convention, not a constraint",
             },
         )
 
-    def to_native(self, cp10k: np.ndarray) -> np.ndarray:
+    def to_native(self, cp10k) -> np.ndarray:
         return np.asarray(cp10k, dtype=np.float32)
 
-    def _forward_many(self, expr: torch.Tensor) -> torch.Tensor:
-        gp = torch.as_tensor(self.seq_positions, device=self.device).unsqueeze(0).expand(
-            expr.shape[0], -1
+    def _forward_many(self, expr: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
+        gp = (
+            torch.as_tensor(self.seq_positions, device=self.device)
+            .unsqueeze(0)
+            .expand(expr.shape[0], -1)
         )
         depth = expr.sum(dim=1)
         out = self.model.forward(
             gene_pos=gp,
             expression=expr,
+            mask=mask,
             req_depth=depth,
             get_gene_emb=False,
             do_mvc=False,
@@ -429,33 +478,44 @@ class ScPrintQuery(ScPrintResponse, QueryModel):
         self, x_native: np.ndarray, perturbed_col: int | None = None, mask: np.ndarray | None = None
     ) -> np.ndarray:
         x = np.atleast_2d(np.asarray(x_native, dtype=np.float32))
-        if mask is not None:
-            spec = self.mask_spec()
-            if spec is None:
-                raise RuntimeError("scprint has no recorded mask convention")
-            x = np.where(mask, float(spec["value"]), x)
-        seq = x[:, self.readout_to_seq.argsort()] if False else x[:, np.argsort(self.readout_to_seq)]
+        seq = x[:, self.seq_order]
+        seq_mask = mask[:, self.seq_order] if mask is not None else None
         out = np.empty((x.shape[0], self.n_readout), dtype=np.float32)
         for start, chunk in self._batches(seq):
             expr = torch.as_tensor(chunk, device=self.device, dtype=torch.float32)
+            m = (
+                torch.as_tensor(seq_mask[start : start + chunk.shape[0]], device=self.device)
+                if seq_mask is not None
+                else None
+            )
             with torch.no_grad():
-                mean = self._forward_many(expr).float().cpu().numpy()
+                mean = self._forward_many(expr, m).float().cpu().numpy()
             out[start : start + chunk.shape[0]] = mean[:, self.readout_to_seq]
         return out
 
-    def mask_spec(self) -> dict | None:
-        return getattr(self, "_mask_spec", None)
+    def mask_spec(self) -> dict:
+        return {
+            "kind": "boolean_mask_argument",
+            "value": None,
+            "rate": DEFAULT_MASK_RATE,
+            "source": "scPrint.forward(mask=...); the value encoder zeroes the "
+            "expression embedding at masked positions. The checkpoint records no "
+            f"pretraining mask rate, so {DEFAULT_MASK_RATE} is used and recorded as a "
+            "fallback",
+        }
 
     def gene_embeddings(self) -> tuple[np.ndarray, str]:
         emb = self.model.gene_encoder.embeddings.weight.detach()
         idx = torch.as_tensor(self.seq_positions, device=emb.device)
         table = emb[idx].float().cpu().numpy()
-        return table[self.readout_to_seq], "scPrint.gene_encoder.embeddings (frozen ESM-derived)"
+        return (
+            table[self.readout_to_seq],
+            "scPrint.gene_encoder.embeddings, the frozen ESM-derived gene embedding",
+        )
 
     def exact_jvp(self, x_native: np.ndarray, col: int) -> np.ndarray | None:
-        seq_order = np.argsort(self.readout_to_seq)
         base = torch.as_tensor(
-            np.atleast_2d(np.asarray(x_native, dtype=np.float32))[:, seq_order],
+            np.atleast_2d(np.asarray(x_native, dtype=np.float32))[:, self.seq_order],
             device=self.device,
             dtype=torch.float32,
         )
@@ -480,16 +540,16 @@ class ScPrintQuery(ScPrintResponse, QueryModel):
 class TranscriptFormerQuery(TranscriptFormerResponse, QueryModel):
     """TranscriptFormer: autoregressive, so the ordering is part of the query.
 
-    The perturbed gene is placed at position 0 of every pass, which makes every
+    The perturbed gene goes to position 0 of every pass, which makes every
     read-out gene downstream of it and therefore measurable. The cost is that the
-    context differs between queries by that one gene; the fraction of pairs that
-    would be structurally unmeasurable under a single fixed ordering is reported
-    instead of being hidden.
+    context differs between queries by that one gene, and the fraction of pairs a
+    single fixed ordering could not measure at all is reported rather than hidden.
     """
 
     batch_size = 8
     self_response_defined = False
-    #: the model's own training-time count clip (data_config.clip_counts)
+    ordering_dependent = True
+    linear_scale = "identity"  # a share of the cell's counts
     COUNT_CLIP = 30.0
 
     def configure(self, readout: pd.DataFrame, anchor_cp10k: np.ndarray, cell_line: str) -> QueryLayout:
@@ -498,12 +558,8 @@ class TranscriptFormerQuery(TranscriptFormerResponse, QueryModel):
         self.n_readout = int(self.readout_tokens.size)
         anchor = np.asarray(anchor_cp10k, dtype=np.float64)
         gene_ids = readout["gene_id"].to_numpy().astype(str)
-        self.anchor_order = np.lexsort((gene_ids, -anchor))  # descending anchor, id tie-break
-        self.anchor_rank = np.empty(self.n_readout, dtype=np.int64)
-        self.anchor_rank[self.anchor_order] = np.arange(self.n_readout)
+        self.anchor_order = np.lexsort((gene_ids, -anchor))
         self.pad_id = int(self.gene_vocab_dict[self.model.data_config.gene_pad_token])
-        from .transcriptformer_model import ASSAY_LABEL
-
         self.assay_token = int(self.aux_vocab["assay"][ASSAY_LABEL])
         chunks = self._query_chunks(perturbed_col=int(self.anchor_order[0]))
         return QueryLayout(
@@ -515,33 +571,37 @@ class TranscriptFormerQuery(TranscriptFormerResponse, QueryModel):
             n_passes=len(chunks),
             context_block=self.context_block,
             notes={
-                "ordering": "descending anchor expression, gene id as tie-break, with the "
-                "perturbed gene moved to position 0",
+                "ordering": "descending anchor expression, gene id as tie-break, with "
+                "the perturbed gene moved to position 0",
                 "seq_len": int(self.seq_len),
                 "softmax_over": "the tokens of the same pass; the response is mu divided "
-                "by that pass's total count so passes are comparable",
+                "by that pass's total count, so passes are comparable",
                 "count_clip": self.COUNT_CLIP,
-                "unmeasurable_fraction_fixed_ordering": self.unmeasurable_fraction(),
+                "count_clip_note": "the model's own training-time clip; a query value "
+                "above it saturates",
+                "unmeasurable_fraction_under_fixed_ordering": self.unmeasurable_fraction(),
+                "masked_variant": "not applicable: a causal mask means a gene never sees "
+                "its own value, so this model is natively in the masked regime",
             },
         )
 
     def unmeasurable_fraction(self) -> float:
-        """Share of ordered pairs a single fixed ordering could not measure.
+        """Share of ordered pairs one fixed ordering could not measure.
 
-        Under one fixed ordering, gene *j* responds to gene *i* only if *i* comes
-        first, so exactly the pairs with rank(i) > rank(j) are structurally zero:
-        half of all ordered pairs, minus the diagonal.
+        Under a single ordering, gene *j* responds to gene *i* only when *i* comes
+        first, so exactly the pairs with rank(i) > rank(j) are structurally zero.
         """
         n = self.n_readout
-        return float((n * (n - 1) / 2) / (n * (n - 1))) if n > 1 else float("nan")
+        return float(0.5) if n > 1 else float("nan")
 
-    def to_native(self, cp10k: np.ndarray) -> np.ndarray:
+    def to_native(self, cp10k) -> np.ndarray:
         return np.clip(np.asarray(cp10k, dtype=np.float32), 0.0, self.COUNT_CLIP)
 
     def _query_chunks(self, perturbed_col: int | None) -> list[np.ndarray]:
-        order = list(self.anchor_order)
+        order = list(int(r) for r in self.anchor_order)
         if perturbed_col is not None:
-            order = [int(perturbed_col)] + [r for r in order if r != int(perturbed_col)]
+            p = int(perturbed_col)
+            order = [p] + [r for r in order if r != p]
         context = order[: self.context_block]
         body = order[self.context_block :]
         per = self.seq_len - len(context)
@@ -550,19 +610,22 @@ class TranscriptFormerQuery(TranscriptFormerResponse, QueryModel):
         ] or [np.array(context, dtype=np.int64)]
 
     def _forward_rows(self, rows: np.ndarray, values: np.ndarray) -> np.ndarray:
-        """(B, len(rows)) counts -> (B, len(rows)) shares for one pass."""
         from transcriptformer.data.dataclasses import BatchData
 
         b, n = values.shape
         tok = torch.full((b, self.seq_len), self.pad_id, dtype=torch.long, device=self.device)
-        tok[:, :n] = torch.as_tensor(
-            self.readout_tokens[rows], dtype=torch.long, device=self.device
-        ).unsqueeze(0).expand(b, -1)
+        tok[:, :n] = (
+            torch.as_tensor(self.readout_tokens[rows], dtype=torch.long, device=self.device)
+            .unsqueeze(0)
+            .expand(b, -1)
+        )
         val = torch.zeros((b, self.seq_len), dtype=torch.float32, device=self.device)
         val[:, :n] = torch.as_tensor(values, dtype=torch.float32, device=self.device)
         aux = torch.full((b, 1), self.assay_token, dtype=torch.long, device=self.device)
         with torch.no_grad():
-            out = self.model(BatchData(gene_counts=val, gene_token_indices=tok, aux_token_indices=aux))
+            out = self.model(
+                BatchData(gene_counts=val, gene_token_indices=tok, aux_token_indices=aux)
+            )
         mu = out["mu"].reshape(b, -1)[:, :n]
         total = val.sum(dim=1, keepdim=True)
         if bool((total <= 0).any()):
@@ -575,38 +638,37 @@ class TranscriptFormerQuery(TranscriptFormerResponse, QueryModel):
         if mask is not None:
             raise RuntimeError(
                 "TranscriptFormer is autoregressive: a gene never sees its own value, so "
-                "it is natively in the masked regime and has no masked variant"
+                "it has no masked variant"
             )
         x = np.atleast_2d(np.asarray(x_native, dtype=np.float32))
         out = np.zeros((x.shape[0], self.n_readout), dtype=np.float32)
         filled = np.zeros(self.n_readout, dtype=bool)
         for ci, rows in enumerate(self._query_chunks(perturbed_col)):
-            take = rows if ci == 0 else rows[self.context_block :]
+            keep = slice(None) if ci == 0 else slice(self.context_block, None)
+            cols = rows[keep]
             for start, chunk in self._batches(x[:, rows]):
                 share = self._forward_rows(rows, chunk)
-                sl = slice(start, start + chunk.shape[0])
-                out[sl, take] = share[:, : len(rows)][:, (slice(None) if ci == 0 else slice(self.context_block, None))]
-            filled[take] = True
+                out[start : start + chunk.shape[0], cols] = share[:, keep]
+            filled[cols] = True
         if not filled.all():
             raise RuntimeError(f"{int((~filled).sum())} read-out genes never entered a pass")
         return out
 
     def gene_embeddings(self) -> tuple[np.ndarray, str]:
-        emb = self.model.gene_embedding.weight if hasattr(self.model, "gene_embedding") else None
-        if emb is None:
-            for name, module in self.model.named_modules():
-                if isinstance(module, torch.nn.Embedding) and module.num_embeddings >= len(
-                    self.gene_vocab_dict
-                ):
-                    emb = module.weight
-                    source = f"Transcriptformer.{name} (ESM2-derived gene embedding table)"
-                    break
-        else:
-            source = "Transcriptformer.gene_embedding"
-        if emb is None:
-            raise RuntimeError("no gene embedding table found on the TranscriptFormer model")
-        idx = torch.as_tensor(self.readout_tokens, device=emb.device)
-        return emb.detach()[idx].float().cpu().numpy(), source
+        best, source = None, ""
+        for name, module in self.model.named_modules():
+            if isinstance(module, torch.nn.Embedding) and module.num_embeddings >= len(
+                self.gene_vocab_dict
+            ):
+                best, source = module, name
+                break
+        if best is None:
+            raise RuntimeError("no gene embedding table found on TranscriptFormer")
+        idx = torch.as_tensor(self.readout_tokens, device=best.weight.device)
+        return (
+            best.weight.detach()[idx].float().cpu().numpy(),
+            f"Transcriptformer.{source}, the ESM2-derived gene embedding table",
+        )
 
 
 BUILDERS = {
@@ -621,18 +683,17 @@ def build(model: str, cache, universe: pd.DataFrame, vocab: pd.DataFrame, device
     return BUILDERS[model](cache=cache, universe=universe, vocab=vocab, device=device)
 
 
-def partition_mask(n: int, rate: float, cycles: int, seed: int) -> list[np.ndarray]:
+def partition_masks(n: int, rate: float, cycles: int, seed: int) -> list[np.ndarray]:
     """Disjoint mask blocks: every gene is masked exactly once per cycle.
 
-    Masking a random subset independently per pass would need ~50 passes before
-    the least lucky gene had been masked once. A seeded partition into
-    ``ceil(1/rate)`` blocks keeps the per-pass masked fraction at the model's own
+    Masking an independent random subset per pass would leave the unluckiest gene
+    unmasked for ~50 passes at a 15% rate. A seeded partition into
+    ``ceil(1/rate)`` blocks holds the per-pass masked fraction at the model's own
     pretraining rate and gives every gene exact, auditable coverage.
     """
     rng = np.random.default_rng(seed)
     blocks: list[np.ndarray] = []
     n_blocks = max(1, int(math.ceil(1.0 / max(rate, 1e-6))))
-    for _ in range(cycles):
-        order = rng.permutation(n)
-        blocks.extend(np.array_split(order, n_blocks))
+    for _ in range(int(cycles)):
+        blocks.extend(np.array_split(rng.permutation(n), n_blocks))
     return blocks
