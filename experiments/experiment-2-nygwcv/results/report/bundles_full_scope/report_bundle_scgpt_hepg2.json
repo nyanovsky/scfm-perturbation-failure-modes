@@ -1,0 +1,1397 @@
+{
+  "model": "scgpt",
+  "cell_line": "hepg2",
+  "manifest": {
+    "model": "scgpt",
+    "cell_line": "hepg2",
+    "layout": {
+      "model": "scgpt",
+      "cell_line": "hepg2",
+      "n_readout_genes": 2721,
+      "n_supplied_genes": 2721,
+      "supplied_mode": "tiled",
+      "forward_passes_per_query": 3,
+      "context_block_genes": 256,
+      "training_max_seq_len": 1200,
+      "positional_encoding_over_genes": false,
+      "bin_edges_source": "51-bin quantile edges of log1p(anchor CP10K) over the 2721 read-out genes of hepg2, fixed for every query",
+      "n_bins": 51,
+      "context_extrapolation_factor": 2.268,
+      "tile_limit": 1200,
+      "tile_prefix_genes": 256,
+      "tile_note": "every pass carries the same highest-expression prefix; when the perturbed gene is not already in a pass it is appended to it, so the context differs between queries by exactly one gene"
+    },
+    "scope": {
+      "n_perturbed": 524,
+      "n_perturbed_cells_anchor": 524,
+      "n_perturbed_masked": 524,
+      "n_step_sweep": 50,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ]
+    },
+    "coverage": {
+      "mode": "full",
+      "n_perturbed": 524,
+      "n_in_scope": 524,
+      "fraction_of_scope": 1.0,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ],
+      "by_stratum": {
+        "S3": {
+          "in_scope": 240,
+          "selected": 240
+        },
+        "S4_highest": {
+          "in_scope": 284,
+          "selected": 284
+        }
+      },
+      "n_perturbed_cells_anchor": 524,
+      "n_perturbed_masked": 524,
+      "n_step_sweep": 50,
+      "scope_requested": {
+        "n_perturbed": 0,
+        "n_perturbed_cells_anchor": 0,
+        "n_perturbed_masked": 0,
+        "strata": [
+          "S3",
+          "S4_highest"
+        ]
+      },
+      "selection_rule": "every in-scope perturbation",
+      "in_scope_definition": "perturbations in strata S3, S4_highest whose target gene is also a read-out gene of this cell line, so it can be perturbed at all",
+      "comparability_note": "a block at partial coverage and a block at full coverage share the perturbed genes of the smaller one but not its row order; join on perturbed_gene_id, never on row index, and do not compare a per-block aggregate across two different coverages"
+    },
+    "value_grid_cp10k": [
+      0.0,
+      1.0,
+      4.0,
+      16.0,
+      64.0
+    ],
+    "gdt_base_grid_cp10k": [
+      0.0,
+      1.0,
+      4.0,
+      16.0,
+      64.0
+    ],
+    "sign_convention": "perturbed minus baseline; a positive entry means raising the perturbed gene raises the model's prediction for the read-out gene. Zero-out uses this convention, not the paper's reversed one",
+    "expression_floor_cp10k": 0.5,
+    "expression_floor_note": "the read-out set is the inclusive floor; each gene's pooled control level travels with the block so a higher floor is a column mask",
+    "gene_embedding_source": "TransformerModel.encoder.embedding, the gene token embedding table",
+    "gene_embedding_shape": [
+      2721,
+      512
+    ],
+    "mask_spec": {
+      "kind": "input_value",
+      "value": -1.0,
+      "rate": 0.25,
+      "pretraining_rates": [
+        0.25,
+        0.5,
+        0.75
+      ],
+      "source": "scGPT args.json: mask_value and mask_ratio; the mildest pretraining rate is used"
+    },
+    "seed": 42,
+    "anchors": {
+      "uniform_virtual": {
+        "description": "every supplied gene pinned at 3.6751 CP10K, the uniform share of a 10,000-count virtual cell; the paper's construction, and far off the distribution the models were trained on",
+        "cells": [
+          "uniform"
+        ],
+        "n_perturbed": 524,
+        "step": 0.05,
+        "forms": {
+          "vvp": {
+            "raw": [
+              524,
+              5,
+              2721
+            ],
+            "standardized": [
+              524,
+              5,
+              2721
+            ]
+          },
+          "zero_out": {
+            "raw": [
+              524,
+              2721
+            ],
+            "standardized": [
+              524,
+              2721
+            ]
+          },
+          "gdt": {
+            "raw": [
+              524,
+              5,
+              2721
+            ],
+            "standardized": [
+              524,
+              5,
+              2721
+            ]
+          }
+        },
+        "n_cells_averaged": 1,
+        "zero_out_value_index": 0,
+        "gdt_source": "central_finite_difference(step=0.05)",
+        "forward_mode": {
+          "attempted": true,
+          "available": false,
+          "reason_unavailable": "the tiled layout delivers a query in 3 pass(es) over a padded supplied set, so it is not one differentiable function of the input; the untiled layout is differentiable and is cross-checked separately"
+        },
+        "seconds": 62.3
+      },
+      "mean_control": {
+        "description": "the pooled non-targeting control mean expression profile of this cell line, restricted to the read-out genes; the on-distribution counterpart",
+        "cells": [
+          "mean_control"
+        ],
+        "n_perturbed": 524,
+        "step": 0.02,
+        "forms": {
+          "vvp": {
+            "raw": [
+              524,
+              5,
+              2721
+            ],
+            "standardized": [
+              524,
+              5,
+              2721
+            ]
+          },
+          "zero_out": {
+            "raw": [
+              524,
+              2721
+            ],
+            "standardized": [
+              524,
+              2721
+            ]
+          },
+          "gdt": {
+            "raw": [
+              524,
+              5,
+              2721
+            ],
+            "standardized": [
+              524,
+              5,
+              2721
+            ]
+          }
+        },
+        "n_cells_averaged": 1,
+        "zero_out_value_index": 0,
+        "gdt_source": "central_finite_difference(step=0.02)",
+        "forward_mode": {
+          "attempted": true,
+          "available": false,
+          "reason_unavailable": "the tiled layout delivers a query in 3 pass(es) over a padded supplied set, so it is not one differentiable function of the input; the untiled layout is differentiable and is cross-checked separately"
+        },
+        "seconds": 62.2
+      },
+      "individual_cells": {
+        "description": "4 real non-targeting control cells, each converted to CP10K so every anchor sits at one depth; responses are averaged over the cells and their spread is recorded",
+        "cells": [
+          "AAACCCAAGCTGGAGT-49",
+          "AAACCCATCACTTGTT-39",
+          "AAACCCATCATCAGTG-11",
+          "AAACGAAAGACTACGG-38"
+        ],
+        "n_perturbed": 524,
+        "step": 0.02,
+        "forms": {
+          "vvp": {
+            "raw": [
+              524,
+              5,
+              2721
+            ],
+            "standardized": [
+              524,
+              5,
+              2721
+            ]
+          },
+          "zero_out": {
+            "raw": [
+              524,
+              2721
+            ],
+            "standardized": [
+              524,
+              2721
+            ]
+          },
+          "gdt": {
+            "raw": [
+              524,
+              5,
+              2721
+            ],
+            "standardized": [
+              524,
+              5,
+              2721
+            ]
+          }
+        },
+        "n_cells_averaged": 4,
+        "zero_out_value_index": 0,
+        "gdt_source": "central_finite_difference(step=0.02)",
+        "forward_mode": {
+          "attempted": true,
+          "available": false,
+          "reason_unavailable": "the tiled layout delivers a query in 3 pass(es) over a padded supplied set, so it is not one differentiable function of the input; the untiled layout is differentiable and is cross-checked separately"
+        },
+        "seconds": 247.7,
+        "per_cell_spread": "responses averaged over cells; see summary rows"
+      }
+    },
+    "substitutions": [
+      "flash-attention not installed (the published checkpoint was trained with scGPT's FlashMHA layers, whose API exists only in flash-attn 1.x, which cannot build against this torch); used scGPT's own fallback torch.nn.TransformerEncoder path (use_fast_transformer=False), which changes the attention kernel and therefore the exact numerics",
+      "remapped 24 fused attention tensors from the checkpoint's FlashMHA layout (self_attn.Wqkv) onto torch's packed projection (self_attn.in_proj); both hold [query; key; value] over the same head partition, so the attention computed is the same function of the same weights. Verified numerically at load time (see attention_remap_check)",
+      "imported scgpt.model.model by file path to avoid executing scgpt/__init__ (scvi-tools / torchtext / scib); model source unmodified"
+    ],
+    "contract": {
+      "model": "scgpt",
+      "checkpoint": "wanglab/scGPT-human",
+      "checkpoint_revision": "a24c237737a40f3720f75abb555489e9fe753be6",
+      "checkpoint_md5": null,
+      "input_normalization": "counts -> CP10K -> log1p -> per-cell quantile binning into 51 bins (published path). Gene tokens are vocab.json ids; no <cls> token is prepended (the checkpoint was trained with no_cls=True).",
+      "output_head": "ExprDecoder.fc -> dict['pred'], one scalar per gene token",
+      "output_semantics": "predicted binned expression value for that gene in this cell, on the 51-bin training scale (not counts, not CP10K)",
+      "information_flow": "bidirectional full attention over gene tokens; no positional encoding over genes",
+      "ordering_dependent": false,
+      "response_symmetric": null,
+      "symmetry_evidence": "architecture imposes no ordering, so a response exists for every ordered pair, but symmetry of the pairwise response is not implied and was not measured here",
+      "differentiable_wrt_input_expression": true,
+      "jacobian_available": true,
+      "jacobian_method": "forward_mode_autodiff_jvp_on_smooth_binning",
+      "jacobian_unavailable_reason": null,
+      "forward_mode_autodiff": "not probed in the process that wrote this contract",
+      "jacobian_check": {},
+      "vocabulary_kind": "symbol",
+      "vocabulary_size": 60697,
+      "context_length": 1200,
+      "dtype": "float32",
+      "substitutions": [
+        "flash-attention not installed (the published checkpoint was trained with scGPT's FlashMHA layers, whose API exists only in flash-attn 1.x, which cannot build against this torch); used scGPT's own fallback torch.nn.TransformerEncoder path (use_fast_transformer=False), which changes the attention kernel and therefore the exact numerics",
+        "remapped 24 fused attention tensors from the checkpoint's FlashMHA layout (self_attn.Wqkv) onto torch's packed projection (self_attn.in_proj); both hold [query; key; value] over the same head partition, so the attention computed is the same function of the same weights. Verified numerically at load time (see attention_remap_check)",
+        "imported scgpt.model.model by file path to avoid executing scgpt/__init__ (scvi-tools / torchtext / scib); model source unmodified"
+      ],
+      "notes": "The published input path bins expression with np.digitize, which has zero derivative almost everywhere: the Jacobian is therefore taken through a piecewise-linear surrogate of the same quantile bin edges. binning_deviation records how far the surrogate moves the output. Checkpoint build flags inferred from the state dict: {'do_mvc': True, 'explicit_zero_prob': False, 'use_batch_labels': False, 'has_dsbn': False}. Sequence length used here is the number of resolved vocabulary genes, which exceeds the training max_seq_len of 1200; scGPT has no positional encoding over genes, so this is a context-length extrapolation rather than an invalid input."
+    },
+    "step_selection": {
+      "uniform_virtual": {
+        "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+        "steps_swept": [
+          0.02,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0
+        ],
+        "base_value_cp10k": 4.0,
+        "n_genes": 50,
+        "selected_step": 0.05,
+        "verdict": "stable_in_direction_and_magnitude",
+        "gradient_features_usable_for": "direction, ranking and magnitude",
+        "adjacent_agreement": [
+          {
+            "step": 0.02,
+            "next_step": 0.05,
+            "median_pearson_adjacent": 0.998599403937787,
+            "median_relative_l2_adjacent": 0.07693198489446755,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.05,
+            "next_step": 0.1,
+            "median_pearson_adjacent": 0.9996173347503756,
+            "median_relative_l2_adjacent": 0.04072628421180043,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.1,
+            "next_step": 0.25,
+            "median_pearson_adjacent": 0.9994141843791788,
+            "median_relative_l2_adjacent": 0.11256516029901947,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.25,
+            "next_step": 0.5,
+            "median_pearson_adjacent": 0.9979839838907427,
+            "median_relative_l2_adjacent": 0.1863250760788288,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.5,
+            "next_step": 1.0,
+            "median_pearson_adjacent": 0.9842506412845814,
+            "median_relative_l2_adjacent": 0.3688557556909655,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          }
+        ]
+      },
+      "mean_control": {
+        "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+        "steps_swept": [
+          0.02,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0
+        ],
+        "base_value_cp10k": 4.0,
+        "n_genes": 50,
+        "selected_step": 0.02,
+        "verdict": "stable_in_direction_and_magnitude",
+        "gradient_features_usable_for": "direction, ranking and magnitude",
+        "adjacent_agreement": [
+          {
+            "step": 0.02,
+            "next_step": 0.05,
+            "median_pearson_adjacent": 0.9995846005777504,
+            "median_relative_l2_adjacent": 0.032156984952693875,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.05,
+            "next_step": 0.1,
+            "median_pearson_adjacent": 0.9998491200177172,
+            "median_relative_l2_adjacent": 0.020189110727121314,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.1,
+            "next_step": 0.25,
+            "median_pearson_adjacent": 0.9996326756390026,
+            "median_relative_l2_adjacent": 0.03795308266430318,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.25,
+            "next_step": 0.5,
+            "median_pearson_adjacent": 0.9993754633767573,
+            "median_relative_l2_adjacent": 0.0448432620932384,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.5,
+            "next_step": 1.0,
+            "median_pearson_adjacent": 0.9984762372167347,
+            "median_relative_l2_adjacent": 0.06335723095464516,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          }
+        ]
+      },
+      "individual_cells": {
+        "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+        "steps_swept": [
+          0.02,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0
+        ],
+        "base_value_cp10k": 4.0,
+        "n_genes": 50,
+        "selected_step": 0.02,
+        "verdict": "stable_in_direction_and_magnitude",
+        "gradient_features_usable_for": "direction, ranking and magnitude",
+        "adjacent_agreement": [
+          {
+            "step": 0.02,
+            "next_step": 0.05,
+            "median_pearson_adjacent": 0.9996026413038931,
+            "median_relative_l2_adjacent": 0.03079390760947577,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.05,
+            "next_step": 0.1,
+            "median_pearson_adjacent": 0.9998284534905533,
+            "median_relative_l2_adjacent": 0.0219810593438972,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.1,
+            "next_step": 0.25,
+            "median_pearson_adjacent": 0.9995484595202802,
+            "median_relative_l2_adjacent": 0.0400367872108907,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.25,
+            "next_step": 0.5,
+            "median_pearson_adjacent": 0.9993985924287896,
+            "median_relative_l2_adjacent": 0.05430878661642512,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          },
+          {
+            "step": 0.5,
+            "next_step": 1.0,
+            "median_pearson_adjacent": 0.9988470288817577,
+            "median_relative_l2_adjacent": 0.06645599222986268,
+            "median_abs_value": 0.0,
+            "n_genes": 50
+          }
+        ]
+      }
+    },
+    "wiring_checks": {
+      "uniform_virtual": {
+        "n_genes": 524,
+        "value_low_cp10k": 1.0,
+        "value_high_cp10k": 64.0,
+        "sign_check_pass_fraction": 0.8721374045801527,
+        "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+        "magnitude_check_pass_fraction": 0.8492366412213741,
+        "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+        "median_self_rank": 0.0,
+        "permuted_magnitude_pass_fraction": 0.0,
+        "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+        "threshold": 0.95
+      },
+      "mean_control": {
+        "n_genes": 524,
+        "value_low_cp10k": 1.0,
+        "value_high_cp10k": 64.0,
+        "sign_check_pass_fraction": 0.9217557251908397,
+        "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+        "magnitude_check_pass_fraction": 0.8969465648854962,
+        "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+        "median_self_rank": 0.0,
+        "permuted_magnitude_pass_fraction": 0.0,
+        "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+        "threshold": 0.95
+      },
+      "individual_cells": {
+        "n_genes": 524,
+        "value_low_cp10k": 1.0,
+        "value_high_cp10k": 64.0,
+        "sign_check_pass_fraction": 0.9541984732824428,
+        "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+        "magnitude_check_pass_fraction": 0.9179389312977099,
+        "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+        "median_self_rank": 0.0,
+        "permuted_magnitude_pass_fraction": 0.0,
+        "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+        "threshold": 0.95
+      }
+    },
+    "masked": {
+      "ran": true,
+      "mask_spec": {
+        "kind": "input_value",
+        "value": -1.0,
+        "rate": 0.25,
+        "pretraining_rates": [
+          0.25,
+          0.5,
+          0.75
+        ],
+        "source": "scGPT args.json: mask_value and mask_ratio; the mildest pretraining rate is used"
+      },
+      "mask_rate": 0.25,
+      "n_blocks_per_cycle": 4,
+      "cycles": 3,
+      "coverage_per_gene": {
+        "min": 3,
+        "median": 3.0,
+        "max": 3
+      },
+      "n_perturbed": 524,
+      "value_grid_cp10k": [
+        0.0,
+        4.0,
+        64.0
+      ],
+      "seconds": 269.0,
+      "note": "responses are read only at masked positions, averaged over cycles; the unmasked block at the same anchor is the comparison"
+    },
+    "context_comparison": {
+      "n_genes": 40,
+      "form": "zero-out response difference at the mean control anchor",
+      "widths": {
+        "readout": 2721,
+        "universe": 7444,
+        "tiled": 1200
+      },
+      "agreement": {
+        "readout_vs_universe": {
+          "median_pearson": 0.9811233699169337,
+          "median_relative_l2": 0.702570935598122
+        },
+        "readout_vs_tiled": {
+          "median_pearson": 0.770559605734854,
+          "median_relative_l2": 1.0546996892338716
+        },
+        "universe_vs_tiled": {
+          "median_pearson": 0.76614302561962,
+          "median_relative_l2": 1.2313313240163666
+        }
+      },
+      "production_mode": "tiled"
+    },
+    "untiled_exact_check": {
+      "ran": true,
+      "layout": "readout (untiled), the layout that admits forward-mode autodiff",
+      "n_genes": 20,
+      "step": 0.02,
+      "per_value": [
+        {
+          "value_cp10k": 0.0,
+          "one_sided": true,
+          "pearson": 0.9971533383211062,
+          "relative_l2": 0.07602114233539976
+        },
+        {
+          "value_cp10k": 1.0,
+          "one_sided": false,
+          "pearson": 0.9992954060386047,
+          "relative_l2": 0.03758869535168319
+        },
+        {
+          "value_cp10k": 4.0,
+          "one_sided": false,
+          "pearson": 0.9992002239309807,
+          "relative_l2": 0.039831274497849026
+        },
+        {
+          "value_cp10k": 16.0,
+          "one_sided": false,
+          "pearson": 0.9997010893130017,
+          "relative_l2": 0.02446704555830057
+        },
+        {
+          "value_cp10k": 64.0,
+          "one_sided": false,
+          "pearson": 0.999802398308286,
+          "relative_l2": 0.020375146273116127
+        }
+      ],
+      "median_pearson_two_sided": 0.9994982476758032,
+      "median_relative_l2_two_sided": 0.031027870454991877
+    }
+  },
+  "n_readout": 2721,
+  "n_perturbed": 524,
+  "blocks": {
+    "individual_cells/zero_out": {
+      "shape": [
+        524,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.0019192695617675781,
+      "abs_p99": 0.10255669116973876,
+      "all_zero_fraction": 0.003816793893129771,
+      "n_response_vectors": 524
+    },
+    "individual_cells/vvp": {
+      "shape": [
+        524,
+        5,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.003589153289794922,
+      "abs_p99": 0.07925787448883037,
+      "all_zero_fraction": 0.0007633587786259542,
+      "n_response_vectors": 2620
+    },
+    "individual_cells/gdt": {
+      "shape": [
+        524,
+        5,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.0012159347534179688,
+      "abs_p99": 0.032258033752441406,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 2620
+    },
+    "mean_control/zero_out": {
+      "shape": [
+        524,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.003978729248046875,
+      "abs_p99": 0.09265321731567377,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 524
+    },
+    "mean_control/vvp": {
+      "shape": [
+        524,
+        5,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.0066242218017578125,
+      "abs_p99": 0.1219329833984375,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 2620
+    },
+    "mean_control/gdt": {
+      "shape": [
+        524,
+        5,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.001811981201171875,
+      "abs_p99": 0.040435791015625,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 2620
+    },
+    "mean_control_masked/zero_out": {
+      "shape": [
+        524,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.0021864573936909437,
+      "abs_p99": 0.026678720489144325,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 524
+    },
+    "mean_control_masked/vvp": {
+      "shape": [
+        524,
+        3,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.0030231475830078125,
+      "abs_p99": 0.042483576759695794,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 1572
+    },
+    "uniform_virtual/zero_out": {
+      "shape": [
+        524,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.003170013427734375,
+      "abs_p99": 0.030862808227539062,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 524
+    },
+    "uniform_virtual/vvp": {
+      "shape": [
+        524,
+        5,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.0045223236083984375,
+      "abs_p99": 0.029254913330078125,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 2620
+    },
+    "uniform_virtual/gdt": {
+      "shape": [
+        524,
+        5,
+        2721
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "standardized"
+      ],
+      "abs_median": 0.000743865966796875,
+      "abs_p99": 0.0299835205078125,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 2620
+    }
+  },
+  "query_summary": {
+    "individual_cells": [
+      {
+        "value_cp10k": 0.0,
+        "cross_gene_mean": 0.0,
+        "cross_gene_sd": 0.015790745265916194,
+        "max_abs": 0.6380691528320312,
+        "self_delta": -0.3900442123413086,
+        "self_rank_median": 0.0,
+        "n_queries": 2096,
+        "n_no_op_queries": 379
+      },
+      {
+        "value_cp10k": 1.0,
+        "cross_gene_mean": -0.0023073924021526364,
+        "cross_gene_sd": 0.017312761918326917,
+        "max_abs": 0.6045522689819336,
+        "self_delta": -0.4948616027832031,
+        "self_rank_median": 0.0,
+        "n_queries": 2096,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 4.0,
+        "cross_gene_mean": -0.000377402328384663,
+        "cross_gene_sd": 0.020757060695752158,
+        "max_abs": 0.5635042190551758,
+        "self_delta": 0.5355949401855469,
+        "self_rank_median": 0.0,
+        "n_queries": 2096,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 16.0,
+        "cross_gene_mean": -7.938839240531543e-05,
+        "cross_gene_sd": 0.025436372854601565,
+        "max_abs": 0.5900812149047852,
+        "self_delta": 0.512054443359375,
+        "self_rank_median": 0.0,
+        "n_queries": 2096,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 64.0,
+        "cross_gene_mean": 0.000387399260588579,
+        "cross_gene_sd": 0.02781232425076864,
+        "max_abs": 0.5720720291137695,
+        "self_delta": 0.37253856658935547,
+        "self_rank_median": 0.0,
+        "n_queries": 2096,
+        "n_no_op_queries": 0
+      }
+    ],
+    "mean_control": [
+      {
+        "value_cp10k": 0.0,
+        "cross_gene_mean": 0.0010042670718539686,
+        "cross_gene_sd": 0.028684702587680105,
+        "max_abs": 1.0234241485595703,
+        "self_delta": -0.02197742462158203,
+        "self_rank_median": 0.0,
+        "n_queries": 524,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 1.0,
+        "cross_gene_mean": -0.0006095068895479459,
+        "cross_gene_sd": 0.023523321203232764,
+        "max_abs": 0.686711311340332,
+        "self_delta": 0.09787750244140625,
+        "self_rank_median": 0.0,
+        "n_queries": 524,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 4.0,
+        "cross_gene_mean": 0.001575975372527549,
+        "cross_gene_sd": 0.03265136054481248,
+        "max_abs": 1.222635269165039,
+        "self_delta": 1.2192955017089844,
+        "self_rank_median": 0.0,
+        "n_queries": 524,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 16.0,
+        "cross_gene_mean": 0.006153882667011569,
+        "cross_gene_sd": 0.037810233616204544,
+        "max_abs": 1.0803375244140625,
+        "self_delta": 1.060460090637207,
+        "self_rank_median": 0.0,
+        "n_queries": 524,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 64.0,
+        "cross_gene_mean": 0.008258617699737719,
+        "cross_gene_sd": 0.04026187607747053,
+        "max_abs": 0.9713973999023438,
+        "self_delta": 0.9164018630981445,
+        "self_rank_median": 0.0,
+        "n_queries": 524,
+        "n_no_op_queries": 0
+      }
+    ],
+    "uniform_virtual": [
+      {
+        "value_cp10k": 0.0,
+        "cross_gene_mean": -0.003774758955434332,
+        "cross_gene_sd": 0.00680791598985352,
+        "max_abs": 0.2006855010986328,
+        "self_delta": -0.14748573303222656,
+        "self_rank_median": 0.0,
+        "n_queries": 524,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 1.0,
+        "cross_gene_mean": -0.006662637247227869,
+        "cross_gene_sd": 0.007981471744373296,
+        "max_abs": 0.22168636322021484,
+        "self_delta": 0.21617889404296875,
+        "self_rank_median": 0.0,
+        "n_queries": 524,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 4.0,
+        "cross_gene_mean": 8.108299560995497e-05,
+        "cross_gene_sd": 0.0004599853798533261,
+        "max_abs": 0.022159576416015625,
+        "self_delta": 0.01633930206298828,
+        "self_rank_median": 0.0,
+        "n_queries": 524,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 16.0,
+        "cross_gene_mean": 0.007310110608780484,
+        "cross_gene_sd": 0.00828376922392607,
+        "max_abs": 0.3953208923339844,
+        "self_delta": 0.3953208923339844,
+        "self_rank_median": 0.0,
+        "n_queries": 524,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 64.0,
+        "cross_gene_mean": 0.007410728331218525,
+        "cross_gene_sd": 0.008894426738463555,
+        "max_abs": 0.3998422622680664,
+        "self_delta": 0.3998422622680664,
+        "self_rank_median": 0.0,
+        "n_queries": 524,
+        "n_no_op_queries": 0
+      }
+    ]
+  },
+  "step_sweep": [
+    {
+      "step": 0.02,
+      "next_step": 0.05,
+      "median_pearson_adjacent": 0.998599403937787,
+      "median_relative_l2_adjacent": 0.07693198489446755,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.05,
+      "next_step": 0.1,
+      "median_pearson_adjacent": 0.9996173347503756,
+      "median_relative_l2_adjacent": 0.04072628421180043,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.1,
+      "next_step": 0.25,
+      "median_pearson_adjacent": 0.9994141843791788,
+      "median_relative_l2_adjacent": 0.11256516029901947,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.25,
+      "next_step": 0.5,
+      "median_pearson_adjacent": 0.9979839838907427,
+      "median_relative_l2_adjacent": 0.1863250760788288,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.5,
+      "next_step": 1.0,
+      "median_pearson_adjacent": 0.9842506412845814,
+      "median_relative_l2_adjacent": 0.3688557556909655,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.02,
+      "next_step": 0.05,
+      "median_pearson_adjacent": 0.9995846005777504,
+      "median_relative_l2_adjacent": 0.032156984952693875,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.05,
+      "next_step": 0.1,
+      "median_pearson_adjacent": 0.9998491200177172,
+      "median_relative_l2_adjacent": 0.020189110727121314,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.1,
+      "next_step": 0.25,
+      "median_pearson_adjacent": 0.9996326756390026,
+      "median_relative_l2_adjacent": 0.03795308266430318,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.25,
+      "next_step": 0.5,
+      "median_pearson_adjacent": 0.9993754633767573,
+      "median_relative_l2_adjacent": 0.0448432620932384,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.5,
+      "next_step": 1.0,
+      "median_pearson_adjacent": 0.9984762372167347,
+      "median_relative_l2_adjacent": 0.06335723095464516,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.02,
+      "next_step": 0.05,
+      "median_pearson_adjacent": 0.9996026413038931,
+      "median_relative_l2_adjacent": 0.03079390760947577,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.05,
+      "next_step": 0.1,
+      "median_pearson_adjacent": 0.9998284534905533,
+      "median_relative_l2_adjacent": 0.0219810593438972,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.1,
+      "next_step": 0.25,
+      "median_pearson_adjacent": 0.9995484595202802,
+      "median_relative_l2_adjacent": 0.0400367872108907,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.25,
+      "next_step": 0.5,
+      "median_pearson_adjacent": 0.9993985924287896,
+      "median_relative_l2_adjacent": 0.05430878661642512,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.5,
+      "next_step": 1.0,
+      "median_pearson_adjacent": 0.9988470288817577,
+      "median_relative_l2_adjacent": 0.06645599222986268,
+      "median_abs_value": 0.0,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    }
+  ],
+  "anchor_cell_spread": {
+    "individual_cells": {
+      "n_cells": 4,
+      "median_cv_of_response_size": 0.39105978194561547,
+      "p90_cv_of_response_size": 0.9106434761185241
+    }
+  },
+  "wiring_detail": [
+    {
+      "bin": "at or below the top of the value grid",
+      "n": 523,
+      "pass_fraction": 0.8967495219885278,
+      "median_anchor_cp10k": 1.2991156682244784
+    },
+    {
+      "bin": "above the top of the value grid",
+      "n": 1,
+      "pass_fraction": 1.0,
+      "median_anchor_cp10k": 74.66627664916199
+    }
+  ],
+  "alignment": [
+    {
+      "anchor": "uniform_virtual",
+      "n_perturbed": 524,
+      "n_readout": 2721,
+      "own_largest": 0.8492366412213741,
+      "own_largest_null": 0.0,
+      "self_rank_median": 0.0,
+      "self_rank_median_fraction": 0.0,
+      "self_rank_median_null": 1305.0,
+      "self_rank_median_fraction_null": 0.4797794117647059,
+      "sign_rate": 0.8721374045801527,
+      "sign_rate_null": 0.9694656488549618,
+      "separated_by": [
+        "self_rank"
+      ],
+      "aligned": true
+    },
+    {
+      "anchor": "mean_control",
+      "n_perturbed": 524,
+      "n_readout": 2721,
+      "own_largest": 0.8969465648854962,
+      "own_largest_null": 0.0,
+      "self_rank_median": 0.0,
+      "self_rank_median_fraction": 0.0,
+      "self_rank_median_null": 1389.0,
+      "self_rank_median_fraction_null": 0.5106617647058823,
+      "sign_rate": 0.9217557251908397,
+      "sign_rate_null": 0.5935114503816794,
+      "separated_by": [
+        "self_rank",
+        "sign"
+      ],
+      "aligned": true
+    },
+    {
+      "anchor": "individual_cells",
+      "n_perturbed": 524,
+      "n_readout": 2721,
+      "own_largest": 0.9179389312977099,
+      "own_largest_null": 0.0,
+      "self_rank_median": 0.0,
+      "self_rank_median_fraction": 0.0,
+      "self_rank_median_null": 1447.5,
+      "self_rank_median_fraction_null": 0.5321691176470589,
+      "sign_rate": 0.9541984732824428,
+      "sign_rate_null": 0.5954198473282443,
+      "separated_by": [
+        "self_rank",
+        "sign"
+      ],
+      "aligned": true
+    }
+  ],
+  "checks": [
+    {
+      "section": "scgpt/hepg2",
+      "check": "individual_cells/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "individual_cells/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "individual_cells/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "individual_cells/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "individual_cells/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "individual_cells/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control_masked/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control_masked/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control_masked/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control_masked/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 3, 2721) (expected (524, 3, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "uniform_virtual/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "uniform_virtual/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 2721) (expected (524, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "uniform_virtual/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "uniform_virtual/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "uniform_virtual/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "uniform_virtual/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (524, 5, 2721) (expected (524, 5, 2721)), finite=True, variants ['raw', 'standardized']"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "coverage_recorded",
+      "ok": true,
+      "detail": "full coverage: 524 of 524 in-scope perturbations (1.0), strata ['S3', 'S4_highest']; perturbed table has 524 rows"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "step_selection",
+      "ok": true,
+      "detail": "selected step and adjacent-step agreement recorded for every anchor; magnitude-unstable anchors: none"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "untiled_exact_derivative",
+      "ok": true,
+      "detail": "in the untiled layout the exact forward-mode derivative agrees with the central difference at step 0.02 over 20 genes: median pearson 0.999498, relative L2 0.03103"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "wiring_by_anchor_level",
+      "ok": true,
+      "detail": "own-entry-largest rate by the perturbed gene's own anchor level: at or below the top of the value grid (523 genes) 0.897; above the top of the value grid (1 genes) 1.000; the value grid tops out at 64 CP10K, so a gene whose anchor sits far above it is barely moved by the query"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "uniform_virtual/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.849 (null 0.000); median self-rank 0 of 2721 (null 1305); own output moves the expected way 0.872 (null 0.969)"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank, sign: own entry largest 0.897 (null 0.000); median self-rank 0 of 2721 (null 1389); own output moves the expected way 0.922 (null 0.594)"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "individual_cells/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank, sign: own entry largest 0.918 (null 0.000); median self-rank 0 of 2721 (null 1448); own output moves the expected way 0.954 (null 0.595)"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "uniform_virtual/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 84.9% of 524 sampled genes (threshold 95%); sign version 87.2%"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "uniform_virtual/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 89.7% of 524 sampled genes (threshold 95%); sign version 92.2%"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "mean_control/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "individual_cells/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 91.8% of 524 sampled genes (threshold 95%); sign version 95.4%"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "individual_cells/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "supplied_set_recorded",
+      "ok": true,
+      "detail": "2721 genes, mode tiled, 3 pass(es) per query; fixed for every query in this (model, cell line)"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "scgpt/context_comparison",
+      "ok": true,
+      "detail": "40 common genes; readout_vs_universe pearson 0.9811 relative L2 0.7026; readout_vs_tiled pearson 0.7706 relative L2 1.0547; universe_vs_tiled pearson 0.7661 relative L2 1.2313; production width tiled"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "masked_coverage",
+      "ok": true,
+      "detail": "mask rate 0.25 in 4 disjoint blocks, 3 cycles; every read-out gene read masked 3-3 times"
+    },
+    {
+      "section": "scgpt/hepg2",
+      "check": "manifest_complete",
+      "ok": true,
+      "detail": "{\"checkpoint\": \"wanglab/scGPT-human\", \"checkpoint_revision\": \"a24c237737a40f3720f75abb555489e9fe753be6\", \"anchors\": [\"individual_cells\", \"mean_control\", \"uniform_virtual\"], \"value_grid_cp10k\": [0.0, 1.0, 4.0, 16.0, 64.0], \"expression_floor_cp10k\": 0.5, \"n_substitutions\": 3}"
+    }
+  ]
+}

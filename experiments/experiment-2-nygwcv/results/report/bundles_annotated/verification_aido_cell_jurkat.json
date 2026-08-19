@@ -1,0 +1,226 @@
+{
+  "checks": [
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 3247) (expected (60, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 5, 3247) (expected (60, 5, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 5, 3247) (expected (60, 5, 3247)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 3247) (expected (250, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control_masked/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control_masked/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 3247) (expected (60, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control_masked/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control_masked/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 3, 3247) (expected (60, 3, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 3247) (expected (250, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "coverage_recorded",
+      "ok": true,
+      "detail": "subset coverage: 250 of 705 in-scope perturbations (0.35461), strata ['S3', 'S4_highest']; perturbed table has 250 rows"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "step_selection",
+      "ok": true,
+      "detail": "selected step and adjacent-step agreement recorded for every anchor; magnitude-unstable anchors: none"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "wiring_by_anchor_level",
+      "ok": true,
+      "detail": "own-entry-largest rate by the perturbed gene's own anchor level: at or below the top of the value grid (250 genes) 0.688; the value grid tops out at 64 CP10K, so a gene whose anchor sits far above it is barely moved by the query"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.736 (null 0.000); median self-rank 0 of 3247 (null 1674); own output moves the expected way 0.084 (null 0.120)"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.688 (null 0.000); median self-rank 0 of 3247 (null 1592); own output moves the expected way 0.104 (null 0.820)"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.667 (null 0.000); median self-rank 0 of 3247 (null 1736); own output moves the expected way 0.100 (null 0.817)"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 73.6% of 250 sampled genes (threshold 95%); sign version 8.4%"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 68.8% of 250 sampled genes (threshold 95%); sign version 10.4%"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 66.7% of 60 sampled genes (threshold 95%); sign version 10.0%"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "supplied_set_recorded",
+      "ok": true,
+      "detail": "19264 genes, mode fixed_transcriptome, 1 pass(es) per query; fixed for every query in this (model, cell line)"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "masked_coverage",
+      "ok": true,
+      "detail": "mask rate 0.15 in 7 disjoint blocks, 3 cycles; every read-out gene read masked 3-3 times"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "manifest_complete",
+      "ok": true,
+      "detail": "{\"checkpoint\": \"genbio-ai/GB.Cell-100M (plan alias genbio-ai/AIDO.Cell-100M, upstream rename)\", \"checkpoint_revision\": \"a983b388e1025860f2c413ecef60e76078253c24\", \"anchors\": [\"individual_cells\", \"mean_control\", \"uniform_virtual\"], \"value_grid_cp10k\": [0.0, 1.0, 4.0, 16.0, 64.0], \"expression_floor_cp10k\": 0.5, \"n_substitutions\": 1}"
+    }
+  ]
+}

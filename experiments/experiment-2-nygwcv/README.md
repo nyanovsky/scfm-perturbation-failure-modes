@@ -15,13 +15,20 @@ blocks, swapping only the feature.
 | path | what |
 |---|---|
 | `src/scfm_pfm/config.py` | every grid, threshold and scope constant the run commits to |
-| `src/scfm_pfm/paths.py` | the three roots: durable outputs, worktree handoff tables, checkpoint cache |
+| `src/scfm_pfm/paths.py` | the roots: durable outputs, worktree handoff tables, checkpoint cache |
+| `src/scfm_pfm/forms.py` | the two array-level operations every block shares, torch-free |
 | `src/scfm_pfm/data/floor_sweep.py` | step 1: ceiling vs expression floor, and the read-out gene set |
 | `src/scfm_pfm/data/demo_cells.py` | real non-targeting control cells (run 1 code, Jurkat added here) |
 | `src/scfm_pfm/models/` | the four response adapters (run 1) extended with a batched query interface |
-| `src/scfm_pfm/features/` | anchors, the extraction driver, step-stability sweep, alignment checks |
+| `src/scfm_pfm/features/scope.py` | which perturbed genes a block covers, and the coverage record |
+| `src/scfm_pfm/features/extract.py` | anchors, the extraction driver, step-stability sweep, alignment checks |
+| `src/scfm_pfm/features/hidden_readout.py` | visible / mask token / median level at one anchor |
+| `src/scfm_pfm/features/cost_probe.py` | measured throughput, full-coverage projection, forward-mode probe |
+| `src/scfm_pfm/features/annotate_coverage.py` | adds the coverage record to a block extracted before it existed |
+| `src/scfm_pfm/features/feature_index.py` | the canonical block per (model, cell line) |
 | `src/scfm_pfm/verify_features.py` | per-block verification (`--block-dir`) and the roll-up (`--all`) |
-| `src/scfm_pfm/report/` | the nine figures and the report the artifacts assemble themselves into |
+| `src/scfm_pfm/report/` | the figures and the report the artifacts assemble themselves into |
+| `tests/` | the hidden-readout estimator against a plain reference on a toy model |
 | `results/handoff/` | small tables that travel with the worktree into a job |
 | `results/floor_sweep/` | the floor sensitivity sweep's outputs |
 | `results/report/bundles/` | one verification record per feature block; the report reads only these |
@@ -37,15 +44,26 @@ python -m scfm_pfm.data.floor_sweep --vectors-dir <dir with shv_<line>.npz>
 # checkpoints onto one job volume, reused read-only by every GPU job
 python3 -m scfm_pfm.models.prefetch --cache _ckpt
 
-# per (model, cell line) extraction job (GPU; mounts the checkpoint volume)
-python -m scfm_pfm.features.extract --model <model> --cell-line <line>
+# per (model, cell line) extraction job (GPU; mounts the checkpoint volume).
+# --full-scope covers every in-scope perturbation and writes to features_full_scope/
+python -m scfm_pfm.features.extract --model <model> --cell-line <line> [--full-scope]
+
+# the visible / mask-token / median-level comparison at the mean-control anchor (GPU)
+python -m scfm_pfm.features.hidden_readout --model <model> --cell-line <line>
+
+# what full coverage would cost for one model, and whether forward-mode autodiff runs (GPU)
+python -m scfm_pfm.features.cost_probe --model aido_cell --batch-sizes 1 2 4 8
 
 # per-block verification (CPU; mounts that extraction job's volume)
 python -m scfm_pfm.verify_features --block-dir auto --out <bundles dir>
 
-# roll-up over the per-block records, then the report
+# roll-up over the per-block records, the block index, then the report
 python -m scfm_pfm.verify_features --all --bundles results/report/bundles
+python -m scfm_pfm.features.feature_index --bundles results/report/bundles
 python -m scfm_pfm.report.build --bundles results/report/bundles
+
+# the estimator behind the masking comparison, on a toy model (CPU, pod)
+PYTHONPATH=src apy -m pytest tests -q
 ```
 
 A block is verified inside a job that mounts the volume the extraction wrote, against that block's
@@ -64,9 +82,28 @@ The worktree keeps only what is small enough to read and diff: the per-block ver
 records, the roll-up, the figures, and the report's Markdown copy. The feature arrays and the
 inline-Plotly HTML report are in the store.
 
-### Feature blocks — `features/<model>/<cell_line>/`
+### Feature blocks — two trees, and an index that names the canonical one
 
-One directory per (model, cell line). Inside:
+Coverage differs by model, so there are two trees with the same layout:
+
+| tree | what | which models |
+|---|---|---|
+| `features_full_scope/<model>/<cell_line>/` | every in-scope perturbation, at every anchor and in the masked variant | scGPT, scPRINT, TranscriptFormer |
+| `features/<model>/<cell_line>/` | the first wave's 250 perturbed genes | AIDO.Cell (canonical); the other three are superseded |
+| `feature_index/blocks.json` | one row per (model, cell line): the block to read, its coverage, what it supersedes | — |
+
+"In scope" is not the same as the plan's strata. The S3 and S4 strata hold 991 perturbations in
+HepG2 and 1,100 in Jurkat, but a perturbed gene has to be a column of the supplied set to be
+perturbed at all, so only the 524 and 705 whose target is itself a read-out gene are reachable. Of
+those, AIDO.Cell runs 250 because its measured cost is about 0.9 s per forward pass; the projection
+for full coverage is in `report/cost_probe/` and in the report. Every manifest records its own
+`coverage` block and the roll-up fails if one does not.
+
+Blocks at different coverage share the smaller one's perturbed genes but **not** its row order.
+Join on `perturbed_gene_id`, never on row index, and do not compare a per-block aggregate across
+two coverages.
+
+Inside a block:
 
 | file | what |
 |---|---|
@@ -82,8 +119,23 @@ One directory per (model, cell line). Inside:
 
 Each `npz` carries `raw` and `standardized`, plus `recentred` where the model's head ends in a
 softmax. Anchors are `uniform_virtual`, `mean_control`, `individual_cells`, and
-`mean_control_masked` for the two bidirectional models. `scgpt/<line>/context_comparison.npz`
+`mean_control_masked` for the three bidirectional models. `scgpt/<line>/context_comparison.npz`
 additionally holds the three-context side check described in the report.
+
+### Hiding the read-out gene two ways — `features/<model>/<cell_line>/hidden_readout/`
+
+For the three bidirectional models, the same 60-gene subset at the mean-control anchor under three
+conditions: the gene's own input `visible`, replaced by the model's `masked` convention, and
+replaced by one uninformative in-distribution level (`median_substituted`, the median pooled-control
+level over read-out genes). This is what separates information removal from a mask-token artefact.
+`manifest.json` carries the per-condition medians, the ratios, the per-gene agreement and the
+substitute level; `condition=<c>/{zero_out,vvp}.npz` carry the arrays and a `read_coverage` array.
+
+The estimator differs from the shipped masked block in one way, deliberately. A mask block that
+also hides the perturbed gene overwrites the perturbation before the forward pass, so that pass
+contributes exactly zero; the shipped block averaged those zeros in, shrinking its magnitudes by
+1/(blocks per cycle) — 25% for scGPT, 14% for scPRINT and AIDO.Cell. Here they are skipped, and
+`abs_median_run2_diluted_estimator` reproduces the shipped estimator exactly.
 
 Per-gene values sit on four different output scales and are not comparable across models without
 an explicit transformation. The median absolute zero-out response spans about three orders of
@@ -93,10 +145,14 @@ magnitude between models; the report's scale figure gives the numbers.
 
 | path | what |
 |---|---|
-| `report/feature_extraction_report.html` (store) | the report, nine figures inline, self-contained |
+| `report/feature_extraction_report.html` (store) | the report, figures inline, self-contained |
 | `results/report/feature_extraction_report.md` (worktree) | the same text as a reading copy |
-| `results/report/bundles/report_bundle_<model>_<line>.json` | one verification record per block; the report reads only these |
+| `results/report/bundles/report_bundle_<model>_<line>.json` | the canonical verification record per block; the report reads only these |
+| `results/report/bundles_subset250/` | the first wave's records for the six blocks now superseded |
+| `results/report/hidden_readout/<model>_<line>.json` | the visible / mask-token / median-level comparison and its checks |
+| `results/report/cost_probe/cost_probe_<model>.json` | measured throughput, the full-coverage projection, the forward-mode probe |
 | `results/report/no_op_queries.csv` | per (model, cell line, anchor, value) count of queries the model could not see |
+| `results/feature_index/blocks.{json,parquet}` | the canonical block per (model, cell line), with its coverage |
 | `results/verification/verify_all.{txt,json}` | the roll-up over the whole artifact tree |
 | `results/floor_sweep/` | the expression-floor sensitivity sweep and the resulting read-out gene set |
 | `figures/<name>/` | interactive HTML, static PDF and PNG, and the `data.json` behind each figure |

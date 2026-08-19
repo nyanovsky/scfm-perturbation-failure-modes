@@ -1,0 +1,1369 @@
+{
+  "model": "aido_cell",
+  "cell_line": "jurkat",
+  "manifest": {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "layout": {
+      "model": "aido_cell",
+      "cell_line": "jurkat",
+      "n_readout_genes": 3247,
+      "n_supplied_genes": 19264,
+      "supplied_mode": "fixed_transcriptome",
+      "forward_passes_per_query": 1,
+      "context_block_genes": 0,
+      "gene_order": "OS_scRNA_gene_index.19264.tsv, a model constraint",
+      "unsupplied_positions": "left at zero, as an unmeasured gene is",
+      "sequence_length": 19266,
+      "hidden_size": 640,
+      "num_hidden_layers": 18
+    },
+    "scope": {
+      "n_perturbed": 250,
+      "n_perturbed_cells_anchor": 60,
+      "n_perturbed_masked": 60,
+      "n_step_sweep": 50,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ]
+    },
+    "value_grid_cp10k": [
+      0.0,
+      1.0,
+      4.0,
+      16.0,
+      64.0
+    ],
+    "gdt_base_grid_cp10k": [
+      0.0,
+      1.0,
+      4.0,
+      16.0,
+      64.0
+    ],
+    "sign_convention": "perturbed minus baseline; a positive entry means raising the perturbed gene raises the model's prediction for the read-out gene. Zero-out uses this convention, not the paper's reversed one",
+    "expression_floor_cp10k": 0.5,
+    "expression_floor_note": "the read-out set is the inclusive floor; each gene's pooled control level travels with the block so a higher floor is a column mask",
+    "gene_embedding_source": "CellFoundation bert.position_embedding: gene identity is the position in the fixed 19,264-gene order, so this table is the model's gene embedding",
+    "gene_embedding_shape": [
+      3247,
+      640
+    ],
+    "mask_spec": {
+      "kind": "transformed_input_value",
+      "value": -1.0,
+      "rate": 0.15,
+      "source": "config.json: mask_token_id; the checkpoint records no pretraining mask rate, so 0.15 is used and recorded as a fallback"
+    },
+    "seed": 42,
+    "anchors": {
+      "uniform_virtual": {
+        "description": "every supplied gene pinned at 3.0798 CP10K, the uniform share of a 10,000-count virtual cell; the paper's construction, and far off the distribution the models were trained on",
+        "cells": [
+          "uniform"
+        ],
+        "n_perturbed": 250,
+        "step": 0.02,
+        "forms": {
+          "vvp": {
+            "raw": [
+              250,
+              5,
+              3247
+            ],
+            "standardized": [
+              250,
+              5,
+              3247
+            ],
+            "recentred": [
+              250,
+              5,
+              3247
+            ],
+            "log2fc": [
+              250,
+              5,
+              3247
+            ]
+          },
+          "zero_out": {
+            "raw": [
+              250,
+              3247
+            ],
+            "standardized": [
+              250,
+              3247
+            ],
+            "recentred": [
+              250,
+              3247
+            ],
+            "log2fc": [
+              250,
+              3247
+            ]
+          },
+          "gdt": {
+            "raw": [
+              250,
+              5,
+              3247
+            ],
+            "standardized": [
+              250,
+              5,
+              3247
+            ],
+            "recentred": [
+              250,
+              5,
+              3247
+            ]
+          }
+        },
+        "n_cells_averaged": 1,
+        "zero_out_value_index": 0,
+        "gdt_source": "central_finite_difference(step=0.02)",
+        "seconds": 3571.3
+      },
+      "mean_control": {
+        "description": "the pooled non-targeting control mean expression profile of this cell line, restricted to the read-out genes; the on-distribution counterpart",
+        "cells": [
+          "mean_control"
+        ],
+        "n_perturbed": 250,
+        "step": 0.02,
+        "forms": {
+          "vvp": {
+            "raw": [
+              250,
+              5,
+              3247
+            ],
+            "standardized": [
+              250,
+              5,
+              3247
+            ],
+            "recentred": [
+              250,
+              5,
+              3247
+            ],
+            "log2fc": [
+              250,
+              5,
+              3247
+            ]
+          },
+          "zero_out": {
+            "raw": [
+              250,
+              3247
+            ],
+            "standardized": [
+              250,
+              3247
+            ],
+            "recentred": [
+              250,
+              3247
+            ],
+            "log2fc": [
+              250,
+              3247
+            ]
+          },
+          "gdt": {
+            "raw": [
+              250,
+              5,
+              3247
+            ],
+            "standardized": [
+              250,
+              5,
+              3247
+            ],
+            "recentred": [
+              250,
+              5,
+              3247
+            ]
+          }
+        },
+        "n_cells_averaged": 1,
+        "zero_out_value_index": 0,
+        "gdt_source": "central_finite_difference(step=0.02)",
+        "seconds": 3572.1
+      },
+      "individual_cells": {
+        "description": "4 real non-targeting control cells, each converted to CP10K so every anchor sits at one depth; responses are averaged over the cells and their spread is recorded",
+        "cells": [
+          "AAACCCAAGCTGGAGT-37",
+          "AAACCCAAGGGCCTCT-51",
+          "AAACCCACAAAGAGTT-20",
+          "AAACCCACATTGCTTT-48"
+        ],
+        "n_perturbed": 60,
+        "step": 0.02,
+        "forms": {
+          "vvp": {
+            "raw": [
+              60,
+              5,
+              3247
+            ],
+            "standardized": [
+              60,
+              5,
+              3247
+            ],
+            "recentred": [
+              60,
+              5,
+              3247
+            ],
+            "log2fc": [
+              60,
+              5,
+              3247
+            ]
+          },
+          "zero_out": {
+            "raw": [
+              60,
+              3247
+            ],
+            "standardized": [
+              60,
+              3247
+            ],
+            "recentred": [
+              60,
+              3247
+            ],
+            "log2fc": [
+              60,
+              3247
+            ]
+          },
+          "gdt": {
+            "raw": [
+              60,
+              5,
+              3247
+            ],
+            "standardized": [
+              60,
+              5,
+              3247
+            ],
+            "recentred": [
+              60,
+              5,
+              3247
+            ]
+          }
+        },
+        "n_cells_averaged": 4,
+        "zero_out_value_index": 0,
+        "gdt_source": "central_finite_difference(step=0.02)",
+        "seconds": 3427.9,
+        "per_cell_spread": "responses averaged over cells; see summary rows"
+      }
+    },
+    "substitutions": [
+      "replaced BertSelfFlashAttention.forward with a shape-correct SDPA implementation: the shipped non-flash fallback softmaxes across heads instead of across the sequence, and the flash-attention path is fp16/bf16 only with no forward-mode derivative. Weights and attention mathematics are unchanged; the kernel and dtype are not."
+    ],
+    "contract": {
+      "model": "aido_cell",
+      "checkpoint": "genbio-ai/GB.Cell-100M (plan alias genbio-ai/AIDO.Cell-100M, upstream rename)",
+      "checkpoint_revision": "a983b388e1025860f2c413ecef60e76078253c24",
+      "checkpoint_md5": null,
+      "input_normalization": "raw counts scattered onto the fixed 19,264-gene order (unmeasured genes = 0), then read-depth-aware scFoundation transform: rd = max(log10(total), 5); x = log1p(x / total * 1e4); x = concat([x, rd, rd]); clamp(x, max=20). Sequence length 19,266.",
+      "output_head": "CellFoundationForMaskedLM.cls.predictions -> Linear(hidden, 1)",
+      "output_semantics": "one scalar per gene position (the model's masked-language-model regression target, i.e. predicted high-read-depth expression on the log1p CP10K scale); the last two positions are read-depth tokens and are dropped",
+      "information_flow": "bidirectional encoder (18 layers) over the full fixed gene order",
+      "ordering_dependent": false,
+      "response_symmetric": null,
+      "symmetry_evidence": "bidirectional attention plus absolute position embeddings over a fixed gene order; every gene sees every other gene, but pairwise symmetry was not measured here",
+      "differentiable_wrt_input_expression": true,
+      "jacobian_available": true,
+      "jacobian_method": "forward_mode_autodiff_jvp",
+      "jacobian_unavailable_reason": null,
+      "jacobian_check": {},
+      "vocabulary_kind": "symbol",
+      "vocabulary_size": 19264,
+      "context_length": 19266,
+      "dtype": "float32",
+      "substitutions": [
+        "replaced BertSelfFlashAttention.forward with a shape-correct SDPA implementation: the shipped non-flash fallback softmaxes across heads instead of across the sequence, and the flash-attention path is fp16/bf16 only with no forward-mode derivative. Weights and attention mathematics are unchanged; the kernel and dtype are not."
+      ],
+      "notes": "The gene order is a model constraint, not a choice: position i of the input is gene i of OS_scRNA_gene_index.19264.tsv. Expression enters through GeneEmbedding's auto-discretization (Linear(1, 100) -> softmax -> bin-embedding mixture), which is smooth in the input value, so no binning has to be bypassed. flash-attention 2 importable in this environment: False; published-kernel cross-check: {'ran': False}."
+    },
+    "step_selection": {
+      "uniform_virtual": {
+        "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+        "steps_swept": [
+          0.02,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0
+        ],
+        "base_value_cp10k": 4.0,
+        "n_genes": 50,
+        "selected_step": 0.02,
+        "verdict": "stable_in_direction_and_magnitude",
+        "gradient_features_usable_for": "direction, ranking and magnitude",
+        "adjacent_agreement": [
+          {
+            "step": 0.02,
+            "next_step": 0.05,
+            "median_pearson_adjacent": 0.9993381126509793,
+            "median_relative_l2_adjacent": 0.036339176904013754,
+            "median_abs_value": 4.619359970092821e-05,
+            "n_genes": 50
+          },
+          {
+            "step": 0.05,
+            "next_step": 0.1,
+            "median_pearson_adjacent": 0.9998610487589441,
+            "median_relative_l2_adjacent": 0.016763416614998375,
+            "median_abs_value": 4.649162292480485e-05,
+            "n_genes": 50
+          },
+          {
+            "step": 0.1,
+            "next_step": 0.25,
+            "median_pearson_adjacent": 0.9999657082152074,
+            "median_relative_l2_adjacent": 0.009124898258087823,
+            "median_abs_value": 4.6193599700927795e-05,
+            "n_genes": 50
+          },
+          {
+            "step": 0.25,
+            "next_step": 0.5,
+            "median_pearson_adjacent": 0.9999645723842026,
+            "median_relative_l2_adjacent": 0.012675586963363048,
+            "median_abs_value": 4.6133995056152344e-05,
+            "n_genes": 50
+          },
+          {
+            "step": 0.5,
+            "next_step": 1.0,
+            "median_pearson_adjacent": 0.999693662629699,
+            "median_relative_l2_adjacent": 0.044058190265746686,
+            "median_abs_value": 4.6133995056152344e-05,
+            "n_genes": 50
+          }
+        ]
+      },
+      "mean_control": {
+        "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+        "steps_swept": [
+          0.02,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0
+        ],
+        "base_value_cp10k": 4.0,
+        "n_genes": 50,
+        "selected_step": 0.02,
+        "verdict": "stable_in_direction_and_magnitude",
+        "gradient_features_usable_for": "direction, ranking and magnitude",
+        "adjacent_agreement": [
+          {
+            "step": 0.02,
+            "next_step": 0.05,
+            "median_pearson_adjacent": 0.9996216668632611,
+            "median_relative_l2_adjacent": 0.02337055476302341,
+            "median_abs_value": 0.00037997961044311914,
+            "n_genes": 50
+          },
+          {
+            "step": 0.05,
+            "next_step": 0.1,
+            "median_pearson_adjacent": 0.999929384623502,
+            "median_relative_l2_adjacent": 0.01041628368330529,
+            "median_abs_value": 0.00037908554077148573,
+            "n_genes": 50
+          },
+          {
+            "step": 0.1,
+            "next_step": 0.25,
+            "median_pearson_adjacent": 0.9999781470953684,
+            "median_relative_l2_adjacent": 0.0070889288273140744,
+            "median_abs_value": 0.00037789344787597705,
+            "n_genes": 50
+          },
+          {
+            "step": 0.25,
+            "next_step": 0.5,
+            "median_pearson_adjacent": 0.999984327170614,
+            "median_relative_l2_adjacent": 0.008004775567408303,
+            "median_abs_value": 0.0003769397735595703,
+            "n_genes": 50
+          },
+          {
+            "step": 0.5,
+            "next_step": 1.0,
+            "median_pearson_adjacent": 0.999831406888943,
+            "median_relative_l2_adjacent": 0.024593473846197478,
+            "median_abs_value": 0.00037588179111480713,
+            "n_genes": 50
+          }
+        ]
+      },
+      "individual_cells": {
+        "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+        "steps_swept": [
+          0.02,
+          0.05,
+          0.1,
+          0.25,
+          0.5,
+          1.0
+        ],
+        "base_value_cp10k": 4.0,
+        "n_genes": 50,
+        "selected_step": 0.02,
+        "verdict": "stable_in_direction_and_magnitude",
+        "gradient_features_usable_for": "direction, ranking and magnitude",
+        "adjacent_agreement": [
+          {
+            "step": 0.02,
+            "next_step": 0.05,
+            "median_pearson_adjacent": 0.9994790818659433,
+            "median_relative_l2_adjacent": 0.027020471796418633,
+            "median_abs_value": 0.00026673078536987576,
+            "n_genes": 50
+          },
+          {
+            "step": 0.05,
+            "next_step": 0.1,
+            "median_pearson_adjacent": 0.9999066031461843,
+            "median_relative_l2_adjacent": 0.01206436077527043,
+            "median_abs_value": 0.000267028808593751,
+            "n_genes": 50
+          },
+          {
+            "step": 0.1,
+            "next_step": 0.25,
+            "median_pearson_adjacent": 0.9999676396365547,
+            "median_relative_l2_adjacent": 0.007392946316617941,
+            "median_abs_value": 0.0002676248550415043,
+            "n_genes": 50
+          },
+          {
+            "step": 0.25,
+            "next_step": 0.5,
+            "median_pearson_adjacent": 0.9999791581054421,
+            "median_relative_l2_adjacent": 0.006755348586270573,
+            "median_abs_value": 0.0002677440643310547,
+            "n_genes": 50
+          },
+          {
+            "step": 0.5,
+            "next_step": 1.0,
+            "median_pearson_adjacent": 0.999824262137383,
+            "median_relative_l2_adjacent": 0.022065412731042892,
+            "median_abs_value": 0.00026738643646240234,
+            "n_genes": 50
+          }
+        ]
+      }
+    },
+    "wiring_checks": {
+      "uniform_virtual": {
+        "n_genes": 250,
+        "value_low_cp10k": 1.0,
+        "value_high_cp10k": 64.0,
+        "sign_check_pass_fraction": 0.084,
+        "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+        "magnitude_check_pass_fraction": 0.736,
+        "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+        "median_self_rank": 0.0,
+        "permuted_magnitude_pass_fraction": 0.0,
+        "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+        "threshold": 0.95
+      },
+      "mean_control": {
+        "n_genes": 250,
+        "value_low_cp10k": 1.0,
+        "value_high_cp10k": 64.0,
+        "sign_check_pass_fraction": 0.104,
+        "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+        "magnitude_check_pass_fraction": 0.688,
+        "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+        "median_self_rank": 0.0,
+        "permuted_magnitude_pass_fraction": 0.0,
+        "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+        "threshold": 0.95
+      },
+      "individual_cells": {
+        "n_genes": 60,
+        "value_low_cp10k": 1.0,
+        "value_high_cp10k": 64.0,
+        "sign_check_pass_fraction": 0.1,
+        "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+        "magnitude_check_pass_fraction": 0.6666666666666666,
+        "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+        "median_self_rank": 0.0,
+        "permuted_magnitude_pass_fraction": 0.0,
+        "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+        "threshold": 0.95
+      }
+    },
+    "masked": {
+      "ran": true,
+      "mask_spec": {
+        "kind": "transformed_input_value",
+        "value": -1.0,
+        "rate": 0.15,
+        "source": "config.json: mask_token_id; the checkpoint records no pretraining mask rate, so 0.15 is used and recorded as a fallback"
+      },
+      "mask_rate": 0.15,
+      "n_blocks_per_cycle": 7,
+      "cycles": 3,
+      "coverage_per_gene": {
+        "min": 3,
+        "median": 3.0,
+        "max": 3
+      },
+      "n_perturbed": 60,
+      "value_grid_cp10k": [
+        0.0,
+        4.0,
+        64.0
+      ],
+      "seconds": 3453.4,
+      "note": "responses are read only at masked positions, averaged over cycles; the unmasked block at the same anchor is the comparison"
+    },
+    "coverage": {
+      "mode": "subset",
+      "n_perturbed": 250,
+      "n_in_scope": 705,
+      "fraction_of_scope": 0.35461,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ],
+      "by_stratum": {
+        "S3": {
+          "in_scope": 354,
+          "selected": 125
+        },
+        "S4_highest": {
+          "in_scope": 351,
+          "selected": 125
+        }
+      },
+      "n_perturbed_cells_anchor": 60,
+      "n_perturbed_masked": 60,
+      "n_step_sweep": 50,
+      "scope_requested": {
+        "n_perturbed": 250,
+        "n_perturbed_cells_anchor": 60,
+        "n_perturbed_masked": 60,
+        "strata": [
+          "S3",
+          "S4_highest"
+        ]
+      },
+      "selection_rule": "stratified sample of 250 at seed 42, 125 per stratum, drawn from the in-scope set; the individual-cell and masked subsets are nested inside it",
+      "in_scope_definition": "perturbations in strata S3, S4_highest whose target gene is also a read-out gene of this cell line, so it can be perturbed at all",
+      "comparability_note": "a block at partial coverage and a block at full coverage share the perturbed genes of the smaller one but not its row order; join on perturbed_gene_id, never on row index, and do not compare a per-block aggregate across two different coverages",
+      "annotated_after_extraction": "added by features.annotate_coverage: the block was extracted before the coverage record existed. The selector was re-run and reproduces this block's perturbed table exactly, so the record describes the features as shipped; no array changed."
+    }
+  },
+  "n_readout": 3247,
+  "n_perturbed": 250,
+  "blocks": {
+    "individual_cells/zero_out": {
+      "shape": [
+        60,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 0.00013944506645202637,
+      "abs_p99": 0.01064088851213455,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 60
+    },
+    "individual_cells/vvp": {
+      "shape": [
+        60,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 0.0008627921342849731,
+      "abs_p99": 0.05445113778114319,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 300
+    },
+    "individual_cells/gdt": {
+      "shape": [
+        60,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 0.00016540288925170898,
+      "abs_p99": 0.002047419548034668,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 300
+    },
+    "mean_control/zero_out": {
+      "shape": [
+        250,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 0.0001308917999267578,
+      "abs_p99": 0.010180652141571045,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 250
+    },
+    "mean_control/vvp": {
+      "shape": [
+        250,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 0.001008749008178711,
+      "abs_p99": 0.09888063132762881,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 1250
+    },
+    "mean_control/gdt": {
+      "shape": [
+        250,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 0.00024437904357910156,
+      "abs_p99": 0.003591179847717285,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 1250
+    },
+    "mean_control_masked/zero_out": {
+      "shape": [
+        60,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 0.00018624961376190186,
+      "abs_p99": 0.008144171582534903,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 60
+    },
+    "mean_control_masked/vvp": {
+      "shape": [
+        60,
+        3,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 0.0005278984899632633,
+      "abs_p99": 0.01762302696704867,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 180
+    },
+    "uniform_virtual/zero_out": {
+      "shape": [
+        250,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 8.511543273925781e-05,
+      "abs_p99": 0.0009294748306274414,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 250
+    },
+    "uniform_virtual/vvp": {
+      "shape": [
+        250,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "log2fc",
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 0.0001475214958190918,
+      "abs_p99": 0.032813344597816374,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 1250
+    },
+    "uniform_virtual/gdt": {
+      "shape": [
+        250,
+        5,
+        3247
+      ],
+      "finite": true,
+      "variants": [
+        "raw",
+        "recentred",
+        "standardized"
+      ],
+      "abs_median": 4.470348358154297e-05,
+      "abs_p99": 0.0019222497940063477,
+      "all_zero_fraction": 0.0,
+      "n_response_vectors": 1250
+    }
+  },
+  "query_summary": {
+    "individual_cells": [
+      {
+        "value_cp10k": 0.0,
+        "cross_gene_mean": 0.0,
+        "cross_gene_sd": 0.0012130392290327409,
+        "max_abs": 0.04747346043586731,
+        "self_delta": 0.0,
+        "self_rank_median": 0.0,
+        "n_queries": 240,
+        "n_no_op_queries": 42
+      },
+      {
+        "value_cp10k": 1.0,
+        "cross_gene_mean": 3.4470293552720587e-07,
+        "cross_gene_sd": 0.001177138243091829,
+        "max_abs": 0.0406719446182251,
+        "self_delta": 0.02019965648651123,
+        "self_rank_median": 0.0,
+        "n_queries": 240,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 4.0,
+        "cross_gene_mean": 0.0001315536126058433,
+        "cross_gene_sd": 0.001802152528508903,
+        "max_abs": 0.07262355089187622,
+        "self_delta": -0.012401011772453785,
+        "self_rank_median": 0.0,
+        "n_queries": 240,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 16.0,
+        "cross_gene_mean": 0.0039251257711634254,
+        "cross_gene_sd": 0.006143724176104976,
+        "max_abs": 0.12078753113746643,
+        "self_delta": -0.06689569354057312,
+        "self_rank_median": 0.0,
+        "n_queries": 240,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 64.0,
+        "cross_gene_mean": 0.014060161096707312,
+        "cross_gene_sd": 0.01939403462487669,
+        "max_abs": 0.2110288143157959,
+        "self_delta": -0.12146541476249695,
+        "self_rank_median": 0.0,
+        "n_queries": 240,
+        "n_no_op_queries": 0
+      }
+    ],
+    "mean_control": [
+      {
+        "value_cp10k": 0.0,
+        "cross_gene_mean": 1.2539739312944245e-05,
+        "cross_gene_sd": 0.0018891891931208384,
+        "max_abs": 0.08475729823112488,
+        "self_delta": -0.0007342696189880371,
+        "self_rank_median": 0.0,
+        "n_queries": 250,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 1.0,
+        "cross_gene_mean": -1.0275909826870803e-06,
+        "cross_gene_sd": 0.0011708424457284815,
+        "max_abs": 0.051743507385253906,
+        "self_delta": 0.011521220207214355,
+        "self_rank_median": 0.0,
+        "n_queries": 250,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 4.0,
+        "cross_gene_mean": 0.0002594232762276594,
+        "cross_gene_sd": 0.0027907981920510107,
+        "max_abs": 0.12491931021213531,
+        "self_delta": -0.04806670546531677,
+        "self_rank_median": 0.0,
+        "n_queries": 250,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 16.0,
+        "cross_gene_mean": 0.007516328883301416,
+        "cross_gene_sd": 0.00897593775386456,
+        "max_abs": 0.1855589747428894,
+        "self_delta": -0.15789270401000977,
+        "self_rank_median": 0.0,
+        "n_queries": 250,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 64.0,
+        "cross_gene_mean": 0.031104653039709086,
+        "cross_gene_sd": 0.028608657475025626,
+        "max_abs": 0.26230308413505554,
+        "self_delta": -0.22350943088531494,
+        "self_rank_median": 0.0,
+        "n_queries": 250,
+        "n_no_op_queries": 0
+      }
+    ],
+    "uniform_virtual": [
+      {
+        "value_cp10k": 0.0,
+        "cross_gene_mean": 2.6389199828492116e-05,
+        "cross_gene_sd": 0.0004973213151896557,
+        "max_abs": 0.025605380535125732,
+        "self_delta": 0.01461571455001831,
+        "self_rank_median": 0.0,
+        "n_queries": 250,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 1.0,
+        "cross_gene_mean": 1.5228773055074396e-05,
+        "cross_gene_sd": 0.0004035663712200274,
+        "max_abs": 0.02093362808227539,
+        "self_delta": 0.012720257043838501,
+        "self_rank_median": 0.0,
+        "n_queries": 250,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 4.0,
+        "cross_gene_mean": 7.440787798850985e-06,
+        "cross_gene_sd": 0.00015272434350446765,
+        "max_abs": 0.0062163472175598145,
+        "self_delta": -0.003948807716369629,
+        "self_rank_median": 0.0,
+        "n_queries": 250,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 16.0,
+        "cross_gene_mean": -0.00022872468450315774,
+        "cross_gene_sd": 0.001751356364903906,
+        "max_abs": 0.0465644896030426,
+        "self_delta": -0.002049684524536133,
+        "self_rank_median": 0.0,
+        "n_queries": 250,
+        "n_no_op_queries": 0
+      },
+      {
+        "value_cp10k": 64.0,
+        "cross_gene_mean": -0.00457628057052906,
+        "cross_gene_sd": 0.0058400499589406855,
+        "max_abs": 0.14493733644485474,
+        "self_delta": -0.13677528500556946,
+        "self_rank_median": 0.0,
+        "n_queries": 250,
+        "n_no_op_queries": 0
+      }
+    ]
+  },
+  "step_sweep": [
+    {
+      "step": 0.02,
+      "next_step": 0.05,
+      "median_pearson_adjacent": 0.9993381126509793,
+      "median_relative_l2_adjacent": 0.036339176904013754,
+      "median_abs_value": 4.619359970092821e-05,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.05,
+      "next_step": 0.1,
+      "median_pearson_adjacent": 0.9998610487589441,
+      "median_relative_l2_adjacent": 0.016763416614998375,
+      "median_abs_value": 4.649162292480485e-05,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.1,
+      "next_step": 0.25,
+      "median_pearson_adjacent": 0.9999657082152074,
+      "median_relative_l2_adjacent": 0.009124898258087823,
+      "median_abs_value": 4.6193599700927795e-05,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.25,
+      "next_step": 0.5,
+      "median_pearson_adjacent": 0.9999645723842026,
+      "median_relative_l2_adjacent": 0.012675586963363048,
+      "median_abs_value": 4.6133995056152344e-05,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.5,
+      "next_step": 1.0,
+      "median_pearson_adjacent": 0.999693662629699,
+      "median_relative_l2_adjacent": 0.044058190265746686,
+      "median_abs_value": 4.6133995056152344e-05,
+      "n_genes": 50,
+      "anchor": "uniform_virtual"
+    },
+    {
+      "step": 0.02,
+      "next_step": 0.05,
+      "median_pearson_adjacent": 0.9996216668632611,
+      "median_relative_l2_adjacent": 0.02337055476302341,
+      "median_abs_value": 0.00037997961044311914,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.05,
+      "next_step": 0.1,
+      "median_pearson_adjacent": 0.999929384623502,
+      "median_relative_l2_adjacent": 0.01041628368330529,
+      "median_abs_value": 0.00037908554077148573,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.1,
+      "next_step": 0.25,
+      "median_pearson_adjacent": 0.9999781470953684,
+      "median_relative_l2_adjacent": 0.0070889288273140744,
+      "median_abs_value": 0.00037789344787597705,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.25,
+      "next_step": 0.5,
+      "median_pearson_adjacent": 0.999984327170614,
+      "median_relative_l2_adjacent": 0.008004775567408303,
+      "median_abs_value": 0.0003769397735595703,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.5,
+      "next_step": 1.0,
+      "median_pearson_adjacent": 0.999831406888943,
+      "median_relative_l2_adjacent": 0.024593473846197478,
+      "median_abs_value": 0.00037588179111480713,
+      "n_genes": 50,
+      "anchor": "mean_control"
+    },
+    {
+      "step": 0.02,
+      "next_step": 0.05,
+      "median_pearson_adjacent": 0.9994790818659433,
+      "median_relative_l2_adjacent": 0.027020471796418633,
+      "median_abs_value": 0.00026673078536987576,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.05,
+      "next_step": 0.1,
+      "median_pearson_adjacent": 0.9999066031461843,
+      "median_relative_l2_adjacent": 0.01206436077527043,
+      "median_abs_value": 0.000267028808593751,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.1,
+      "next_step": 0.25,
+      "median_pearson_adjacent": 0.9999676396365547,
+      "median_relative_l2_adjacent": 0.007392946316617941,
+      "median_abs_value": 0.0002676248550415043,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.25,
+      "next_step": 0.5,
+      "median_pearson_adjacent": 0.9999791581054421,
+      "median_relative_l2_adjacent": 0.006755348586270573,
+      "median_abs_value": 0.0002677440643310547,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    },
+    {
+      "step": 0.5,
+      "next_step": 1.0,
+      "median_pearson_adjacent": 0.999824262137383,
+      "median_relative_l2_adjacent": 0.022065412731042892,
+      "median_abs_value": 0.00026738643646240234,
+      "n_genes": 50,
+      "anchor": "individual_cells"
+    }
+  ],
+  "anchor_cell_spread": {
+    "individual_cells": {
+      "n_cells": 4,
+      "median_cv_of_response_size": 0.3524784440774812,
+      "p90_cv_of_response_size": 1.097373864985715
+    }
+  },
+  "wiring_detail": [
+    {
+      "bin": "at or below the top of the value grid",
+      "n": 250,
+      "pass_fraction": 0.688,
+      "median_anchor_cp10k": 1.258144520925124
+    }
+  ],
+  "alignment": [
+    {
+      "anchor": "uniform_virtual",
+      "n_perturbed": 250,
+      "n_readout": 3247,
+      "own_largest": 0.736,
+      "own_largest_null": 0.0,
+      "self_rank_median": 0.0,
+      "self_rank_median_fraction": 0.0,
+      "self_rank_median_null": 1674.0,
+      "self_rank_median_fraction_null": 0.5157116451016636,
+      "sign_rate": 0.084,
+      "sign_rate_null": 0.12,
+      "separated_by": [
+        "self_rank"
+      ],
+      "aligned": true
+    },
+    {
+      "anchor": "mean_control",
+      "n_perturbed": 250,
+      "n_readout": 3247,
+      "own_largest": 0.688,
+      "own_largest_null": 0.0,
+      "self_rank_median": 0.0,
+      "self_rank_median_fraction": 0.0,
+      "self_rank_median_null": 1592.0,
+      "self_rank_median_fraction_null": 0.4904497843499692,
+      "sign_rate": 0.104,
+      "sign_rate_null": 0.82,
+      "separated_by": [
+        "self_rank"
+      ],
+      "aligned": true
+    },
+    {
+      "anchor": "individual_cells",
+      "n_perturbed": 60,
+      "n_readout": 3247,
+      "own_largest": 0.6666666666666666,
+      "own_largest_null": 0.0,
+      "self_rank_median": 0.0,
+      "self_rank_median_fraction": 0.0,
+      "self_rank_median_null": 1736.5,
+      "self_rank_median_fraction_null": 0.534966112138016,
+      "sign_rate": 0.1,
+      "sign_rate_null": 0.8166666666666667,
+      "separated_by": [
+        "self_rank"
+      ],
+      "aligned": true
+    }
+  ],
+  "checks": [
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 3247) (expected (60, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 5, 3247) (expected (60, 5, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 5, 3247) (expected (60, 5, 3247)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 3247) (expected (250, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control_masked/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control_masked/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 3247) (expected (60, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control_masked/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control_masked/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (60, 3, 3247) (expected (60, 3, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/zero_out/exists",
+      "ok": true,
+      "detail": "zero_out.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/zero_out/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 3247) (expected (250, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/vvp/exists",
+      "ok": true,
+      "detail": "vvp.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/vvp/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['log2fc', 'raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/gdt/exists",
+      "ok": true,
+      "detail": "gdt.npz"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/gdt/shape_and_finite",
+      "ok": true,
+      "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "coverage_recorded",
+      "ok": true,
+      "detail": "subset coverage: 250 of 705 in-scope perturbations (0.35461), strata ['S3', 'S4_highest']; perturbed table has 250 rows"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "step_selection",
+      "ok": true,
+      "detail": "selected step and adjacent-step agreement recorded for every anchor; magnitude-unstable anchors: none"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "wiring_by_anchor_level",
+      "ok": true,
+      "detail": "own-entry-largest rate by the perturbed gene's own anchor level: at or below the top of the value grid (250 genes) 0.688; the value grid tops out at 64 CP10K, so a gene whose anchor sits far above it is barely moved by the query"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.736 (null 0.000); median self-rank 0 of 3247 (null 1674); own output moves the expected way 0.084 (null 0.120)"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.688 (null 0.000); median self-rank 0 of 3247 (null 1592); own output moves the expected way 0.104 (null 0.820)"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/alignment_vs_permutation",
+      "ok": true,
+      "detail": "read-out order is aligned with the query on self_rank: own entry largest 0.667 (null 0.000); median self-rank 0 of 3247 (null 1736); own output moves the expected way 0.100 (null 0.817)"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 73.6% of 250 sampled genes (threshold 95%); sign version 8.4%"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "uniform_virtual/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 68.8% of 250 sampled genes (threshold 95%); sign version 10.4%"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "mean_control/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/wiring_magnitude",
+      "ok": false,
+      "detail": "the perturbed gene's own entry is the largest response for 66.7% of 60 sampled genes (threshold 95%); sign version 10.0%"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "individual_cells/wiring_permutation",
+      "ok": true,
+      "detail": "shuffling the read-out order drops the same test to 0.0%, so the guard has power"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "supplied_set_recorded",
+      "ok": true,
+      "detail": "19264 genes, mode fixed_transcriptome, 1 pass(es) per query; fixed for every query in this (model, cell line)"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "masked_coverage",
+      "ok": true,
+      "detail": "mask rate 0.15 in 7 disjoint blocks, 3 cycles; every read-out gene read masked 3-3 times"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "manifest_complete",
+      "ok": true,
+      "detail": "{\"checkpoint\": \"genbio-ai/GB.Cell-100M (plan alias genbio-ai/AIDO.Cell-100M, upstream rename)\", \"checkpoint_revision\": \"a983b388e1025860f2c413ecef60e76078253c24\", \"anchors\": [\"individual_cells\", \"mean_control\", \"uniform_virtual\"], \"value_grid_cp10k\": [0.0, 1.0, 4.0, 16.0, 64.0], \"expression_floor_cp10k\": 0.5, \"n_substitutions\": 1}"
+    }
+  ]
+}

@@ -115,15 +115,48 @@ def rank(x) -> str:
     return f"{int(x):,}" if x == int(x) else f"{x:,.1f}"
 
 
-def anchor_levels(cell_line: str, clip_cp10k: float | None = None) -> dict | None:
+def coverage_tag(bundle: dict) -> str:
+    """The perturbed-table tag a block's coverage corresponds to."""
+    cov = bundle["manifest"].get("coverage") or {}
+    if cov.get("mode") == "full":
+        return "full"
+    return f"n{cov.get('n_perturbed', bundle['n_perturbed'])}"
+
+
+def strata_scope(cell_line: str) -> dict | None:
+    """How many perturbations the plan's strata hold, before reachability.
+
+    A perturbed gene has to be a column of the supplied set to be perturbed at
+    all, so the strata count and the count that can actually be queried are two
+    different numbers and the report states both.
+    """
+    path = paths.handoff_root() / "effects" / cell_line / "perturbations.parquet"
+    if not path.exists():
+        return None
+    perts = pd.read_parquet(path, columns=["target", "effect_stratum"])
+    in_strata = perts[perts.effect_stratum.isin(C.PERTURBED_STRATA)]
+    return {
+        "n_in_strata": int(in_strata.shape[0]),
+        "by_stratum": in_strata.effect_stratum.value_counts().to_dict(),
+    }
+
+
+def anchor_levels(
+    cell_line: str, clip_cp10k: float | None = None, tag: str | None = None
+) -> dict | None:
     """Where the perturbed genes already sit, per anchor, from the shipped tables.
 
     The response difference vanishes when the queried value equals the gene's own
     level in the anchor, so these numbers are what the size of the response at
-    each grid value has to be read against.
+    each grid value has to be read against. The perturbed table depends on the
+    coverage the block ran at, so the tag selects it: a 250-gene block and a
+    full-coverage block do not have the same perturbed genes.
     """
     repo = paths.repo_dir()
-    pg_path = repo / "results" / "report" / "blocks" / f"perturbed_genes_{cell_line}.parquet"
+    blocks = repo / "results" / "report" / "blocks"
+    pg_path = blocks / f"perturbed_genes_{tag}_{cell_line}.parquet"
+    if not pg_path.exists():  # run 2's first wave wrote one table per cell line
+        pg_path = blocks / f"perturbed_genes_{cell_line}.parquet"
     ro_path = paths.handoff_root() / "readout" / f"readout_genes_{cell_line}.parquet"
     dc_path = paths.demo_cells_dir() / f"demo_cells_{cell_line}.parquet"
     if not (pg_path.exists() and ro_path.exists()):
@@ -211,6 +244,42 @@ def load_bundles(bundles_dir: Path) -> dict:
     return out
 
 
+def load_hidden(repo: Path) -> dict:
+    """The visible / masked / median-substituted comparison, where it ran."""
+    out = {}
+    d = repo / "results" / "report" / "hidden_readout"
+    if d.exists():
+        for path in sorted(d.glob("*.json")):
+            if path.name.startswith("verification_"):
+                continue
+            rec = json.loads(path.read_text())
+            out[(rec["model"], rec["cell_line"])] = rec
+    return out
+
+
+def load_cost_probes(repo: Path) -> dict:
+    """Measured throughput and full-coverage projections, per model."""
+    out = {}
+    d = repo / "results" / "report" / "cost_probe"
+    if d.exists():
+        for path in sorted(d.glob("cost_probe_*.json")):
+            rec = json.loads(path.read_text())
+            out[rec["model"]] = rec
+    return out
+
+
+def same_direction(masked_ratio: float, substituted_ratio: float, share: float = 0.5) -> bool:
+    """Does the substitution reproduce the mask's effect, and at least half of it?
+
+    Read on a log scale, because a factor of 0.1 and a factor of 10 are the same
+    size of effect in opposite directions.
+    """
+    import math
+
+    lm, ls = math.log(masked_ratio), math.log(substituted_ratio)
+    return lm * ls > 0 and abs(ls) >= share * abs(lm)
+
+
 def _first(bundles: dict, key: str, default=None):
     for b in bundles.values():
         v = b["manifest"].get(key)
@@ -219,8 +288,237 @@ def _first(bundles: dict, key: str, default=None):
     return default
 
 
-def build_sections(bundles: dict, floor: dict, verification: dict | None) -> list[Section]:
+def hidden_blocks(hidden: dict) -> list:
+    """The visible / masked / median-substituted comparison, and what it settles."""
+    any_rec = next(iter(hidden.values()))
+    sub = {cl: None for cl in LINES}
+    for (model, cl), rec in hidden.items():
+        sub[cl] = rec["substitute_level"]
+    rows, verdict_rows = [], []
+    for model in MODELS:
+        for cl in LINES:
+            rec = hidden.get((model, cl))
+            if not rec:
+                continue
+            s_ = rec["summary"]
+            r_ = rec["ratios"]
+            rows.append(
+                [
+                    MODEL_LABEL[model],
+                    LABEL[cl],
+                    fmt(rec["n_perturbed"]),
+                    fmt(s_["visible"]["abs_median"], 3),
+                    f"{fmt(s_['masked']['abs_median'], 3)} ({rate(r_['masked_over_visible'])})",
+                    f"{fmt(s_['median_substituted']['abs_median'], 3)} "
+                    f"({rate(r_['median_substituted_over_visible'])})",
+                    rate(r_.get("median_substituted_over_masked")),
+                ]
+            )
+            m_, x_ = r_["masked_over_visible"], r_["median_substituted_over_visible"]
+            if m_ and x_:
+                verdict_rows.append((MODEL_LABEL[model], LABEL[cl], m_, x_, same_direction(m_, x_)))
+    survives = sorted({n for n, _, _, _, ok in verdict_rows if ok})
+    artefact = sorted({n for n, _, _, _, ok in verdict_rows if not ok})
+    both = sorted(set(survives) & set(artefact))
+    dilution = sorted(
+        {
+            round(1.0 - rec["summary"]["masked"]["dilution_factor_vs_run2_estimator"], 3)
+            for rec in hidden.values()
+        }
+    )
+    blocks = [
+        Head(3, "Separating the mask token from the information it removes"),
+        Para(
+            "A shrinking response has two readings and the masked block alone cannot tell them "
+            "apart. Either the model falls back on what the rest of the cell implies, which is "
+            "information removal and a real property of the masked regime, or the mask token is "
+            "a value the model is not being asked to read the way pretraining used it, in which "
+            "case the whole response is measured off the input distribution and says nothing "
+            "about reconstruction. A third condition separates them: instead of the mask token, "
+            "the read-out gene's input is set to one uninformative but in-distribution level, "
+            "the median pooled-control level across read-out genes ("
+            + " and ".join(
+                f"{fmt(sub[cl]['value_cp10k'])} CP10K in {LABEL[cl]}"
+                for cl in LINES if sub.get(cl)
+            )
+            + ", at the "
+            + " and ".join(
+                rate(sub[cl]["quantile_of_readout_levels"]) for cl in LINES if sub.get(cl)
+            )
+            + " quantile of the read-out genes' own levels). It removes the same gene-specific "
+            "information as masking while leaving every input value inside the range the model "
+            "was trained on. If the shrinkage survives it, it is information removal; if it only "
+            "appears with the mask token, it is an artefact of the query."
+        ),
+        Para(
+            f"All three conditions run in one job over the same {fmt(any_rec['n_perturbed'])} "
+            "perturbed genes at the mean-control anchor with one batching, so nothing but the "
+            "condition differs. They also correct the masked estimator. The masked read cycles "
+            "disjoint blocks and reads each gene only where it is hidden; when the perturbed "
+            "gene falls in the same block as the gene being read, the mask overwrites the "
+            "perturbation before the forward pass, so that pass is identical to its own baseline "
+            "and contributes exactly zero. Run 2's masked block averaged those zeros in, which "
+            "shrinks its magnitudes by "
+            + " and ".join(pct(d, 3) for d in dilution)
+            + " -- one over the number of blocks per cycle. Those passes are skipped here, and "
+            "because their contribution is exactly zero the run 2 estimator is reproduced from "
+            "these arrays rather than argued about."
+        ),
+        FigRef("masked_regime"),
+        Table(
+            ["model", "cell line", "perturbed genes", "visible", "mask token (of visible)",
+             "median level (of visible)", "median level over mask token"],
+            rows,
+        ),
+    ]
+    verdict = ""
+    if survives:
+        verdict += (
+            f"For {_join(survives)} the substitution moves the response the same way as the mask "
+            "and by at least half as much on a log scale, so what the mask takes away is "
+            "information: the masked reading stands. "
+        )
+    if artefact:
+        verdict += (
+            f"For {_join(artefact)} it does not, so that model's masked response is at least "
+            "partly an artefact of being queried outside its input distribution and must not be "
+            "read as evidence about reconstruction. "
+        )
+    if both:
+        verdict += (
+            f"{_join(both)} splits between the two cell lines, so its verdict is not a property "
+            "of the model alone. "
+        )
+    blocks.append(
+        Para(
+            verdict
+            + "The rule is stated before the numbers are read: the substitution reproduces the "
+            "mask when both ratios sit on the same side of 1 and the substituted one is at least "
+            "half the mask's size in log units. Per-gene agreement between the conditions is "
+            "recorded beside the medians in each record, because a ratio of medians can hide a "
+            "change of pattern."
+        )
+    )
+    agree_rows = []
+    for model in MODELS:
+        for cl in LINES:
+            rec = hidden.get((model, cl))
+            if not rec:
+                continue
+            ag = rec.get("agreement", {})
+            agree_rows.append(
+                [MODEL_LABEL[model], LABEL[cl]]
+                + [
+                    fmt((ag.get(k) or {}).get("median_pearson_per_gene"))
+                    for k in ("visible_vs_masked", "visible_vs_median_substituted",
+                              "masked_vs_median_substituted")
+                ]
+            )
+    if agree_rows:
+        blocks.append(
+            Table(
+                ["model", "cell line", "visible vs mask token", "visible vs median level",
+                 "mask token vs median level"],
+                agree_rows,
+            )
+        )
+        blocks.append(
+            Para(
+                "Median per-gene Pearson correlation between the two conditions' zero-out "
+                "response vectors, over the read-out genes each condition could read. A high "
+                "correlation with a small ratio means the same pattern at a smaller size; a low "
+                "correlation means the conditions are measuring different things."
+            )
+        )
+    return blocks
+
+
+def aido_gradient_blocks(bundles: dict, probes: dict) -> list:
+    """AIDO.Cell's gradient route, from a measurement rather than a default."""
+    probe = (probes.get("aido_cell") or {}).get("per_cell_line", {})
+    fm = next(
+        (entry["forward_mode_probe"] for entry in probe.values() if "forward_mode_probe" in entry),
+        None,
+    )
+    recorded = sorted(
+        {
+            (b["manifest"].get("contract", {}) or {}).get("forward_mode_autodiff", "")
+            for (model, _), b in bundles.items()
+            if model == "aido_cell"
+        }
+    )
+    if fm is None:
+        return [
+            Para(
+                "AIDO.Cell is absent from that table. Its gradient trajectories are central "
+                "differences at the selected step, and whether an exact forward-mode derivative "
+                "is available for this build was not measured in this run, so no cross-check "
+                "stands behind them. Its magnitude evidence is the step sweep alone, which it "
+                "passes at the smallest swept step in every anchor and both cell lines."
+            )
+        ]
+    if not fm.get("available"):
+        return [
+            Para(
+                "AIDO.Cell is absent from that table because the exact route does not exist for "
+                "this build, which is a measurement rather than an omission. Attempting "
+                "forward-mode autodiff through its forward pass raises "
+                f"`{_cell(str(fm.get('reason', 'an error'))[:160])}`. Its gradient trajectories "
+                "are therefore central differences at the selected step with no exact "
+                "cross-check behind them, and their magnitude evidence is the step sweep alone, "
+                "which they pass at the smallest swept step in every anchor and both cell lines."
+            ),
+            Para(
+                "One record had to be corrected to say this. Run 1 recorded a substitution note "
+                "reading `forward-mode AD unavailable (NotImplementedError); used central finite "
+                "differences`, while the same contract's `jacobian_available` field asserted the "
+                "opposite; that field was an unmeasured default, and it is where run 2's first "
+                "report read the claim that the route was available. The contract now carries a "
+                "separate `forward_mode_autodiff` field filled from an actual attempt, and every "
+                "adapter records why a forward-mode column was unavailable instead of returning "
+                "nothing silently."
+                + (f" This block records: {_cell(recorded[0][:200])}." if recorded and recorded[0] else "")
+            ),
+        ]
+    two_sided = [r for r in fm.get("per_value", []) if not r["one_sided"]]
+    return [
+        Para(
+            "AIDO.Cell is absent from that table, and the absence is a gap in the extraction "
+            "rather than a property of the model: forward-mode autodiff does run through this "
+            "build, measured directly rather than inferred. On "
+            f"{fmt(fm['n_genes'])} perturbed genes at the mean-control anchor the exact "
+            "derivative agrees with the central difference at step "
+            f"{fmt(fm['step'])} to a median Pearson of "
+            f"{fmt(fm.get('median_pearson_two_sided'), 6)} and a median relative L2 difference of "
+            f"{fmt(fm.get('median_relative_l2_two_sided'))} over the "
+            f"{len(two_sided)} base values whose difference stays inside the input range. The "
+            "shipped gradient trajectories are still the central differences, so this is the "
+            "cross-check the block was missing rather than a change to it; an exact-derivative "
+            "AIDO.Cell block would be a re-extraction."
+        ),
+        Para(
+            "That also corrects a record. Run 1 recorded a substitution note reading "
+            "`forward-mode AD unavailable (NotImplementedError); used central finite "
+            "differences`, and the same contract's `jacobian_available` field asserted the "
+            "opposite. Neither was a measurement of this build in this environment: the field "
+            "was an optimistic default and the note came from an earlier environment. The "
+            "contract now carries a separate `forward_mode_autodiff` field filled from an actual "
+            "attempt, and every adapter records why a forward-mode column was unavailable rather "
+            "than returning nothing silently."
+        ),
+    ]
+
+
+def build_sections(
+    bundles: dict,
+    floor: dict,
+    verification: dict | None,
+    hidden: dict | None = None,
+    probes: dict | None = None,
+) -> list[Section]:
     sections: list[Section] = []
+    hidden = hidden or {}
+    probes = probes or {}
     any_b = next(iter(bundles.values())) if bundles else None
     grid = any_b["manifest"]["value_grid_cp10k"] if any_b else list(C.VALUE_GRID_CP10K)
 
@@ -262,12 +560,15 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         rows = []
         for (model, cl), b in sorted(bundles.items()):
             m = b["manifest"]
+            cov = m.get("coverage") or {}
+            reach = cov.get("n_in_scope")
             rows.append(
                 [
                     MODEL_LABEL[model],
                     LABEL[cl],
                     fmt(b["n_readout"]),
-                    fmt(b["n_perturbed"]),
+                    f"{fmt(b['n_perturbed'])} of {fmt(reach)}" if reach else fmt(b["n_perturbed"]),
+                    "all" if cov.get("mode") == "full" else rate(cov.get("fraction_of_scope")),
                     m["layout"]["supplied_mode"],
                     fmt(m["layout"]["n_supplied_genes"]),
                     m["layout"]["forward_passes_per_query"],
@@ -277,8 +578,8 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         s.blocks += [
             Head(2, "What was produced"),
             Table(
-                ["model", "cell line", "read-out genes", "perturbed genes", "supplied set",
-                 "supplied genes", "passes per query", "GPU seconds, 3 anchors"],
+                ["model", "cell line", "read-out genes", "perturbed genes", "coverage",
+                 "supplied set", "supplied genes", "passes per query", "GPU seconds, 3 anchors"],
                 rows,
             ),
             Para(
@@ -289,6 +590,105 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                 "magnitude for the same query."
             ),
         ]
+        strata = {cl: strata_scope(cl) for cl in LINES}
+        reach = {
+            cl: next(
+                (
+                    b["manifest"]["coverage"]["n_in_scope"]
+                    for (m_, c_), b in sorted(bundles.items())
+                    if c_ == cl and b["manifest"].get("coverage")
+                ),
+                None,
+            )
+            for cl in LINES
+        }
+        if all(strata.values()) and all(reach.values()):
+            s.blocks.append(
+                Para(
+                    "Two different reductions sit between the plan's effect strata and the "
+                    "perturbed-gene column, and they are not the same kind of decision. The plan "
+                    f"scoped the {_join(list(C.PERTURBED_STRATA))} strata, which hold "
+                    + " and ".join(
+                        f"{fmt(strata[cl]['n_in_strata'])} perturbations in {LABEL[cl]}"
+                        for cl in LINES
+                    )
+                    + ". A perturbed gene has to be a column of the supplied set to be perturbed "
+                    "at all: the query works by setting that gene's input value, and a gene the "
+                    "model was never given has no input to set. Only perturbations whose target "
+                    "is itself a read-out gene are therefore reachable, which leaves "
+                    + " and ".join(
+                        f"{fmt(reach[cl])} in {LABEL[cl]}" for cl in LINES
+                    )
+                    + ". That reduction is structural and no amount of compute removes it. The "
+                    "second is compute: run 2's first wave ran 250 of those per block, sized "
+                    "from the slowest model's measured cost, and the three cheaper models now run "
+                    "the whole reachable set at every anchor and in the masked variant. Each "
+                    "block's manifest records its own coverage and the roll-up fails if one does "
+                    "not, because a 250-gene block and a full block share the smaller one's "
+                    "perturbed genes but not its row order."
+                )
+            )
+        probe_rows, probe_notes = [], []
+        for model, rec in sorted(probes.items()):
+            for cl, entry in sorted(rec.get("per_cell_line", {}).items()):
+                pr = entry["projection"]
+                probe_rows.append(
+                    [
+                        MODEL_LABEL[model],
+                        LABEL[cl],
+                        fmt(pr["rate_used_seconds_per_forward"]),
+                        fmt(pr["rate_batch_size"]),
+                        f"{fmt(pr['best_rate_seconds_per_forward'])} at batch "
+                        f"{fmt(pr['best_batch_size'])}",
+                        rate(pr["batching_speedup"], 2),
+                        f"{fmt(round(pr['observed_subset_three_anchor_seconds'] or 0))} vs "
+                        f"{fmt(pr['predicted_subset_three_anchor_seconds'])}",
+                        f"{pr['projected_full_three_anchor_seconds'] / 3600:.1f} h",
+                        f"{pr['projected_full_everything_seconds'] / 3600:.1f} h",
+                    ]
+                )
+                alt = entry.get("alternate_dtypes", {})
+                for dt, info in alt.items():
+                    if info.get("best_seconds_per_forward"):
+                        probe_notes.append(
+                            f"{dt} autocast reaches "
+                            f"{fmt(info['best_seconds_per_forward'])} s per forward pass in "
+                            f"{LABEL[cl]}"
+                        )
+        if probe_rows:
+            worst = max(probes)
+            s.blocks += [
+                Head(3, "What full coverage would cost for AIDO.Cell"),
+                Para(
+                    "AIDO.Cell is the reason the first wave ran a subset, so its extension was "
+                    "priced instead of attempted. The projection prices the extraction driver's "
+                    "own forward-pass count at a measured rate, and is checked by predicting the "
+                    "block that already exists: the observed and predicted three-anchor seconds "
+                    "in the table are that check."
+                ),
+                Table(
+                    ["model", "cell line", "s per forward", "at batch", "best measured",
+                     "batching speedup", "observed vs predicted, 250 genes",
+                     "full, 3 anchors", "full, everything"],
+                    probe_rows,
+                ),
+                Para(
+                    "Batching across perturbed genes does not bring this down: the sequence is "
+                    f"{fmt(next(iter(probes[worst]['per_cell_line'].values()))['layout']['n_supplied_genes'])} "
+                    "genes long, so one forward pass already saturates the GPU and a larger batch "
+                    "buys the ratio in the table rather than anything like its size. "
+                    + (
+                        "Lower precision would: " + _join(probe_notes) + ", against "
+                        f"{fmt(probe_rows[0][2])} in float32. That is not a top-up though, "
+                        "because it changes the numerics: a block half in float32 and half in "
+                        "bfloat16 is not one block. "
+                        if probe_notes
+                        else ""
+                    )
+                    + "AIDO.Cell therefore stays at 250 perturbed genes in this run, and the "
+                    "number above is what extending it would cost."
+                ),
+            ]
     sections.append(s)
 
     # ---- 2. the expression floor
@@ -352,6 +752,21 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
             "perturbation-specific. A score at any floor should be reported as headroom over "
             "that baseline as a fraction of the ceiling's own headroom, not as a raw correlation."
         ),
+        Para(
+            "That narrow band is a property of the library, not a defect of the measurement. The "
+            "source screen perturbs DepMap common-essential genes, which is the study's design "
+            "and not a choice of this run: most targets are genes a proliferating cell cannot do "
+            "without, so knocking any of them down produces much the same growth-arrest "
+            "programme, and the shared part of that programme is most of the transcriptome "
+            "response. What is left once the shared signature is predicted for free is "
+            f"{fmt(shared['hepg2|S4_highest|0.5']['headroom'])} of correlation in the top "
+            f"stratum and {fmt(shared['hepg2|S3|0.5']['headroom'])} in S3, and that band is "
+            "the whole space any later comparison between models can resolve. A comparison run "
+            "reporting raw correlations on this library will show four models close together and "
+            "near the ceiling whatever they have learned; only the headroom over the mean-effect "
+            "baseline can separate them, and its size bounds how much separation is available at "
+            "all."
+        ),
     ]
     sections.append(s)
 
@@ -413,7 +828,19 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         ),
         None,
     )
-    levels = {cl: anchor_levels(cl, clip) for cl in LINES}
+    # the perturbed set now depends on the block's coverage, so the levels a block is
+    # read against are looked up by its own coverage tag rather than by cell line alone
+    tags = {key: coverage_tag(b) for key, b in bundles.items()}
+    levels_by_tag: dict[tuple[str, str], dict | None] = {}
+    for (model, cl), tag in tags.items():
+        if (tag, cl) not in levels_by_tag:
+            levels_by_tag[(tag, cl)] = anchor_levels(cl, clip, tag)
+    primary_tag = (
+        max(set(tags.values()), key=lambda t: sum(1 for v in tags.values() if v == t))
+        if tags
+        else "full"
+    )
+    levels = {cl: levels_by_tag.get((primary_tag, cl)) for cl in LINES}
     if minima:
         parts = []
         uni = minima.get("uniform_virtual", [])
@@ -492,11 +919,6 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         if blk.get("all_zero_fraction")
     ]
     if no_op_rows:
-        floor_counts = {
-            cl: levels[cl]
-            for cl in LINES
-            if levels.get(cl) and levels[cl].get("cells_below_floor_n") is not None
-        }
         s.blocks += [
             Para(
                 "A related quantity run 3 needs is how many queries the model could not see at "
@@ -511,40 +933,94 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                 no_op_rows,
             ),
         ]
-        if floor_counts:
-            s.blocks.append(
+        # each model's no-op count is read against its OWN perturbed set: with mixed
+        # coverage the number of gene-and-cell pairs is not the same for every block
+        ref_rows, matches_zero, matches_floor, matches_neither = [], [], [], []
+        for (model, cl), b in sorted(bundles.items()):
+            lv = levels_by_tag.get((tags[(model, cl)], cl))
+            if not lv or lv.get("cells_zero_n") is None:
+                continue
+            observed = next(
+                (
+                    r.get("n_no_op_queries", 0)
+                    for r in b.get("query_summary", {}).get("individual_cells", [])
+                    if r["value_cp10k"] == 0.0
+                ),
+                None,
+            )
+            if observed is None:
+                continue
+            verdict = (
+                "exactly-zero pairs"
+                if observed == lv["cells_zero_n"]
+                else "below-floor pairs"
+                if observed == lv["cells_below_floor_n"]
+                else "fewer than either"
+            )
+            (
+                matches_zero if verdict.startswith("exactly")
+                else matches_floor if verdict.startswith("below")
+                else matches_neither
+            ).append(MODEL_LABEL[model])
+            ref_rows.append(
+                [
+                    MODEL_LABEL[model],
+                    LABEL[cl],
+                    fmt(lv["cells_n_pairs"]),
+                    fmt(observed),
+                    fmt(lv["cells_zero_n"]),
+                    fmt(lv["cells_below_floor_n"]),
+                    verdict,
+                ]
+            )
+        if ref_rows:
+            s.blocks += [
                 Para(
                     "The count is set by how each model encodes its input rather than by the "
-                    "cell, and the three distinct counts land on two interpretable numbers. Of "
-                    "the perturbed gene and cell pairs, "
-                    + " and ".join(
-                        f"{fmt(floor_counts[cl]['cells_zero_n'])} of "
-                        f"{fmt(floor_counts[cl]['cells_n_pairs'])} in {LABEL[cl]}"
-                        for cl in LINES if cl in floor_counts
-                    )
-                    + " read exactly zero counts, and "
-                    + " and ".join(
-                        f"{fmt(floor_counts[cl]['cells_below_floor_n'])} in {LABEL[cl]}"
-                        for cl in LINES if cl in floor_counts
-                    )
-                    + f" sit below the {fmt(C.RUN1_FLOOR_CP10K)} CP10K read-out floor. AIDO.Cell "
-                    "matches the first number exactly in both lines, which is what a raw-count "
-                    "input predicts: only a gene already at zero is unchanged by being set to "
-                    "zero. scGPT matches the second exactly, which is what a binned input "
-                    "predicts: every below-floor pair falls in its lowest bin. scPRINT and "
-                    "TranscriptFormer record fewer than either, so for them even an "
-                    "already-zero gene is not always delivered the same way as an explicit zero."
-                    + (
-                        " The single TranscriptFormer no-op at the 64 CP10K query is recorded "
-                        "and not explained: it is not that model's "
-                        f"{fmt(floor_counts[LINES[0]]['cells_clip_cp10k'])} CP10K count clip, "
-                        f"which {fmt(floor_counts[LINES[0]]['cells_above_clip_n'])} "
-                        f"{LABEL[LINES[0]]} pairs sit at or above."
-                        if floor_counts.get(LINES[0], {}).get("cells_above_clip_n")
+                    "cell, and it lands on one of two interpretable numbers: how many perturbed "
+                    "gene and cell pairs read exactly zero counts, and how many sit below the "
+                    f"{fmt(C.RUN1_FLOOR_CP10K)} CP10K read-out floor. Both are counted over each "
+                    "block's own perturbed genes, which is why the number of pairs differs "
+                    "between blocks at different coverage."
+                ),
+                Table(
+                    ["model", "cell line", "gene and cell pairs", "no-ops at 0 CP10K",
+                     "exactly zero counts", "below the read-out floor", "matches"],
+                    ref_rows,
+                ),
+                Para(
+                    (
+                        f"{_join(sorted(set(matches_zero)))} matches the exactly-zero count, "
+                        "which is what a raw-count input predicts: only a gene already at zero is "
+                        "unchanged by being set to zero. "
+                        if matches_zero
                         else ""
                     )
-                )
-            )
+                    + (
+                        f"{_join(sorted(set(matches_floor)))} matches the below-floor count, "
+                        "which is what a binned input predicts: every below-floor pair falls in "
+                        "its lowest bin. "
+                        if matches_floor
+                        else ""
+                    )
+                    + (
+                        f"{_join(sorted(set(matches_neither)))} records fewer than either, so for "
+                        "those even an already-zero gene is not always delivered the same way as "
+                        "an explicit zero. "
+                        if matches_neither
+                        else ""
+                    )
+                    + (
+                        "The single TranscriptFormer no-op at the 64 CP10K query is recorded and "
+                        "not explained: it is not that model's "
+                        f"{fmt(levels[LINES[0]]['cells_clip_cp10k'])} CP10K count clip, which "
+                        f"{fmt(levels[LINES[0]]['cells_above_clip_n'])} {LABEL[LINES[0]]} pairs "
+                        "sit at or above."
+                        if (levels.get(LINES[0]) or {}).get("cells_above_clip_n")
+                        else ""
+                    )
+                ),
+            ]
         spread_rows = [
             [
                 MODEL_LABEL[model],
@@ -650,7 +1126,6 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
             "sees its own value and is natively in the masked regime."
         ),
         Head(3, "Findings"),
-        FigRef("masked_regime"),
     ]
     mask_findings, shrink, grow = [], [], []
     for model in MODELS:
@@ -697,14 +1172,15 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                     if shrink
                     else ""
                 )
-                + "Run 2 records the split and does not explain it. Two accounts are consistent "
-                "with the shrinking direction, a masked prediction falling back on a population "
-                "prior that no single other gene moves much, and the mask token itself being off "
-                "the distribution the model was trained to read, and nothing here separates "
-                "them. A consumer should treat masked and unmasked as two features and not "
-                "assume a common sign of the effect across models."
+                + "Two accounts are consistent with the shrinking direction: a masked prediction "
+                "falling back on a population prior that no single other gene moves much, and "
+                "the mask token itself being off the distribution the model was trained to read. "
+                "The next section separates them. A consumer should treat masked and unmasked as "
+                "two features and not assume a common sign of the effect across models."
             ),
         ]
+    if hidden:
+        s.blocks += hidden_blocks(hidden)
     sections.append(s)
 
     # ---- 5. gradients and step stability
@@ -835,16 +1311,8 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                  "median relative L2", "step"],
                 exact_rows,
             ),
-            Para(
-                "AIDO.Cell is absent from that table, and the absence is a gap in run 2 rather "
-                "than a property of the model. Its contract records a forward-mode derivative as "
-                "available and its query is one differentiable function of the input, but this "
-                "run's adapter does not implement that path, so its gradient trajectories are "
-                "central differences at the selected step with no exact cross-check behind them. "
-                "Its magnitude evidence is the step sweep alone, which it passes at the smallest "
-                "swept step in every anchor and both cell lines."
-            ),
         ]
+        s.blocks += aido_gradient_blocks(bundles, probes)
     sections.append(s)
 
     # ---- 6. normalization
@@ -1166,6 +1634,20 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
             "  anchor=<anchor>/gdt.npz           (perturbed, base values, read-out)\n"
             "  anchor=<anchor>/query_summary.parquet   per-query diagnostics\n"
             "  anchor=mean_control_masked/       the masked counterpart, where it applies\n"
+            "  hidden_readout/condition=<c>/     visible / mask token / median level, where\n"
+            "                                    the model has a masking regime\n"
+            "\n"
+            "features_full_scope/<model>/<cell_line>/   the same layout at full coverage\n"
+            "feature_index/blocks.json                  the canonical block per (model, line)\n"
+        ),
+        Para(
+            "Two trees, because coverage differs by model: `features/` holds the 250-gene blocks "
+            "the first wave produced and `features_full_scope/` the full-coverage blocks that "
+            "supersede them for the three cheap models. Read `feature_index/blocks.json` to "
+            "resolve the canonical block for a (model, cell line) rather than globbing either "
+            "tree, and read the `coverage` block of a manifest before comparing two blocks: they "
+            "share the smaller one's perturbed genes but not its row order, so join on "
+            "`perturbed_gene_id`."
         ),
         Para(
             "Each npz carries `raw` and `standardized` always, and `recentred` and `log2fc` "
@@ -1493,8 +1975,13 @@ def main(argv: list[str] | None = None) -> int:
         ]
     ).to_csv(out / "no_op_queries.csv", index=False)
 
+    hidden = load_hidden(repo)
+    probes = load_cost_probes(repo)
+    print(
+        f"[report] {len(hidden)} hidden-readout records, {len(probes)} cost probes", flush=True
+    )
     figs = figmod.build_all(bundles, repo)
-    sections = build_sections(bundles, floor, verification)
+    sections = build_sections(bundles, floor, verification, hidden=hidden, probes=probes)
     (out / "feature_extraction_report.html").write_text(render_html(sections, figs))
     (out / "feature_extraction_report.md").write_text(render_markdown(sections, figs))
     print(f"[report] wrote {out / 'feature_extraction_report.html'}", flush=True)
