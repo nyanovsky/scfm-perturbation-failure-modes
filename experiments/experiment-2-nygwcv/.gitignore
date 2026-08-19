@@ -21,3 +21,6 @@ __pycache__/
 *.pyc
 # Stranded _atomic_write temps (name.<pid>.<hex>.tmp) from a crashed write.
 *.*.*.tmp
+# report bundles are pulled from the artifact store for the pod-side build; the
+# durable copies live under the experiment artifacts root
+results/report/bundles/

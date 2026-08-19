@@ -78,6 +78,8 @@ MASKED_VALUE_GRID_CP10K = (0.0, 4.0, 64.0)
 N_CONTEXT_COMPARE_GENES = 40
 #: which supplied width the production sweep uses (set from the comparison)
 SCGPT_PRODUCTION_MODE = "tiled"
+#: genes used for scGPT's untiled exact-derivative cross-check
+N_UNTILED_CHECK_GENES = 20
 
 # --------------------------------------------------------------------------- #
 # step 5 — finite-difference step selection

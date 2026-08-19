@@ -1,0 +1,15 @@
+{
+  "HepG2": "#C4650D",
+  "Jurkat": "#4E728A",
+  "S1_lowest": "#2E6E4E",
+  "S2": "#988453",
+  "S3": "#B9605B",
+  "S4_highest": "#7495AB",
+  "scPRINT": "#2E6E4E",
+  "scGPT": "#988453",
+  "TranscriptFormer": "#B9605B",
+  "AIDO.Cell": "#7495AB",
+  "ceiling": "#C4650D",
+  "mean-effect baseline": "#4E728A",
+  "cross-perturbation": "#2E6E4E"
+}

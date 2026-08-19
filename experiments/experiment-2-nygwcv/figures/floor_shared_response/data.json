@@ -1,0 +1,182 @@
+[
+  {
+    "cell_line": "hepg2",
+    "stratum": "S3",
+    "floor_cp10k": 0.5,
+    "ceiling": 0.2979996079096253,
+    "loo_mean_baseline": 0.2730984274815129,
+    "cross_perturbation": 0.05644716619945184,
+    "pc1_share": 0.19564454737153777
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S3",
+    "floor_cp10k": 1.0,
+    "ceiling": 0.4067181651065889,
+    "loo_mean_baseline": 0.3304624839285122,
+    "cross_perturbation": 0.0796579754436749,
+    "pc1_share": 0.24258280436582086
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S3",
+    "floor_cp10k": 2.0,
+    "ceiling": 0.5211893173915532,
+    "loo_mean_baseline": 0.3848420391521182,
+    "cross_perturbation": 0.10112039906030479,
+    "pc1_share": 0.2794082294304547
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S3",
+    "floor_cp10k": 5.0,
+    "ceiling": 0.6344635169912277,
+    "loo_mean_baseline": 0.42214011917542293,
+    "cross_perturbation": 0.12515621233045165,
+    "pc1_share": 0.2998379762883694
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S3",
+    "floor_cp10k": 10.0,
+    "ceiling": 0.7001771159004564,
+    "loo_mean_baseline": 0.4481755339691982,
+    "cross_perturbation": 0.1387589759717348,
+    "pc1_share": 0.286135692081567
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S3",
+    "floor_cp10k": 0.5,
+    "ceiling": 0.2933459734823436,
+    "loo_mean_baseline": 0.22778073488185216,
+    "cross_perturbation": 0.03908715368465686,
+    "pc1_share": 0.11742005434078424
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S3",
+    "floor_cp10k": 1.0,
+    "ceiling": 0.4280112887770171,
+    "loo_mean_baseline": 0.2687936718960161,
+    "cross_perturbation": 0.05266560216602305,
+    "pc1_share": 0.1580964904769607
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S3",
+    "floor_cp10k": 2.0,
+    "ceiling": 0.5632182770944266,
+    "loo_mean_baseline": 0.3048974979914123,
+    "cross_perturbation": 0.06926520795539899,
+    "pc1_share": 0.19531444929949893
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S3",
+    "floor_cp10k": 5.0,
+    "ceiling": 0.7013644177232241,
+    "loo_mean_baseline": 0.370969499220804,
+    "cross_perturbation": 0.10767762462544644,
+    "pc1_share": 0.2322201867255232
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S3",
+    "floor_cp10k": 10.0,
+    "ceiling": 0.7704649229932723,
+    "loo_mean_baseline": 0.41494486488197174,
+    "cross_perturbation": 0.14418574451181548,
+    "pc1_share": 0.3359857076401711
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S4_highest",
+    "floor_cp10k": 0.5,
+    "ceiling": 0.7031375273661714,
+    "loo_mean_baseline": 0.6032400604694643,
+    "cross_perturbation": 0.32061764742263255,
+    "pc1_share": 0.4766505030757479
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S4_highest",
+    "floor_cp10k": 1.0,
+    "ceiling": 0.7880009477236476,
+    "loo_mean_baseline": 0.6342682160551009,
+    "cross_perturbation": 0.35958697699488396,
+    "pc1_share": 0.5101976588727196
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S4_highest",
+    "floor_cp10k": 2.0,
+    "ceiling": 0.8495255137489409,
+    "loo_mean_baseline": 0.6387077737202564,
+    "cross_perturbation": 0.36789636799954767,
+    "pc1_share": 0.5099512900279681
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S4_highest",
+    "floor_cp10k": 5.0,
+    "ceiling": 0.8982040971707173,
+    "loo_mean_baseline": 0.6393884705695196,
+    "cross_perturbation": 0.36877638213382713,
+    "pc1_share": 0.49035849962632716
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S4_highest",
+    "floor_cp10k": 10.0,
+    "ceiling": 0.9162595487609063,
+    "loo_mean_baseline": 0.625575366465515,
+    "cross_perturbation": 0.36031248844337327,
+    "pc1_share": 0.453111785437411
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S4_highest",
+    "floor_cp10k": 0.5,
+    "ceiling": 0.43465293852672576,
+    "loo_mean_baseline": 0.35608557702395255,
+    "cross_perturbation": 0.10092905681254974,
+    "pc1_share": 0.21953547641093293
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S4_highest",
+    "floor_cp10k": 1.0,
+    "ceiling": 0.5634830726445788,
+    "loo_mean_baseline": 0.40027834554201214,
+    "cross_perturbation": 0.1261165830690598,
+    "pc1_share": 0.27414137695077834
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S4_highest",
+    "floor_cp10k": 2.0,
+    "ceiling": 0.679131515482071,
+    "loo_mean_baseline": 0.4139610122048837,
+    "cross_perturbation": 0.14130025561539555,
+    "pc1_share": 0.3072530165529263
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S4_highest",
+    "floor_cp10k": 5.0,
+    "ceiling": 0.7941266629608776,
+    "loo_mean_baseline": 0.4419708465355555,
+    "cross_perturbation": 0.17204038999310273,
+    "pc1_share": 0.33853964936718595
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S4_highest",
+    "floor_cp10k": 10.0,
+    "ceiling": 0.8557074234126784,
+    "loo_mean_baseline": 0.48214084603346297,
+    "cross_perturbation": 0.21486694346769858,
+    "pc1_share": 0.3848641043629321
+  }
+]

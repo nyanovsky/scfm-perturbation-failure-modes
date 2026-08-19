@@ -340,13 +340,44 @@ def extract_anchor(
         "seconds": round(time.time() - started, 1),
     }
     if have_exact.any():
-        a, b = acc["gdt_exact"].ravel(), acc["gdt"].ravel()
-        ok = np.isfinite(a) & np.isfinite(b)
-        denom = np.linalg.norm(a[ok]) + np.linalg.norm(b[ok])
+        # per value, because the estimator is not the same at every value: at 0 the
+        # central difference has nowhere to go below the count floor, so it becomes a
+        # one-sided difference and disagrees with the exact derivative wherever the
+        # response is curved there. Pooling the values hides that in one number.
+        per_value = []
+        for vi in range(n_v):
+            a = acc["gdt_exact"][:, vi].ravel()
+            b = acc["gdt"][:, vi].ravel()
+            ok = np.isfinite(a) & np.isfinite(b)
+            denom = np.linalg.norm(a[ok]) + np.linalg.norm(b[ok])
+            per_value.append(
+                {
+                    "value_cp10k": float(grid_cp10k[vi]),
+                    "one_sided": bool(float(values_native[vi]) - step < NATIVE_FLOOR),
+                    "pearson": float(np.corrcoef(a[ok], b[ok])[0, 1])
+                    if ok.sum() > 2 and np.std(a[ok]) > 0 and np.std(b[ok]) > 0
+                    else None,
+                    "relative_l2": float(2 * np.linalg.norm(a[ok] - b[ok]) / denom)
+                    if denom
+                    else None,
+                }
+            )
+        two_sided = [r for r in per_value if not r["one_sided"] and r["pearson"] is not None]
         diagnostics["exact_vs_finite_difference"] = {
-            "pearson": float(np.corrcoef(a[ok], b[ok])[0, 1]),
-            "relative_l2": float(2 * np.linalg.norm(a[ok] - b[ok]) / denom) if denom else None,
+            "per_value": per_value,
+            "median_pearson_two_sided": float(np.median([r["pearson"] for r in two_sided]))
+            if two_sided
+            else None,
+            "median_relative_l2_two_sided": float(
+                np.median([r["relative_l2"] for r in two_sided])
+            )
+            if two_sided
+            else None,
             "step": step,
+            "note": "the exact forward-mode derivative is the feature; the central "
+            "difference at the selected step is the cross-check. A value whose "
+            "difference would cross the input floor is marked one_sided and excluded "
+            "from the medians",
         }
     if len(anchor_cp10k_profiles) > 1:
         diagnostics["per_cell_spread"] = "responses averaged over cells; see summary rows"
@@ -653,10 +684,13 @@ def run(
             "is natively in the masked regime and a masked variant would be the same query",
         }
 
-    # ---- scGPT context width comparison
+    # ---- scGPT context width comparison and its untiled exact-derivative check
     if do_context_compare and model_name == "scgpt":
         manifest["context_comparison"] = compare_context_widths(
             model, data, readout, perturbed, out_dir
+        )
+        manifest["untiled_exact_check"] = untiled_exact_check(
+            model, readout, perturbed, float(steps_by_anchor["mean_control"]["selected_step"])
         )
 
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))
@@ -816,6 +850,62 @@ def compare_context_widths(model, data: dict, readout: pd.DataFrame, perturbed: 
         },
         "agreement": pairs,
         "production_mode": C.SCGPT_PRODUCTION_MODE,
+    }
+
+
+def untiled_exact_check(model, readout: pd.DataFrame, perturbed: pd.DataFrame, step: float) -> dict:
+    """scGPT only: the exact derivative the production layout cannot provide.
+
+    A tiled query is several forward passes, so it is not one differentiable
+    function of the input and the production gradient is a central difference.
+    The same model in the untiled layout does admit forward-mode differentiation,
+    so the two are compared there on a small subset: it is evidence about the
+    difference estimator, measured on the same weights.
+    """
+    control = readout["pooled_control_cp10k"].to_numpy(dtype=np.float64)
+    cols = perturbed["readout_col"].to_numpy(dtype=np.int64)[: C.N_UNTILED_CHECK_GENES]
+    model.configure(readout, control, model.cell_line, supplied_mode="readout")
+    x0 = np.asarray(model.to_native(control), dtype=np.float32)
+    values = np.asarray(model.to_native(np.asarray(C.VALUE_GRID_CP10K, dtype=np.float64)))
+    rows = []
+    for vi, v in enumerate(values):
+        exact, fd = [], []
+        for col in cols:
+            x = x0.copy()
+            x[int(col)] = float(v)
+            jvp = model.exact_jvp(x, int(col))
+            if jvp is None:
+                model.configure(readout, control, model.cell_line,
+                                supplied_mode=C.SCGPT_PRODUCTION_MODE)
+                return {"ran": False, "reason": getattr(model, "_jvp_error", "unavailable")}
+            lo = max(float(v) - step, NATIVE_FLOOR)
+            xa, xb = x0.copy(), x0.copy()
+            xa[int(col)], xb[int(col)] = lo, float(v) + step
+            resp = model.forward_batch(np.stack([xa, xb]), perturbed_col=int(col))
+            exact.append(jvp)
+            fd.append((resp[1] - resp[0]) / max(float(v) + step - lo, 1e-12))
+        a, b = np.concatenate(exact), np.concatenate(fd)
+        denom = np.linalg.norm(a) + np.linalg.norm(b)
+        rows.append(
+            {
+                "value_cp10k": float(C.VALUE_GRID_CP10K[vi]),
+                "one_sided": bool(float(v) - step < NATIVE_FLOOR),
+                "pearson": float(np.corrcoef(a, b)[0, 1]),
+                "relative_l2": float(2 * np.linalg.norm(a - b) / denom) if denom else None,
+            }
+        )
+    model.configure(readout, control, model.cell_line, supplied_mode=C.SCGPT_PRODUCTION_MODE)
+    two_sided = [r for r in rows if not r["one_sided"]]
+    return {
+        "ran": True,
+        "layout": "readout (untiled), the layout that admits forward-mode autodiff",
+        "n_genes": int(cols.size),
+        "step": step,
+        "per_value": rows,
+        "median_pearson_two_sided": float(np.median([r["pearson"] for r in two_sided])),
+        "median_relative_l2_two_sided": float(
+            np.median([r["relative_l2"] for r in two_sided])
+        ),
     }
 
 

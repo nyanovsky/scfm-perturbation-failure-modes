@@ -1,0 +1,1 @@
+The mean-effect baseline stays nearly flat while the ceiling rises with the floor.
