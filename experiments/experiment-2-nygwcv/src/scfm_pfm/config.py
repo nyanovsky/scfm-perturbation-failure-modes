@@ -74,6 +74,26 @@ N_INDIVIDUAL_CELLS = 4
 #: reduced value grid: zero-out, a mid value and the top of the grid
 MASKED_VALUE_GRID_CP10K = (0.0, 4.0, 64.0)
 
+# --------------------------------------------------------------------------- #
+# step 3b — hiding the read-out gene's own value, two ways
+# --------------------------------------------------------------------------- #
+#: Masking shrinks scPRINT's response by a factor of ~0.1 at the same anchor, and
+#: two accounts fit: the model falls back on a population prior (information
+#: removal), or the mask token is itself off-distribution (an artefact of asking
+#: the model a question it was not trained to read). The two are separated by a
+#: third condition that removes the same information WITHOUT leaving the input
+#: distribution: the read-out gene's input is set to one uninformative level, the
+#: median pooled-control level across read-out genes, instead of the mask token.
+HIDDEN_CONDITIONS = ("visible", "masked", "median_substituted")
+#: the same reduced grid as the masked variant, so the two are read at one grid
+HIDDEN_VALUE_GRID_CP10K = MASKED_VALUE_GRID_CP10K
+#: the substitute level, as a statistic of the read-out genes' pooled control
+#: profile of that cell line (recorded in CP10K and in the model's own units)
+HIDDEN_SUBSTITUTE_STATISTIC = "median"
+#: forward passes per call in the block-cycled conditions; one call carries every
+#: mask block of a cycle, which is numerically identical to one call per block
+HIDDEN_BLOCK_BATCH = True
+
 #: scGPT context-width comparison
 N_CONTEXT_COMPARE_GENES = 40
 #: which supplied width the production sweep uses (set from the comparison)
@@ -128,9 +148,16 @@ SELF_RESPONSE_MIN_PASS = 0.95
 class Scope:
     """How many perturbed genes each anchor runs on.
 
-    ``n_perturbed`` is filled from the measured per-forward cost of the slowest
-    model rather than guessed; the value in force for a block is recorded in its
-    manifest.
+    Run 2's first wave set ``n_perturbed`` from the measured per-forward cost of
+    the slowest model (AIDO.Cell, ~0.9 s per forward pass at 19,266 tokens),
+    which put 250 perturbed genes at about 3 GPU hours per block and the full
+    in-scope set at about 12. The three cheaper models cost minutes to hours at
+    full coverage, so they run at ``FULL_SCOPE`` instead.
+
+    ``0`` on any of the three counts means "every gene in scope", which is how
+    full coverage is requested. Whatever is in force is recorded in the block's
+    manifest under ``coverage``, together with the size of the in-scope set, so
+    two blocks at different coverage cannot be mixed silently.
     """
 
     n_perturbed: int = 250
@@ -140,3 +167,5 @@ class Scope:
 
 
 SCOPE = Scope()
+#: every in-scope perturbation, at every anchor and in the masked variant
+FULL_SCOPE = Scope(n_perturbed=0, n_perturbed_cells_anchor=0, n_perturbed_masked=0)

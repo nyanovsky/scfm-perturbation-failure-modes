@@ -8,6 +8,48 @@
     },
     {
       "section": "coverage",
+      "check": "perturbed_gene_coverage_recorded",
+      "ok": true,
+      "detail": "coverage present in every block manifest; the tree mixes full at 524 of 524; full at 705 of 705; subset at 250 of 524; subset at 250 of 705"
+    },
+    {
+      "section": "coverage",
+      "check": "scgpt/hepg2/full_at_every_anchor",
+      "ok": true,
+      "detail": "3 of 3 anchors run the whole 524-gene in-scope set; masked variant at 524"
+    },
+    {
+      "section": "coverage",
+      "check": "scgpt/jurkat/full_at_every_anchor",
+      "ok": true,
+      "detail": "3 of 3 anchors run the whole 705-gene in-scope set; masked variant at 705"
+    },
+    {
+      "section": "coverage",
+      "check": "scprint/hepg2/full_at_every_anchor",
+      "ok": true,
+      "detail": "3 of 3 anchors run the whole 524-gene in-scope set; masked variant at 524"
+    },
+    {
+      "section": "coverage",
+      "check": "scprint/jurkat/full_at_every_anchor",
+      "ok": true,
+      "detail": "3 of 3 anchors run the whole 705-gene in-scope set; masked variant at 705"
+    },
+    {
+      "section": "coverage",
+      "check": "transcriptformer/hepg2/full_at_every_anchor",
+      "ok": true,
+      "detail": "3 of 3 anchors run the whole 524-gene in-scope set"
+    },
+    {
+      "section": "coverage",
+      "check": "transcriptformer/jurkat/full_at_every_anchor",
+      "ok": true,
+      "detail": "3 of 3 anchors run the whole 705-gene in-scope set"
+    },
+    {
+      "section": "coverage",
       "check": "aido_cell/hepg2/anchors",
       "ok": true,
       "detail": "anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']"
@@ -28,7 +70,7 @@
       "section": "block_checks",
       "check": "aido_cell/hepg2",
       "ok": false,
-      "detail": "36 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+      "detail": "37 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
     },
     {
       "section": "coverage",
@@ -52,7 +94,7 @@
       "section": "block_checks",
       "check": "aido_cell/jurkat",
       "ok": false,
-      "detail": "36 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+      "detail": "37 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
     },
     {
       "section": "coverage",
@@ -70,13 +112,13 @@
       "section": "alignment",
       "check": "scgpt/hepg2",
       "ok": true,
-      "detail": "uniform_virtual on self_rank; mean_control on self_rank+sign; individual_cells on self_rank"
+      "detail": "uniform_virtual on self_rank; mean_control on self_rank+sign; individual_cells on self_rank+sign"
     },
     {
       "section": "block_checks",
       "check": "scgpt/hepg2",
       "ok": false,
-      "detail": "38 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+      "detail": "39 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
     },
     {
       "section": "coverage",
@@ -94,13 +136,13 @@
       "section": "alignment",
       "check": "scgpt/jurkat",
       "ok": true,
-      "detail": "uniform_virtual on self_rank; mean_control on self_rank; individual_cells on self_rank+sign"
+      "detail": "uniform_virtual on self_rank; mean_control on self_rank+sign; individual_cells on self_rank+sign"
     },
     {
       "section": "block_checks",
       "check": "scgpt/jurkat",
       "ok": false,
-      "detail": "38 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+      "detail": "39 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
     },
     {
       "section": "coverage",
@@ -124,7 +166,7 @@
       "section": "block_checks",
       "check": "scprint/hepg2",
       "ok": true,
-      "detail": "53 block-level checks, 0 failed"
+      "detail": "54 block-level checks, 0 failed"
     },
     {
       "section": "coverage",
@@ -148,7 +190,7 @@
       "section": "block_checks",
       "check": "scprint/jurkat",
       "ok": true,
-      "detail": "53 block-level checks, 0 failed"
+      "detail": "54 block-level checks, 0 failed"
     },
     {
       "section": "coverage",
@@ -165,14 +207,14 @@
     {
       "section": "alignment",
       "check": "transcriptformer/hepg2",
-      "ok": true,
-      "detail": "uniform_virtual on sign; mean_control on self_rank; individual_cells on self_rank"
+      "ok": false,
+      "detail": "uniform_virtual on no statistic; mean_control on self_rank; individual_cells on self_rank"
     },
     {
       "section": "block_checks",
       "check": "transcriptformer/hepg2",
       "ok": false,
-      "detail": "45 block-level checks, 4 failed: ['uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+      "detail": "46 block-level checks, 6 failed: ['individual_cells/softmax_coupling', 'uniform_virtual/softmax_coupling', 'uniform_virtual/alignment_vs_permutation', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
     },
     {
       "section": "coverage",
@@ -196,7 +238,43 @@
       "section": "block_checks",
       "check": "transcriptformer/jurkat",
       "ok": false,
-      "detail": "45 block-level checks, 6 failed: ['individual_cells/softmax_coupling', 'mean_control/softmax_coupling', 'uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+      "detail": "46 block-level checks, 6 failed: ['individual_cells/softmax_coupling', 'mean_control/softmax_coupling', 'uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+    },
+    {
+      "section": "hidden_readout",
+      "check": "aido_cell/hepg2",
+      "ok": true,
+      "detail": "60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 1.973; median_substituted_over_visible 1.14; median_substituted_over_masked 0.5779; 8/8 own checks passed"
+    },
+    {
+      "section": "hidden_readout",
+      "check": "aido_cell/jurkat",
+      "ok": true,
+      "detail": "60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 1.579; median_substituted_over_visible 1.11; median_substituted_over_masked 0.7026; 8/8 own checks passed"
+    },
+    {
+      "section": "hidden_readout",
+      "check": "scgpt/hepg2",
+      "ok": true,
+      "detail": "60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 0.7624; median_substituted_over_visible 1.028; median_substituted_over_masked 1.348; 8/8 own checks passed"
+    },
+    {
+      "section": "hidden_readout",
+      "check": "scgpt/jurkat",
+      "ok": true,
+      "detail": "60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 0.7778; median_substituted_over_visible 0.9374; median_substituted_over_masked 1.205; 8/8 own checks passed"
+    },
+    {
+      "section": "hidden_readout",
+      "check": "scprint/hepg2",
+      "ok": true,
+      "detail": "60 perturbed genes, substitute 1.013 CP10K; masked_over_visible 0.0685; median_substituted_over_visible 0.3132; median_substituted_over_masked 4.573; 8/8 own checks passed"
+    },
+    {
+      "section": "hidden_readout",
+      "check": "scprint/jurkat",
+      "ok": true,
+      "detail": "60 perturbed genes, substitute 1.028 CP10K; masked_over_visible 0.05729; median_substituted_over_visible 0.3127; median_substituted_over_masked 5.458; 8/8 own checks passed"
     },
     {
       "section": "floor_sweep",

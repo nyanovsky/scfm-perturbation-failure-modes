@@ -1,1 +1,1 @@
-Zero-out response magnitude with and without masking the read-out gene.
+Zero-out response magnitude with the read-out gene's own value visible, masked, and replaced by the median control level.

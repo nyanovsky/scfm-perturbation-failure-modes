@@ -258,6 +258,15 @@ def fig_floor_shared_response(shared: pd.DataFrame, out: Path) -> Fig:
         for ri in range(1, len(strata) + 1):
             fig.update_yaxes(title_text="Pearson", range=[0, 1], row=ri, col=ci)
     apply_theme(fig, height=620)
+    # read the headline off the same rows the figure draws, so the caption cannot drift
+    # from the curve
+    at_floor = [
+        r for r in rows
+        if r["cell_line"] == "hepg2" and r["stratum"] == C.FLOOR_RULE_STRATUM
+        and abs(r["floor_cp10k"] - C.RUN1_FLOOR_CP10K) < 1e-9
+    ]
+    share = 100 * at_floor[0]["loo_mean_baseline"] / at_floor[0]["ceiling"] if at_floor else float("nan")
+    band = at_floor[0]["ceiling"] - at_floor[0]["loo_mean_baseline"] if at_floor else float("nan")
     return Fig(
         name="floor_shared_response",
         figure=fig,
@@ -271,7 +280,8 @@ def fig_floor_shared_response(shared: pd.DataFrame, out: Path) -> Fig:
             "between different perturbations across the two halves.",
             "findings": "The baseline is nearly flat across the floor grid, so the extra "
             "correlation a higher floor buys is mostly perturbation-specific. At the inclusive "
-            "floor the baseline already reaches 86% of the HepG2 S4 ceiling.",
+            f"floor the baseline already reaches {share:.3g}% of the HepG2 S4 ceiling, leaving "
+            f"{band:.4g} of correlation for everything perturbation-specific.",
             "sources": "experiments/experiment-2-nygwcv/results/floor_sweep/floor_shared_response.parquet",
         },
     )
@@ -494,82 +504,138 @@ def fig_softmax_coupling(bundles: dict, out: Path) -> Fig:
     )
 
 
+def load_hidden(out: Path) -> dict:
+    """The visible / masked / median-substituted records, where they exist."""
+    hidden: dict[tuple[str, str], dict] = {}
+    for d in (paths.repo_dir() / "results" / "report" / "hidden_readout",
+              out / "report" / "hidden_readout"):
+        if not d.exists():
+            continue
+        for path in sorted(d.glob("*.json")):
+            if path.name.startswith("verification_"):
+                continue
+            rec = json.loads(path.read_text())
+            hidden[(rec["model"], rec["cell_line"])] = rec
+    return hidden
+
+
+#: the three ways the read-out gene's own input value is delivered
+HIDDEN_SERIES = (
+    ("visible", "visible", "HepG2"),
+    ("masked", "mask token", "Jurkat"),
+    ("median_substituted", "median level", "S3"),
+)
+
+
 def fig_masked_regime(bundles: dict, out: Path) -> Fig:
-    """Masked against unmasked, at the same anchor."""
+    """Three ways of hiding the read-out gene's own value, at the same anchor."""
     col = colors(out)
+    hidden = load_hidden(out)
+    if not hidden:
+        raise RuntimeError("no hidden-readout records to plot")
     fig = _panel_grid(1, 2, [LABEL[cl] for cl in LINES])
     rows = []
     for ci, cl in enumerate(LINES, start=1):
-        names, unmasked, masked = [], [], []
-        for model in MODELS:
-            b = bundles.get((model, cl))
-            if not b:
+        names = [MODEL_LABEL[m] for m in MODELS if (m, cl) in hidden]
+        for key, label, colour in HIDDEN_SERIES:
+            values = [
+                hidden[(m, cl)]["summary"][key]["abs_median"]
+                for m in MODELS
+                if (m, cl) in hidden
+            ]
+            fig.add_trace(
+                go.Bar(
+                    x=names, y=values, name=label if ci == 1 else None, legendgroup=label,
+                    showlegend=ci == 1, marker_color=col[colour],
+                    hovertemplate="%{x}<br>" + label + " %{y:.3g}<extra></extra>",
+                ),
+                row=1, col=ci,
+            )
+        for m in MODELS:
+            rec = hidden.get((m, cl))
+            if not rec:
                 continue
-            u = b["blocks"].get("mean_control/zero_out", {}).get("abs_median")
-            m = b["blocks"].get("mean_control_masked/zero_out", {}).get("abs_median")
-            if u is None:
-                continue
-            names.append(MODEL_LABEL[model])
-            unmasked.append(u)
-            masked.append(m if m is not None else 0.0)
             rows.append(
                 {
-                    "model": model,
+                    "model": m,
                     "cell_line": cl,
-                    "unmasked_abs_median": float(u),
-                    "masked_abs_median": float(m) if m is not None else None,
-                    "ratio": float(m / u) if (m and u) else None,
+                    "n_perturbed": rec["n_perturbed"],
+                    "substitute_cp10k": rec["substitute_level"]["value_cp10k"],
+                    **{
+                        f"{key}_abs_median": rec["summary"][key]["abs_median"]
+                        for key, _, _ in HIDDEN_SERIES
+                    },
+                    "masked_over_visible": rec["ratios"].get("masked_over_visible"),
+                    "median_substituted_over_visible": rec["ratios"].get(
+                        "median_substituted_over_visible"
+                    ),
+                    "run2_diluted_masked_abs_median": rec["summary"]["masked"][
+                        "abs_median_run2_diluted_estimator"
+                    ],
                 }
             )
-        fig.add_trace(
-            go.Bar(x=names, y=unmasked, name="unmasked" if ci == 1 else None, legendgroup="unmasked",
-                   showlegend=ci == 1, marker_color=col["HepG2"],
-                   hovertemplate="%{x}<br>unmasked %{y:.3g}<extra></extra>"),
-            row=1, col=ci,
-        )
-        fig.add_trace(
-            go.Bar(x=names, y=masked, name="masked" if ci == 1 else None, legendgroup="masked",
-                   showlegend=ci == 1, marker_color=col["Jurkat"],
-                   hovertemplate="%{x}<br>masked %{y:.3g}<extra></extra>"),
-            row=1, col=ci,
-        )
     for ci in (1, 2):
         fig.update_xaxes(title_text="model", row=1, col=ci)
         fig.update_yaxes(title_text="median |zero-out response| (log, model units)", type="log",
                          dtick=1, row=1, col=ci)
     apply_theme(fig, height=460)
-    ratios = {
-        MODEL_LABEL[r["model"]]: r["ratio"] for r in rows if r["ratio"]
-    }
-    up = sorted(n for n, v in ratios.items() if v > 1)
-    down = sorted(n for n, v in ratios.items() if v < 1)
-    findings = "The direction of the change is model-specific. "
-    if down:
+
+    survives, artefact = [], []
+    for r in rows:
+        m, s = r["masked_over_visible"], r["median_substituted_over_visible"]
+        if not (m and s):
+            continue
+        (survives if _same_direction(m, s) else artefact).append(MODEL_LABEL[r["model"]])
+    findings = (
+        "The mask token and an uninformative in-distribution value are not the same query. "
+    )
+    if survives:
         findings += (
-            f"Masking shrinks the response for {', '.join(down)}, down to a factor of "
-            f"{min(v for v in ratios.values()):.3g}. "
+            f"For {', '.join(sorted(set(survives)))} the substitution moves the response the "
+            "same way as the mask, so what the mask removes is information rather than "
+            "distribution. "
         )
-    if up:
+    if artefact:
         findings += (
-            f"It grows the response for {', '.join(up)}, up to a factor of "
-            f"{max(v for v in ratios.values()):.3g}. "
+            f"For {', '.join(sorted(set(artefact)))} the substitution does not reproduce what "
+            "the mask does, so that model's masked response says more about the mask token "
+            "than about reconstruction. "
         )
-    findings += "Masked and unmasked are two features, not one with a common offset."
+    findings += "TranscriptFormer is absent: it is autoregressive, so a gene never sees its own value."
     return Fig(
         name="masked_regime",
         figure=fig,
         data=rows,
-        alt="Zero-out response magnitude with and without masking the read-out gene.",
+        alt="Zero-out response magnitude with the read-out gene's own value visible, masked, "
+        "and replaced by the median control level.",
         meta={
-            "title": "Masking the read-out gene, at the same anchor",
-            "description": "Median absolute zero-out response at the mean control anchor, with the "
-            "read-out gene's own input value visible and with it replaced by each model's own mask "
-            "convention (log axis, each model in its own output units). TranscriptFormer has no "
-            "masked variant: it is autoregressive, so a gene never sees its own value.",
+            "title": "Three ways to hide the read-out gene's own value, at the same anchor",
+            "description": "Median absolute zero-out response at the mean control anchor over the "
+            "same perturbed-gene subset, with the read-out gene's own input value visible, "
+            "replaced by each model's own mask convention, and replaced by one uninformative "
+            "in-distribution level, the median pooled-control level of the read-out genes (log "
+            "axis, each model in its own output units). All three come from one job with one "
+            "batching, and all three drop the passes in which the mask would have overwritten "
+            "the perturbation itself, so they sit slightly above the shipped masked block's own "
+            "numbers.",
             "findings": findings,
-            "sources": "experiments/experiment-2-nygwcv/results/report/bundles",
+            "sources": "experiments/experiment-2-nygwcv/results/report/hidden_readout",
         },
     )
+
+
+def _same_direction(masked_ratio: float, substituted_ratio: float, share: float = 0.5) -> bool:
+    """Does the substitution reproduce the mask's effect, and at least half of it?
+
+    Both ratios are read on a log scale, because a factor of 0.1 and a factor of 10
+    are the same size of effect in opposite directions. The substitution counts as
+    reproducing the mask when it moves the response the same way and by at least
+    ``share`` of the mask's log magnitude.
+    """
+    import math
+
+    lm, ls = math.log(masked_ratio), math.log(substituted_ratio)
+    return lm * ls > 0 and abs(ls) >= share * abs(lm)
 
 
 #: the three alignment statistics, each read against the same query with a randomly

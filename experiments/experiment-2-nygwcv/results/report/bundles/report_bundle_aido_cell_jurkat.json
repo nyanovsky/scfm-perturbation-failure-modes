@@ -546,6 +546,42 @@
       ],
       "seconds": 3453.4,
       "note": "responses are read only at masked positions, averaged over cycles; the unmasked block at the same anchor is the comparison"
+    },
+    "coverage": {
+      "mode": "subset",
+      "n_perturbed": 250,
+      "n_in_scope": 705,
+      "fraction_of_scope": 0.35461,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ],
+      "by_stratum": {
+        "S3": {
+          "in_scope": 354,
+          "selected": 125
+        },
+        "S4_highest": {
+          "in_scope": 351,
+          "selected": 125
+        }
+      },
+      "n_perturbed_cells_anchor": 60,
+      "n_perturbed_masked": 60,
+      "n_step_sweep": 50,
+      "scope_requested": {
+        "n_perturbed": 250,
+        "n_perturbed_cells_anchor": 60,
+        "n_perturbed_masked": 60,
+        "strata": [
+          "S3",
+          "S4_highest"
+        ]
+      },
+      "selection_rule": "stratified sample of 250 at seed 42, 125 per stratum, drawn from the in-scope set; the individual-cell and masked subsets are nested inside it",
+      "in_scope_definition": "perturbations in strata S3, S4_highest whose target gene is also a read-out gene of this cell line, so it can be perturbed at all",
+      "comparability_note": "a block at partial coverage and a block at full coverage share the perturbed genes of the smaller one but not its row order; join on perturbed_gene_id, never on row index, and do not compare a per-block aggregate across two different coverages",
+      "annotated_after_extraction": "added by features.annotate_coverage: the block was extracted before the coverage record existed. The selector was re-run and reproduces this block's perturbed table exactly, so the record describes the features as shipped; no array changed."
     }
   },
   "n_readout": 3247,
@@ -564,7 +600,7 @@
         "standardized"
       ],
       "abs_median": 0.00013944506645202637,
-      "abs_p99": 0.010640888474881649,
+      "abs_p99": 0.01064088851213455,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 60
     },
@@ -634,7 +670,7 @@
         "standardized"
       ],
       "abs_median": 0.001008749008178711,
-      "abs_p99": 0.09888063371181488,
+      "abs_p99": 0.09888063132762881,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 1250
     },
@@ -668,7 +704,7 @@
         "standardized"
       ],
       "abs_median": 0.00018624961376190186,
-      "abs_p99": 0.00814417190849781,
+      "abs_p99": 0.008144171582534903,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 60
     },
@@ -686,7 +722,7 @@
         "standardized"
       ],
       "abs_median": 0.0005278984899632633,
-      "abs_p99": 0.01762302778661251,
+      "abs_p99": 0.01762302696704867,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 180
     },
@@ -721,7 +757,7 @@
         "standardized"
       ],
       "abs_median": 0.0001475214958190918,
-      "abs_p99": 0.03281334415078163,
+      "abs_p99": 0.032813344597816374,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 1250
     },
@@ -1238,6 +1274,12 @@
       "check": "uniform_virtual/gdt/shape_and_finite",
       "ok": true,
       "detail": "raw (250, 5, 3247) (expected (250, 5, 3247)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/jurkat",
+      "check": "coverage_recorded",
+      "ok": true,
+      "detail": "subset coverage: 250 of 705 in-scope perturbations (0.35461), strata ['S3', 'S4_highest']; perturbed table has 250 rows"
     },
     {
       "section": "aido_cell/jurkat",

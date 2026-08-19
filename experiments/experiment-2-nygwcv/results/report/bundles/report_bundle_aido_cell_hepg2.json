@@ -546,6 +546,42 @@
       ],
       "seconds": 3454.8,
       "note": "responses are read only at masked positions, averaged over cycles; the unmasked block at the same anchor is the comparison"
+    },
+    "coverage": {
+      "mode": "subset",
+      "n_perturbed": 250,
+      "n_in_scope": 524,
+      "fraction_of_scope": 0.477099,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ],
+      "by_stratum": {
+        "S3": {
+          "in_scope": 240,
+          "selected": 125
+        },
+        "S4_highest": {
+          "in_scope": 284,
+          "selected": 125
+        }
+      },
+      "n_perturbed_cells_anchor": 60,
+      "n_perturbed_masked": 60,
+      "n_step_sweep": 50,
+      "scope_requested": {
+        "n_perturbed": 250,
+        "n_perturbed_cells_anchor": 60,
+        "n_perturbed_masked": 60,
+        "strata": [
+          "S3",
+          "S4_highest"
+        ]
+      },
+      "selection_rule": "stratified sample of 250 at seed 42, 125 per stratum, drawn from the in-scope set; the individual-cell and masked subsets are nested inside it",
+      "in_scope_definition": "perturbations in strata S3, S4_highest whose target gene is also a read-out gene of this cell line, so it can be perturbed at all",
+      "comparability_note": "a block at partial coverage and a block at full coverage share the perturbed genes of the smaller one but not its row order; join on perturbed_gene_id, never on row index, and do not compare a per-block aggregate across two different coverages",
+      "annotated_after_extraction": "added by features.annotate_coverage: the block was extracted before the coverage record existed. The selector was re-run and reproduces this block's perturbed table exactly, so the record describes the features as shipped; no array changed."
     }
   },
   "n_readout": 2721,
@@ -564,7 +600,7 @@
         "standardized"
       ],
       "abs_median": 0.0002548098564147949,
-      "abs_p99": 0.008803779259324074,
+      "abs_p99": 0.008803779631853113,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 60
     },
@@ -582,7 +618,7 @@
         "standardized"
       ],
       "abs_median": 0.0009279549121856689,
-      "abs_p99": 0.04066618159413338,
+      "abs_p99": 0.04066617995500566,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 300
     },
@@ -616,7 +652,7 @@
         "standardized"
       ],
       "abs_median": 0.00017588213086128235,
-      "abs_p99": 0.008459425531327724,
+      "abs_p99": 0.008459425568580634,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 250
     },
@@ -634,7 +670,7 @@
         "standardized"
       ],
       "abs_median": 0.0009176731109619141,
-      "abs_p99": 0.04421157017350197,
+      "abs_p99": 0.044211570024490277,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 1250
     },
@@ -668,7 +704,7 @@
         "standardized"
       ],
       "abs_median": 0.00031178194331005216,
-      "abs_p99": 0.00943529698997736,
+      "abs_p99": 0.009435296980664138,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 60
     },
@@ -686,7 +722,7 @@
         "standardized"
       ],
       "abs_median": 0.0008778274059295654,
-      "abs_p99": 0.02154354751110077,
+      "abs_p99": 0.021543547976762084,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 180
     },
@@ -703,7 +739,7 @@
         "standardized"
       ],
       "abs_median": 0.0001035928726196289,
-      "abs_p99": 0.0009641355136409402,
+      "abs_p99": 0.0009641355276107794,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 250
     },
@@ -721,7 +757,7 @@
         "standardized"
       ],
       "abs_median": 0.0001621246337890625,
-      "abs_p99": 0.02617916651070118,
+      "abs_p99": 0.026179166436195334,
       "all_zero_fraction": 0.0,
       "n_response_vectors": 1250
     },
@@ -1244,6 +1280,12 @@
       "check": "uniform_virtual/gdt/shape_and_finite",
       "ok": true,
       "detail": "raw (250, 5, 2721) (expected (250, 5, 2721)), finite=True, variants ['raw', 'recentred', 'standardized']"
+    },
+    {
+      "section": "aido_cell/hepg2",
+      "check": "coverage_recorded",
+      "ok": true,
+      "detail": "subset coverage: 250 of 524 in-scope perturbations (0.477099), strata ['S3', 'S4_highest']; perturbed table has 250 rows"
     },
     {
       "section": "aido_cell/hepg2",

@@ -1,0 +1,48 @@
+{
+  "model": "aido_cell",
+  "cell_line": "jurkat",
+  "n_passed": 8,
+  "n_checks": 8,
+  "checks": [
+    {
+      "check": "visible/shape_and_finite",
+      "ok": true,
+      "detail": "delta (60, 3, 3247) over 60 genes and 3 values, finite=True"
+    },
+    {
+      "check": "masked/shape_and_finite",
+      "ok": true,
+      "detail": "delta (60, 3, 3247) over 60 genes and 3 values, finite=True"
+    },
+    {
+      "check": "masked/read_coverage",
+      "ok": true,
+      "detail": "638 of 194820 entries (0.327%) had no cycle in which the read-out gene was hidden and the perturbed gene was not; mean coverage 2.571 of 3 cycles"
+    },
+    {
+      "check": "median_substituted/shape_and_finite",
+      "ok": true,
+      "detail": "delta (60, 3, 3247) over 60 genes and 3 values, finite=True"
+    },
+    {
+      "check": "median_substituted/read_coverage",
+      "ok": true,
+      "detail": "638 of 194820 entries (0.327%) had no cycle in which the read-out gene was hidden and the perturbed gene was not; mean coverage 2.571 of 3 cycles"
+    },
+    {
+      "check": "conditions_differ_from_visible",
+      "ok": true,
+      "detail": "visible median |zero-out| 0.0001414; masked median |zero-out| 0.0002233; median_substituted median |zero-out| 0.0001569"
+    },
+    {
+      "check": "substitution_is_in_distribution",
+      "ok": true,
+      "detail": "substitute 1.028 CP10K sits at quantile 0.500 of the read-out genes' own control levels"
+    },
+    {
+      "check": "one_code_path",
+      "ok": true,
+      "detail": "3 conditions computed in one job with one batching and one anchor: visible, masked, median_substituted"
+    }
+  ]
+}

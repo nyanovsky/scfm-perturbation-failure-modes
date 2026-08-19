@@ -1,0 +1,599 @@
+{
+  "model": "scgpt",
+  "cell_line": "jurkat",
+  "layout": {
+    "model": "scgpt",
+    "cell_line": "jurkat",
+    "n_readout_genes": 3247,
+    "n_supplied_genes": 3247,
+    "supplied_mode": "tiled",
+    "forward_passes_per_query": 4,
+    "context_block_genes": 256,
+    "training_max_seq_len": 1200,
+    "positional_encoding_over_genes": false,
+    "bin_edges_source": "51-bin quantile edges of log1p(anchor CP10K) over the 3247 read-out genes of jurkat, fixed for every query",
+    "n_bins": 51,
+    "context_extrapolation_factor": 2.706,
+    "tile_limit": 1200,
+    "tile_prefix_genes": 256,
+    "tile_note": "every pass carries the same highest-expression prefix; when the perturbed gene is not already in a pass it is appended to it, so the context differs between queries by exactly one gene"
+  },
+  "scope": {
+    "n_perturbed": 250,
+    "n_perturbed_cells_anchor": 60,
+    "n_perturbed_masked": 60,
+    "n_step_sweep": 50,
+    "strata": [
+      "S3",
+      "S4_highest"
+    ]
+  },
+  "value_grid_cp10k": [
+    0.0,
+    1.0,
+    4.0,
+    16.0,
+    64.0
+  ],
+  "gdt_base_grid_cp10k": [
+    0.0,
+    1.0,
+    4.0,
+    16.0,
+    64.0
+  ],
+  "sign_convention": "perturbed minus baseline; a positive entry means raising the perturbed gene raises the model's prediction for the read-out gene. Zero-out uses this convention, not the paper's reversed one",
+  "expression_floor_cp10k": 0.5,
+  "expression_floor_note": "the read-out set is the inclusive floor; each gene's pooled control level travels with the block so a higher floor is a column mask",
+  "gene_embedding_source": "TransformerModel.encoder.embedding, the gene token embedding table",
+  "gene_embedding_shape": [
+    3247,
+    512
+  ],
+  "mask_spec": {
+    "kind": "input_value",
+    "value": -1.0,
+    "rate": 0.25,
+    "pretraining_rates": [
+      0.25,
+      0.5,
+      0.75
+    ],
+    "source": "scGPT args.json: mask_value and mask_ratio; the mildest pretraining rate is used"
+  },
+  "seed": 42,
+  "anchors": {
+    "uniform_virtual": {
+      "description": "every supplied gene pinned at 3.0798 CP10K, the uniform share of a 10,000-count virtual cell; the paper's construction, and far off the distribution the models were trained on",
+      "cells": [
+        "uniform"
+      ],
+      "n_perturbed": 250,
+      "step": 0.02,
+      "forms": {
+        "vvp": {
+          "raw": [
+            250,
+            5,
+            3247
+          ],
+          "standardized": [
+            250,
+            5,
+            3247
+          ]
+        },
+        "zero_out": {
+          "raw": [
+            250,
+            3247
+          ],
+          "standardized": [
+            250,
+            3247
+          ]
+        },
+        "gdt": {
+          "raw": [
+            250,
+            5,
+            3247
+          ],
+          "standardized": [
+            250,
+            5,
+            3247
+          ]
+        }
+      },
+      "n_cells_averaged": 1,
+      "zero_out_value_index": 0,
+      "gdt_source": "central_finite_difference(step=0.02)",
+      "seconds": 38.6
+    },
+    "mean_control": {
+      "description": "the pooled non-targeting control mean expression profile of this cell line, restricted to the read-out genes; the on-distribution counterpart",
+      "cells": [
+        "mean_control"
+      ],
+      "n_perturbed": 250,
+      "step": 0.02,
+      "forms": {
+        "vvp": {
+          "raw": [
+            250,
+            5,
+            3247
+          ],
+          "standardized": [
+            250,
+            5,
+            3247
+          ]
+        },
+        "zero_out": {
+          "raw": [
+            250,
+            3247
+          ],
+          "standardized": [
+            250,
+            3247
+          ]
+        },
+        "gdt": {
+          "raw": [
+            250,
+            5,
+            3247
+          ],
+          "standardized": [
+            250,
+            5,
+            3247
+          ]
+        }
+      },
+      "n_cells_averaged": 1,
+      "zero_out_value_index": 0,
+      "gdt_source": "central_finite_difference(step=0.02)",
+      "seconds": 38.8
+    },
+    "individual_cells": {
+      "description": "4 real non-targeting control cells, each converted to CP10K so every anchor sits at one depth; responses are averaged over the cells and their spread is recorded",
+      "cells": [
+        "AAACCCAAGCTGGAGT-37",
+        "AAACCCAAGGGCCTCT-51",
+        "AAACCCACAAAGAGTT-20",
+        "AAACCCACATTGCTTT-48"
+      ],
+      "n_perturbed": 60,
+      "step": 0.02,
+      "forms": {
+        "vvp": {
+          "raw": [
+            60,
+            5,
+            3247
+          ],
+          "standardized": [
+            60,
+            5,
+            3247
+          ]
+        },
+        "zero_out": {
+          "raw": [
+            60,
+            3247
+          ],
+          "standardized": [
+            60,
+            3247
+          ]
+        },
+        "gdt": {
+          "raw": [
+            60,
+            5,
+            3247
+          ],
+          "standardized": [
+            60,
+            5,
+            3247
+          ]
+        }
+      },
+      "n_cells_averaged": 4,
+      "zero_out_value_index": 0,
+      "gdt_source": "central_finite_difference(step=0.02)",
+      "seconds": 36.9,
+      "per_cell_spread": "responses averaged over cells; see summary rows"
+    }
+  },
+  "substitutions": [
+    "flash-attention not installed (the published checkpoint was trained with scGPT's FlashMHA layers, whose API exists only in flash-attn 1.x, which cannot build against this torch); used scGPT's own fallback torch.nn.TransformerEncoder path (use_fast_transformer=False), which changes the attention kernel and therefore the exact numerics",
+    "remapped 24 fused attention tensors from the checkpoint's FlashMHA layout (self_attn.Wqkv) onto torch's packed projection (self_attn.in_proj); both hold [query; key; value] over the same head partition, so the attention computed is the same function of the same weights. Verified numerically at load time (see attention_remap_check)",
+    "imported scgpt.model.model by file path to avoid executing scgpt/__init__ (scvi-tools / torchtext / scib); model source unmodified"
+  ],
+  "contract": {
+    "model": "scgpt",
+    "checkpoint": "wanglab/scGPT-human",
+    "checkpoint_revision": "a24c237737a40f3720f75abb555489e9fe753be6",
+    "checkpoint_md5": null,
+    "input_normalization": "counts -> CP10K -> log1p -> per-cell quantile binning into 51 bins (published path). Gene tokens are vocab.json ids; no <cls> token is prepended (the checkpoint was trained with no_cls=True).",
+    "output_head": "ExprDecoder.fc -> dict['pred'], one scalar per gene token",
+    "output_semantics": "predicted binned expression value for that gene in this cell, on the 51-bin training scale (not counts, not CP10K)",
+    "information_flow": "bidirectional full attention over gene tokens; no positional encoding over genes",
+    "ordering_dependent": false,
+    "response_symmetric": null,
+    "symmetry_evidence": "architecture imposes no ordering, so a response exists for every ordered pair, but symmetry of the pairwise response is not implied and was not measured here",
+    "differentiable_wrt_input_expression": true,
+    "jacobian_available": true,
+    "jacobian_method": "forward_mode_autodiff_jvp_on_smooth_binning",
+    "jacobian_unavailable_reason": null,
+    "jacobian_check": {},
+    "vocabulary_kind": "symbol",
+    "vocabulary_size": 60697,
+    "context_length": 1200,
+    "dtype": "float32",
+    "substitutions": [
+      "flash-attention not installed (the published checkpoint was trained with scGPT's FlashMHA layers, whose API exists only in flash-attn 1.x, which cannot build against this torch); used scGPT's own fallback torch.nn.TransformerEncoder path (use_fast_transformer=False), which changes the attention kernel and therefore the exact numerics",
+      "remapped 24 fused attention tensors from the checkpoint's FlashMHA layout (self_attn.Wqkv) onto torch's packed projection (self_attn.in_proj); both hold [query; key; value] over the same head partition, so the attention computed is the same function of the same weights. Verified numerically at load time (see attention_remap_check)",
+      "imported scgpt.model.model by file path to avoid executing scgpt/__init__ (scvi-tools / torchtext / scib); model source unmodified"
+    ],
+    "notes": "The published input path bins expression with np.digitize, which has zero derivative almost everywhere: the Jacobian is therefore taken through a piecewise-linear surrogate of the same quantile bin edges. binning_deviation records how far the surrogate moves the output. Checkpoint build flags inferred from the state dict: {'do_mvc': True, 'explicit_zero_prob': False, 'use_batch_labels': False, 'has_dsbn': False}. Sequence length used here is the number of resolved vocabulary genes, which exceeds the training max_seq_len of 1200; scGPT has no positional encoding over genes, so this is a context-length extrapolation rather than an invalid input."
+  },
+  "step_selection": {
+    "uniform_virtual": {
+      "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+      "steps_swept": [
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1.0
+      ],
+      "base_value_cp10k": 4.0,
+      "n_genes": 50,
+      "selected_step": 0.02,
+      "verdict": "stable_in_direction_and_magnitude",
+      "gradient_features_usable_for": "direction, ranking and magnitude",
+      "adjacent_agreement": [
+        {
+          "step": 0.02,
+          "next_step": 0.05,
+          "median_pearson_adjacent": 0.9997852012709594,
+          "median_relative_l2_adjacent": 0.03859520251902952,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.05,
+          "next_step": 0.1,
+          "median_pearson_adjacent": 0.9999051773183112,
+          "median_relative_l2_adjacent": 0.044565105066763366,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.1,
+          "next_step": 0.25,
+          "median_pearson_adjacent": 0.9996957330170946,
+          "median_relative_l2_adjacent": 0.06136733556988522,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.25,
+          "next_step": 0.5,
+          "median_pearson_adjacent": 0.9994489029878941,
+          "median_relative_l2_adjacent": 0.07587970338840082,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.5,
+          "next_step": 1.0,
+          "median_pearson_adjacent": 0.9982492839422166,
+          "median_relative_l2_adjacent": 0.15749279524951137,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        }
+      ]
+    },
+    "mean_control": {
+      "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+      "steps_swept": [
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1.0
+      ],
+      "base_value_cp10k": 4.0,
+      "n_genes": 50,
+      "selected_step": 0.02,
+      "verdict": "stable_in_direction_and_magnitude",
+      "gradient_features_usable_for": "direction, ranking and magnitude",
+      "adjacent_agreement": [
+        {
+          "step": 0.02,
+          "next_step": 0.05,
+          "median_pearson_adjacent": 0.9996443064290967,
+          "median_relative_l2_adjacent": 0.029405606773873216,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.05,
+          "next_step": 0.1,
+          "median_pearson_adjacent": 0.9996761825230592,
+          "median_relative_l2_adjacent": 0.02645292791839387,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.1,
+          "next_step": 0.25,
+          "median_pearson_adjacent": 0.9993503588724726,
+          "median_relative_l2_adjacent": 0.04070224687635955,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.25,
+          "next_step": 0.5,
+          "median_pearson_adjacent": 0.9992949868546168,
+          "median_relative_l2_adjacent": 0.04868976084651859,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.5,
+          "next_step": 1.0,
+          "median_pearson_adjacent": 0.9986593960535247,
+          "median_relative_l2_adjacent": 0.07702973214232241,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        }
+      ]
+    },
+    "individual_cells": {
+      "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+      "steps_swept": [
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1.0
+      ],
+      "base_value_cp10k": 4.0,
+      "n_genes": 50,
+      "selected_step": 0.02,
+      "verdict": "stable_in_direction_and_magnitude",
+      "gradient_features_usable_for": "direction, ranking and magnitude",
+      "adjacent_agreement": [
+        {
+          "step": 0.02,
+          "next_step": 0.05,
+          "median_pearson_adjacent": 0.9995081084329647,
+          "median_relative_l2_adjacent": 0.03735950788225237,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.05,
+          "next_step": 0.1,
+          "median_pearson_adjacent": 0.9997791267464564,
+          "median_relative_l2_adjacent": 0.022384571267193808,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.1,
+          "next_step": 0.25,
+          "median_pearson_adjacent": 0.999526680269891,
+          "median_relative_l2_adjacent": 0.0407997559747835,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.25,
+          "next_step": 0.5,
+          "median_pearson_adjacent": 0.999328153957879,
+          "median_relative_l2_adjacent": 0.05879344196482242,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        },
+        {
+          "step": 0.5,
+          "next_step": 1.0,
+          "median_pearson_adjacent": 0.9983552573053969,
+          "median_relative_l2_adjacent": 0.0750774493989539,
+          "median_abs_value": 0.0,
+          "n_genes": 50
+        }
+      ]
+    }
+  },
+  "wiring_checks": {
+    "uniform_virtual": {
+      "n_genes": 250,
+      "value_low_cp10k": 1.0,
+      "value_high_cp10k": 64.0,
+      "sign_check_pass_fraction": 0.992,
+      "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+      "magnitude_check_pass_fraction": 0.92,
+      "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+      "median_self_rank": 0.0,
+      "permuted_magnitude_pass_fraction": 0.0,
+      "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+      "threshold": 0.95
+    },
+    "mean_control": {
+      "n_genes": 250,
+      "value_low_cp10k": 1.0,
+      "value_high_cp10k": 64.0,
+      "sign_check_pass_fraction": 0.816,
+      "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+      "magnitude_check_pass_fraction": 0.932,
+      "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+      "median_self_rank": 0.0,
+      "permuted_magnitude_pass_fraction": 0.0,
+      "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+      "threshold": 0.95
+    },
+    "individual_cells": {
+      "n_genes": 60,
+      "value_low_cp10k": 1.0,
+      "value_high_cp10k": 64.0,
+      "sign_check_pass_fraction": 0.9666666666666667,
+      "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+      "magnitude_check_pass_fraction": 0.9333333333333333,
+      "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+      "median_self_rank": 0.0,
+      "permuted_magnitude_pass_fraction": 0.0,
+      "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+      "threshold": 0.95
+    }
+  },
+  "masked": {
+    "ran": true,
+    "mask_spec": {
+      "kind": "input_value",
+      "value": -1.0,
+      "rate": 0.25,
+      "pretraining_rates": [
+        0.25,
+        0.5,
+        0.75
+      ],
+      "source": "scGPT args.json: mask_value and mask_ratio; the mildest pretraining rate is used"
+    },
+    "mask_rate": 0.25,
+    "n_blocks_per_cycle": 4,
+    "cycles": 3,
+    "coverage_per_gene": {
+      "min": 3,
+      "median": 3.0,
+      "max": 3
+    },
+    "n_perturbed": 60,
+    "value_grid_cp10k": [
+      0.0,
+      4.0,
+      64.0
+    ],
+    "seconds": 50.7,
+    "note": "responses are read only at masked positions, averaged over cycles; the unmasked block at the same anchor is the comparison"
+  },
+  "context_comparison": {
+    "n_genes": 40,
+    "form": "zero-out response difference at the mean control anchor",
+    "widths": {
+      "readout": 3247,
+      "universe": 7444,
+      "tiled": 1200
+    },
+    "agreement": {
+      "readout_vs_universe": {
+        "median_pearson": 0.9882918732703083,
+        "median_relative_l2": 0.42626886717286727
+      },
+      "readout_vs_tiled": {
+        "median_pearson": 0.8830367875747761,
+        "median_relative_l2": 0.9113814629317373
+      },
+      "universe_vs_tiled": {
+        "median_pearson": 0.9102348607754933,
+        "median_relative_l2": 0.7643268836487407
+      }
+    },
+    "production_mode": "tiled"
+  },
+  "untiled_exact_check": {
+    "ran": true,
+    "layout": "readout (untiled), the layout that admits forward-mode autodiff",
+    "n_genes": 20,
+    "step": 0.02,
+    "per_value": [
+      {
+        "value_cp10k": 0.0,
+        "one_sided": true,
+        "pearson": 0.9974266656841572,
+        "relative_l2": 0.07192819873544261
+      },
+      {
+        "value_cp10k": 1.0,
+        "one_sided": false,
+        "pearson": 0.9988495523835339,
+        "relative_l2": 0.047977432146054946
+      },
+      {
+        "value_cp10k": 4.0,
+        "one_sided": false,
+        "pearson": 0.9997380838197468,
+        "relative_l2": 0.022754885084740346
+      },
+      {
+        "value_cp10k": 16.0,
+        "one_sided": false,
+        "pearson": 0.9998769642799653,
+        "relative_l2": 0.014776450809153227
+      },
+      {
+        "value_cp10k": 64.0,
+        "one_sided": false,
+        "pearson": 0.9998350227768378,
+        "relative_l2": 0.016064751422416583
+      }
+    ],
+    "median_pearson_two_sided": 0.9997865532982924,
+    "median_relative_l2_two_sided": 0.019409818253578466
+  },
+  "coverage": {
+    "mode": "subset",
+    "n_perturbed": 250,
+    "n_in_scope": 705,
+    "fraction_of_scope": 0.35461,
+    "strata": [
+      "S3",
+      "S4_highest"
+    ],
+    "by_stratum": {
+      "S3": {
+        "in_scope": 354,
+        "selected": 125
+      },
+      "S4_highest": {
+        "in_scope": 351,
+        "selected": 125
+      }
+    },
+    "n_perturbed_cells_anchor": 60,
+    "n_perturbed_masked": 60,
+    "n_step_sweep": 50,
+    "scope_requested": {
+      "n_perturbed": 250,
+      "n_perturbed_cells_anchor": 60,
+      "n_perturbed_masked": 60,
+      "strata": [
+        "S3",
+        "S4_highest"
+      ]
+    },
+    "selection_rule": "stratified sample of 250 at seed 42, 125 per stratum, drawn from the in-scope set; the individual-cell and masked subsets are nested inside it",
+    "in_scope_definition": "perturbations in strata S3, S4_highest whose target gene is also a read-out gene of this cell line, so it can be perturbed at all",
+    "comparability_note": "a block at partial coverage and a block at full coverage share the perturbed genes of the smaller one but not its row order; join on perturbed_gene_id, never on row index, and do not compare a per-block aggregate across two different coverages",
+    "annotated_after_extraction": "added by features.annotate_coverage: the block was extracted before the coverage record existed. The selector was re-run and reproduces this block's perturbed table exactly, so the record describes the features as shipped; no array changed."
+  },
+  "superseded_by": {
+    "block": "features_full_scope/scgpt/jurkat",
+    "note": "this 250-gene block is kept for provenance; the canonical block for scgpt / jurkat covers every in-scope perturbation. Read feature_index/blocks.json rather than globbing the feature tree, and join on perturbed_gene_id, never on row index: the two coverages share genes but not row order."
+  }
+}

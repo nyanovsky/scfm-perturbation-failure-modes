@@ -164,6 +164,31 @@ def verify_block(block_dir: Path, ch: Checks) -> dict:
                     f"{SOFTMAX_MEAN_TOLERANCE}); raising one gene's share must lower others",
                 )
 
+    # coverage: how much of the in-scope perturbation set this block covers. Recorded
+    # explicitly because a subset block and a full block are not interchangeable and
+    # the difference is invisible in anything but an array shape.
+    cov = manifest.get("coverage")
+    if cov:
+        ch.add(
+            sec,
+            "coverage_recorded",
+            cov.get("n_perturbed") == n_p
+            and cov.get("n_in_scope", 0) >= n_p
+            and cov.get("mode") in ("full", "subset"),
+            f"{cov.get('mode')} coverage: {cov.get('n_perturbed')} of "
+            f"{cov.get('n_in_scope')} in-scope perturbations "
+            f"({cov.get('fraction_of_scope')}), strata {cov.get('strata')}; "
+            f"perturbed table has {n_p} rows",
+        )
+    else:
+        ch.add(
+            sec,
+            "coverage_recorded",
+            False,
+            f"the manifest records no coverage block, so this block's {n_p} perturbed genes "
+            "cannot be placed against the in-scope set",
+        )
+
     # step selection and its evidence
     steps = manifest.get("step_selection", {})
     complete = all(
@@ -532,6 +557,50 @@ def verify_all(bundles_dir: Path, ch: Checks) -> list[dict]:
         f"{len(have)}/{len(want)} blocks present; missing {sorted(want - have) or 'none'}",
     )
 
+    # every block has to say how much of the in-scope perturbation set it covers, and
+    # the mix across models has to be stated rather than discovered later
+    missing_cov = [
+        f"{b['model']}/{b['cell_line']}" for b in bundles if not b["manifest"].get("coverage")
+    ]
+    mix = sorted(
+        {
+            (
+                b["manifest"].get("coverage", {}).get("mode", "unrecorded"),
+                b["manifest"].get("coverage", {}).get("n_perturbed"),
+                b["manifest"].get("coverage", {}).get("n_in_scope"),
+            )
+            for b in bundles
+        }
+    )
+    ch.add(
+        "coverage",
+        "perturbed_gene_coverage_recorded",
+        not missing_cov,
+        "coverage present in every block manifest; the tree mixes "
+        + "; ".join(f"{m} at {n} of {a}" for m, n, a in mix)
+        + (f"; missing in {missing_cov}" if missing_cov else ""),
+    )
+    for b in bundles:
+        cov = b["manifest"].get("coverage", {})
+        if cov.get("mode") != "full":
+            continue
+        anchors = b["manifest"].get("anchors", {})
+        full_anchors = [
+            a for a, meta in anchors.items() if meta.get("n_perturbed") == cov["n_perturbed"]
+        ]
+        ch.add(
+            "coverage",
+            f"{b['model']}/{b['cell_line']}/full_at_every_anchor",
+            len(full_anchors) == len(anchors),
+            f"{len(full_anchors)} of {len(anchors)} anchors run the whole "
+            f"{cov['n_perturbed']}-gene in-scope set"
+            + (
+                f"; masked variant at {b['manifest'].get('masked', {}).get('n_perturbed')}"
+                if b["manifest"].get("masked", {}).get("ran")
+                else ""
+            ),
+        )
+
     for b in bundles:
         sec = f"{b['model']}/{b['cell_line']}"
         anchors = {k.split("/")[0] for k in b["blocks"]}
@@ -570,6 +639,43 @@ def verify_all(bundles_dir: Path, ch: Checks) -> list[dict]:
             f"{len(b.get('checks', []))} block-level checks, {len(failed)} failed"
             + (f": {[r['check'] for r in failed][:6]}" if failed else ""),
         )
+
+    # the visible / masked / median-substituted comparison, where it applies
+    hidden_dir = paths.repo_dir() / "results" / "report" / "hidden_readout"
+    if hidden_dir.exists():
+        bidirectional = sorted(
+            {b["model"] for b in bundles if b["manifest"].get("masked", {}).get("ran")}
+        )
+        for model in bidirectional:
+            for cl in C.CELL_LINES:
+                path = hidden_dir / f"{model}_{cl}.json"
+                vpath = hidden_dir / f"verification_{model}_{cl}.json"
+                if not path.exists():
+                    ch.add(
+                        "hidden_readout",
+                        f"{model}/{cl}",
+                        False,
+                        "no visible / masked / median-substituted comparison for a model whose "
+                        "masked variant ran",
+                    )
+                    continue
+                rec = json.loads(path.read_text())
+                checks = json.loads(vpath.read_text()) if vpath.exists() else {"checks": []}
+                own = checks.get("checks", [])
+                failed = [r["check"] for r in own if not r["ok"]]
+                ratios = rec.get("ratios", {})
+                ch.add(
+                    "hidden_readout",
+                    f"{model}/{cl}",
+                    not failed and bool(ratios),
+                    f"{rec['n_perturbed']} perturbed genes, substitute "
+                    f"{rec['substitute_level']['value_cp10k']:.4g} CP10K; "
+                    + "; ".join(
+                        f"{k} {v:.4g}" for k, v in ratios.items() if isinstance(v, (int, float))
+                    )
+                    + f"; {sum(1 for r in own if r['ok'])}/{len(own)} own checks passed"
+                    + (f", failed {failed}" if failed else ""),
+                )
 
     # the floor sweep and the read-out set it selected
     floor = paths.repo_dir() / "results" / "floor_sweep"

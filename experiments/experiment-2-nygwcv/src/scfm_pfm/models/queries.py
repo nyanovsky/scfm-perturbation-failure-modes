@@ -49,13 +49,13 @@ Masking regimes, read from each checkpoint rather than assumed
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
 import torch
 
+from ..forms import partition_masks as _partition_masks
 from .aido_model import AidoCellResponse, N_GENES as AIDO_N_GENES
 from .scgpt_model import ScGPTResponse, quantile_bin_edges
 from .scprint_model import ScPrintResponse
@@ -124,7 +124,31 @@ class QueryModel:
         raise NotImplementedError
 
     def exact_jvp(self, x_native: np.ndarray, col: int) -> np.ndarray | None:
+        """The exact forward-mode derivative column, or None with a recorded reason.
+
+        An adapter that cannot provide one sets ``self._jvp_error`` to say why, so
+        the block manifest records a measured absence rather than a default.
+        """
+        self._jvp_error = (
+            f"{type(self).__name__} does not implement a forward-mode column; the base "
+            "interface returns none"
+        )
         return None
+
+    def forward_mode_probe(self, x_native: np.ndarray, col: int) -> tuple[np.ndarray | None, str | None]:
+        """Try the forward-mode route once and report what happened.
+
+        Separate from :meth:`exact_jvp` because a model may support forward-mode
+        differentiation while a block's features were produced by finite
+        differences: the probe measures the route without changing the features.
+        """
+        try:
+            col_out = self.exact_jvp(np.asarray(x_native), int(col))
+        except Exception as exc:  # noqa: BLE001
+            return None, f"{type(exc).__name__}: {exc}"
+        if col_out is None:
+            return None, str(getattr(self, "_jvp_error", "unavailable, no reason recorded"))
+        return col_out, None
 
     def _batches(self, x: np.ndarray, size: int | None = None):
         size = int(size or self.batch_size)
@@ -310,7 +334,14 @@ class ScGPTQuery(ScGPTResponse, QueryModel):
         from torch.nn.attention import SDPBackend, sdpa_kernel
 
         if self.tiles is not None or self.supplied_mode == "universe":
-            return None  # a multi-pass or padded query is not one function of the input
+            # a multi-pass or padded query is not one function of the input
+            self._jvp_error = (
+                f"the {self.supplied_mode} layout delivers a query in "
+                f"{len(self.tiles) if self.tiles is not None else 1} pass(es) over a padded "
+                "supplied set, so it is not one differentiable function of the input; the "
+                "untiled layout is differentiable and is cross-checked separately"
+            )
+            return None
         tokens = torch.as_tensor(self.supplied_tokens, device=self.device).unsqueeze(0)
         base = torch.as_tensor(
             np.atleast_2d(np.asarray(x_native, dtype=np.float32)), device=self.device
@@ -367,6 +398,52 @@ class AidoQuery(AidoCellResponse, QueryModel):
 
     def to_native(self, cp10k) -> np.ndarray:
         return np.asarray(cp10k, dtype=np.float32)
+
+    def _full_counts(self, x: np.ndarray) -> np.ndarray:
+        full = np.zeros((np.atleast_2d(x).shape[0], AIDO_N_GENES), dtype=np.float32)
+        full[:, self.readout_positions] = np.atleast_2d(x)
+        return full
+
+    def _response_torch(self, counts: "torch.Tensor") -> "torch.Tensor":
+        """The production response as one differentiable function of the input counts."""
+        inputs = self._transform(counts)
+        logits = self.model(input_ids=inputs).logits[:, :-2, 0]
+        return logits[:, self._out_idx]
+
+    def exact_jvp(self, x_native: np.ndarray, col: int) -> np.ndarray | None:
+        """Not the production route for this model, and recorded as such.
+
+        Run 2's AIDO.Cell blocks are central differences at the selected step. The
+        forward-mode route is measured separately by :mod:`scfm_pfm.features.cost_probe`
+        through :meth:`forward_mode_probe`, so that the record in the manifest is a
+        measurement and enabling the exact path later cannot silently change what a
+        shipped block contains.
+        """
+        self._jvp_error = (
+            "not attempted in the production path: this run's AIDO.Cell gradient "
+            "trajectories are central differences at the selected step, and the "
+            "forward-mode route is measured by features.cost_probe instead"
+        )
+        return None
+
+    def forward_mode_probe(self, x_native: np.ndarray, col: int):
+        """Attempt ``torch.func.jvp`` through AIDO.Cell's own forward pass."""
+        counts = torch.as_tensor(
+            self._full_counts(np.asarray(x_native, dtype=np.float32)),
+            device=self.device, dtype=torch.float32,
+        )
+        position = int(self.readout_positions[int(col)])
+
+        def fn(c: torch.Tensor) -> torch.Tensor:
+            return self._response_torch(c)[0]
+
+        tangent = torch.zeros_like(counts)
+        tangent[0, position] = 1.0
+        try:
+            _, jvp = torch.func.jvp(fn, (counts,), (tangent,))
+            return jvp.detach().float().cpu().numpy(), None
+        except Exception as exc:  # noqa: BLE001
+            return None, f"{type(exc).__name__}: {exc}"
 
     def forward_batch(
         self, x_native: np.ndarray, perturbed_col: int | None = None, mask: np.ndarray | None = None
@@ -654,6 +731,15 @@ class TranscriptFormerQuery(TranscriptFormerResponse, QueryModel):
             raise RuntimeError(f"{int((~filled).sum())} read-out genes never entered a pass")
         return out
 
+    def exact_jvp(self, x_native: np.ndarray, col: int) -> np.ndarray | None:
+        """Not available in this layout, for the same reason as scGPT's tiled one."""
+        self._jvp_error = (
+            "the read-out set does not fit one sequence, so a query is several forward "
+            "passes stitched together and is not one differentiable function of the input; "
+            "the derivative is a central difference at the selected step"
+        )
+        return None
+
     def gene_embeddings(self) -> tuple[np.ndarray, str]:
         best, source = None, ""
         for name, module in self.model.named_modules():
@@ -683,17 +769,6 @@ def build(model: str, cache, universe: pd.DataFrame, vocab: pd.DataFrame, device
     return BUILDERS[model](cache=cache, universe=universe, vocab=vocab, device=device)
 
 
-def partition_masks(n: int, rate: float, cycles: int, seed: int) -> list[np.ndarray]:
-    """Disjoint mask blocks: every gene is masked exactly once per cycle.
-
-    Masking an independent random subset per pass would leave the unluckiest gene
-    unmasked for ~50 passes at a 15% rate. A seeded partition into
-    ``ceil(1/rate)`` blocks holds the per-pass masked fraction at the model's own
-    pretraining rate and gives every gene exact, auditable coverage.
-    """
-    rng = np.random.default_rng(seed)
-    blocks: list[np.ndarray] = []
-    n_blocks = max(1, int(math.ceil(1.0 / max(rate, 1e-6))))
-    for _ in range(int(cycles)):
-        blocks.extend(np.array_split(rng.permutation(n), n_blocks))
-    return blocks
+#: re-exported so `queries.partition_masks` keeps working for callers that had it
+#: here; the implementation is torch-free so the pod can import it
+partition_masks = _partition_masks

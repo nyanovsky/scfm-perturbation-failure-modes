@@ -46,10 +46,16 @@ class ResponseContract:
     response_symmetric: bool | None
     symmetry_evidence: str
     #: differentiability of the per-gene output w.r.t. an input gene's expression
+    #: as mathematics; whether *this* build can differentiate it is separate
     differentiable_wrt_input_expression: bool
     jacobian_available: bool
     jacobian_method: str
     jacobian_unavailable_reason: str | None
+    #: whether ``torch.func.jvp`` actually runs through this build's forward pass,
+    #: as measured in the process that wrote this contract. A mathematically smooth
+    #: model can still lack a forward-mode rule for one of its kernels, so this is
+    #: recorded from an attempt and never inferred from differentiability.
+    forward_mode_autodiff: str = "not probed in the process that wrote this contract"
     #: finite-difference agreement when both routes are available
     jacobian_check: dict = field(default_factory=dict)
     vocabulary_kind: str = ""

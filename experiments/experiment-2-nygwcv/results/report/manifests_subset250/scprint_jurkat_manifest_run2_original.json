@@ -1,0 +1,661 @@
+{
+  "model": "scprint",
+  "cell_line": "jurkat",
+  "layout": {
+    "model": "scprint",
+    "cell_line": "jurkat",
+    "n_readout_genes": 3247,
+    "n_supplied_genes": 3247,
+    "supplied_mode": "readout",
+    "forward_passes_per_query": 1,
+    "context_block_genes": 0,
+    "softmax_over": "the supplied gene positions, so a response is a share of the cell's counts and depends on which genes were supplied together",
+    "vocabulary_size": 44756,
+    "input_order": "ascending vocabulary position; the model carries no gene positional encoding, so the order is a convention, not a constraint"
+  },
+  "scope": {
+    "n_perturbed": 250,
+    "n_perturbed_cells_anchor": 60,
+    "n_perturbed_masked": 60,
+    "n_step_sweep": 50,
+    "strata": [
+      "S3",
+      "S4_highest"
+    ]
+  },
+  "value_grid_cp10k": [
+    0.0,
+    1.0,
+    4.0,
+    16.0,
+    64.0
+  ],
+  "gdt_base_grid_cp10k": [
+    0.0,
+    1.0,
+    4.0,
+    16.0,
+    64.0
+  ],
+  "sign_convention": "perturbed minus baseline; a positive entry means raising the perturbed gene raises the model's prediction for the read-out gene. Zero-out uses this convention, not the paper's reversed one",
+  "expression_floor_cp10k": 0.5,
+  "expression_floor_note": "the read-out set is the inclusive floor; each gene's pooled control level travels with the block so a higher floor is a column mask",
+  "gene_embedding_source": "scPrint.gene_encoder.embeddings, the frozen ESM-derived gene embedding",
+  "gene_embedding_shape": [
+    3247,
+    256
+  ],
+  "mask_spec": {
+    "kind": "boolean_mask_argument",
+    "value": null,
+    "rate": 0.15,
+    "source": "scPrint.forward(mask=...); the value encoder zeroes the expression embedding at masked positions. The checkpoint records no pretraining mask rate, so 0.15 is used and recorded as a fallback"
+  },
+  "seed": 42,
+  "anchors": {
+    "uniform_virtual": {
+      "description": "every supplied gene pinned at 3.0798 CP10K, the uniform share of a 10,000-count virtual cell; the paper's construction, and far off the distribution the models were trained on",
+      "cells": [
+        "uniform"
+      ],
+      "n_perturbed": 250,
+      "step": 0.02,
+      "forms": {
+        "vvp": {
+          "raw": [
+            250,
+            5,
+            3247
+          ],
+          "standardized": [
+            250,
+            5,
+            3247
+          ],
+          "recentred": [
+            250,
+            5,
+            3247
+          ],
+          "log2fc": [
+            250,
+            5,
+            3247
+          ]
+        },
+        "zero_out": {
+          "raw": [
+            250,
+            3247
+          ],
+          "standardized": [
+            250,
+            3247
+          ],
+          "recentred": [
+            250,
+            3247
+          ],
+          "log2fc": [
+            250,
+            3247
+          ]
+        },
+        "gdt": {
+          "raw": [
+            250,
+            5,
+            3247
+          ],
+          "standardized": [
+            250,
+            5,
+            3247
+          ],
+          "recentred": [
+            250,
+            5,
+            3247
+          ]
+        }
+      },
+      "n_cells_averaged": 1,
+      "zero_out_value_index": 0,
+      "gdt_source": "forward_mode_autodiff_jvp",
+      "seconds": 59.5,
+      "exact_vs_finite_difference": {
+        "per_value": [
+          {
+            "value_cp10k": 0.0,
+            "one_sided": true,
+            "pearson": 0.9294203226207624,
+            "relative_l2": 0.37910595180165
+          },
+          {
+            "value_cp10k": 1.0,
+            "one_sided": false,
+            "pearson": 0.9995966903903548,
+            "relative_l2": 0.02840485588752917
+          },
+          {
+            "value_cp10k": 4.0,
+            "one_sided": false,
+            "pearson": 0.9999794493763863,
+            "relative_l2": 0.006417339371628624
+          },
+          {
+            "value_cp10k": 16.0,
+            "one_sided": false,
+            "pearson": 0.9998585806202339,
+            "relative_l2": 0.016819310492497692
+          },
+          {
+            "value_cp10k": 64.0,
+            "one_sided": false,
+            "pearson": 0.9994640539211798,
+            "relative_l2": 0.03274484107817956
+          }
+        ],
+        "median_pearson_two_sided": 0.9997276355052944,
+        "median_relative_l2_two_sided": 0.022612083190013434,
+        "step": 0.02,
+        "note": "the exact forward-mode derivative is the feature; the central difference at the selected step is the cross-check. A value whose difference would cross the input floor is marked one_sided and excluded from the medians"
+      }
+    },
+    "mean_control": {
+      "description": "the pooled non-targeting control mean expression profile of this cell line, restricted to the read-out genes; the on-distribution counterpart",
+      "cells": [
+        "mean_control"
+      ],
+      "n_perturbed": 250,
+      "step": 0.02,
+      "forms": {
+        "vvp": {
+          "raw": [
+            250,
+            5,
+            3247
+          ],
+          "standardized": [
+            250,
+            5,
+            3247
+          ],
+          "recentred": [
+            250,
+            5,
+            3247
+          ],
+          "log2fc": [
+            250,
+            5,
+            3247
+          ]
+        },
+        "zero_out": {
+          "raw": [
+            250,
+            3247
+          ],
+          "standardized": [
+            250,
+            3247
+          ],
+          "recentred": [
+            250,
+            3247
+          ],
+          "log2fc": [
+            250,
+            3247
+          ]
+        },
+        "gdt": {
+          "raw": [
+            250,
+            5,
+            3247
+          ],
+          "standardized": [
+            250,
+            5,
+            3247
+          ],
+          "recentred": [
+            250,
+            5,
+            3247
+          ]
+        }
+      },
+      "n_cells_averaged": 1,
+      "zero_out_value_index": 0,
+      "gdt_source": "forward_mode_autodiff_jvp",
+      "seconds": 59.2,
+      "exact_vs_finite_difference": {
+        "per_value": [
+          {
+            "value_cp10k": 0.0,
+            "one_sided": true,
+            "pearson": 0.9075067851500321,
+            "relative_l2": 0.5485607515750275
+          },
+          {
+            "value_cp10k": 1.0,
+            "one_sided": false,
+            "pearson": 0.9999378181865899,
+            "relative_l2": 0.011486715888209537
+          },
+          {
+            "value_cp10k": 4.0,
+            "one_sided": false,
+            "pearson": 0.9999385983108605,
+            "relative_l2": 0.01108022221503413
+          },
+          {
+            "value_cp10k": 16.0,
+            "one_sided": false,
+            "pearson": 0.999758940198296,
+            "relative_l2": 0.021956929335163144
+          },
+          {
+            "value_cp10k": 64.0,
+            "one_sided": false,
+            "pearson": 0.9968013815176348,
+            "relative_l2": 0.08011220119752974
+          }
+        ],
+        "median_pearson_two_sided": 0.999848379192443,
+        "median_relative_l2_two_sided": 0.01672182261168634,
+        "step": 0.02,
+        "note": "the exact forward-mode derivative is the feature; the central difference at the selected step is the cross-check. A value whose difference would cross the input floor is marked one_sided and excluded from the medians"
+      }
+    },
+    "individual_cells": {
+      "description": "4 real non-targeting control cells, each converted to CP10K so every anchor sits at one depth; responses are averaged over the cells and their spread is recorded",
+      "cells": [
+        "AAACCCAAGCTGGAGT-37",
+        "AAACCCAAGGGCCTCT-51",
+        "AAACCCACAAAGAGTT-20",
+        "AAACCCACATTGCTTT-48"
+      ],
+      "n_perturbed": 60,
+      "step": 0.02,
+      "forms": {
+        "vvp": {
+          "raw": [
+            60,
+            5,
+            3247
+          ],
+          "standardized": [
+            60,
+            5,
+            3247
+          ],
+          "recentred": [
+            60,
+            5,
+            3247
+          ],
+          "log2fc": [
+            60,
+            5,
+            3247
+          ]
+        },
+        "zero_out": {
+          "raw": [
+            60,
+            3247
+          ],
+          "standardized": [
+            60,
+            3247
+          ],
+          "recentred": [
+            60,
+            3247
+          ],
+          "log2fc": [
+            60,
+            3247
+          ]
+        },
+        "gdt": {
+          "raw": [
+            60,
+            5,
+            3247
+          ],
+          "standardized": [
+            60,
+            5,
+            3247
+          ],
+          "recentred": [
+            60,
+            5,
+            3247
+          ]
+        }
+      },
+      "n_cells_averaged": 4,
+      "zero_out_value_index": 0,
+      "gdt_source": "forward_mode_autodiff_jvp",
+      "seconds": 57.4,
+      "exact_vs_finite_difference": {
+        "per_value": [
+          {
+            "value_cp10k": 0.0,
+            "one_sided": true,
+            "pearson": 0.9962433486996896,
+            "relative_l2": 0.11987597060283169
+          },
+          {
+            "value_cp10k": 1.0,
+            "one_sided": false,
+            "pearson": 0.9999339305550973,
+            "relative_l2": 0.012425861736704485
+          },
+          {
+            "value_cp10k": 4.0,
+            "one_sided": false,
+            "pearson": 0.9999884763130797,
+            "relative_l2": 0.0048333387653694306
+          },
+          {
+            "value_cp10k": 16.0,
+            "one_sided": false,
+            "pearson": 0.999973230284239,
+            "relative_l2": 0.0073163183727014735
+          },
+          {
+            "value_cp10k": 64.0,
+            "one_sided": false,
+            "pearson": 0.9990070866608881,
+            "relative_l2": 0.04456190394638967
+          }
+        ],
+        "median_pearson_two_sided": 0.9999535804196682,
+        "median_relative_l2_two_sided": 0.009871090054702979,
+        "step": 0.02,
+        "note": "the exact forward-mode derivative is the feature; the central difference at the selected step is the cross-check. A value whose difference would cross the input floor is marked one_sided and excluded from the medians"
+      },
+      "per_cell_spread": "responses averaged over cells; see summary rows"
+    }
+  },
+  "substitutions": [
+    "simpler_flash.FlashSelfAttention.forward delegated to the package's own pure-torch SelfAttention: the fused kernel asserts fp16/bf16 and has no forward-mode derivative, so the response and its Jacobian would not be computable in float32. Same weights, same attention, different kernel (upstream forward kept at FlashSelfAttention.forward)",
+    "stubbed scprint.model.utils / scprint.utils / scprint.tasks.* at import time to avoid bionty+lamindb+scdataloader (a configured lamindb instance is not available and is unnecessary for a forward pass); model source unmodified"
+  ],
+  "contract": {
+    "model": "scprint",
+    "checkpoint": "jkobject/scPRINT:medium-v1.5.ckpt",
+    "checkpoint_revision": "8e1ad1a1bc40c1fc2f4f1700fe27923eea9a2bed",
+    "checkpoint_md5": null,
+    "input_normalization": "raw counts per gene, normalized inside the model (hyper_parameter normalization='log': expression / expression.sum() for 'sum', log2(1+expression) for 'log'), with a requested-read-depth token prepended (log2(1 + total counts))",
+    "output_head": "decoders.ExprDecoder -> output['mean'], scaled by the depth multiplier",
+    "output_semantics": "predicted share of the cell's counts for that gene: the expression decoder ends in a softmax across the supplied gene positions, conditioned on the requested read depth. Multiply by the total count to read it as an expected count; it is not a log fold change, and the values depend on which genes were supplied together",
+    "information_flow": "bidirectional flash transformer over the supplied gene set plus cell-embedding tokens",
+    "ordering_dependent": false,
+    "response_symmetric": null,
+    "symmetry_evidence": "gene tokens carry no positional encoding by default, so the response is permutation-equivariant in the input gene order; pairwise symmetry of the response was not measured here",
+    "differentiable_wrt_input_expression": true,
+    "jacobian_available": true,
+    "jacobian_method": "forward_mode_autodiff_jvp",
+    "jacobian_unavailable_reason": null,
+    "jacobian_check": {},
+    "vocabulary_kind": "ensembl",
+    "vocabulary_size": 44756,
+    "context_length": 44756,
+    "dtype": "float32",
+    "substitutions": [
+      "simpler_flash.FlashSelfAttention.forward delegated to the package's own pure-torch SelfAttention: the fused kernel asserts fp16/bf16 and has no forward-mode derivative, so the response and its Jacobian would not be computable in float32. Same weights, same attention, different kernel (upstream forward kept at FlashSelfAttention.forward)",
+      "stubbed scprint.model.utils / scprint.utils / scprint.tasks.* at import time to avoid bionty+lamindb+scdataloader (a configured lamindb instance is not available and is unnecessary for a forward pass); model source unmodified"
+    ],
+    "notes": "The gene vocabulary is the checkpoint's own hyper_parameters['genes'] list; gene identity enters through a frozen pretrained (ESM-derived) gene embedding indexed by position in that list. Checkpoint hyper-parameters recorded: {'d_model': 256, 'nhead': 4, 'nlayers': 8, 'normalization': 'log', 'attn_bias': 'none', 'expr_encoder_layers': 2, 'transformer': 'flash', 'expr_emb_style': 'continuous', 'domain_spec_batchnorm': 'None', 'n_input_bins': 0, 'mvc_decoder': 'inner product', 'compress_class_dim': None, 'cell_emb_style': 'cls', 'cell_specific_blocks': False, 'depth_atinput': False, 'freeze_embeddings': False, 'zinb': True, 'dropout': 0.0, 'lr': 0.0001, 'num_heads_kv': 4, 'residual_in_fp32': True, 'checkpointing': False, 'fused_dropout_add_ln': False, 'return_residual': False, 'mlp_ratio': 4.0, 'fused_mlp': False, 'fused_bias_fc': False, 'sequence_parallel': False, 'drop_path_rate': 0.0, 'weight_init': '', 'precpt_gene_emb': '/lustre/fswork/projects/rech/xeg/uat95fg/gene_embeddings.parquet', '_instantiator': 'lightning.pytorch.cli.instantiate_module', 'gene_pos_enc': None}."
+  },
+  "step_selection": {
+    "uniform_virtual": {
+      "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+      "steps_swept": [
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1.0
+      ],
+      "base_value_cp10k": 4.0,
+      "n_genes": 50,
+      "selected_step": 0.02,
+      "verdict": "stable_in_direction_and_magnitude",
+      "gradient_features_usable_for": "direction, ranking and magnitude",
+      "adjacent_agreement": [
+        {
+          "step": 0.02,
+          "next_step": 0.05,
+          "median_pearson_adjacent": 0.9999871016213946,
+          "median_relative_l2_adjacent": 0.0054497126101931154,
+          "median_abs_value": 0.00017285346984863457,
+          "n_genes": 50
+        },
+        {
+          "step": 0.05,
+          "next_step": 0.1,
+          "median_pearson_adjacent": 0.9999976335422545,
+          "median_relative_l2_adjacent": 0.0024909030782983544,
+          "median_abs_value": 0.00015974044799804744,
+          "n_genes": 50
+        },
+        {
+          "step": 0.1,
+          "next_step": 0.25,
+          "median_pearson_adjacent": 0.9999993602281947,
+          "median_relative_l2_adjacent": 0.003454079359979056,
+          "median_abs_value": 0.00015854835510253928,
+          "n_genes": 50
+        },
+        {
+          "step": 0.25,
+          "next_step": 0.5,
+          "median_pearson_adjacent": 0.9999997772870676,
+          "median_relative_l2_adjacent": 0.031154540788941143,
+          "median_abs_value": 0.00015783309936523438,
+          "n_genes": 50
+        },
+        {
+          "step": 0.5,
+          "next_step": 1.0,
+          "median_pearson_adjacent": 0.9999990237885356,
+          "median_relative_l2_adjacent": 0.07003943634559395,
+          "median_abs_value": 0.0001552104949951172,
+          "n_genes": 50
+        }
+      ]
+    },
+    "mean_control": {
+      "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+      "steps_swept": [
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1.0
+      ],
+      "base_value_cp10k": 4.0,
+      "n_genes": 50,
+      "selected_step": 0.02,
+      "verdict": "stable_in_direction_and_magnitude",
+      "gradient_features_usable_for": "direction, ranking and magnitude",
+      "adjacent_agreement": [
+        {
+          "step": 0.02,
+          "next_step": 0.05,
+          "median_pearson_adjacent": 0.9999383619595836,
+          "median_relative_l2_adjacent": 0.0111637177385464,
+          "median_abs_value": 0.00014901161193847808,
+          "n_genes": 50
+        },
+        {
+          "step": 0.05,
+          "next_step": 0.1,
+          "median_pearson_adjacent": 0.9999877633340359,
+          "median_relative_l2_adjacent": 0.0052932771682311286,
+          "median_abs_value": 0.00014424324035644583,
+          "n_genes": 50
+        },
+        {
+          "step": 0.1,
+          "next_step": 0.25,
+          "median_pearson_adjacent": 0.9999968880260848,
+          "median_relative_l2_adjacent": 0.0033967226096103245,
+          "median_abs_value": 0.0001436471939086916,
+          "n_genes": 50
+        },
+        {
+          "step": 0.25,
+          "next_step": 0.5,
+          "median_pearson_adjacent": 0.9999970198547949,
+          "median_relative_l2_adjacent": 0.02731473548133466,
+          "median_abs_value": 0.00014328956604003906,
+          "n_genes": 50
+        },
+        {
+          "step": 0.5,
+          "next_step": 1.0,
+          "median_pearson_adjacent": 0.9999873768780587,
+          "median_relative_l2_adjacent": 0.054676227679896675,
+          "median_abs_value": 0.000141143798828125,
+          "n_genes": 50
+        }
+      ]
+    },
+    "individual_cells": {
+      "rule": "smallest step whose column agrees with the next larger step at median Pearson >= 0.999 and median relative L2 difference <= 0.1; if none qualifies the step with the best direction agreement is used and the block is flagged",
+      "steps_swept": [
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1.0
+      ],
+      "base_value_cp10k": 4.0,
+      "n_genes": 50,
+      "selected_step": 0.02,
+      "verdict": "stable_in_direction_and_magnitude",
+      "gradient_features_usable_for": "direction, ranking and magnitude",
+      "adjacent_agreement": [
+        {
+          "step": 0.02,
+          "next_step": 0.05,
+          "median_pearson_adjacent": 0.9999663074736523,
+          "median_relative_l2_adjacent": 0.008368679375796885,
+          "median_abs_value": 0.00015348196029663243,
+          "n_genes": 50
+        },
+        {
+          "step": 0.05,
+          "next_step": 0.1,
+          "median_pearson_adjacent": 0.9999945097110684,
+          "median_relative_l2_adjacent": 0.003608882103106224,
+          "median_abs_value": 0.00015020370483398492,
+          "n_genes": 50
+        },
+        {
+          "step": 0.1,
+          "next_step": 0.25,
+          "median_pearson_adjacent": 0.9999983498006975,
+          "median_relative_l2_adjacent": 0.0027922339012288007,
+          "median_abs_value": 0.0001493096351623537,
+          "n_genes": 50
+        },
+        {
+          "step": 0.25,
+          "next_step": 0.5,
+          "median_pearson_adjacent": 0.999998164355937,
+          "median_relative_l2_adjacent": 0.02859543556112633,
+          "median_abs_value": 0.00014853477478027344,
+          "n_genes": 50
+        },
+        {
+          "step": 0.5,
+          "next_step": 1.0,
+          "median_pearson_adjacent": 0.9999922490009562,
+          "median_relative_l2_adjacent": 0.06807581639571107,
+          "median_abs_value": 0.00014609098434448242,
+          "n_genes": 50
+        }
+      ]
+    }
+  },
+  "wiring_checks": {
+    "uniform_virtual": {
+      "n_genes": 250,
+      "value_low_cp10k": 1.0,
+      "value_high_cp10k": 64.0,
+      "sign_check_pass_fraction": 1.0,
+      "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+      "magnitude_check_pass_fraction": 1.0,
+      "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+      "median_self_rank": 0.0,
+      "permuted_magnitude_pass_fraction": 0.0,
+      "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+      "threshold": 0.95
+    },
+    "mean_control": {
+      "n_genes": 250,
+      "value_low_cp10k": 1.0,
+      "value_high_cp10k": 64.0,
+      "sign_check_pass_fraction": 1.0,
+      "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+      "magnitude_check_pass_fraction": 1.0,
+      "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+      "median_self_rank": 0.0,
+      "permuted_magnitude_pass_fraction": 0.0,
+      "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+      "threshold": 0.95
+    },
+    "individual_cells": {
+      "n_genes": 60,
+      "value_low_cp10k": 1.0,
+      "value_high_cp10k": 64.0,
+      "sign_check_pass_fraction": 1.0,
+      "sign_check_note": "fraction whose own predicted output RISES when its input rises; a model that reverts to a population level can fail this while still being correctly wired",
+      "magnitude_check_pass_fraction": 1.0,
+      "magnitude_check_note": "fraction whose own entry is the largest response in the vector; this is the wiring guard",
+      "median_self_rank": 0.0,
+      "permuted_magnitude_pass_fraction": 0.0,
+      "permutation_note": "the same test after shuffling the read-out gene order; it must collapse to chance for the guard to have power",
+      "threshold": 0.95
+    }
+  },
+  "masked": {
+    "ran": true,
+    "mask_spec": {
+      "kind": "boolean_mask_argument",
+      "value": null,
+      "rate": 0.15,
+      "source": "scPrint.forward(mask=...); the value encoder zeroes the expression embedding at masked positions. The checkpoint records no pretraining mask rate, so 0.15 is used and recorded as a fallback"
+    },
+    "mask_rate": 0.15,
+    "n_blocks_per_cycle": 7,
+    "cycles": 3,
+    "coverage_per_gene": {
+      "min": 3,
+      "median": 3.0,
+      "max": 3
+    },
+    "n_perturbed": 60,
+    "value_grid_cp10k": [
+      0.0,
+      4.0,
+      64.0
+    ],
+    "seconds": 26.5,
+    "note": "responses are read only at masked positions, averaged over cycles; the unmasked block at the same anchor is the comparison"
+  }
+}

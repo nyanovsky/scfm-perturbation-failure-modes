@@ -203,7 +203,9 @@ class AidoCellResponse(ResponseModel):
             _, jvp = torch.func.jvp(fn, (base,), (tangent,))
             col = jvp.detach().float().cpu().numpy()
             method = "forward_mode_autodiff_jvp"
+            self._forward_mode_autodiff = "available: torch.func.jvp runs through this build"
         except Exception as exc:  # noqa: BLE001
+            self._forward_mode_autodiff = f"unavailable: {type(exc).__name__}: {exc}"
             self.substitutions.append(
                 f"forward-mode AD unavailable ({type(exc).__name__}); used central finite differences"
             )
@@ -255,8 +257,17 @@ class AidoCellResponse(ResponseModel):
             ),
             differentiable_wrt_input_expression=True,
             jacobian_available=True,
-            jacobian_method=getattr(self, "_jacobian_method", "forward_mode_autodiff_jvp"),
+            # measured in this process, or an explicit "not exercised". The earlier
+            # default asserted forward-mode autodiff, which run 1 had already found
+            # unavailable for this build: torch.func.jvp has no rule for the kernel
+            # this adapter runs, so the Jacobian route here is a central difference.
+            jacobian_method=getattr(
+                self, "_jacobian_method", "not exercised in this process"
+            ),
             jacobian_unavailable_reason=None,
+            forward_mode_autodiff=getattr(
+                self, "_forward_mode_autodiff", "not probed in the process that wrote this contract"
+            ),
             jacobian_check=getattr(self, "jacobian_check", {}),
             vocabulary_kind="symbol",
             vocabulary_size=N_GENES,
