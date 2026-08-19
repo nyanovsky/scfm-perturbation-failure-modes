@@ -1,0 +1,175 @@
+{
+  "stage": "expression-floor sensitivity of the replicate-split ceiling",
+  "floors_cp10k": [
+    0.5,
+    1.0,
+    2.0,
+    5.0,
+    10.0
+  ],
+  "run1_floor_cp10k": 0.5,
+  "plateau_tolerance": 0.01,
+  "rule_stratum": "S4_highest",
+  "metric": "per-perturbation Pearson correlation of the two replicate halves' log2 fold-change vectors over the genes surviving the floor",
+  "inputs": {
+    "hepg2": {
+      "cell_line": "hepg2",
+      "vectors": "/tmp/r2in/shv_hepg2.npz",
+      "n_perturbations": 1982,
+      "n_genes_at_run1_floor": 3119,
+      "median_control_cp10k_all_expressed": 1.0108249818434842,
+      "genes_by_floor": {
+        "0.5": 3119,
+        "1": 1578,
+        "2": 729,
+        "5": 248,
+        "10": 142
+      }
+    },
+    "jurkat": {
+      "cell_line": "jurkat",
+      "vectors": "/tmp/r2in/shv_jurkat.npz",
+      "n_perturbations": 2201,
+      "n_genes_at_run1_floor": 3469,
+      "median_control_cp10k_all_expressed": 1.0232221218063726,
+      "genes_by_floor": {
+        "0.5": 3469,
+        "1": 1778,
+        "2": 804,
+        "5": 264,
+        "10": 143
+      }
+    }
+  },
+  "decisions": {
+    "hepg2": {
+      "cell_line": "hepg2",
+      "rule": "lowest floor whose S4_highest median Pearson ceiling is within 0.01 of the best value any higher floor reaches, required in both split forms; if the ceiling is still rising at the top of the grid there is no such floor and the read-out set stays at run 1's 0.5 CP10K floor, with the floor recorded as a scoring-time column mask",
+      "per_split": {
+        "split_half_cells": {
+          "plateau_pick_floor": 10.0,
+          "plateau_found": false,
+          "best_ceiling": 0.9162595487609063,
+          "ceiling_at_pick": 0.9162595487609063,
+          "ceiling_at_lowest_floor": 0.7031375273661722,
+          "rise_from_lowest_to_best": 0.21312202139473413,
+          "curve": {
+            "0.5": 0.7031375273661722,
+            "1": 0.7880009477236504,
+            "2": 0.8495255137489409,
+            "5": 0.8982040971707167,
+            "10": 0.9162595487609063
+          }
+        },
+        "split_by_batch": {
+          "plateau_pick_floor": 10.0,
+          "plateau_found": false,
+          "best_ceiling": 0.920802213538048,
+          "ceiling_at_pick": 0.920802213538048,
+          "ceiling_at_lowest_floor": 0.7044227179284739,
+          "rise_from_lowest_to_best": 0.21637949560957415,
+          "curve": {
+            "0.5": 0.7044227179284739,
+            "1": 0.7922349981184567,
+            "2": 0.8479385283959996,
+            "5": 0.8955358319906951,
+            "10": 0.920802213538048
+          }
+        }
+      },
+      "plateau_found": false,
+      "chosen_floor_cp10k": 0.5,
+      "floor_was_limiting": true,
+      "ceiling_vs_coverage": {
+        "0.5": {
+          "n_genes_above_floor": 3119,
+          "s4_median_pearson_ceiling": 0.7031375273661722
+        },
+        "1": {
+          "n_genes_above_floor": 1578,
+          "s4_median_pearson_ceiling": 0.7880009477236504
+        },
+        "2": {
+          "n_genes_above_floor": 729,
+          "s4_median_pearson_ceiling": 0.8495255137489409
+        },
+        "5": {
+          "n_genes_above_floor": 248,
+          "s4_median_pearson_ceiling": 0.8982040971707167
+        },
+        "10": {
+          "n_genes_above_floor": 142,
+          "s4_median_pearson_ceiling": 0.9162595487609063
+        }
+      },
+      "note": "the ceiling rises monotonically across the whole grid, so part of run 1's low ceiling was the floor rather than the biology; but no floor stops it rising, and every step up costs most of the read-out set, so the floor is reported as a curve instead of being baked into the extraction",
+      "n_readout_genes": 2721,
+      "n_universe_genes": 7444
+    },
+    "jurkat": {
+      "cell_line": "jurkat",
+      "rule": "lowest floor whose S4_highest median Pearson ceiling is within 0.01 of the best value any higher floor reaches, required in both split forms; if the ceiling is still rising at the top of the grid there is no such floor and the read-out set stays at run 1's 0.5 CP10K floor, with the floor recorded as a scoring-time column mask",
+      "per_split": {
+        "split_half_cells": {
+          "plateau_pick_floor": 10.0,
+          "plateau_found": false,
+          "best_ceiling": 0.8557074234126782,
+          "ceiling_at_pick": 0.8557074234126782,
+          "ceiling_at_lowest_floor": 0.4346529385267261,
+          "rise_from_lowest_to_best": 0.42105448488595215,
+          "curve": {
+            "0.5": 0.4346529385267261,
+            "1": 0.5634830726445779,
+            "2": 0.6791315154820707,
+            "5": 0.7941266629608777,
+            "10": 0.8557074234126782
+          }
+        },
+        "split_by_batch": {
+          "plateau_pick_floor": 10.0,
+          "plateau_found": false,
+          "best_ceiling": 0.855199229322476,
+          "ceiling_at_pick": 0.855199229322476,
+          "ceiling_at_lowest_floor": 0.43049532028317006,
+          "rise_from_lowest_to_best": 0.424703909039306,
+          "curve": {
+            "0.5": 0.43049532028317006,
+            "1": 0.5594824230380129,
+            "2": 0.678393225691297,
+            "5": 0.790406721246943,
+            "10": 0.855199229322476
+          }
+        }
+      },
+      "plateau_found": false,
+      "chosen_floor_cp10k": 0.5,
+      "floor_was_limiting": true,
+      "ceiling_vs_coverage": {
+        "0.5": {
+          "n_genes_above_floor": 3469,
+          "s4_median_pearson_ceiling": 0.4346529385267261
+        },
+        "1": {
+          "n_genes_above_floor": 1778,
+          "s4_median_pearson_ceiling": 0.5634830726445779
+        },
+        "2": {
+          "n_genes_above_floor": 804,
+          "s4_median_pearson_ceiling": 0.6791315154820707
+        },
+        "5": {
+          "n_genes_above_floor": 264,
+          "s4_median_pearson_ceiling": 0.7941266629608777
+        },
+        "10": {
+          "n_genes_above_floor": 143,
+          "s4_median_pearson_ceiling": 0.8557074234126782
+        }
+      },
+      "note": "the ceiling rises monotonically across the whole grid, so part of run 1's low ceiling was the floor rather than the biology; but no floor stops it rising, and every step up costs most of the read-out set, so the floor is reported as a curve instead of being baked into the extraction",
+      "n_readout_genes": 3247,
+      "n_universe_genes": 7444
+    }
+  },
+  "seconds": 24.7
+}
