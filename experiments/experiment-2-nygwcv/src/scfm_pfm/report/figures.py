@@ -540,56 +540,79 @@ def fig_masked_regime(bundles: dict, out: Path) -> Fig:
     )
 
 
+#: the three alignment statistics, each read against the same query with a randomly
+#: relabelled read-out column: (label, observed key, null key, colour key)
+ALIGN_STATS = (
+    ("own entry largest", "own_largest", "own_largest_null", "ceiling"),
+    ("own entry high in the vector", "_rank_obs", "_rank_null", "mean-effect baseline"),
+    ("own output moves as expected", "sign_rate", "sign_rate_null", "cross-perturbation"),
+)
+
+
 def fig_wiring(bundles: dict, out: Path) -> Fig:
-    """The guard against a gene-index misalignment, and its power."""
+    """Three readings of the alignment question, each against its permuted null."""
     col = colors(out)
     fig = _panel_grid(1, 2, [LABEL[cl] for cl in LINES])
     rows = []
     for ci, cl in enumerate(LINES, start=1):
-        names, mag, sign, perm = [], [], [], []
+        names, obs, null = [], {k: [] for _, k, _, _ in ALIGN_STATS}, {k: [] for _, _, k, _ in ALIGN_STATS}
         for model in MODELS:
             b = bundles.get((model, cl))
-            w = (b or {}).get("manifest", {}).get("wiring_checks", {}).get("mean_control")
-            if not w:
+            align = {r["anchor"]: r for r in (b or {}).get("alignment", [])}
+            r = align.get("mean_control")
+            if not r:
                 continue
             names.append(MODEL_LABEL[model])
-            mag.append(w["magnitude_check_pass_fraction"])
-            sign.append(w["sign_check_pass_fraction"])
-            perm.append(w["permuted_magnitude_pass_fraction"])
-            rows.append({"model": model, "cell_line": cl, **{k: v for k, v in w.items() if isinstance(v, (int, float))}})
-        for label, series, color in (
-            ("own entry largest", mag, col["HepG2"]),
-            ("own output rises", sign, col["Jurkat"]),
-            ("after permutation", perm, col["S1_lowest"]),
-        ):
+            # a rank near the top of the vector reads as a high number, like the others
+            r = dict(r)
+            r["_rank_obs"] = 1.0 - r["self_rank_median_fraction"]
+            r["_rank_null"] = 1.0 - r["self_rank_median_fraction_null"]
+            for _, ok, nk, _ in ALIGN_STATS:
+                obs[ok].append(r[ok])
+                null[nk].append(r[nk])
+            rows += [
+                {"model": model, "cell_line": cl, **a}
+                for a in (b or {}).get("alignment", [])
+            ]
+        for label, ok, nk, ck in ALIGN_STATS:
             fig.add_trace(
-                go.Bar(x=names, y=series, name=label if ci == 1 else None,
-                       legendgroup=label, showlegend=ci == 1,
-                       marker_color=color,
+                go.Bar(x=names, y=obs[ok], name=label, legendgroup=label, showlegend=ci == 1,
+                       marker=dict(color=col[ck]),
                        hovertemplate="%{x}<br>" + label + " %{y:.3f}<extra></extra>"),
+                row=1, col=ci,
+            )
+            fig.add_trace(
+                go.Bar(x=names, y=null[nk], name=label + ", permuted", legendgroup=label,
+                       showlegend=ci == 1, marker=dict(color=col[ck], opacity=0.35),
+                       hovertemplate="%{x}<br>" + label + ", permuted %{y:.3f}<extra></extra>"),
                 row=1, col=ci,
             )
     add_reference_line(fig, y=C.SELF_RESPONSE_MIN_PASS, label="0.95 threshold", row="all", col="all")
     for ci in (1, 2):
         fig.update_xaxes(title_text="model", row=1, col=ci)
-        fig.update_yaxes(title_text="fraction of sampled perturbed genes", range=[0, 1.05],
+        fig.update_yaxes(title_text="statistic (1 = perfectly aligned)", range=[0, 1.05],
                          row=1, col=ci)
-    apply_theme(fig, height=460)
+    apply_theme(fig, height=470)
     return Fig(
         name="wiring_checks",
         figure=fig,
         data=rows,
-        alt="Wiring guard pass rates per model, with the permuted control at zero.",
+        alt="Three alignment statistics per model beside their permuted nulls; every model "
+        "separates from its null on at least one of them.",
         meta={
-            "title": "The gene-index wiring guard",
-            "description": "At the mean control anchor. 'Own entry largest' is the fraction of "
-            "sampled perturbed genes whose own entry is the largest response in the vector; 'own "
-            "output rises' is the plan's sign version, the fraction whose own predicted output "
-            "rises when its input rises; 'after permutation' repeats the first test with the "
-            "read-out gene order shuffled.",
-            "findings": "The permuted control sits at zero everywhere, so the guard has power. The "
-            "sign version separates the models rather than the wiring: a reconstruction head "
-            "trained on masked positions need not raise its own output when its own input rises.",
+            "title": "Is the read-out order aligned with the query?",
+            "description": "At the mean control anchor, over the perturbed genes sampled in each "
+            "block. Each statistic is shown beside the same statistic computed after relabelling "
+            "the perturbed gene's own read-out column at random (the pale bar). 'Own entry "
+            "largest' is the pre-registered guard; 'own entry high in the vector' is one minus "
+            "the median rank of the own entry as a fraction of the vector; 'own output moves as "
+            "expected' is the sign reading.",
+            "findings": "scPRINT saturates the pre-registered guard on both lines. scGPT misses "
+            "its 0.95 threshold while its own entry still ranks first for the median gene. "
+            "TranscriptFormer scores exactly zero on that guard, and so does its null: with the "
+            "perturbed gene placed first, an autoregressive model never conditions on its own "
+            "value, so the guard cannot have power there. The other two statistics do, and "
+            "TranscriptFormer separates from its null on both.",
             "sources": "experiments/experiment-2-nygwcv/results/report/bundles",
         },
     )

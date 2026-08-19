@@ -232,6 +232,24 @@ def verify_block(block_dir: Path, ch: Checks) -> dict:
             "whose anchor sits far above it is barely moved by the query",
         )
 
+    # alignment: the pre-registered guard plus two statistics that keep their power
+    # when it structurally cannot have any
+    align_rows = alignment_detail(block_dir, manifest, perturbed)
+    if align_rows:
+        bundle["alignment"] = align_rows
+        for r in align_rows:
+            ch.add(
+                sec,
+                f"{r['anchor']}/alignment_vs_permutation",
+                r["aligned"],
+                "read-out order is aligned with the query on "
+                + (", ".join(r["separated_by"]) or "no statistic")
+                + f": own entry largest {r['own_largest']:.3f} (null {r['own_largest_null']:.3f}); "
+                f"median self-rank {r['self_rank_median']:.0f} of {r['n_readout']} "
+                f"(null {r['self_rank_median_null']:.0f}); own output moves the expected way "
+                f"{r['sign_rate']:.3f} (null {r['sign_rate_null']:.3f})",
+            )
+
     for anchor, w in manifest.get("wiring_checks", {}).items():
         ch.add(
             sec,
@@ -373,6 +391,90 @@ def wiring_detail(block_dir: Path, manifest: dict, readout: pd.DataFrame, pertur
     ]
 
 
+#: an alignment statistic counts as separated from its permuted null by these margins
+ALIGN_RANK_MAX_FRACTION = 0.05  # own entry inside the top 5% of the response vector
+ALIGN_RANK_NULL_MIN_FRACTION = 0.25  # ... while a relabelled column sits mid-vector
+ALIGN_SIGN_MIN = 0.80  # own output moves the expected way this often
+ALIGN_SIGN_NULL_MAX = 0.65  # ... while a relabelled column is near a coin flip
+
+
+def alignment_detail(block_dir: Path, manifest: dict, perturbed: pd.DataFrame) -> list[dict]:
+    """Three readings of the same alignment question, each against its permuted null.
+
+    The pre-registered guard asks whether the perturbed gene's own entry is the
+    *largest* response. That question has no power for an autoregressive model:
+    with the perturbed gene placed first it never conditions on its own value, so
+    its own entry is never the largest and the permuted control is zero too ---
+    both the test and its null sit at the floor, and the comparison says nothing.
+
+    So record three statistics per anchor, each with the null obtained by reading
+    a randomly relabelled column instead of the true one:
+
+    ``own_largest``  fraction whose own entry is the largest response (null ~0)
+    ``self_rank``    median rank of the own entry among read-out genes (null ~n/2)
+    ``sign``         fraction whose own output moves the expected way (null ~0.5)
+
+    A misalignment would drive all three to their nulls at once, so one statistic
+    that separates widely is enough to rule it out.
+    """
+    rows = []
+    rng = np.random.default_rng(C.SEED)
+    for anchor in manifest.get("anchors", []):
+        path = block_dir / f"anchor={anchor}" / "vvp.npz"
+        if not path.exists():
+            continue
+        z = np.load(path, allow_pickle=False)
+        raw = z["raw"]
+        grid = (
+            list(z["value_grid_cp10k"]) if "value_grid_cp10k" in z.files else list(C.VALUE_GRID_CP10K)
+        )
+        positive = [i for i, v in enumerate(grid) if v > 0]
+        lo_i, hi_i = positive[0], positive[-1]
+        n_p, n_r = raw.shape[0], raw.shape[2]
+        cols = perturbed["readout_col"].to_numpy(dtype=np.int64)[:n_p]
+        perm = rng.permutation(n_r)
+        ranks, ranks_null, signs, signs_null = [], [], [], []
+        for pi, col in enumerate(cols):
+            col = int(col)
+            null_col = int(perm[col])
+            delta = raw[pi, hi_i] - raw[pi, lo_i]
+            mag = np.abs(delta)
+            ranks.append(int((mag > mag[col]).sum()))
+            ranks_null.append(int((mag > mag[null_col]).sum()))
+            signs.append(float(delta[col]) > 0)
+            signs_null.append(float(delta[null_col]) > 0)
+        ranks, ranks_null = np.asarray(ranks), np.asarray(ranks_null)
+        signs, signs_null = np.asarray(signs), np.asarray(signs_null)
+        rank_frac = float(np.median(ranks)) / max(n_r - 1, 1)
+        rank_frac_null = float(np.median(ranks_null)) / max(n_r - 1, 1)
+        sign_rate, sign_rate_null = float(signs.mean()), float(signs_null.mean())
+        own_largest = float((ranks == 0).mean())
+        separated = {
+            "own_largest": own_largest >= C.SELF_RESPONSE_MIN_PASS,
+            "self_rank": rank_frac <= ALIGN_RANK_MAX_FRACTION
+            and rank_frac_null >= ALIGN_RANK_NULL_MIN_FRACTION,
+            "sign": sign_rate >= ALIGN_SIGN_MIN and sign_rate_null <= ALIGN_SIGN_NULL_MAX,
+        }
+        rows.append(
+            {
+                "anchor": anchor,
+                "n_perturbed": int(n_p),
+                "n_readout": int(n_r),
+                "own_largest": own_largest,
+                "own_largest_null": float((ranks_null == 0).mean()),
+                "self_rank_median": float(np.median(ranks)),
+                "self_rank_median_fraction": rank_frac,
+                "self_rank_median_null": float(np.median(ranks_null)),
+                "self_rank_median_fraction_null": rank_frac_null,
+                "sign_rate": sign_rate,
+                "sign_rate_null": sign_rate_null,
+                "separated_by": sorted(k for k, v in separated.items() if v),
+                "aligned": any(separated.values()),
+            }
+        )
+    return rows
+
+
 # --------------------------------------------------------------------------- #
 # aggregate: runs on the pod
 # --------------------------------------------------------------------------- #
@@ -406,6 +508,17 @@ def verify_all(bundles_dir: Path, ch: Checks) -> list[dict]:
             set(FORMS) <= forms,
             f"forms present: {sorted(forms)} plus the gene-embedding table",
         )
+        align = b.get("alignment", [])
+        if align:
+            ch.add(
+                "alignment",
+                sec,
+                all(r["aligned"] for r in align),
+                "; ".join(
+                    f"{r['anchor']} on {'+'.join(r['separated_by']) or 'no statistic'}"
+                    for r in align
+                ),
+            )
         failed = [r for r in b.get("checks", []) if not r["ok"]]
         ch.add(
             "block_checks",
@@ -461,6 +574,50 @@ def verify_all(bundles_dir: Path, ch: Checks) -> list[dict]:
     return bundles
 
 
+def write_summaries(bundles_dir: Path, out: Path) -> None:
+    """Two small tables carrying the numbers the report and the checkpoints cite.
+
+    ``block_summary`` is one row per (model, cell line, anchor): the selected
+    step and its verdict beside the three alignment statistics and their nulls.
+    ``step_stability`` is the adjacent-step agreement curve behind that verdict.
+    """
+    block_rows, step_rows = [], []
+    for p in sorted(bundles_dir.glob("report_bundle*.json")):
+        b = json.loads(p.read_text())
+        model, cl = b["model"], b["cell_line"]
+        align = {r["anchor"]: r for r in b.get("alignment", [])}
+        for anchor, sel in b["manifest"].get("step_selection", {}).items():
+            a = align.get(anchor, {})
+            block_rows.append(
+                {
+                    "model": model,
+                    "cell_line": cl,
+                    "anchor": anchor,
+                    "n_perturbed": a.get("n_perturbed"),
+                    "n_readout": b["n_readout"],
+                    "selected_step": sel["selected_step"],
+                    "step_verdict": sel["verdict"],
+                    "gradient_usable_for": sel["gradient_features_usable_for"],
+                    "own_largest": a.get("own_largest"),
+                    "own_largest_null": a.get("own_largest_null"),
+                    "self_rank_median": a.get("self_rank_median"),
+                    "self_rank_median_null": a.get("self_rank_median_null"),
+                    "sign_rate": a.get("sign_rate"),
+                    "sign_rate_null": a.get("sign_rate_null"),
+                    "separated_by": "+".join(a.get("separated_by", [])) or "none",
+                    "aligned": a.get("aligned"),
+                }
+            )
+        for r in b.get("step_sweep", []):
+            step_rows.append({"model": model, "cell_line": cl, **r})
+    (out / "block_summary.json").write_text(json.dumps(block_rows, indent=2, default=str))
+    (out / "step_stability.json").write_text(json.dumps(step_rows, indent=2, default=str))
+    if block_rows:
+        pd.DataFrame(block_rows).to_parquet(out / "block_summary.parquet", index=False)
+    if step_rows:
+        pd.DataFrame(step_rows).to_parquet(out / "step_stability.parquet", index=False)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--block-dir", default=None)
@@ -496,6 +653,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\n{ok}/{total} checks passed", flush=True)
     if args.all:
         out = paths.ensure(paths.repo_dir() / "results" / "verification")
+        write_summaries(Path(args.bundles) if args.bundles else paths.report_dir() / "bundles", out)
         (out / "verify_all.json").write_text(json.dumps({"checks": ch.rows}, indent=2))
         lines = [f"[{'PASS' if r['ok'] else 'FAIL'}] {r['section']}/{r['check']}: {r['detail']}" for r in ch.rows]
         (out / "verify_all.txt").write_text("\n".join(lines) + f"\n\n{ok}/{total} checks passed\n")

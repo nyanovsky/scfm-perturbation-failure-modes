@@ -1,0 +1,148 @@
+{
+  "checks": [
+    {
+      "section": "coverage",
+      "check": "model_x_cell_line",
+      "ok": false,
+      "detail": "6/8 blocks present; missing [('aido_cell', 'hepg2'), ('aido_cell', 'jurkat')]"
+    },
+    {
+      "section": "coverage",
+      "check": "scgpt/hepg2/anchors",
+      "ok": true,
+      "detail": "anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']"
+    },
+    {
+      "section": "coverage",
+      "check": "scgpt/hepg2/forms",
+      "ok": true,
+      "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
+    },
+    {
+      "section": "block_checks",
+      "check": "scgpt/hepg2",
+      "ok": false,
+      "detail": "35 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+    },
+    {
+      "section": "coverage",
+      "check": "scgpt/jurkat/anchors",
+      "ok": true,
+      "detail": "anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']"
+    },
+    {
+      "section": "coverage",
+      "check": "scgpt/jurkat/forms",
+      "ok": true,
+      "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
+    },
+    {
+      "section": "block_checks",
+      "check": "scgpt/jurkat",
+      "ok": false,
+      "detail": "35 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+    },
+    {
+      "section": "coverage",
+      "check": "scprint/hepg2/anchors",
+      "ok": true,
+      "detail": "anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']"
+    },
+    {
+      "section": "coverage",
+      "check": "scprint/hepg2/forms",
+      "ok": true,
+      "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
+    },
+    {
+      "section": "block_checks",
+      "check": "scprint/hepg2",
+      "ok": true,
+      "detail": "50 block-level checks, 0 failed"
+    },
+    {
+      "section": "coverage",
+      "check": "scprint/jurkat/anchors",
+      "ok": true,
+      "detail": "anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']"
+    },
+    {
+      "section": "coverage",
+      "check": "scprint/jurkat/forms",
+      "ok": true,
+      "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
+    },
+    {
+      "section": "block_checks",
+      "check": "scprint/jurkat",
+      "ok": true,
+      "detail": "50 block-level checks, 0 failed"
+    },
+    {
+      "section": "coverage",
+      "check": "transcriptformer/hepg2/anchors",
+      "ok": true,
+      "detail": "anchors present: ['individual_cells', 'mean_control', 'uniform_virtual']"
+    },
+    {
+      "section": "coverage",
+      "check": "transcriptformer/hepg2/forms",
+      "ok": true,
+      "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
+    },
+    {
+      "section": "block_checks",
+      "check": "transcriptformer/hepg2",
+      "ok": false,
+      "detail": "42 block-level checks, 4 failed: ['uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+    },
+    {
+      "section": "coverage",
+      "check": "transcriptformer/jurkat/anchors",
+      "ok": true,
+      "detail": "anchors present: ['individual_cells', 'mean_control', 'uniform_virtual']"
+    },
+    {
+      "section": "coverage",
+      "check": "transcriptformer/jurkat/forms",
+      "ok": true,
+      "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
+    },
+    {
+      "section": "block_checks",
+      "check": "transcriptformer/jurkat",
+      "ok": false,
+      "detail": "42 block-level checks, 6 failed: ['individual_cells/softmax_coupling', 'mean_control/softmax_coupling', 'uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+    },
+    {
+      "section": "floor_sweep",
+      "check": "grid_complete",
+      "ok": true,
+      "detail": "20 (cell line, split, floor) cells computed over floors [0.5, 1.0, 2.0, 5.0, 10.0]"
+    },
+    {
+      "section": "floor_sweep",
+      "check": "hepg2/readout_matches_floor",
+      "ok": true,
+      "detail": "2721 read-out genes, all at or above the selected 0.5 CP10K floor (plateau found: False)"
+    },
+    {
+      "section": "floor_sweep",
+      "check": "hepg2/shared_response_recorded",
+      "ok": true,
+      "detail": "10 (stratum, floor) cells carry ceiling, mean-effect baseline, cross-perturbation correlation and PC1 share"
+    },
+    {
+      "section": "floor_sweep",
+      "check": "jurkat/readout_matches_floor",
+      "ok": true,
+      "detail": "3247 read-out genes, all at or above the selected 0.5 CP10K floor (plateau found: False)"
+    },
+    {
+      "section": "floor_sweep",
+      "check": "jurkat/shared_response_recorded",
+      "ok": true,
+      "detail": "10 (stratum, floor) cells carry ceiling, mean-effect baseline, cross-perturbation correlation and PC1 share"
+    }
+  ]
+}

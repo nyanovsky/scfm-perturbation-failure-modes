@@ -491,39 +491,55 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         Head(3, "Procedure"),
         Para(
             "The failure that would silently invalidate everything is a gene-index misalignment "
-            "between a model's vocabulary order and the read-out gene order. Two readings of the "
-            "same numbers guard it. The sign check is the plan's: raising a perturbed gene's "
-            "input should raise that gene's own predicted output, read between the lowest "
-            "positive value on the grid and the highest. The magnitude check asks instead that "
-            "the perturbed gene's own entry be the largest response in the vector, whatever its "
-            "sign. Both are repeated with the read-out gene order shuffled, which must destroy "
-            "them."
+            "between a model's vocabulary order and the read-out gene order. The pre-registered "
+            "guard reads the response between the lowest positive value on the grid and the "
+            "highest and asks that the perturbed gene's own entry be the largest response in the "
+            "vector, whatever its sign; the plan's sign version asks instead that the gene's own "
+            "predicted output move the expected way. Each is repeated with the perturbed gene's "
+            "own read-out column relabelled at random, which gives the statistic its null."
+        ),
+        Para(
+            "The pre-registered guard turns out to have no power for an autoregressive model. "
+            "With the perturbed gene placed first, TranscriptFormer never conditions on its own "
+            "value, so its own entry is never the largest response and the permuted control is "
+            "zero as well: test and null sit together at the floor and the comparison says "
+            "nothing. Two statistics that keep their power there were added: the median rank of "
+            "the own entry within the response vector, whose null is the middle of the vector, "
+            "and the sign rate, whose null is a coin flip. A misalignment would drive all three "
+            "statistics to their nulls at once, so one wide separation is enough to rule it out."
         ),
         Head(3, "Findings"),
         FigRef("wiring_checks"),
     ]
     wire_rows = []
     for (model, cl), b in sorted(bundles.items()):
-        for anchor, w in b["manifest"].get("wiring_checks", {}).items():
+        for r in b.get("alignment", []):
             wire_rows.append(
                 [
                     MODEL_LABEL[model],
                     LABEL[cl],
-                    ANCHOR_LABEL.get(anchor, anchor),
-                    fmt(w["n_genes"]),
-                    fmt(w["magnitude_check_pass_fraction"], 3),
-                    fmt(w["sign_check_pass_fraction"], 3),
-                    fmt(w["permuted_magnitude_pass_fraction"], 3),
+                    ANCHOR_LABEL.get(r["anchor"], r["anchor"]),
+                    fmt(r["n_perturbed"]),
+                    f"{fmt(r['own_largest'], 3)} ({fmt(r['own_largest_null'], 3)})",
+                    f"{fmt(r['self_rank_median'], 4)} ({fmt(r['self_rank_median_null'], 4)})",
+                    f"{fmt(r['sign_rate'], 3)} ({fmt(r['sign_rate_null'], 3)})",
+                    ", ".join(r["separated_by"]) or "none",
                 ]
             )
     if wire_rows:
-        s.blocks.append(
+        s.blocks += [
             Table(
-                ["model", "cell line", "anchor", "genes", "own entry largest", "own output rises",
-                 "after permutation"],
+                ["model", "cell line", "anchor", "genes", "own entry largest (null)",
+                 "median self-rank (null)", "own output moves as expected (null)",
+                 "separated on"],
                 wire_rows,
-            )
-        )
+            ),
+            Para(
+                "Each cell gives the observed statistic with its permuted null in parentheses. "
+                "The last column names the statistics that separate widely enough to establish "
+                "alignment for that block."
+            ),
+        ]
     sections.append(s)
 
     # ---- 9. the file contract
