@@ -258,6 +258,15 @@ def fig_floor_shared_response(shared: pd.DataFrame, out: Path) -> Fig:
         for ri in range(1, len(strata) + 1):
             fig.update_yaxes(title_text="Pearson", range=[0, 1], row=ri, col=ci)
     apply_theme(fig, height=620)
+    # read the headline off the same rows the figure draws, so the caption cannot drift
+    # from the curve
+    at_floor = [
+        r for r in rows
+        if r["cell_line"] == "hepg2" and r["stratum"] == C.FLOOR_RULE_STRATUM
+        and abs(r["floor_cp10k"] - C.RUN1_FLOOR_CP10K) < 1e-9
+    ]
+    share = 100 * at_floor[0]["loo_mean_baseline"] / at_floor[0]["ceiling"] if at_floor else float("nan")
+    band = at_floor[0]["ceiling"] - at_floor[0]["loo_mean_baseline"] if at_floor else float("nan")
     return Fig(
         name="floor_shared_response",
         figure=fig,
@@ -271,7 +280,8 @@ def fig_floor_shared_response(shared: pd.DataFrame, out: Path) -> Fig:
             "between different perturbations across the two halves.",
             "findings": "The baseline is nearly flat across the floor grid, so the extra "
             "correlation a higher floor buys is mostly perturbation-specific. At the inclusive "
-            "floor the baseline already reaches 86% of the HepG2 S4 ceiling.",
+            f"floor the baseline already reaches {share:.3g}% of the HepG2 S4 ceiling, leaving "
+            f"{band:.4g} of correlation for everything perturbation-specific.",
             "sources": "experiments/experiment-2-nygwcv/results/floor_sweep/floor_shared_response.parquet",
         },
     )
@@ -587,8 +597,9 @@ def fig_masked_regime(bundles: dict, out: Path) -> Fig:
         )
     if artefact:
         findings += (
-            f"For {', '.join(sorted(set(artefact)))} it does not, so that model's masked "
-            "response says more about the mask token than about reconstruction. "
+            f"For {', '.join(sorted(set(artefact)))} the substitution does not reproduce what "
+            "the mask does, so that model's masked response says more about the mask token "
+            "than about reconstruction. "
         )
     findings += "TranscriptFormer is absent: it is autoregressive, so a gene never sees its own value."
     return Fig(

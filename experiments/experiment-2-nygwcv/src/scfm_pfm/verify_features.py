@@ -661,7 +661,8 @@ def verify_all(bundles_dir: Path, ch: Checks) -> list[dict]:
                     continue
                 rec = json.loads(path.read_text())
                 checks = json.loads(vpath.read_text()) if vpath.exists() else {"checks": []}
-                failed = [r["check"] for r in checks.get("checks", []) if not r["ok"]]
+                own = checks.get("checks", [])
+                failed = [r["check"] for r in own if not r["ok"]]
                 ratios = rec.get("ratios", {})
                 ch.add(
                     "hidden_readout",
@@ -672,7 +673,7 @@ def verify_all(bundles_dir: Path, ch: Checks) -> list[dict]:
                     + "; ".join(
                         f"{k} {v:.4g}" for k, v in ratios.items() if isinstance(v, (int, float))
                     )
-                    + f"; {checks.get('n_passed')}/{checks.get('n_checks')} own checks passed"
+                    + f"; {sum(1 for r in own if r['ok'])}/{len(own)} own checks passed"
                     + (f", failed {failed}" if failed else ""),
                 )
 

@@ -99,6 +99,13 @@ def fmt(x, digits: int = 4) -> str:
     return f"{float(x):.{digits}g}"
 
 
+def _first_line(text, limit: int = 200) -> str:
+    """An exception message's first line: the rest is the library's own advice, and a
+    hard character cut lands mid-word."""
+    line = str(text).splitlines()[0].strip().rstrip(".")
+    return line if len(line) <= limit else line[: limit - 1].rsplit(" ", 1)[0] + "..."
+
+
 def rate(x, digits: int = 3) -> str:
     """A fraction at fixed width, so a column of pass rates lines up."""
     if x is None or (isinstance(x, float) and not np.isfinite(x)):
@@ -380,9 +387,10 @@ def hidden_blocks(hidden: dict) -> list:
         )
     if artefact:
         verdict += (
-            f"For {_join(artefact)} it does not, so that model's masked response is at least "
-            "partly an artefact of being queried outside its input distribution and must not be "
-            "read as evidence about reconstruction. "
+            f"For {_join(artefact)} the substitution does not reproduce what the mask does, so "
+            "that model's masked response is at least partly an artefact of being queried "
+            "outside its input distribution and must not be read as evidence about "
+            "reconstruction. "
         )
     if both:
         verdict += (
@@ -409,7 +417,7 @@ def hidden_blocks(hidden: dict) -> list:
             agree_rows.append(
                 [MODEL_LABEL[model], LABEL[cl]]
                 + [
-                    fmt((ag.get(k) or {}).get("median_pearson_per_gene"))
+                    rate((ag.get(k) or {}).get("median_pearson_per_gene"), 4)
                     for k in ("visible_vs_masked", "visible_vs_median_substituted",
                               "masked_vs_median_substituted")
                 ]
@@ -463,7 +471,7 @@ def aido_gradient_blocks(bundles: dict, probes: dict) -> list:
                 "AIDO.Cell is absent from that table because the exact route does not exist for "
                 "this build, which is a measurement rather than an omission. Attempting "
                 "forward-mode autodiff through its forward pass raises "
-                f"`{_cell(str(fm.get('reason', 'an error'))[:160])}`. Its gradient trajectories "
+                f"`{_cell(_first_line(fm.get('reason', 'an error')))}`. Its gradient trajectories "
                 "are therefore central differences at the selected step with no exact "
                 "cross-check behind them, and their magnitude evidence is the step sweep alone, "
                 "which they pass at the smallest swept step in every anchor and both cell lines."
@@ -477,7 +485,8 @@ def aido_gradient_blocks(bundles: dict, probes: dict) -> list:
                 "separate `forward_mode_autodiff` field filled from an actual attempt, and every "
                 "adapter records why a forward-mode column was unavailable instead of returning "
                 "nothing silently."
-                + (f" This block records: {_cell(recorded[0][:200])}." if recorded and recorded[0] else "")
+                + (f" This block records: {_cell(_first_line(recorded[0]))}."
+                   if recorded and recorded[0] else "")
             ),
         ]
     two_sided = [r for r in fm.get("per_value", []) if not r["one_sided"]]

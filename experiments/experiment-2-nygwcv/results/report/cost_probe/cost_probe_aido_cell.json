@@ -1,0 +1,358 @@
+{
+  "model": "aido_cell",
+  "batch_sizes": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "per_cell_line": {
+    "hepg2": {
+      "n_readout": 2721,
+      "layout": {
+        "model": "aido_cell",
+        "cell_line": "hepg2",
+        "n_readout_genes": 2721,
+        "n_supplied_genes": 19264,
+        "supplied_mode": "fixed_transcriptome",
+        "forward_passes_per_query": 1,
+        "context_block_genes": 0,
+        "gene_order": "OS_scRNA_gene_index.19264.tsv, a model constraint",
+        "unsupplied_positions": "left at zero, as an unmeasured gene is",
+        "sequence_length": 19266,
+        "hidden_size": 640,
+        "num_hidden_layers": 18
+      },
+      "default_batch_size": 4,
+      "throughput": [
+        {
+          "batch_size": 1,
+          "autocast": "none (float32)",
+          "seconds_per_call": 0.896,
+          "seconds_per_forward": 0.89605,
+          "n_calls_timed": 3,
+          "peak_gpu_gib": 2.38
+        },
+        {
+          "batch_size": 2,
+          "autocast": "none (float32)",
+          "seconds_per_call": 1.7752,
+          "seconds_per_forward": 0.88762,
+          "n_calls_timed": 3,
+          "peak_gpu_gib": 4.35
+        },
+        {
+          "batch_size": 4,
+          "autocast": "none (float32)",
+          "seconds_per_call": 3.5372,
+          "seconds_per_forward": 0.88431,
+          "n_calls_timed": 3,
+          "peak_gpu_gib": 8.29
+        },
+        {
+          "batch_size": 8,
+          "autocast": "none (float32)",
+          "seconds_per_call": 7.0535,
+          "seconds_per_forward": 0.88169,
+          "n_calls_timed": 3,
+          "peak_gpu_gib": 16.18
+        }
+      ],
+      "alternate_dtypes": {
+        "bfloat16": {
+          "throughput": [
+            {
+              "batch_size": 1,
+              "autocast": "bfloat16",
+              "seconds_per_call": 0.1016,
+              "seconds_per_forward": 0.10163,
+              "n_calls_timed": 3,
+              "peak_gpu_gib": 16.18
+            },
+            {
+              "batch_size": 2,
+              "autocast": "bfloat16",
+              "seconds_per_call": 0.1931,
+              "seconds_per_forward": 0.09654,
+              "n_calls_timed": 3,
+              "peak_gpu_gib": 16.18
+            },
+            {
+              "batch_size": 4,
+              "autocast": "bfloat16",
+              "seconds_per_call": 0.3842,
+              "seconds_per_forward": 0.09606,
+              "n_calls_timed": 3,
+              "peak_gpu_gib": 16.18
+            },
+            {
+              "batch_size": 8,
+              "autocast": "bfloat16",
+              "seconds_per_call": 0.7629,
+              "seconds_per_forward": 0.09536,
+              "n_calls_timed": 3,
+              "peak_gpu_gib": 16.18
+            }
+          ],
+          "best_seconds_per_forward": 0.09536,
+          "warning": "not a like-for-like extension: the block's numerics change, so a partly-float32 and partly-lower-precision feature set would not be one block. Recorded as the cost of a deliberate re-extraction, not of a top-up."
+        }
+      },
+      "projection": {
+        "n_in_scope": 524,
+        "n_subset": 250,
+        "forward_passes": {
+          "subset": {
+            "per_gene_per_cell": 16,
+            "single_cell_anchors": 8000,
+            "individual_cells_anchor": 3840,
+            "masked_variant": 3801,
+            "step_sweeps": 1800,
+            "total": 17441
+          },
+          "full": {
+            "per_gene_per_cell": 16,
+            "single_cell_anchors": 16768,
+            "individual_cells_anchor": 33536,
+            "masked_variant": 33033,
+            "step_sweeps": 1800,
+            "total": 85137
+          }
+        },
+        "rate_used_seconds_per_forward": 0.88431,
+        "rate_batch_size": 4,
+        "best_rate_seconds_per_forward": 0.88169,
+        "best_batch_size": 8,
+        "batching_speedup": 1.003,
+        "predicted_subset_three_anchor_seconds": 10470,
+        "observed_subset_three_anchor_seconds": 10575.1,
+        "prediction_error_vs_observed": -0.01,
+        "projected_full_three_anchor_seconds": 44484,
+        "projected_full_three_anchor_seconds_best_batch": 44353,
+        "projected_full_everything_seconds": 75288,
+        "projected_full_everything_seconds_best_batch": 75064
+      },
+      "forward_mode_probe": {
+        "available": false,
+        "reason": "NotImplementedError: Trying to use forward AD with _scaled_dot_product_efficient_attention that does not support it because it has not been implemented yet.\nPlease file an issue to PyTorch at https://github.com/pytorch/pytorch/issues/new?template=feature-request.yml so that we can prioritize its implementation or submit a PR adding the implementation to derivatives.yaml",
+        "n_genes_attempted": 1,
+        "note": "the forward-mode route does not run through this build, so the central difference at the selected step is the only derivative available and the block's gradient features have no exact cross-check"
+      }
+    },
+    "jurkat": {
+      "n_readout": 3247,
+      "layout": {
+        "model": "aido_cell",
+        "cell_line": "jurkat",
+        "n_readout_genes": 3247,
+        "n_supplied_genes": 19264,
+        "supplied_mode": "fixed_transcriptome",
+        "forward_passes_per_query": 1,
+        "context_block_genes": 0,
+        "gene_order": "OS_scRNA_gene_index.19264.tsv, a model constraint",
+        "unsupplied_positions": "left at zero, as an unmeasured gene is",
+        "sequence_length": 19266,
+        "hidden_size": 640,
+        "num_hidden_layers": 18
+      },
+      "default_batch_size": 4,
+      "throughput": [
+        {
+          "batch_size": 1,
+          "autocast": "none (float32)",
+          "seconds_per_call": 0.9002,
+          "seconds_per_forward": 0.90021,
+          "n_calls_timed": 3,
+          "peak_gpu_gib": 16.18
+        },
+        {
+          "batch_size": 2,
+          "autocast": "none (float32)",
+          "seconds_per_call": 1.7789,
+          "seconds_per_forward": 0.88947,
+          "n_calls_timed": 3,
+          "peak_gpu_gib": 16.18
+        },
+        {
+          "batch_size": 4,
+          "autocast": "none (float32)",
+          "seconds_per_call": 3.5387,
+          "seconds_per_forward": 0.88467,
+          "n_calls_timed": 3,
+          "peak_gpu_gib": 16.18
+        },
+        {
+          "batch_size": 8,
+          "autocast": "none (float32)",
+          "seconds_per_call": 7.059,
+          "seconds_per_forward": 0.88237,
+          "n_calls_timed": 3,
+          "peak_gpu_gib": 16.18
+        }
+      ],
+      "alternate_dtypes": {
+        "bfloat16": {
+          "throughput": [
+            {
+              "batch_size": 1,
+              "autocast": "bfloat16",
+              "seconds_per_call": 0.1025,
+              "seconds_per_forward": 0.10255,
+              "n_calls_timed": 3,
+              "peak_gpu_gib": 16.18
+            },
+            {
+              "batch_size": 2,
+              "autocast": "bfloat16",
+              "seconds_per_call": 0.1935,
+              "seconds_per_forward": 0.09676,
+              "n_calls_timed": 3,
+              "peak_gpu_gib": 16.18
+            },
+            {
+              "batch_size": 4,
+              "autocast": "bfloat16",
+              "seconds_per_call": 0.384,
+              "seconds_per_forward": 0.09599,
+              "n_calls_timed": 3,
+              "peak_gpu_gib": 16.18
+            },
+            {
+              "batch_size": 8,
+              "autocast": "bfloat16",
+              "seconds_per_call": 0.7637,
+              "seconds_per_forward": 0.09546,
+              "n_calls_timed": 3,
+              "peak_gpu_gib": 16.18
+            }
+          ],
+          "best_seconds_per_forward": 0.09546,
+          "warning": "not a like-for-like extension: the block's numerics change, so a partly-float32 and partly-lower-precision feature set would not be one block. Recorded as the cost of a deliberate re-extraction, not of a top-up."
+        }
+      },
+      "projection": {
+        "n_in_scope": 705,
+        "n_subset": 250,
+        "forward_passes": {
+          "subset": {
+            "per_gene_per_cell": 16,
+            "single_cell_anchors": 8000,
+            "individual_cells_anchor": 3840,
+            "masked_variant": 3801,
+            "step_sweeps": 1800,
+            "total": 17441
+          },
+          "full": {
+            "per_gene_per_cell": 16,
+            "single_cell_anchors": 22560,
+            "individual_cells_anchor": 45120,
+            "masked_variant": 44436,
+            "step_sweeps": 1800,
+            "total": 113916
+          }
+        },
+        "rate_used_seconds_per_forward": 0.88467,
+        "rate_batch_size": 4,
+        "best_rate_seconds_per_forward": 0.88237,
+        "best_batch_size": 8,
+        "batching_speedup": 1.003,
+        "predicted_subset_three_anchor_seconds": 10474,
+        "observed_subset_three_anchor_seconds": 10571.3,
+        "prediction_error_vs_observed": -0.009,
+        "projected_full_three_anchor_seconds": 59874,
+        "projected_full_three_anchor_seconds_best_batch": 59719,
+        "projected_full_everything_seconds": 100778,
+        "projected_full_everything_seconds_best_batch": 100516
+      }
+    }
+  },
+  "environment": {
+    "model": "aido_cell",
+    "image": "python:3.11-slim + envs/model_stack.sh",
+    "python": "3.11.16 (main, Aug 13 2026, 19:40:50) [GCC 14.2.0]",
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.41",
+    "pinned_packages": [
+      "Jinja2==3.1.6",
+      "MarkupSafe==3.0.3",
+      "PyYAML==6.0.3",
+      "aiohappyeyeballs==2.7.1",
+      "aiohttp==3.14.3",
+      "aiosignal==1.4.0",
+      "anndata==0.10.9",
+      "antlr4-python3-runtime==4.9.3",
+      "array-api-compat==1.15.0",
+      "attrs==26.1.0",
+      "certifi==2026.7.22",
+      "charset-normalizer==3.5.1",
+      "contourpy==1.3.3",
+      "cycler==0.12.1",
+      "einops==0.8.0",
+      "filelock==3.32.3",
+      "fonttools==4.63.0",
+      "frozenlist==1.8.0",
+      "fsspec==2025.12.0",
+      "h5py==3.12.1",
+      "huggingface-hub==0.25.2",
+      "hydra-core==1.3.2",
+      "idna==3.19",
+      "kiwisolver==1.5.0",
+      "lightning-utilities==0.15.3",
+      "lightning==2.4.0",
+      "matplotlib==3.9.3",
+      "mpmath==1.3.0",
+      "multidict==6.7.1",
+      "natsort==8.4.0",
+      "networkx==3.6.1",
+      "numpy==1.26.4",
+      "nvidia-cublas-cu12==12.1.3.1",
+      "nvidia-cuda-cupti-cu12==12.1.105",
+      "nvidia-cuda-nvrtc-cu12==12.1.105",
+      "nvidia-cuda-runtime-cu12==12.1.105",
+      "nvidia-cudnn-cu12==9.1.0.70",
+      "nvidia-cufft-cu12==11.0.2.54",
+      "nvidia-curand-cu12==10.3.2.106",
+      "nvidia-cusolver-cu12==11.4.5.107",
+      "nvidia-cusparse-cu12==12.1.0.106",
+      "nvidia-nccl-cu12==2.21.5",
+      "nvidia-nvjitlink-cu12==12.9.86",
+      "nvidia-nvtx-cu12==12.1.105",
+      "omegaconf==2.3.0",
+      "packaging==24.2",
+      "pandas==2.2.3",
+      "pillow==12.3.0",
+      "propcache==0.5.2",
+      "pyarrow==17.0.0",
+      "pyparsing==3.3.2",
+      "python-dateutil==2.9.0.post0",
+      "pytorch-lightning==2.6.5",
+      "pytz==2026.3.post1",
+      "regex==2026.7.19",
+      "requests==2.32.3",
+      "safetensors==0.4.5",
+      "scgpt==0.2.4",
+      "scipy==1.15.3",
+      "scprint==2.3.8",
+      "session_info==1.0.1",
+      "simpler-flash==1.0.7",
+      "six==1.17.0",
+      "stdlib-list==0.12.0",
+      "sympy==1.13.1",
+      "tokenizers==0.19.1",
+      "torch==2.5.1+cu121",
+      "torchdata==0.7.1",
+      "torchmetrics==1.6.0",
+      "torchtext==0.17.0",
+      "torchvision==0.20.1+cu121",
+      "tqdm==4.70.0",
+      "transcriptformer==0.6.1",
+      "transformers==4.44.2",
+      "triton==3.1.0",
+      "typing_extensions==4.16.0",
+      "tzdata==2026.3",
+      "urllib3==2.7.0",
+      "yarl==1.24.5"
+    ],
+    "recorded_at": "2026-08-19T11:19:42Z",
+    "device": "cuda"
+  }
+}

@@ -38,7 +38,7 @@ def find_block(mount: Path) -> Path:
     return hits[0].parent
 
 
-def annotate(block_dir: Path, out_root: Path, bundles_dir: Path) -> dict:
+def annotate(block_dir: Path, out_root: Path, bundles_dir: Path, manifest_only: bool = False) -> dict:
     manifest = json.loads((block_dir / "manifest.json").read_text())
     model, cell_line = manifest["model"], manifest["cell_line"]
     scope_rec = manifest.get("scope", {})
@@ -82,6 +82,13 @@ def annotate(block_dir: Path, out_root: Path, bundles_dir: Path) -> dict:
     (dest / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))
     print(f"[annotate] wrote {dest / 'manifest.json'}", flush=True)
 
+    if manifest_only:
+        # a superseded block: its arrays are not mounted here and no bundle reads it, so the
+        # record is written from the manifest and the perturbed table alone. The selector check
+        # above is the one that matters --- it is what ties the record to the shipped rows.
+        print(f"[annotate] manifest only, no bundle written for {model}/{cell_line}", flush=True)
+        return {"model": model, "cell_line": cell_line, "manifest": manifest}
+
     # a shadow block: the annotated manifest over the mounted arrays, so the bundle the
     # report reads carries coverage without copying gigabytes
     shadow = paths.ensure(Path("/tmp") / f"block_{model}_{cell_line}")
@@ -113,6 +120,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--block-dir", default="auto")
     ap.add_argument("--out", default=None)
     ap.add_argument("--bundles", default=None)
+    ap.add_argument(
+        "--manifest-only",
+        action="store_true",
+        help="patch the manifest without re-verifying the arrays: for a superseded block whose "
+        "npz files are not mounted here",
+    )
     args = ap.parse_args(argv)
 
     if args.block_dir == "auto":
@@ -123,7 +136,7 @@ def main(argv: list[str] | None = None) -> int:
         block = Path(args.block_dir)
     out_root = Path(args.out) if args.out else paths.data_root()
     bundles = Path(args.bundles) if args.bundles else paths.report_dir() / "bundles_annotated"
-    annotate(block, out_root, bundles)
+    annotate(block, out_root, bundles, manifest_only=args.manifest_only)
     return 0
 
 

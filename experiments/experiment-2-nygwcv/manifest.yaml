@@ -2,8 +2,45 @@ experiment: 2
 eid: "exp_01m0c7ecnnf3fvxskxj5nygwcv"
 title: "Response features for four models over three query anchors"
 date: "2026-08-19"
-status: in-progress
-data: {}
-outputs: {}
-results: {}
-slurm_jobs: []
+status: complete
+
+data:
+  source_experiment: "exp_01m09d588jez38j6trqk30499z"   # run 1: effect matrices, gene universe, response contract
+  effects: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/"
+  gene_universe: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/gene_universe/"
+  cell_lines: [hepg2, jurkat]
+  readout_genes: {hepg2: 2721, jurkat: 3247}
+  expression_floor_cp10k: 0.5
+  perturbation_strata: [S3, S4_highest]
+  perturbations_in_strata: {hepg2: 991, jurkat: 1100}
+  perturbations_in_scope: {hepg2: 524, jurkat: 705}   # target gene is itself a read-out gene
+
+models:
+  scgpt: {checkpoint: "scGPT_human (whole-human)", coverage: full}
+  scprint: {checkpoint: "jkobject/scPRINT (large)", coverage: full}
+  transcriptformer: {checkpoint: "tf_sapiens", coverage: full}
+  aido_cell: {checkpoint: "genbio-ai/GB.Cell-100M", coverage: "250 of in-scope; full coverage priced at 20.9 h (HepG2) + 28.0 h (Jurkat)"}
+
+outputs:
+  features: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/features/"
+  features_full_scope: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/features_full_scope/"
+  feature_index: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/feature_index/"
+  hidden_readout: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/hidden_readout/"
+  cost_probe: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/cost_probe/cost_probe_aido_cell.json"
+  bundles: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/bundles/"
+  report_html: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/feature_extraction_report.html"
+  report_md: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/feature_extraction_report.md"
+  no_op_queries: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/no_op_queries.csv"
+  verify_all: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/verification/verify_all.txt"
+
+results:
+  anchors: [uniform_virtual, mean_control, individual_cells]
+  value_grid_cp10k: [0, 1, 4, 16, 64]
+  features_per_block: [zero_out, vvp, gdt, gene_embeddings]
+  masked_variant: "the 3 bidirectional models; the read-out gene's own value hidden"
+  hidden_readout_conditions: [visible, masked, median_substituted]
+  mean_effect_baseline_share_of_ceiling: {hepg2_S4_highest: 0.858, hepg2_S3: 0.916}
+  perturbation_specific_band: {hepg2_S4_highest: 0.0999, hepg2_S3: 0.0249}
+  aido_seconds_per_forward: {batch_1: 0.8961, batch_4: 0.8843, batch_8: 0.8817}
+
+slurm_jobs: []   # on-demand fabric; job ids are recorded in the checkpoints

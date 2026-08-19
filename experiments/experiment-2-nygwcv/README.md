@@ -168,10 +168,12 @@ Checkpoints, as recorded in each block's `manifest.json`:
 | TranscriptFormer | `s3://czi-transcriptformer/weights/tf_sapiens.tar.gz` | unversioned public bucket object |
 | AIDO.Cell | `genbio-ai/GB.Cell-100M` (the plan's `AIDO.Cell-100M`, renamed upstream) | `a983b388e1025860f2c413ecef60e76078253c24` |
 
-All GPU work ran as single-H100 on-demand jobs from the `job-core` image, one job per
-(model, cell line), with the checkpoints mounted read-only from a shared prefetch volume.
-Verification ran as CPU-only `python:3.11-slim` jobs mounting each extraction job's volume.
-No external model API was used and no researcher credential was needed.
+All GPU work ran as single-H100 on-demand jobs from the public `python:3.11-slim` image with
+`envs/model_stack.sh` installing the pinned model stack at job start (torch 2.5.1+cu121, scgpt
+0.2.4, scprint 2.3.8, transcriptformer 0.6.1); each block's `environment.json` records the exact
+resolved package list. One job per (model, cell line), with the checkpoints mounted read-only from
+a shared prefetch volume. Verification ran as CPU-only jobs from the same image mounting each
+extraction job's volume. No external model API was used and no researcher credential was needed.
 
 Every model needed some change to its shipped code to run here, 7 in total; each block's
 `manifest.json` records its own verbatim, and the report's provenance section groups them. Three
