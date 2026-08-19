@@ -52,6 +52,8 @@ from .. import config as C
 from .. import paths
 from ..models import queries as Q
 from ..models.base import environment_manifest
+from ..forms import normalize_forms
+from .scope import coverage_record, select_perturbed
 
 #: native-input floor: none of the four models takes a negative input value
 NATIVE_FLOOR = 0.0
@@ -77,70 +79,6 @@ def load_inputs(model: str, cell_line: str) -> dict:
         "cells": cells,
         "cells_path": str(demo) if demo.exists() else None,
     }
-
-
-def select_perturbed(
-    perts: pd.DataFrame, readout: pd.DataFrame, scope: C.Scope, seed: int = C.SEED
-) -> pd.DataFrame:
-    """Perturbed genes: in-scope strata, present in the read-out set, stratified.
-
-    A perturbed gene has to be a column of the supplied set to be perturbable at
-    all, so the scope is the intersection of the effect-size strata the plan
-    keeps with the read-out set this cell line ended up with.
-    """
-    by_symbol = {}
-    for col in ("gene_name", "hgnc_symbol"):
-        if col in readout.columns:
-            for i, sym in enumerate(readout[col].to_numpy().astype(str)):
-                by_symbol.setdefault(sym, i)
-    rows = []
-    for rec in perts.itertuples():
-        if str(rec.effect_stratum) not in scope.strata:
-            continue
-        col = by_symbol.get(str(rec.target))
-        if col is None:
-            continue
-        rows.append(
-            {
-                "target": str(rec.target),
-                "readout_col": int(col),
-                "gene_id": str(readout["gene_id"].to_numpy()[col]),
-                "effect_stratum": str(rec.effect_stratum),
-                "n_de_genes": int(getattr(rec, "n_de_genes", 0)),
-                "knockdown": float(getattr(rec, "knockdown", float("nan"))),
-            }
-        )
-    frame = pd.DataFrame(rows).drop_duplicates("readout_col").reset_index(drop=True)
-    if frame.empty:
-        raise RuntimeError("no perturbed genes survive the scope intersection")
-
-    rng = np.random.default_rng(seed)
-    keep: list[int] = []
-    per_stratum = max(1, scope.n_perturbed // max(1, len(scope.strata)))
-    for stratum in scope.strata:
-        idx = np.flatnonzero(frame.effect_stratum.to_numpy() == stratum)
-        take = min(per_stratum, idx.size)
-        keep.extend(rng.choice(idx, size=take, replace=False).tolist())
-    frame = frame.iloc[sorted(keep)].reset_index(drop=True)
-
-    # nested subsets, so the small anchors are strictly inside the large one
-    frame["in_main"] = True
-    sub_cells = rng.choice(
-        frame.shape[0], size=min(scope.n_perturbed_cells_anchor, frame.shape[0]), replace=False
-    )
-    sub_mask = rng.choice(
-        sub_cells, size=min(scope.n_perturbed_masked, sub_cells.size), replace=False
-    )
-    sub_step = rng.choice(
-        frame.shape[0], size=min(C.N_STEP_SWEEP_GENES, frame.shape[0]), replace=False
-    )
-    frame["in_cells_anchor"] = False
-    frame.loc[sorted(sub_cells), "in_cells_anchor"] = True
-    frame["in_masked"] = False
-    frame.loc[sorted(sub_mask), "in_masked"] = True
-    frame["in_step_sweep"] = False
-    frame.loc[sorted(sub_step), "in_step_sweep"] = True
-    return frame
 
 
 def build_anchors(readout: pd.DataFrame, cells: pd.DataFrame | None) -> dict:
@@ -208,37 +146,6 @@ def query_batch(
             x[col] = w
             rows.append(x)
     return np.stack(rows)
-
-
-def normalize_forms(delta: np.ndarray, y_pert: np.ndarray, y_base: np.ndarray, model) -> dict:
-    """raw / standardized / recentred / log2fc for one block of differences.
-
-    ``delta`` is (..., n_readout). The standardized form is a z-score across
-    read-out genes within a query, which is what makes two models with different
-    output scales comparable at all. The recentred form removes the per-query
-    cross-gene mean, which for a softmax model is the part of every response that
-    is redistribution rather than regulation.
-    """
-    out = {"raw": delta.astype(np.float32)}
-    mean = delta.mean(axis=-1, keepdims=True)
-    sd = delta.std(axis=-1, keepdims=True)
-    out["standardized"] = np.where(sd > 0, (delta - mean) / np.where(sd > 0, sd, 1.0), 0.0).astype(
-        np.float32
-    )
-    if model.linear_scale is not None:
-        out["recentred"] = (delta - mean).astype(np.float32)
-    if model.linear_scale == "identity":
-        lin_p, lin_b = y_pert, y_base
-    elif model.linear_scale == "expm1":
-        lin_p, lin_b = np.expm1(y_pert), np.expm1(y_base)
-    else:
-        lin_p = lin_b = None
-    if lin_p is not None:
-        eps = C.LOG2FC_EPS
-        out["log2fc"] = np.log2(
-            (np.maximum(lin_p, 0) + eps) / (np.maximum(lin_b, 0) + eps)
-        ).astype(np.float32)
-    return out
 
 
 def extract_anchor(
@@ -337,6 +244,16 @@ def extract_anchor(
         "zero_out_value_index": zero_index,
         "gdt_source": "forward_mode_autodiff_jvp" if have_exact.all() else
         f"central_finite_difference(step={step:.4g})",
+        # measured, not assumed: whether this model's production layout admits a
+        # forward-mode derivative is decided by trying it here, and the reason it
+        # did not is recorded verbatim rather than left to a contract default
+        "forward_mode": {
+            "attempted": True,
+            "available": bool(have_exact.all()),
+            "reason_unavailable": None if have_exact.all() else str(
+                getattr(model, "_jvp_error", "the adapter returned no forward-mode column")
+            ),
+        },
         "seconds": round(time.time() - started, 1),
     }
     if have_exact.any():
@@ -533,9 +450,11 @@ def run(
     data = load_inputs(model_name, cell_line)
     readout = data["readout"]
     perturbed = select_perturbed(data["perturbations"], readout, scope)
+    coverage = coverage_record(data["perturbations"], readout, scope, perturbed)
     print(
         f"[{model_name}/{cell_line}] {readout.shape[0]} read-out genes, "
-        f"{perturbed.shape[0]} perturbed genes "
+        f"{perturbed.shape[0]} perturbed genes of {coverage['n_in_scope']} in scope "
+        f"(coverage {coverage['mode']}, fraction {coverage['fraction_of_scope']:.3f}) "
         f"({perturbed.effect_stratum.value_counts().to_dict()})",
         flush=True,
     )
@@ -575,6 +494,7 @@ def run(
             "n_step_sweep": int(perturbed.in_step_sweep.sum()),
             "strata": list(scope.strata),
         },
+        "coverage": coverage,
         "value_grid_cp10k": list(C.VALUE_GRID_CP10K),
         "gdt_base_grid_cp10k": list(C.GDT_BASE_GRID_CP10K),
         "sign_convention": "perturbed minus baseline; a positive entry means raising the "
@@ -694,6 +614,12 @@ def run(
         )
 
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))
+    # the report reads the perturbed genes' own anchor levels to interpret the
+    # individual-cell anchor, and the pod cannot read an npz back out of the store,
+    # so the small index table travels separately, tagged by coverage
+    blocks_dir = paths.ensure(paths.report_dir() / "blocks")
+    tag = "full" if coverage["mode"] == "full" else f"n{coverage['n_perturbed']}"
+    perturbed.to_parquet(blocks_dir / f"perturbed_genes_{tag}_{cell_line}.parquet", index=False)
     (out_dir / "environment.json").write_text(
         json.dumps(
             environment_manifest(model_name, image, {"device": device, "cell_line": cell_line}),
@@ -923,6 +849,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--n-step-sweep", type=int, default=None)
     ap.add_argument("--exact-derivative-genes", type=int, default=None)
     ap.add_argument("--anchors", nargs="*", default=list(C.ANCHORS))
+    ap.add_argument(
+        "--full-scope",
+        action="store_true",
+        help="every in-scope perturbation at every anchor and in the masked variant; "
+        "writes to the features_full_scope tree so run 2's subset blocks stay intact",
+    )
     ap.add_argument("--supplied-mode", default=None)
     ap.add_argument("--no-masked", action="store_true")
     ap.add_argument("--no-context-compare", action="store_true")
@@ -933,13 +865,23 @@ def main(argv: list[str] | None = None) -> int:
         C.N_STEP_SWEEP_GENES = int(args.n_step_sweep)
     if args.exact_derivative_genes is not None:
         C.N_EXACT_DERIVATIVE_GENES = int(args.exact_derivative_genes)
+    # 0 means "every gene in scope", so these read `is not None` rather than being
+    # treated as falsy
+    base = C.FULL_SCOPE if args.full_scope else C.SCOPE
     scope = C.Scope(
-        n_perturbed=args.n_perturbed or C.SCOPE.n_perturbed,
-        n_perturbed_cells_anchor=args.n_cells_anchor or C.SCOPE.n_perturbed_cells_anchor,
-        n_perturbed_masked=args.n_masked or C.SCOPE.n_perturbed_masked,
+        n_perturbed=base.n_perturbed if args.n_perturbed is None else args.n_perturbed,
+        n_perturbed_cells_anchor=(
+            base.n_perturbed_cells_anchor if args.n_cells_anchor is None else args.n_cells_anchor
+        ),
+        n_perturbed_masked=base.n_perturbed_masked if args.n_masked is None else args.n_masked,
     )
     cache = Path(args.cache) if args.cache else paths.checkpoint_cache()
-    out = Path(args.out) if args.out else paths.features_dir(args.model, args.cell_line)
+    default_out = (
+        paths.features_full_dir(args.model, args.cell_line)
+        if args.full_scope
+        else paths.features_dir(args.model, args.cell_line)
+    )
+    out = Path(args.out) if args.out else default_out
     try:
         run(
             args.model,

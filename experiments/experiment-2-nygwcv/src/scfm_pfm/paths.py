@@ -109,6 +109,29 @@ def features_dir(model: str, cell_line: str) -> Path:
     return data_root() / "features" / model / cell_line
 
 
+def features_full_dir(model: str, cell_line: str) -> Path:
+    """Full-coverage blocks: the same layout, a separate tree.
+
+    Run 2's first wave wrote 250 perturbed genes per block under ``features/``.
+    The extension covers every in-scope perturbation for the three cheap models,
+    and a full block is not a drop-in replacement for a subset one (different row
+    count, different nested subsets), so it is written beside the original rather
+    than over it. ``feature_index/blocks.json`` names the canonical block per
+    (model, cell line).
+    """
+    return data_root() / "features_full_scope" / model / cell_line
+
+
+def hidden_readout_dir(model: str, cell_line: str) -> Path:
+    """The visible / masked / median-substituted comparison for one block.
+
+    It belongs to the block whose masked variant it interprets, so it sits inside
+    that block's directory but outside the ``anchor=`` namespace: it is a
+    diagnostic over one anchor, not a fourth anchor.
+    """
+    return features_dir(model, cell_line) / "hidden_readout"
+
+
 def index_dir() -> Path:
     return data_root() / "feature_index"
 
