@@ -1,0 +1,1 @@
+Zero-out response magnitude with and without masking the read-out gene.

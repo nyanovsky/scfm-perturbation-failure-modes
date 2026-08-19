@@ -1,0 +1,170 @@
+[
+  {
+    "model": "scgpt",
+    "cell_line": "hepg2",
+    "form": "zero_out",
+    "abs_median": 0.0038909912109375,
+    "abs_p99": 0.08694267272949219
+  },
+  {
+    "model": "scgpt",
+    "cell_line": "jurkat",
+    "form": "zero_out",
+    "abs_median": 0.00360107421875,
+    "abs_p99": 0.10164280235767365
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "form": "zero_out",
+    "abs_median": 0.00017588213086128235,
+    "abs_p99": 0.008459425531327724
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "form": "zero_out",
+    "abs_median": 0.0001308917999267578,
+    "abs_p99": 0.010180652141571045
+  },
+  {
+    "model": "scprint",
+    "cell_line": "hepg2",
+    "form": "zero_out",
+    "abs_median": 0.0022287368774414062,
+    "abs_p99": 0.38341084122657776
+  },
+  {
+    "model": "scprint",
+    "cell_line": "jurkat",
+    "form": "zero_out",
+    "abs_median": 0.0011091232299804688,
+    "abs_p99": 0.22961467504501343
+  },
+  {
+    "model": "transcriptformer",
+    "cell_line": "hepg2",
+    "form": "zero_out",
+    "abs_median": 3.138411557301879e-06,
+    "abs_p99": 5.606018748949282e-05
+  },
+  {
+    "model": "transcriptformer",
+    "cell_line": "jurkat",
+    "form": "zero_out",
+    "abs_median": 2.094544470310211e-06,
+    "abs_p99": 4.276210893294774e-05
+  },
+  {
+    "model": "scgpt",
+    "cell_line": "hepg2",
+    "form": "vvp",
+    "abs_median": 0.0063953399658203125,
+    "abs_p99": 0.12149429321289062
+  },
+  {
+    "model": "scgpt",
+    "cell_line": "jurkat",
+    "form": "vvp",
+    "abs_median": 0.0062656402587890625,
+    "abs_p99": 0.13720321655273438
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "form": "vvp",
+    "abs_median": 0.0009176731109619141,
+    "abs_p99": 0.04421157017350197
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "form": "vvp",
+    "abs_median": 0.001008749008178711,
+    "abs_p99": 0.09888063371181488
+  },
+  {
+    "model": "scprint",
+    "cell_line": "hepg2",
+    "form": "vvp",
+    "abs_median": 0.0010427236557006836,
+    "abs_p99": 0.2329382449388504
+  },
+  {
+    "model": "scprint",
+    "cell_line": "jurkat",
+    "form": "vvp",
+    "abs_median": 0.0008759498596191406,
+    "abs_p99": 0.21515992283821106
+  },
+  {
+    "model": "transcriptformer",
+    "cell_line": "hepg2",
+    "form": "vvp",
+    "abs_median": 5.996029358357191e-06,
+    "abs_p99": 0.00016628848970867693
+  },
+  {
+    "model": "transcriptformer",
+    "cell_line": "jurkat",
+    "form": "vvp",
+    "abs_median": 5.492649506777525e-06,
+    "abs_p99": 0.00015068883658386767
+  },
+  {
+    "model": "scgpt",
+    "cell_line": "hepg2",
+    "form": "gdt",
+    "abs_median": 0.001811981201171875,
+    "abs_p99": 0.0396728515625
+  },
+  {
+    "model": "scgpt",
+    "cell_line": "jurkat",
+    "form": "gdt",
+    "abs_median": 0.001430511474609375,
+    "abs_p99": 0.031566619873046875
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "hepg2",
+    "form": "gdt",
+    "abs_median": 0.00016987323760986328,
+    "abs_p99": 0.0031709671020507812
+  },
+  {
+    "model": "aido_cell",
+    "cell_line": "jurkat",
+    "form": "gdt",
+    "abs_median": 0.00024437904357910156,
+    "abs_p99": 0.003591179847717285
+  },
+  {
+    "model": "scprint",
+    "cell_line": "hepg2",
+    "form": "gdt",
+    "abs_median": 0.00022581111988984048,
+    "abs_p99": 0.3857811689376831
+  },
+  {
+    "model": "scprint",
+    "cell_line": "jurkat",
+    "form": "gdt",
+    "abs_median": 0.00022950036509428173,
+    "abs_p99": 0.2263791263103485
+  },
+  {
+    "model": "transcriptformer",
+    "cell_line": "hepg2",
+    "form": "gdt",
+    "abs_median": 1.6391059034503996e-06,
+    "abs_p99": 1.763186082825996e-05
+  },
+  {
+    "model": "transcriptformer",
+    "cell_line": "jurkat",
+    "form": "gdt",
+    "abs_median": 1.5039695426821709e-06,
+    "abs_p99": 1.6100653738249093e-05
+  }
+]

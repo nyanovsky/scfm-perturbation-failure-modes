@@ -1,0 +1,142 @@
+[
+  {
+    "cell_line": "hepg2",
+    "stratum": "S3",
+    "floor_cp10k": 0.5,
+    "ceiling": 0.29799960790962576,
+    "n_genes": 3119
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S3",
+    "floor_cp10k": 1.0,
+    "ceiling": 0.40671816510658865,
+    "n_genes": 1578
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S3",
+    "floor_cp10k": 2.0,
+    "ceiling": 0.5211893173915529,
+    "n_genes": 729
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S3",
+    "floor_cp10k": 5.0,
+    "ceiling": 0.6344635169912277,
+    "n_genes": 248
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S3",
+    "floor_cp10k": 10.0,
+    "ceiling": 0.7001771159004565,
+    "n_genes": 142
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S4_highest",
+    "floor_cp10k": 0.5,
+    "ceiling": 0.7031375273661722,
+    "n_genes": 3119
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S4_highest",
+    "floor_cp10k": 1.0,
+    "ceiling": 0.7880009477236504,
+    "n_genes": 1578
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S4_highest",
+    "floor_cp10k": 2.0,
+    "ceiling": 0.8495255137489409,
+    "n_genes": 729
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S4_highest",
+    "floor_cp10k": 5.0,
+    "ceiling": 0.8982040971707167,
+    "n_genes": 248
+  },
+  {
+    "cell_line": "hepg2",
+    "stratum": "S4_highest",
+    "floor_cp10k": 10.0,
+    "ceiling": 0.9162595487609063,
+    "n_genes": 142
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S3",
+    "floor_cp10k": 0.5,
+    "ceiling": 0.2933459734823437,
+    "n_genes": 3469
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S3",
+    "floor_cp10k": 1.0,
+    "ceiling": 0.4280112887770167,
+    "n_genes": 1778
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S3",
+    "floor_cp10k": 2.0,
+    "ceiling": 0.5632182770944265,
+    "n_genes": 804
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S3",
+    "floor_cp10k": 5.0,
+    "ceiling": 0.701364417723224,
+    "n_genes": 264
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S3",
+    "floor_cp10k": 10.0,
+    "ceiling": 0.7704649229932725,
+    "n_genes": 143
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S4_highest",
+    "floor_cp10k": 0.5,
+    "ceiling": 0.4346529385267261,
+    "n_genes": 3469
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S4_highest",
+    "floor_cp10k": 1.0,
+    "ceiling": 0.5634830726445779,
+    "n_genes": 1778
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S4_highest",
+    "floor_cp10k": 2.0,
+    "ceiling": 0.6791315154820707,
+    "n_genes": 804
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S4_highest",
+    "floor_cp10k": 5.0,
+    "ceiling": 0.7941266629608777,
+    "n_genes": 264
+  },
+  {
+    "cell_line": "jurkat",
+    "stratum": "S4_highest",
+    "floor_cp10k": 10.0,
+    "ceiling": 0.8557074234126782,
+    "n_genes": 143
+  }
+]
