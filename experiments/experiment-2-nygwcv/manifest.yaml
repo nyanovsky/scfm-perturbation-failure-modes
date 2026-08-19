@@ -28,6 +28,7 @@ outputs:
   hidden_readout: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/hidden_readout/"
   cost_probe: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/cost_probe/cost_probe_aido_cell.json"
   bundles: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/bundles/"
+  bundles_subset250: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/bundles_subset250/"   # the records the six full-coverage blocks replace
   report_html: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/feature_extraction_report.html"
   report_md: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/feature_extraction_report.md"
   no_op_queries: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0c7ecnnf3fvxskxj5nygwcv/report/no_op_queries.csv"
@@ -42,5 +43,7 @@ results:
   mean_effect_baseline_share_of_ceiling: {hepg2_S4_highest: 0.858, hepg2_S3: 0.916}
   perturbation_specific_band: {hepg2_S4_highest: 0.0999, hepg2_S3: 0.0249}
   aido_seconds_per_forward: {batch_1: 0.8961, batch_4: 0.8843, batch_8: 0.8817}
+  hidden_readout_verdict: "no block reproduces the mask token with an uninformative in-distribution value: mask/visible 0.057-1.97, substituted/visible 0.31-1.14 over the 6 bidirectional blocks"
+  verification: {rollup_checks: 51, rollup_passed: 44, block_level_checks: 352, block_level_passed: 328}
 
 slurm_jobs: []   # on-demand fabric; job ids are recorded in the checkpoints
