@@ -26,6 +26,7 @@ from silico_figures import PLOTLY_CONFIG
 
 from .. import config as C
 from .. import paths
+from ..data import ceilings_grid
 from ..data import sources as data_sources
 from . import figures as figmod
 
@@ -245,6 +246,28 @@ def figure_text(ctx: dict, rel: str) -> dict[str, dict[str, str]]:
             ),
             "sources": src("noise_ceilings", ceil),
         },
+        "topk_overlap_grid": {
+            "title": "Top-k overlap against the chance level it has to beat",
+            "description": (
+                "Median overlap between the two split halves' top-k gene sets, over "
+                "k = 10, 50, 100 and 500 on a logarithmic axis, by effect-size stratum "
+                "and cell line. The dashed line is the chance level k/n for n expressed "
+                "genes; the open square marks the k quoted for that stratum and the "
+                "cross the median adaptive k. The lower panels show the same numbers as "
+                "excess over chance, where 0 is chance and 1 is an identical set."
+            ),
+            "findings": (
+                "Raw overlap climbs with k in every stratum, and most of that climb is "
+                "the chance level climbing underneath it: in the weakest HepG2 quartile "
+                f"the top-500 overlap of {_fmt(ctx.get('grid_s1_500_hepg2', float('nan')))} "
+                f"sits against a chance level of "
+                f"{_sig(ctx.get('grid_chance_500_hepg2', float('nan')))}, while the "
+                f"strongest quartile reaches {_fmt(ctx.get('grid_s4_500_hepg2', float('nan')))}. "
+                "In the excess panels the curves are nearly flat, so the ranking of the "
+                "strata, not the value of k, is what the metric is telling you."
+            ),
+            "sources": src("topk_overlap_grid", ceil),
+        },
         "ceiling_vs_cells": {
             "title": "Replicate agreement against cells per perturbation",
             "description": (
@@ -313,6 +336,21 @@ def compose(root: Path, rel: str) -> tuple[list[Section], dict]:
         for cl in LINES
     }
     genes = {cl: pd.read_parquet(root / "effects" / cl / "genes.parquet") for cl in LINES}
+    grid_files = {
+        cl: root / "effects" / cl / "topk_overlap_grid_summary.parquet" for cl in LINES
+    }
+    has_grid = all(p.exists() for p in grid_files.values())
+    grid = {cl: pd.read_parquet(p) for cl, p in grid_files.items()} if has_grid else {}
+    grid_qc = (
+        {
+            cl: json.loads(
+                (root / "effects" / cl / "topk_overlap_grid_qc.json").read_text()
+            )
+            for cl in LINES
+        }
+        if has_grid
+        else {}
+    )
     cov = json.loads((root / "gene_universe" / "coverage.json").read_text())
     cc_path = root / "crosscheck" / "summary.json"
     cc = json.loads(cc_path.read_text()) if cc_path.exists() else None
@@ -338,6 +376,20 @@ def compose(root: Path, rel: str) -> tuple[list[Section], dict]:
         p = pert[cl]
         s = p[p[a].notna() & p[b].notna()]
         return float(s[a].corr(s[b], method="spearman"))
+
+    def gcell(
+        cl: str,
+        stratum: str,
+        k_label: str,
+        column: str = "median_overlap",
+        split: str = "split_half_cells",
+    ) -> float:
+        sub = grid[cl][
+            (grid[cl].split == split)
+            & (grid[cl].k_label == k_label)
+            & (grid[cl].stratum == stratum)
+        ]
+        return float(sub[column].iloc[0]) if not sub.empty else float("nan")
 
     ctx = {
         "universe": cov["universe_size"],
@@ -371,6 +423,22 @@ def compose(root: Path, rel: str) -> tuple[list[Section], dict]:
         "median_cells_per_batch_hepg2": float(
             (pert["hepg2"].n_cells / pert["hepg2"].n_batches).median()
         ),
+        "grid_repro_max": max(
+            (
+                max(q["reproduction_of_published_ceilings"]["max_abs_diff"].values())
+                for q in grid_qc.values()
+            ),
+            default=float("nan"),
+        ),
+        "grid_chance_500_hepg2": gcell("hepg2", "all", "500", "chance") if has_grid else float("nan"),
+        "grid_s1_500_hepg2": gcell("hepg2", STRATA[0], "500") if has_grid else float("nan"),
+        "grid_s4_500_hepg2": gcell("hepg2", STRATA[-1], "500") if has_grid else float("nan"),
+        "n_expressed_hepg2": int(genes["hepg2"].expressed.sum()),
+        "n_expressed_jurkat": int(genes["jurkat"].expressed.sum()),
+        "de_by_stratum_jurkat": [
+            float(pert["jurkat"][pert["jurkat"].effect_stratum == s].n_de_genes.median())
+            for s in STRATA
+        ],
         "cc_spearman": cc["pooled_spearman"] if cc else float("nan"),
         "cc_entries": cc["n_pooled_entries"] if cc else 0,
         "own_lfc": cc["own_estimator_agreement"]["median_pearson_within_vs_pooled_lfc"]
@@ -674,6 +742,89 @@ def compose(root: Path, rel: str) -> tuple[list[Section], dict]:
             "`perturbations.parquet`; `noise_ceiling_summary.parquet` holds the median "
             "and the quartiles per stratum."
         ),
+        *(
+            [
+                Para(
+                    "The overlap metric is reported over a grid of k rather than at one "
+                    "k. For every perturbation and both split forms, the two sides' "
+                    "top-k sets are compared at k = "
+                    + ", ".join(str(k) for k in ceilings_grid.K_GRID)
+                    + ", and at an adaptive k defined below. The expensive part of this "
+                    "measurement is rebuilding the two split-half effect vectors from "
+                    "the raw count matrices; once they exist, another k costs "
+                    "microseconds, so the whole grid is computed and any k can be read "
+                    "off it. The k = "
+                    f"{C.EFFECTS.topk} column is the `topk_overlap` column already in "
+                    "`perturbations.parquet`, recomputed and identical to it. "
+                    "Per-perturbation values live in `topk_overlap_grid.parquet`, "
+                    "per-stratum medians in `topk_overlap_grid_summary.parquet`, and "
+                    "the split-half vectors themselves in `split_half_vectors.npz` "
+                    "(log2FC and delta, both sides, both split forms, float32 over "
+                    "expressed genes), so a later question about another k or another "
+                    "metric is a file read rather than another pass over the raw data. "
+                    "The stage re-reads the raw count matrices, because those vectors "
+                    "were not kept the first time, and it reproduces every published "
+                    "ceiling column exactly on the way through (largest absolute "
+                    f"difference {ctx['grid_repro_max']:g} over both split forms and all "
+                    "three metrics), so nothing already reported changes meaning."
+                ),
+                Para(
+                    "**Overlap has a floor that moves with k, so raw overlap is not "
+                    "comparable across k.** Two independent sets of size k drawn from n "
+                    "expressed genes share k/n of their members by chance. In HepG2, "
+                    f"with {ctx['n_expressed_hepg2']:,} expressed genes, that chance "
+                    f"level is {_sig(gcell('hepg2', 'all', '10', 'chance'))} at k = 10 "
+                    f"and {_sig(gcell('hepg2', 'all', '500', 'chance'))} at k = 500; in "
+                    f"Jurkat, with {ctx['n_expressed_jurkat']:,} expressed genes, "
+                    f"{_sig(gcell('jurkat', 'all', '10', 'chance'))} and "
+                    f"{_sig(gcell('jurkat', 'all', '500', 'chance'))}. A top-500 overlap "
+                    "of 0.30 is therefore under twice what two random draws reach, while "
+                    "a top-10 overlap of 0.30 is roughly a hundred times chance. "
+                    "Every cell of the grid is reported twice for that reason: the raw "
+                    "overlap, and the excess over chance, (overlap - chance) / "
+                    "(1 - chance), which is 0 when the two halves agree no better than "
+                    "two random draws and 1 when they select exactly the same genes."
+                ),
+                Para(
+                    "A fifth column sets k per perturbation rather than per stratum: k "
+                    "is that perturbation's own `n_de_genes`, clipped to "
+                    f"[{ceilings_grid.ADAPTIVE_K_MIN}, {ceilings_grid.ADAPTIVE_K_MAX}]. "
+                    "The strata are rank quartiles cut inside a cell line, so a stratum "
+                    "label does not fix a response size: the median S3 perturbation has "
+                    f"{ctx['de_by_stratum_hepg2'][2]:.0f} differentially expressed genes "
+                    f"in HepG2 against {ctx['de_by_stratum_jurkat'][2]:.0f} in Jurkat, "
+                    f"and the median S4 perturbation {ctx['de_by_stratum_hepg2'][3]:.0f} "
+                    f"against {ctx['de_by_stratum_jurkat'][3]:.0f}. Asking both lines for "
+                    "their top 500 genes asks a much harder question of Jurkat's top "
+                    "stratum than of HepG2's. A k tied to the perturbation's own "
+                    "response asks both the same question, at the cost of a chance level "
+                    "that changes from row to row, so the adaptive column carries its "
+                    "own chance value per perturbation."
+                ),
+                Para(
+                    "Two diagnostics travel with every cell, because the overlap can be "
+                    "quietly meaningless without them. Selecting the top k with "
+                    "`argpartition` breaks ties arbitrarily, which matters at small k "
+                    "where many genes sit near zero log2 fold change, so `tie_fraction` "
+                    "records the share of the selected set within numerical tolerance "
+                    f"(relative {ceilings_grid.TIE_RTOL:g}) of the k-th value; its floor "
+                    "is 1/k because the k-th value ties itself, and membership is only "
+                    "actually contested when a gene outside the set falls inside that "
+                    "tolerance too. Selection is on absolute log2 fold change with no "
+                    "expression or significance filter, so a small-k set can be "
+                    "dominated by low-expression genes whose ratios are large and "
+                    "unreliable; `median_control_cp10k_selected` records the median "
+                    "pooled control level of the selected genes, to be read against the "
+                    "median over all expressed genes ("
+                    f"{_fmt(float(genes['hepg2'][genes['hepg2'].expressed].pooled_control_cp10k.median()))} "
+                    "CP10K in HepG2, "
+                    f"{_fmt(float(genes['jurkat'][genes['jurkat'].expressed].pooled_control_cp10k.median()))} "
+                    "in Jurkat)."
+                ),
+            ]
+            if has_grid
+            else []
+        ),
         Para(
             "**A model score has to be read as a fraction of this number, not on its "
             "own.** If two independent measurements of the same perturbation agree at "
@@ -768,6 +919,168 @@ def compose(root: Path, rel: str) -> tuple[list[Section], dict]:
             "same perturbations is not an obvious route to a usable signal there."
         ),
     ]
+
+    if has_grid:
+        k_labels = [str(k) for k in ceilings_grid.K_GRID]
+        grid_header = (
+            ["cell line", "stratum"]
+            + [f"k = {k}" for k in k_labels]
+            + ["adaptive k"]
+        )
+        grid_rows = []
+        for cl in LINES:
+            grid_rows.append(
+                [LABEL[cl], "chance level"]
+                + [_sig(gcell(cl, "all", lab, "chance")) for lab in k_labels]
+                + [f"{_sig(gcell(cl, 'all', 'adaptive', 'chance'))} (median)"]
+            )
+            for s in STRATA:
+                cells = []
+                for lab in k_labels:
+                    cell = (
+                        f"{_fmt(gcell(cl, s, lab))} "
+                        f"({_fmt(gcell(cl, s, lab, 'median_excess_over_chance'))})"
+                    )
+                    if ceilings_grid.DIAGONAL_K.get(s) == int(lab):
+                        cell = f"**{cell}**"
+                    cells.append(cell)
+                cells.append(
+                    f"{_fmt(gcell(cl, s, 'adaptive'))} "
+                    f"({_fmt(gcell(cl, s, 'adaptive', 'median_excess_over_chance'))})"
+                    f" at k = {gcell(cl, s, 'adaptive', 'median_k'):g}"
+                )
+                grid_rows.append([LABEL[cl], s] + cells)
+
+        diag_header = [
+            "cell line",
+            "k",
+            "median tie fraction",
+            "selections with a contested boundary",
+            "median control level of the selected genes (CP10K)",
+        ]
+        diag_rows = [
+            [
+                LABEL[cl],
+                lab,
+                _sig(gcell(cl, "all", lab, "median_tie_fraction")),
+                f"{100 * gcell(cl, 'all', lab, 'frac_selection_contested'):.2f}%",
+                _fmt(gcell(cl, "all", lab, "median_control_cp10k_selected")),
+            ]
+            for cl in LINES
+            for lab in k_labels + ["adaptive"]
+        ]
+
+        def split_gap(cl: str) -> float:
+            return max(
+                abs(gcell(cl, s, lab) - gcell(cl, s, lab, split="split_by_batch"))
+                for s in STRATA
+                for lab in k_labels + ["adaptive"]
+            )
+
+        nc.blocks += [
+            Head(4, "The top-k overlap grid"),
+            Para(
+                "Median overlap of the two halves' top-k gene sets, split by cell, with "
+                "excess over chance in parentheses and each stratum's own k in bold. "
+                "The chance row is the overlap two independent draws of the same size "
+                "reach, and the adaptive column uses each perturbation's own "
+                "differentially expressed gene count as its k. Splitting by sequencing "
+                "batch instead of by cell moves no cell of this table by more than "
+                f"{_fmt(max(split_gap(cl) for cl in LINES))}."
+            ),
+            Table(grid_header, grid_rows),
+            Para(
+                "**Reading across a row shows why the chance level has to be quoted "
+                "with the number.** The weakest HepG2 quartile appears to improve from "
+                f"{_fmt(gcell('hepg2', STRATA[0], '10'))} at k = 10 to "
+                f"{_fmt(gcell('hepg2', STRATA[0], '500'))} at k = 500, which looks like "
+                "a better measurement at larger k. It is not: chance rises from "
+                f"{_sig(gcell('hepg2', 'all', '10', 'chance'))} to "
+                f"{_sig(gcell('hepg2', 'all', '500', 'chance'))} over the same span, so "
+                "the excess over chance stays near "
+                f"{_fmt(gcell('hepg2', STRATA[0], '500', 'median_excess_over_chance'))} "
+                "throughout. Two thirds of that top-500 overlap is what two random draws "
+                "would have produced. The same row in Jurkat reads "
+                f"{_fmt(gcell('jurkat', STRATA[0], '500'))} against a chance level of "
+                f"{_sig(gcell('jurkat', 'all', '500', 'chance'))}."
+            ),
+            Para(
+                "**Reading down a column shows which k can see the effect-size "
+                "ordering.** At k = 50 and above, the top stratum separates cleanly from "
+                "the bottom one in both cell lines: in HepG2 the excess runs "
+                f"{_fmt(gcell('hepg2', STRATA[0], '100', 'median_excess_over_chance'))} "
+                f"to {_fmt(gcell('hepg2', STRATA[-1], '100', 'median_excess_over_chance'))} "
+                "at k = 100, and in Jurkat "
+                f"{_fmt(gcell('jurkat', STRATA[0], '100', 'median_excess_over_chance'))} "
+                f"to {_fmt(gcell('jurkat', STRATA[-1], '100', 'median_excess_over_chance'))}. "
+                "At k = 10 it cannot: a per-perturbation overlap of ten genes takes only "
+                "the eleven values 0, 0.1, ..., 1, so the median collapses onto that "
+                "grid and three of the four HepG2 strata land on exactly "
+                f"{_fmt(gcell('hepg2', STRATA[-1], '10'))}. k = 10 is a legitimate "
+                "question about the few strongest genes, but it is too coarse to rank "
+                "perturbations by, and a model compared at k = 10 on a single "
+                "perturbation is being scored on a ten-way coin toss."
+            ),
+            FigRef("topk_overlap_grid"),
+            Para(
+                "**The adaptive column is the one that compares the two cell lines.** "
+                "Each perturbation is asked for as many genes as it actually moved, so "
+                "the median k is "
+                f"{gcell('hepg2', STRATA[2], 'adaptive', 'median_k'):g} in HepG2's S3 "
+                f"against {gcell('jurkat', STRATA[2], 'adaptive', 'median_k'):g} in "
+                "Jurkat's, and "
+                f"{gcell('hepg2', STRATA[-1], 'adaptive', 'median_k'):g} against "
+                f"{gcell('jurkat', STRATA[-1], 'adaptive', 'median_k'):g} in S4. On "
+                "that footing the top HepG2 stratum reproduces its own response at an "
+                "excess of "
+                f"{_fmt(gcell('hepg2', STRATA[-1], 'adaptive', 'median_excess_over_chance'))} "
+                "against "
+                f"{_fmt(gcell('jurkat', STRATA[-1], 'adaptive', 'median_excess_over_chance'))} "
+                "in Jurkat, so the S4 label covers a substantially more reproducible set "
+                "of perturbations in HepG2 than in Jurkat. In the bottom two strata the "
+                "adaptive k collapses to the floor of "
+                f"{ceilings_grid.ADAPTIVE_K_MIN} "
+                "in HepG2, because the median perturbation there has fewer than ten "
+                "differentially expressed genes at all, which is another way of saying "
+                "the same thing the correlation ceiling says: there is little there to "
+                "reproduce."
+            ),
+            Table(diag_header, diag_rows),
+            Para(
+                "The two diagnostics land differently. Ties are not a practical problem "
+                "in this data: the median tie fraction is exactly the 1/k floor in every "
+                "cell, so the only value tied with the k-th value is the k-th value "
+                "itself, and the share of selections where any gene outside the set is "
+                "indistinguishable from the boundary peaks at "
+                f"{100 * max(gcell(cl, s, lab, 'frac_selection_contested') for cl in LINES for s in STRATA + ['all'] for lab in k_labels + ['adaptive']):.2f}% "
+                "across every cell of the grid. The expression diagnostic is the one "
+                "worth carrying: the selected genes sit below the typical expressed gene "
+                "everywhere, from "
+                f"{_fmt(min(gcell(cl, s, lab, 'median_control_cp10k_selected') for cl in LINES for s in STRATA + ['all'] for lab in k_labels + ['adaptive']))} "
+                "to "
+                f"{_fmt(max(gcell(cl, s, lab, 'median_control_cp10k_selected') for cl in LINES for s in STRATA + ['all'] for lab in k_labels + ['adaptive']))} "
+                "CP10K against about 1 CP10K over all expressed genes, and the lean is "
+                "strongest exactly where the signal is weakest "
+                f"({_fmt(gcell('jurkat', STRATA[0], '10', 'median_control_cp10k_selected'))} "
+                "CP10K for the lowest Jurkat stratum at k = 10 against "
+                f"{_fmt(gcell('hepg2', STRATA[-1], '500', 'median_control_cp10k_selected'))} "
+                "for the highest HepG2 stratum at k = 500). Ranking by absolute log2 "
+                "fold change with no expression filter does pull in genes whose ratios "
+                "are large because their denominators are small, so a later run that "
+                "wants a top-k comparison to be about biology rather than about counting "
+                "noise should either add an expression floor or read this column as the "
+                "caveat it is."
+            ),
+            Para(
+                "None of this changes a number that was already reported: the k = "
+                f"{C.EFFECTS.topk} column is the published `topk_overlap` column, "
+                "recomputed to the last bit, and the correlation and cosine ceilings are "
+                "untouched. What the grid adds is the ability to quote an overlap "
+                "honestly. A top-k overlap without its k, its chance level and its "
+                "expressed-gene count is not interpretable, and the same overlap value "
+                "can mean a strong result at k = 10 and a near-chance result at k = 500."
+            ),
+        ]
     S.append(nc)
 
     # ---------------- crosscheck ----------------
@@ -1250,6 +1563,10 @@ def compose(root: Path, rel: str) -> tuple[list[Section], dict]:
             "effects/<cell_line>/perturbations.parquet    per-perturbation metadata, knockdown, DE, strata, ceilings\n"
             "effects/<cell_line>/genes.parquet            gene index, pooled control level, expressed flag\n"
             "effects/<cell_line>/noise_ceiling_summary.parquet   per-stratum medians and quartiles\n"
+            "effects/<cell_line>/topk_overlap_grid.parquet        per-perturbation overlap at every k, with chance and diagnostics\n"
+            "effects/<cell_line>/topk_overlap_grid_summary.parquet  per-stratum medians of that grid\n"
+            "effects/<cell_line>/split_half_vectors.npz   the two split halves' log2FC and delta vectors\n"
+            "effects/<cell_line>/topk_overlap_grid_qc.json  grid config, chance levels, reproduction of the published ceilings\n"
             "effects/<cell_line>/qc.json                  provenance, filter funnel, config, environment\n"
             "crosscheck/summary.json                      agreement with the published reanalysis\n"
             "gene_universe/gene_universe.parquet          one row per shared gene, with each model's token position\n"
@@ -1268,7 +1585,13 @@ def compose(root: Path, rel: str) -> tuple[list[Section], dict]:
             "and ordered across strata, the reference Spearman against its gate, "
             "vocabulary positions inside each model's vocabulary, and one finite response "
             "vector per model with its contract fields filled in, including a symmetry "
-            "field that is either answered or explicitly measured and inconclusive."
+            "field that is either answered or explicitly measured and inconclusive. For "
+            "the overlap grid it also re-derives the chance levels from the expressed-gene "
+            "count, re-checks the excess-over-chance definition and the adaptive k on "
+            "every row, confirms that the k = "
+            f"{C.EFFECTS.topk} column still equals the published `topk_overlap` column, "
+            "and recomputes the overlap from the persisted split-half vectors to confirm "
+            "they are the vectors that were scored."
         ),
     ]
     S.append(fc)

@@ -23,6 +23,7 @@ import json
 import platform
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 import h5py
@@ -166,6 +167,33 @@ def _lfc(pert: np.ndarray, ctrl: np.ndarray) -> np.ndarray:
     return np.log2((pert + eps) / (ctrl + eps))
 
 
+def control_profiles(acc: Accumulators, n_batches: int, n_genes: int) -> dict:
+    """Non-targeting control means: per batch, per control half, and pooled.
+
+    ``expressed`` is the gene mask every magnitude, ceiling and cross-check
+    statistic is restricted to, so it is derived here rather than at each use.
+    """
+    c_lin = acc.c_lin.reshape(n_batches, 2, n_genes)
+    c_n = acc.c_n
+    n_ctrl_total = int(c_n.sum())
+    ctrl_pooled = acc.c_lin.sum(0) / max(n_ctrl_total, 1)
+    ctrl_log_m = acc.c_log.sum(0) / max(n_ctrl_total, 1)
+    return {
+        "ctrl_mean_per_batch": _safe_mean(c_lin.sum(1), c_n.sum(1)),
+        "ctrl_mean_half": np.stack(
+            [_safe_mean(c_lin[:, 0], c_n[:, 0]), _safe_mean(c_lin[:, 1], c_n[:, 1])]
+        ),
+        "n_control_cells": n_ctrl_total,
+        "ctrl_pooled": ctrl_pooled,
+        "ctrl_log_mean": ctrl_log_m,
+        "ctrl_log_var": np.maximum(
+            (acc.c_log2.sum(0) - n_ctrl_total * ctrl_log_m**2) / max(n_ctrl_total - 1, 1),
+            0.0,
+        ),
+        "expressed": ctrl_pooled >= C.EFFECTS.expressed_min_cp10k,
+    }
+
+
 def matched_control(weights: np.ndarray, ctrl_mean_per_batch: np.ndarray) -> np.ndarray:
     """Batch-matched control profile: control means weighted by the
     perturbation's own per-batch cell counts."""
@@ -176,8 +204,40 @@ def matched_control(weights: np.ndarray, ctrl_mean_per_batch: np.ndarray) -> np.
     return (w / total) @ ctrl_mean_per_batch
 
 
-def run(cell_line: str, out_dir: Path, raw_dir: Path) -> dict:
-    started = time.time()
+@dataclass
+class Staged:
+    """What the two streaming passes over one raw h5ad produce.
+
+    Everything downstream -- effects, differential expression, the noise
+    ceilings, and any later recompute of a ceiling metric -- is a function of
+    these arrays alone, so a stage that only needs the ceilings runs the same
+    filtering and the same seeded split assignment as the original run instead
+    of a second copy of that logic.
+    """
+
+    cell_line: str
+    download: dict
+    n_cells: int
+    n_genes: int
+    funnel: list
+    keep: np.ndarray
+    is_control: np.ndarray
+    target_label: np.ndarray
+    targets: np.ndarray
+    target_idx: np.ndarray
+    batches: np.ndarray
+    batch_idx: np.ndarray
+    batches_per_target: np.ndarray
+    pert_keep: np.ndarray
+    cell_half: np.ndarray
+    batch_set: np.ndarray
+    acc: "Accumulators"
+    obs: pd.DataFrame
+    var: pd.DataFrame
+
+
+def stage(cell_line: str, raw_dir: Path) -> Staged:
+    """Download, filter, assign the splits, and accumulate the group sums."""
     url = sources.h5ad_url(cell_line)
     dest = raw_dir / sources.H5AD_FILES[cell_line]
     print(f"[{cell_line}] download {url}", flush=True)
@@ -350,24 +410,51 @@ def run(cell_line: str, out_dir: Path, raw_dir: Path) -> dict:
             acc,
         )
 
+    return Staged(
+        cell_line=cell_line,
+        download=dl,
+        n_cells=int(n_cells),
+        n_genes=int(n_genes),
+        funnel=funnel,
+        keep=keep,
+        is_control=is_control,
+        target_label=target_label,
+        targets=targets,
+        target_idx=target_idx,
+        batches=batches,
+        batch_idx=batch_idx,
+        batches_per_target=batches_per_target,
+        pert_keep=pert_keep,
+        cell_half=cell_half,
+        batch_set=batch_set,
+        acc=acc,
+        obs=obs,
+        var=var,
+    )
+
+
+def run(cell_line: str, out_dir: Path, raw_dir: Path) -> dict:
+    started = time.time()
+    st = stage(cell_line, raw_dir)
+    dl, funnel, acc = st.download, st.funnel, st.acc
+    obs, var = st.obs, st.var
+    n_cells, n_genes = st.n_cells, st.n_genes
+    targets, target_label = st.targets, st.target_label
+    n_targets, n_batches = targets.size, st.batches.size
+    keep = st.keep
+    pert_keep, batches_per_target = st.pert_keep, st.batches_per_target
+
     gene_ids = var["gene_id"].to_numpy().astype(str)
     gene_names = var["gene_name"].to_numpy().astype(str)
 
     # ---- control profiles
-    c_lin = acc.c_lin.reshape(n_batches, 2, n_genes)
-    c_n = acc.c_n
-    ctrl_mean_per_batch = _safe_mean(c_lin.sum(1), c_n.sum(1))
-    ctrl_mean_half = np.stack(
-        [_safe_mean(c_lin[:, 0], c_n[:, 0]), _safe_mean(c_lin[:, 1], c_n[:, 1])]
-    )
-    n_ctrl_total = int(c_n.sum())
-    ctrl_pooled = acc.c_lin.sum(0) / max(n_ctrl_total, 1)
-    ctrl_log_m = acc.c_log.sum(0) / max(n_ctrl_total, 1)
-    ctrl_log_v = np.maximum(
-        (acc.c_log2.sum(0) - n_ctrl_total * ctrl_log_m**2) / max(n_ctrl_total - 1, 1), 0.0
-    )
-
-    expressed = ctrl_pooled >= C.EFFECTS.expressed_min_cp10k
+    cp = control_profiles(acc, n_batches, n_genes)
+    ctrl_mean_per_batch = cp["ctrl_mean_per_batch"]
+    ctrl_mean_half = cp["ctrl_mean_half"]
+    n_ctrl_total = cp["n_control_cells"]
+    ctrl_pooled = cp["ctrl_pooled"]
+    ctrl_log_m, ctrl_log_v = cp["ctrl_log_mean"], cp["ctrl_log_var"]
+    expressed = cp["expressed"]
 
     # ---- per-perturbation effects
     keep_t = np.flatnonzero(pert_keep)

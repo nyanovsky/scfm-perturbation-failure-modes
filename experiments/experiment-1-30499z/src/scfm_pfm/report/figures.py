@@ -24,6 +24,7 @@ from silico_figures import EDITORIAL_8, add_reference_line, apply_theme, save_fi
 
 from .. import config as C
 from .. import paths
+from ..data.ceilings_grid import DIAGONAL_K, K_GRID
 
 LINES = ("hepg2", "jurkat")
 LABEL = {"hepg2": "HepG2", "jurkat": "Jurkat"}
@@ -346,6 +347,112 @@ def fig_ceilings(root: Path, out: Path) -> Fig:
     )
 
 
+def fig_topk_grid(root: Path, out: Path) -> Fig:
+    """Top-k overlap over the whole k grid, against the chance level it has to beat."""
+    col = colors(out)
+    split = "split_half_cells"
+    k_labels = [str(k) for k in K_GRID]
+    frames = {
+        cl: pd.read_parquet(root / "effects" / cl / "topk_overlap_grid_summary.parquet")
+        for cl in LINES
+    }
+    fig = make_subplots(
+        rows=2, cols=2, shared_xaxes=True,
+        subplot_titles=[LABEL[cl] for cl in LINES] + ["", ""],
+        vertical_spacing=0.08, horizontal_spacing=0.07,
+    )
+    data = {}
+    for i, cl in enumerate(LINES, start=1):
+        df = frames[cl]
+        one = df[df.split == split]
+        fixed = one[one.k_label.isin(k_labels)].assign(k=lambda x: x.k_label.astype(int))
+        adaptive = one[one.k_label == "adaptive"].set_index("stratum")
+        for stratum in STRATA:
+            s = fixed[fixed.stratum == stratum].sort_values("k")
+            for row, ycol, name in (
+                (1, "median_overlap", "overlap"),
+                (2, "median_excess_over_chance", "excess"),
+            ):
+                fig.add_trace(
+                    go.Scatter(
+                        x=s.k, y=s[ycol], mode="lines+markers", name=stratum,
+                        legendgroup=stratum, showlegend=(i == 1 and row == 1),
+                        line={"color": col[stratum], "width": 2},
+                        marker={"color": col[stratum], "size": 7},
+                        hovertemplate=f"{stratum}<br>k %{{x}}<br>median {name} "
+                        "%{y:.4f}<extra></extra>",
+                    ),
+                    row=row, col=i,
+                )
+        chance = fixed[fixed.stratum == "all"].sort_values("k")
+        fig.add_trace(
+            go.Scatter(
+                x=chance.k, y=chance.chance, mode="lines", name="chance, k/n",
+                legendgroup="chance", showlegend=i == 1,
+                line={"color": EDITORIAL_8[7], "width": 2, "dash": "dash"},
+                hovertemplate="k %{x}<br>chance %{y:.4f}<extra></extra>",
+            ),
+            row=1, col=i,
+        )
+        diag = pd.DataFrame(
+            [
+                fixed[(fixed.stratum == s) & (fixed.k == k)].iloc[0]
+                for s, k in DIAGONAL_K.items()
+            ]
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=diag.k, y=diag.median_overlap, mode="markers",
+                name="stratum's own k", legendgroup="diagonal", showlegend=i == 1,
+                marker={
+                    "symbol": "square-open", "size": 15,
+                    "color": [col[s] for s in diag.stratum], "line": {"width": 2},
+                },
+                text=diag.stratum,
+                hovertemplate="%{text}<br>k %{x}<br>median overlap %{y:.4f}<extra></extra>",
+            ),
+            row=1, col=i,
+        )
+        ad = adaptive.reindex(STRATA).reset_index()
+        fig.add_trace(
+            go.Scatter(
+                x=ad.median_k, y=ad.median_overlap, mode="markers",
+                name="adaptive k", legendgroup="adaptive", showlegend=i == 1,
+                marker={
+                    "symbol": "x", "size": 9, "color": [col[s] for s in ad.stratum],
+                },
+                text=ad.stratum,
+                hovertemplate="%{text}<br>median adaptive k %{x:.0f}<br>"
+                "median overlap %{y:.4f}<extra></extra>",
+            ),
+            row=1, col=i,
+        )
+        fig.update_xaxes(
+            type="log", tickvals=list(K_GRID), ticktext=[str(k) for k in K_GRID],
+            title_text="genes kept per side, k", row=2, col=i,
+        )
+        fig.update_xaxes(type="log", tickvals=list(K_GRID), row=1, col=i)
+        data[LABEL[cl]] = one.to_dict("records")
+    add_reference_line(fig, y=0.0, label="chance", row=2, col="all")
+    fig.update_yaxes(title_text="median top-k overlap", row=1, col=1)
+    fig.update_yaxes(title_text="median excess over chance", row=2, col=1)
+    apply_theme(fig, height=660)
+    return Fig(
+        "topk_overlap_grid",
+        fig,
+        data,
+        "Median overlap of the two split halves' top-k gene sets, over k = 10, 50, 100 "
+        "and 500 (log axis), by effect-size stratum and cell line. The dashed line is "
+        "the chance level k/n for n expressed genes, the open square is the k the "
+        "report quotes for that stratum, and the cross is the median adaptive k, which "
+        "is each perturbation's own differential-expression count clipped to [10, 500]. "
+        "The lower panels rescale the same numbers as excess over chance, where 0 is "
+        "chance and 1 is a perfectly reproduced set. Raw overlap climbs with k largely "
+        "because chance climbs with k; the excess does not.",
+        {"split": split, "k_grid": list(K_GRID)},
+    )
+
+
 def fig_ceiling_vs_cells(root: Path, out: Path) -> Fig:
     """The same ceiling against how many cells the perturbation actually has."""
     col = colors(out)
@@ -601,6 +708,7 @@ BUILDERS: dict[str, Callable[[Path, Path], Fig]] = {
     "effect_size_vs_de": fig_effect_size,
     "reference_crosscheck": fig_crosscheck,
     "noise_ceilings": fig_ceilings,
+    "topk_overlap_grid": fig_topk_grid,
     "ceiling_vs_cells": fig_ceiling_vs_cells,
     "model_gene_coverage": fig_model_coverage,
     "model_responses_on_one_cell": fig_model_responses,

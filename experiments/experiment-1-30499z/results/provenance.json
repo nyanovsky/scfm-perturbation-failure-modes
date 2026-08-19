@@ -32,7 +32,8 @@
       "aido_cell": "807222987875",
       "scprint": "843963170442",
       "transcriptformer": "110126229432"
-    }
+    },
+    "ceiling_grid_recompute": "999230088447"
   },
   "contract": {
     "effects": [
@@ -40,7 +41,11 @@
       "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/perturbations.parquet",
       "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/genes.parquet",
       "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/noise_ceiling_summary.parquet",
-      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/qc.json"
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/qc.json",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/topk_overlap_grid.parquet",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/topk_overlap_grid_summary.parquet",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/split_half_vectors.npz",
+      "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/effects/<cell_line>/topk_overlap_grid_qc.json"
     ],
     "gene_universe": [
       "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/gene_universe/gene_universe.parquet",
@@ -59,6 +64,24 @@
       "results/crosscheck/summary.json (pod-side, also uploaded)"
     ]
   },
-  "done_condition": "uv run python -m scfm_pfm.verify --all  ->  84/84 checks passed",
-  "seed": 42
+  "done_condition": "uv run python -m scfm_pfm.verify --all  ->  102/102 checks passed",
+  "seed": 42,
+  "updated_at": "2026-08-19T02:10:00Z",
+  "ceiling_grid_recompute": {
+    "what": "top-k overlap ceiling recomputed over k = 10, 50, 100, 500 and a per-perturbation adaptive k, with chance levels and the split-half vectors persisted",
+    "job": "999230088447",
+    "image": "docker.io/library/python:3.12-slim @ sha256:2c941e860699f878900b0edc2403613c234d4b32eda3cc9fa7036991a2a63c4a",
+    "requirements": "envs/ceilings_grid_requirements.lock (numpy 2.2.6, pandas 2.3.3, h5py 3.15.1, pyarrow 17.0.0)",
+    "reproduction": "max abs diff 0.0 against every published ceiling column, both cell lines, both split forms, all three metrics",
+    "unchanged": [
+      "effects.npz",
+      "perturbations.parquet",
+      "genes.parquet",
+      "noise_ceiling_summary.parquet",
+      "qc.json",
+      "crosscheck/",
+      "gene_universe/",
+      "models/"
+    ]
+  }
 }

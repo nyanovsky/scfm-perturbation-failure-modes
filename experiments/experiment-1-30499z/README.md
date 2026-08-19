@@ -32,6 +32,7 @@ Two auditable artifacts that every later run in this thread reads through a
 ```bash
 # data track (CPU, high memory; ~15 GB of raw h5ads land on the job volume)
 python3 -m scfm_pfm.data.prepare --cell-line all
+python3 -m scfm_pfm.data.ceilings_grid --cell-line all   # top-k ceilings over a k grid
 python3 -m scfm_pfm.data.crosscheck            # vs the tahoebio reference release
 
 # model track
@@ -54,6 +55,10 @@ All durable outputs live under the experiment artifact store, rooted at
 | per-perturbation table | `effects/<cl>/perturbations.parquet` | knockdown, DE counts, effect-size strata, split-half and split-by-batch ceilings |
 | gene tables | `effects/<cl>/genes.parquet` | pooled control CP10K and the expressed-gene flag |
 | ceiling summary | `effects/<cl>/noise_ceiling_summary.parquet` | per-stratum medians and quartiles for both splits and both metrics |
+| top-k overlap grid | `effects/<cl>/topk_overlap_grid.parquet` | per-perturbation overlap at k = 10, 50, 100, 500 and an adaptive k, each with its chance level, excess over chance, tie fraction and selected-gene expression level |
+| grid summary | `effects/<cl>/topk_overlap_grid_summary.parquet` | per-stratum medians of that grid (also tracked in `results/ceiling_grid/`) |
+| split-half vectors | `effects/<cl>/split_half_vectors.npz` | the two split halves' log2FC and delta vectors, both split forms, float32 over expressed genes; rows follow `perturbations.parquet` |
+| grid QC | `effects/<cl>/topk_overlap_grid_qc.json` | grid config, chance levels, and the exact reproduction of the published ceiling columns |
 | filter/QC record | `effects/<cl>/qc.json` | funnel counts, config, retained counts, environment |
 | gene universe | `gene_universe/gene_universe.parquet` | 7,444 genes measured in both lines and present in all four vocabularies |
 | model vocabularies | `gene_universe/vocabulary_<model>.parquet` | position, token, resolved Ensembl id, resolution route |
@@ -75,7 +80,11 @@ checkpoints: `wanglab/scGPT-human` @ `a24c2377`, `genbio-ai/GB.Cell-100M` @
 `a983b388` (published as AIDO.Cell-100M), scPRINT `medium-v1.5.ckpt` @
 `8e1ad1a1`, TranscriptFormer `tf_sapiens`. One pinned stack
 (`envs/model_stack.sh`, torch 2.5.1+cu121) on `python:3.11-slim` + H100; each
-model still runs in its own job and records its own resolved package set. No
-external model API or LLM was used. Seed 42. Done condition:
-`uv run python -m scfm_pfm.verify --all` -> 84/84 checks passed
-(2026-08-18).
+model still runs in its own job and records its own resolved package set. The
+ceiling grid re-ran the ceiling stage only, from the same raw h5ads, on
+`python:3.11-slim`'s sibling `python:3.12-slim` with the versions pinned in
+`envs/ceilings_grid_requirements.lock`; it reproduces the published ceiling
+columns exactly and leaves the effect matrices, cross-check, gene universe and
+model contract byte-identical. No external model API or LLM was used. Seed 42.
+Done condition: `uv run python -m scfm_pfm.verify --all` -> 102/102 checks
+passed (2026-08-19).

@@ -12,6 +12,15 @@ verifying artifacts under /tmp/scfm_mirror
   PASS  effects:hepg2/ceiling_range                          30 ceiling estimates all in (0, 1]
   PASS  effects:hepg2/ceiling_split_half_cells               pearson_lfc S1_lowest=0.0961 < S4_highest=0.7031
   PASS  effects:hepg2/ceiling_split_by_batch                 pearson_lfc S1_lowest=0.0934 < S4_highest=0.7044
+  PASS  grid:hepg2/files                                     4 files under /tmp/scfm_mirror/effects/hepg2
+  PASS  grid:hepg2/reproduces_ceilings                       recompute reproduces every published ceiling column exactly (max abs diff 0 over 6 split x metric combinations, pooled control CP10K 0)
+  PASS  grid:hepg2/k50_column_unchanged                      the k=50 column of the grid is the published topk_overlap column, both splits (max abs diff 0 over 1,982 perturbations)
+  PASS  grid:hepg2/chance_level                              chance = k/3,119 expressed genes: k=10 -> 0.0032, k=50 -> 0.0160, k=100 -> 0.0321, k=500 -> 0.1603
+  PASS  grid:hepg2/excess_over_chance                        (overlap - chance)/(1 - chance) on 19,820 rows, 94.5% above chance
+  PASS  grid:hepg2/excess_rises_with_effect                  S1_lowest -> S4_highest excess over chance, split by cell (k=10: 0.1974 -> 0.1974; k=50: 0.0853 -> 0.3699; k=100: 0.0805 -> 0.4215; k=500: 0.0925 -> 0.4188; k=adaptive: 0.1558 -> 0.4188); strict for k >= 50, non-decreasing at k = 10 where the median is quantised to steps of 0.1
+  PASS  grid:hepg2/adaptive_k                                k = clip(n_de_genes, 10, 500) on every row; median k 36, 39.0% at the floor and 26.7% at the ceiling
+  PASS  grid:hepg2/selection_diagnostics                     tie fraction within [1/k, 1] everywhere; 0.14% of selections have any gene tied with the k-th value; median control level of the selected genes 0.7550 CP10K against 1.0108 over all expressed genes
+  PASS  grid:hepg2/persisted_vectors                         8 float32 arrays of 1,982 x 3,119 (185 MB); rows follow perturbations.parquet; overlap recomputed from them differs from the published column by at most 0 over 25 sampled perturbations
   PASS  effects:jurkat/files                                 5/5 present under /tmp/scfm_mirror/effects/jurkat
   PASS  effects:jurkat/shapes                                2201 perturbations x 8882 genes, tables agree
   PASS  effects:jurkat/finite                                non-finite entries {'delta_within_batch': 0, 'delta_pooled': 0, 'lfc_within_batch': 0, 'lfc_pooled': 0}
@@ -24,6 +33,15 @@ verifying artifacts under /tmp/scfm_mirror
   PASS  effects:jurkat/ceiling_range                         30 ceiling estimates all in (0, 1]
   PASS  effects:jurkat/ceiling_split_half_cells              pearson_lfc S1_lowest=0.1041 < S4_highest=0.4347
   PASS  effects:jurkat/ceiling_split_by_batch                pearson_lfc S1_lowest=0.0992 < S4_highest=0.4305
+  PASS  grid:jurkat/files                                    4 files under /tmp/scfm_mirror/effects/jurkat
+  PASS  grid:jurkat/reproduces_ceilings                      recompute reproduces every published ceiling column exactly (max abs diff 0 over 6 split x metric combinations, pooled control CP10K 0)
+  PASS  grid:jurkat/k50_column_unchanged                     the k=50 column of the grid is the published topk_overlap column, both splits (max abs diff 0 over 2,201 perturbations)
+  PASS  grid:jurkat/chance_level                             chance = k/3,469 expressed genes: k=10 -> 0.0029, k=50 -> 0.0144, k=100 -> 0.0288, k=500 -> 0.1441
+  PASS  grid:jurkat/excess_over_chance                       (overlap - chance)/(1 - chance) on 22,010 rows, 91.2% above chance
+  PASS  grid:jurkat/excess_rises_with_effect                 S1_lowest -> S4_highest excess over chance, split by cell (k=10: 0.0974 -> 0.1977; k=50: 0.0463 -> 0.1579; k=100: 0.0527 -> 0.1660; k=500: 0.0840 -> 0.1798; k=adaptive: 0.0974 -> 0.1873); strict for k >= 50, non-decreasing at k = 10 where the median is quantised to steps of 0.1
+  PASS  grid:jurkat/adaptive_k                               k = clip(n_de_genes, 10, 500) on every row; median k 61, 32.6% at the floor and 19.4% at the ceiling
+  PASS  grid:jurkat/selection_diagnostics                    tie fraction within [1/k, 1] everywhere; 0.09% of selections have any gene tied with the k-th value; median control level of the selected genes 0.7019 CP10K against 1.0232 over all expressed genes
+  PASS  grid:jurkat/persisted_vectors                        8 float32 arrays of 2,201 x 3,469 (228 MB); rows follow perturbations.parquet; overlap recomputed from them differs from the published column by at most 0 over 25 sampled perturbations
   PASS  universe/files                                       /tmp/scfm_mirror/gene_universe
   PASS  universe/size                                        7,444 genes present in all four model vocabularies (of 7632 measured in both cell lines)
   PASS  universe/unique                                      7,444 unique Ensembl ids
@@ -85,4 +103,4 @@ verifying artifacts under /tmp/scfm_mirror
   PASS  model:transcriptformer/environment                   79 pinned packages, image docker.io/library/python:3.11-slim, device cuda
   PASS  model:transcriptformer/substitutions                 1 recorded substitution(s): compile_block_mask disabled (eager flex-attention block mask) so that a single-cell forwar
 
-84/84 checks passed
+102/102 checks passed
