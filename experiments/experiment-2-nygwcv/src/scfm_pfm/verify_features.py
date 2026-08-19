@@ -366,7 +366,7 @@ def wiring_detail(block_dir: Path, manifest: dict, readout: pd.DataFrame, pertur
     grid = list(z["value_grid_cp10k"]) if "value_grid_cp10k" in z.files else list(C.VALUE_GRID_CP10K)
     positive = [i for i, v in enumerate(grid) if v > 0]
     lo_i, hi_i = positive[0], positive[-1]
-    cols = perturbed["readout_col"].to_numpy(dtype=np.int64)[: raw.shape[0]]
+    cols = perturbed_cols(z, perturbed)
     level = readout["pooled_control_cp10k"].to_numpy(dtype=np.float64)
     passes, levels = [], []
     for pi, col in enumerate(cols):
@@ -389,6 +389,26 @@ def wiring_detail(block_dir: Path, manifest: dict, readout: pd.DataFrame, pertur
         for name, mask in bins
         if mask.any()
     ]
+
+
+def perturbed_cols(z: "np.lib.npyio.NpzFile", perturbed: pd.DataFrame) -> np.ndarray:
+    """The read-out column of each row of an array, read from the array's own labels.
+
+    An anchor may run over a subset of the perturbed genes --- the individual-cell
+    anchor does --- and that subset is not the first rows of the perturbed table.
+    Every array file stores the gene ids of its own rows, so join on those rather
+    than assuming an order.
+    """
+    lookup = dict(
+        zip(perturbed["gene_id"].astype(str), perturbed["readout_col"].astype(int))
+    )
+    if "perturbed_gene_id" in z.files:
+        ids = [str(g) for g in z["perturbed_gene_id"]]
+        missing = [g for g in ids if g not in lookup]
+        if missing:
+            raise SystemExit(f"{len(missing)} array rows are not in the perturbed table: {missing[:3]}")
+        return np.asarray([lookup[g] for g in ids], dtype=np.int64)
+    return perturbed["readout_col"].to_numpy(dtype=np.int64)
 
 
 #: an alignment statistic counts as separated from its permuted null by these margins
@@ -431,7 +451,9 @@ def alignment_detail(block_dir: Path, manifest: dict, perturbed: pd.DataFrame) -
         positive = [i for i, v in enumerate(grid) if v > 0]
         lo_i, hi_i = positive[0], positive[-1]
         n_p, n_r = raw.shape[0], raw.shape[2]
-        cols = perturbed["readout_col"].to_numpy(dtype=np.int64)[:n_p]
+        cols = perturbed_cols(z, perturbed)
+        if cols.shape[0] != n_p:
+            raise SystemExit(f"{anchor}: {cols.shape[0]} labelled rows for {n_p} array rows")
         perm = rng.permutation(n_r)
         ranks, ranks_null, signs, signs_null = [], [], [], []
         for pi, col in enumerate(cols):
