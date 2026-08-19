@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -107,16 +106,36 @@ def verify_block(block_dir: Path, ch: Checks) -> dict:
                     have_recentred,
                     "the recentred variant sits beside the raw one for a softmax model",
                 )
+            # A response that is identically zero is a query the model could not see:
+            # the perturbed value landed on the value the input already carried. It is a
+            # real property of a quantized input, and a consumer needs to know how much
+            # of a block is degenerate before averaging over it.
+            flat = raw.reshape(-1, raw.shape[-1])
             bundle["blocks"][f"{anchor}/{form}"] = {
                 "shape": list(raw.shape),
                 "finite": finite,
                 "variants": sorted(k for k in z.files if k in C.NORMALIZATIONS),
                 "abs_median": float(np.median(np.abs(raw))),
                 "abs_p99": float(np.percentile(np.abs(raw), 99)),
+                "all_zero_fraction": float((np.abs(flat).max(axis=1) == 0).mean()),
+                "n_response_vectors": int(flat.shape[0]),
             }
         qs = adir / "query_summary.parquet"
         if qs.exists():
             frame = pd.read_parquet(qs)
+            # How much the choice of anchor cell moves the size of the response. The
+            # block stores responses averaged over cells, so this is the only handle on
+            # it: the spread of the per-cell response size across cells, relative to its
+            # own mean, for the same perturbed gene and value.
+            if "cell_index" in frame.columns and frame.cell_index.nunique() > 1:
+                per_cell = frame.groupby(["perturbed_gene", "value_cp10k"])["cross_gene_sd"]
+                mean = per_cell.transform("mean")
+                cv = (per_cell.transform("std") / mean.where(mean > 0)).dropna()
+                bundle.setdefault("anchor_cell_spread", {})[anchor] = {
+                    "n_cells": int(frame.cell_index.nunique()),
+                    "median_cv_of_response_size": float(cv.median()),
+                    "p90_cv_of_response_size": float(cv.quantile(0.9)),
+                }
             bundle["query_summary"][anchor] = (
                 frame.groupby("value_cp10k")
                 .agg(
@@ -219,7 +238,6 @@ def verify_block(block_dir: Path, ch: Checks) -> dict:
     detail_rows = wiring_detail(block_dir, manifest, readout, perturbed)
     if detail_rows:
         bundle["wiring_detail"] = detail_rows
-        worst = detail_rows[0]
         ch.add(
             sec,
             "wiring_by_anchor_level",

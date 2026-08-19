@@ -1,26 +1,32 @@
 [FAIL] coverage/model_x_cell_line: 6/8 blocks present; missing [('aido_cell', 'hepg2'), ('aido_cell', 'jurkat')]
 [PASS] coverage/scgpt/hepg2/anchors: anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']
 [PASS] coverage/scgpt/hepg2/forms: forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table
-[FAIL] block_checks/scgpt/hepg2: 35 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
+[PASS] alignment/scgpt/hepg2: uniform_virtual on self_rank; mean_control on self_rank+sign; individual_cells on self_rank
+[FAIL] block_checks/scgpt/hepg2: 38 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
 [PASS] coverage/scgpt/jurkat/anchors: anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']
 [PASS] coverage/scgpt/jurkat/forms: forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table
-[FAIL] block_checks/scgpt/jurkat: 35 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
+[PASS] alignment/scgpt/jurkat: uniform_virtual on self_rank; mean_control on self_rank; individual_cells on self_rank+sign
+[FAIL] block_checks/scgpt/jurkat: 38 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
 [PASS] coverage/scprint/hepg2/anchors: anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']
 [PASS] coverage/scprint/hepg2/forms: forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table
-[PASS] block_checks/scprint/hepg2: 50 block-level checks, 0 failed
+[PASS] alignment/scprint/hepg2: uniform_virtual on own_largest+self_rank+sign; mean_control on own_largest+self_rank+sign; individual_cells on own_largest+self_rank+sign
+[PASS] block_checks/scprint/hepg2: 53 block-level checks, 0 failed
 [PASS] coverage/scprint/jurkat/anchors: anchors present: ['individual_cells', 'mean_control', 'mean_control_masked', 'uniform_virtual']
 [PASS] coverage/scprint/jurkat/forms: forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table
-[PASS] block_checks/scprint/jurkat: 50 block-level checks, 0 failed
+[PASS] alignment/scprint/jurkat: uniform_virtual on own_largest+self_rank+sign; mean_control on own_largest+self_rank; individual_cells on own_largest+self_rank
+[PASS] block_checks/scprint/jurkat: 53 block-level checks, 0 failed
 [PASS] coverage/transcriptformer/hepg2/anchors: anchors present: ['individual_cells', 'mean_control', 'uniform_virtual']
 [PASS] coverage/transcriptformer/hepg2/forms: forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table
-[FAIL] block_checks/transcriptformer/hepg2: 42 block-level checks, 4 failed: ['uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
+[PASS] alignment/transcriptformer/hepg2: uniform_virtual on sign; mean_control on self_rank; individual_cells on self_rank
+[FAIL] block_checks/transcriptformer/hepg2: 45 block-level checks, 4 failed: ['uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
 [PASS] coverage/transcriptformer/jurkat/anchors: anchors present: ['individual_cells', 'mean_control', 'uniform_virtual']
 [PASS] coverage/transcriptformer/jurkat/forms: forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table
-[FAIL] block_checks/transcriptformer/jurkat: 42 block-level checks, 6 failed: ['individual_cells/softmax_coupling', 'mean_control/softmax_coupling', 'uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
+[PASS] alignment/transcriptformer/jurkat: uniform_virtual on sign; mean_control on self_rank; individual_cells on self_rank
+[FAIL] block_checks/transcriptformer/jurkat: 45 block-level checks, 6 failed: ['individual_cells/softmax_coupling', 'mean_control/softmax_coupling', 'uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']
 [PASS] floor_sweep/grid_complete: 20 (cell line, split, floor) cells computed over floors [0.5, 1.0, 2.0, 5.0, 10.0]
 [PASS] floor_sweep/hepg2/readout_matches_floor: 2721 read-out genes, all at or above the selected 0.5 CP10K floor (plateau found: False)
 [PASS] floor_sweep/hepg2/shared_response_recorded: 10 (stratum, floor) cells carry ceiling, mean-effect baseline, cross-perturbation correlation and PC1 share
 [PASS] floor_sweep/jurkat/readout_matches_floor: 3247 read-out genes, all at or above the selected 0.5 CP10K floor (plateau found: False)
 [PASS] floor_sweep/jurkat/shared_response_recorded: 10 (stratum, floor) cells carry ceiling, mean-effect baseline, cross-perturbation correlation and PC1 share
 
-19/24 checks passed
+25/30 checks passed

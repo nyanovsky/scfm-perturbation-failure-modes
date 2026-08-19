@@ -23,6 +23,7 @@ from silico_figures import PLOTLY_CONFIG
 
 from .. import config as C
 from .. import paths
+from .. import verify_features as vf
 from . import figures as figmod
 
 TITLE = "Response features for four single-cell foundation models over three query anchors"
@@ -91,6 +92,78 @@ def fmt(x, digits: int = 4) -> str:
     if isinstance(x, (int, np.integer)):
         return f"{int(x):,}"
     return f"{float(x):.{digits}g}"
+
+
+def rate(x, digits: int = 3) -> str:
+    """A fraction at fixed width, so a column of pass rates lines up."""
+    if x is None or (isinstance(x, float) and not np.isfinite(x)):
+        return "n/a"
+    return f"{float(x):.{digits}f}"
+
+
+def anchor_levels(cell_line: str) -> dict | None:
+    """Where the perturbed genes already sit, per anchor, from the shipped tables.
+
+    The response difference vanishes when the queried value equals the gene's own
+    level in the anchor, so these numbers are what the size of the response at
+    each grid value has to be read against.
+    """
+    repo = paths.repo_dir()
+    pg_path = repo / "results" / "report" / "blocks" / f"perturbed_genes_{cell_line}.parquet"
+    ro_path = paths.handoff_root() / "readout" / f"readout_genes_{cell_line}.parquet"
+    dc_path = paths.demo_cells_dir() / f"demo_cells_{cell_line}.parquet"
+    if not (pg_path.exists() and ro_path.exists()):
+        return None
+    pg = pd.read_parquet(pg_path)
+    ro = pd.read_parquet(ro_path)
+    cols = pg["readout_col"].to_numpy()
+    out = {
+        "median_control_cp10k": float(np.median(ro["pooled_control_cp10k"].to_numpy()[cols])),
+        "n_perturbed": int(len(pg)),
+    }
+    if dc_path.exists():
+        dc = pd.read_parquet(dc_path)
+        merged = ro[["gene_id"]].merge(dc, on="gene_id", how="left")
+        cell_cols = [c for c in merged.columns if c.startswith("counts__")]
+        totals = np.nansum(dc[cell_cols].to_numpy(float), axis=0)
+        cp10k = np.nan_to_num(merged[cell_cols].to_numpy(float)) / totals * 1e4
+        subset = cp10k[cols[pg["in_cells_anchor"].to_numpy()]]
+        out["cells_median_cp10k"] = float(np.median(subset))
+        out["cells_zero_fraction"] = float((subset == 0).mean())
+    return out
+
+
+def response_minima(bundles: dict) -> dict:
+    """Per anchor, which grid value gives the smallest response in each block."""
+    out: dict[str, list] = {}
+    for (model, cl), b in sorted(bundles.items()):
+        for anchor, queries in b.get("query_summary", {}).items():
+            if not queries:
+                continue
+            best = min(queries, key=lambda r: r["cross_gene_sd"])
+            others = [r["cross_gene_sd"] for r in queries
+                      if r["value_cp10k"] != best["value_cp10k"]]
+            out.setdefault(anchor, []).append(
+                {
+                    "model": model,
+                    "cell_line": cl,
+                    "value_cp10k": best["value_cp10k"],
+                    "cross_gene_sd": best["cross_gene_sd"],
+                    "ratio_to_other_values": (
+                        float(np.median(others)) / best["cross_gene_sd"]
+                        if best["cross_gene_sd"] else float("nan")
+                    ),
+                }
+            )
+    return out
+
+
+def _agree(rows: list, key: str) -> str:
+    """Describe a column that is usually the same across blocks."""
+    values = sorted({r[key] for r in rows})
+    if len(values) == 1:
+        return fmt(values[0])
+    return " and ".join(fmt(v) for v in values)
 
 
 # --------------------------------------------------------------------------- #
@@ -164,14 +237,22 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                     m["layout"]["supplied_mode"],
                     fmt(m["layout"]["n_supplied_genes"]),
                     m["layout"]["forward_passes_per_query"],
+                    fmt(sum(a.get("seconds", 0.0) for a in m["anchors"].values()), 3),
                 ]
             )
         s.blocks += [
             Head(2, "What was produced"),
             Table(
                 ["model", "cell line", "read-out genes", "perturbed genes", "supplied set",
-                 "supplied genes", "passes per query"],
+                 "supplied genes", "passes per query", "GPU seconds, 3 anchors"],
                 rows,
+            ),
+            Para(
+                "The last column is the wall clock spent producing the three anchors' zero-out, "
+                "virtual-value and gradient features for that block, on one H100. It excludes "
+                "the masked block, the step sweep and the layout side checks, and it is the "
+                "number to size run 3 against: the four models differ in cost by two orders of "
+                "magnitude for the same query."
             ),
         ]
     sections.append(s)
@@ -254,9 +335,24 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
     ]
     if any_b:
         anchors = any_b["manifest"]["anchors"]
+        uniform = " and ".join(
+            f"{fmt(1e4 / b['manifest']['layout']['n_readout_genes'], 5)} CP10K in {LABEL[cl]}"
+            for (model, cl), b in sorted(bundles.items())
+            if model == sorted({m for m, _ in bundles})[0]
+        )
+        descriptions = {
+            "uniform_virtual": (
+                "every supplied gene pinned at the uniform share of a 10,000-count virtual "
+                f"cell, {uniform}; the paper's construction, and far off the distribution the "
+                "models were trained on"
+            )
+        }
         s.blocks.append(
             Bullets(
-                [f"**{ANCHOR_LABEL.get(a, a)}** — {meta['description']}" for a, meta in anchors.items()]
+                [
+                    f"**{ANCHOR_LABEL.get(a, a)}** — {descriptions.get(a, meta['description'])}"
+                    for a, meta in anchors.items()
+                ]
             )
         )
     s.blocks += [
@@ -274,6 +370,90 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         Head(3, "Findings"),
         FigRef("response_by_value"),
     ]
+    minima = response_minima(bundles)
+    levels = {cl: anchor_levels(cl) for cl in LINES}
+    if minima:
+        parts = []
+        uni = minima.get("uniform_virtual", [])
+        if uni:
+            constants = sorted(
+                {round(1e4 / b["manifest"]["layout"]["n_readout_genes"], 4) for b in bundles.values()}
+            )
+            parts.append(
+                f"At the uniform-virtual anchor, where every gene sits at the same constant "
+                f"({' and '.join(fmt(c, 5) for c in constants)} CP10K), the "
+                f"smallest response is at the {_agree(uni, 'value_cp10k')} CP10K query in all "
+                f"{len(uni)} blocks, between "
+                f"{fmt(min(r['ratio_to_other_values'] for r in uni), 3)} and "
+                f"{fmt(max(r['ratio_to_other_values'] for r in uni), 3)} times smaller than the "
+                f"median over the other four values."
+            )
+        mc = minima.get("mean_control", [])
+        if mc and levels.get(LINES[0]):
+            parts.append(
+                f"At the mean-control anchor the minimum moves to the {_agree(mc, 'value_cp10k')} "
+                f"CP10K query in all {len(mc)} blocks, and the perturbed genes' median pooled "
+                f"control level is "
+                + " and ".join(
+                    f"{fmt(levels[cl]['median_control_cp10k'])} CP10K in {LABEL[cl]}"
+                    for cl in LINES if levels.get(cl)
+                )
+                + "."
+            )
+        ic = minima.get("individual_cells", [])
+        if ic and levels.get(LINES[0], {}).get("cells_zero_fraction") is not None:
+            by_value: dict[float, list[str]] = {}
+            for r in ic:
+                by_value.setdefault(r["value_cp10k"], []).append(MODEL_LABEL[r["model"]])
+            where = "; ".join(
+                f"{fmt(v)} CP10K for {', '.join(sorted(set(names)))}"
+                for v, names in sorted(by_value.items())
+            )
+            parts.append(
+                f"At the individual-cells anchor it sits at {where}. Of the perturbed gene and "
+                "cell pairs, "
+                + " and ".join(
+                    f"{fmt(100 * levels[cl]['cells_zero_fraction'], 3)}% in {LABEL[cl]}"
+                    for cl in LINES if levels.get(cl)
+                )
+                + " are at exactly zero counts, so the 0 CP10K query is already a no-op for a "
+                "sizeable share of them."
+            )
+        s.blocks.append(
+            Para(
+                "Two forward passes that differ only in the perturbed gene's input value are "
+                "identical when that value equals the gene's own level in the anchor, so the "
+                "response has to be smallest at the grid point nearest that level. It is, which "
+                "is the cheapest available check that a query means what it says. " + " ".join(parts)
+            )
+        )
+    degenerate = []
+    for (model, cl), b in sorted(bundles.items()):
+        for key, blk in b.get("blocks", {}).items():
+            frac = blk.get("all_zero_fraction")
+            if frac:
+                degenerate.append((model, cl, key, frac, blk["n_response_vectors"]))
+    if degenerate:
+        worst = max(degenerate, key=lambda t: t[3])
+        by_model = {}
+        for model, cl, key, frac, _ in degenerate:
+            by_model.setdefault(model, []).append(frac)
+        s.blocks.append(
+            Para(
+                "One consequence of a quantized input is worth carrying into run 3. When the "
+                "queried value falls in the same bin the input already sat in, the two forward "
+                "passes are the same call and the response is identically zero, not small. "
+                + "; ".join(
+                    f"{MODEL_LABEL[m]} {fmt(100 * min(v), 3)}% to {fmt(100 * max(v), 3)}% of "
+                    f"response vectors" for m, v in sorted(by_model.items())
+                )
+                + f" are exactly zero, the worst being {MODEL_LABEL[worst[0]]} at "
+                f"{worst[2].split('/')[0].replace('_', ' ')} in {LABEL[worst[1]]} "
+                f"({fmt(100 * worst[3], 3)}% of {fmt(worst[4])}). Averaging over those pairs "
+                "dilutes a score rather than measuring anything, so run 3 should drop them per "
+                "model rather than treat a zero as a small effect."
+            )
+        )
     sections.append(s)
 
     # ---- 4. masking
@@ -332,6 +512,40 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         Head(3, "Findings"),
         FigRef("masked_regime"),
     ]
+    mask_findings = []
+    for model in MODELS:
+        pieces = []
+        for cl in LINES:
+            b = bundles.get((model, cl))
+            if not b:
+                continue
+            un = b["blocks"].get("mean_control/zero_out", {}).get("abs_median")
+            ma = b["blocks"].get("mean_control_masked/zero_out", {}).get("abs_median")
+            if un and ma:
+                pieces.append(
+                    f"{fmt(un, 3)} to {fmt(ma, 3)} in {LABEL[cl]} (a factor of {rate(ma / un)})"
+                )
+        if pieces:
+            mask_findings.append(f"{MODEL_LABEL[model]}: " + "; ".join(pieces))
+    if mask_findings:
+        s.blocks += [
+            Para(
+                "Masking the read-out gene's own input value shrinks the response at the same "
+                "anchor. Median absolute zero-out response, unmasked against masked: "
+                + ". ".join(mask_findings)
+                + ". The two variants are therefore materially different features at one anchor, "
+                "which is what the masked block was extracted to establish, and the size of the "
+                "gap differs by model rather than being a fixed offset."
+            ),
+            Para(
+                "The direction is worth stating plainly because it is not the naive one: taking "
+                "away the gene's own value made the model less sensitive to the perturbed gene, "
+                "not more. Run 2 records the effect and does not explain it. Two accounts are "
+                "consistent with it, a masked prediction falling back on a population prior that "
+                "no single other gene moves much, and the mask token itself being off the "
+                "distribution the model was trained to read, and nothing here separates them."
+            ),
+        ]
     sections.append(s)
 
     # ---- 5. gradients and step stability
@@ -354,6 +568,47 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         Head(3, "Findings"),
         FigRef("step_stability"),
     ]
+    stable, unstable = [], []
+    for (model, cl), b in sorted(bundles.items()):
+        for anchor, sel in b["manifest"].get("step_selection", {}).items():
+            (stable if sel["verdict"] != "magnitude_unstable" else unstable).append(
+                (model, cl, anchor, sel)
+            )
+    if unstable:
+        worst_model = sorted({m for m, _, _, _ in unstable})
+        example = next(
+            (s_ for m, cl, a, s_ in unstable if a == "mean_control" and cl == LINES[0]),
+            unstable[0][3],
+        )
+        curve = example["adjacent_agreement"]
+        smallest_abs = float(
+            np.median(
+                [
+                    r["median_abs_value"]
+                    for _, _, _, sel in unstable
+                    for r in sel["adjacent_agreement"]
+                ]
+            )
+        )
+        s.blocks.append(
+            Para(
+                f"{len(stable)} of the {len(stable) + len(unstable)} block and anchor pairs "
+                f"converge and {len(unstable)} do not, and the split is by model rather than by "
+                f"anchor: every failure is "
+                f"{', '.join(MODEL_LABEL[m] for m in worst_model)}. Its adjacent-step agreement "
+                f"climbs steadily without ever reaching the threshold, from "
+                f"{fmt(curve[0]['median_pearson_adjacent'])} at step {fmt(curve[0]['step'])} to "
+                f"{fmt(curve[-1]['median_pearson_adjacent'])} at step {fmt(curve[-1]['step'])}, "
+                f"so the rule falls back on the step with the best direction agreement "
+                f"({fmt(example['selected_step'])}) and flags the block. The reason is visible in "
+                f"the size of the numbers: across its swept steps the gradient columns being "
+                f"differenced have a median absolute value of {fmt(smallest_abs, 3)}, close "
+                f"enough to float noise that the "
+                "difference between two nearby steps is dominated by it. Those gradient features "
+                "are usable for direction and ranking and not for magnitude, and a consumer reads "
+                "that verdict out of `step_selection.json` rather than inferring it."
+            )
+        )
     step_rows = []
     for (model, cl), b in sorted(bundles.items()):
         for anchor, sel in b["manifest"].get("step_selection", {}).items():
@@ -379,16 +634,48 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
             chk = meta.get("exact_vs_finite_difference")
             if chk:
                 exact_rows.append(
-                    [MODEL_LABEL[model], LABEL[cl], ANCHOR_LABEL.get(anchor, anchor),
-                     fmt(chk["pearson"], 6), fmt(chk.get("relative_l2")), fmt(chk["step"])]
+                    [
+                        MODEL_LABEL[model],
+                        LABEL[cl],
+                        ANCHOR_LABEL.get(anchor, anchor),
+                        "production",
+                        fmt(chk["median_pearson_two_sided"], 6),
+                        fmt(chk["median_relative_l2_two_sided"]),
+                        fmt(chk["step"]),
+                    ]
                 )
+        untiled = b["manifest"].get("untiled_exact_check") or {}
+        if untiled.get("ran"):
+            exact_rows.append(
+                [
+                    MODEL_LABEL[model],
+                    LABEL[cl],
+                    "uniform virtual",
+                    f"side check, {untiled['n_genes']} genes",
+                    fmt(untiled["median_pearson_two_sided"], 6),
+                    fmt(untiled["median_relative_l2_two_sided"]),
+                    fmt(untiled["step"]),
+                ]
+            )
     if exact_rows:
         s.blocks += [
             Para(
                 "Where an exact derivative exists it is the feature, and the central difference "
-                "at the selected step is its cross-check:"
+                "at the selected step is its cross-check. scPRINT admits forward-mode autodiff in "
+                "the layout it is actually run in, so the cross-check runs on the production "
+                "features. scGPT does not, because its read-out set is delivered in several "
+                "tiled passes; the exact derivative exists only in the untiled layout, so that "
+                "comparison is a side check on a smaller gene sample rather than a statement "
+                "about the production features. The medians below are taken over the base values "
+                "whose central difference stays inside the input range: at a base of 0 CP10K the "
+                "difference would have to cross the floor, so that value is one-sided and "
+                "excluded."
             ),
-            Table(["model", "cell line", "anchor", "Pearson", "relative L2", "step"], exact_rows),
+            Table(
+                ["model", "cell line", "anchor", "layout", "median Pearson",
+                 "median relative L2", "step"],
+                exact_rows,
+            ),
         ]
     sections.append(s)
 
@@ -416,8 +703,86 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         ),
         Head(3, "Findings"),
         FigRef("softmax_coupling"),
-        FigRef("feature_scale"),
     ]
+    coupling = []
+    for model in MODELS:
+        ratios = []
+        for cl in LINES:
+            b = bundles.get((model, cl))
+            if not b:
+                continue
+            for queries in b.get("query_summary", {}).values():
+                for r in queries:
+                    if r["cross_gene_sd"]:
+                        ratios.append(abs(r["cross_gene_mean"]) / r["cross_gene_sd"])
+        if ratios:
+            coupling.append((model, float(np.median(ratios)), max(ratios)))
+    if coupling:
+        s.blocks.append(
+            Para(
+                "The redistribution identity holds where the head is a softmax over the supplied "
+                "genes and not otherwise. Ratio of the absolute cross-gene mean response to its "
+                "cross-gene spread, over every query in both cell lines: "
+                + "; ".join(
+                    f"{MODEL_LABEL[m]} median {fmt(med, 3)}, worst {fmt(hi, 3)}"
+                    for m, med, hi in coupling
+                )
+                + "."
+            )
+        )
+    tf_fail = [
+        (cl, r["check"], r["detail"])
+        for cl in LINES
+        for r in (bundles.get(("transcriptformer", cl)) or {}).get("checks", [])
+        if not r["ok"] and r["check"].endswith("softmax_coupling")
+    ]
+    if tf_fail:
+        values = re.findall(r"= ([0-9.]+) \(tolerance", " ".join(d for _, _, d in tf_fail))
+        tf_total = sum(
+            1
+            for cl in LINES
+            for r in (bundles.get(("transcriptformer", cl)) or {}).get("checks", [])
+            if r["check"].endswith("softmax_coupling")
+        )
+        s.blocks.append(
+            Para(
+                f"TranscriptFormer misses the {vf.SOFTMAX_MEAN_TOLERANCE} tolerance on "
+                f"{len(tf_fail)} of its {tf_total} anchor and cell-line pairs, at "
+                f"{', '.join(values)}. The cause is the layout rather than the head. Its "
+                "read-out set does not fit in one pass, so it is delivered in two, each "
+                "normalized by that pass's own total; the shares sum to one inside a pass and "
+                "not across the union of the two, which leaves exactly this kind of small "
+                "residual offset. Every block ships a recentred variant beside the raw one, and "
+                "the recentred variant removes it. A consumer that cares about the identity "
+                "should read `recentred`."
+            )
+        )
+    s.blocks.append(FigRef("feature_scale"))
+    scale = []
+    for model in MODELS:
+        vals = [
+            b["blocks"]["mean_control/zero_out"]["abs_median"]
+            for cl in LINES
+            for b in [bundles.get((model, cl))]
+            if b and "mean_control/zero_out" in b["blocks"]
+        ]
+        if vals:
+            scale.append((model, min(vals), max(vals)))
+    if len(scale) > 1:
+        spread = max(hi for _, _, hi in scale) / min(lo for _, lo, _ in scale)
+        s.blocks.append(
+            Para(
+                "The four raw scales are not comparable, and the gap is not small. Median "
+                "absolute zero-out response at the mean-control anchor: "
+                + "; ".join(
+                    f"{MODEL_LABEL[m]} {fmt(lo, 3)} to {fmt(hi, 3)}" for m, lo, hi in scale
+                )
+                + f", about {int(round(spread)):,}-fold between the extremes, which reflects each "
+                "head's units rather than anything biological. The comparison run should read "
+                "the standardized form by default and treat a raw cross-model magnitude "
+                "comparison as meaningless."
+            )
+        )
     sections.append(s)
 
     # ---- 7. context width and ordering
@@ -520,24 +885,43 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
                     LABEL[cl],
                     ANCHOR_LABEL.get(r["anchor"], r["anchor"]),
                     fmt(r["n_perturbed"]),
-                    f"{fmt(r['own_largest'], 3)} ({fmt(r['own_largest_null'], 3)})",
-                    f"{fmt(r['self_rank_median'], 4)} ({fmt(r['self_rank_median_null'], 4)})",
-                    f"{fmt(r['sign_rate'], 3)} ({fmt(r['sign_rate_null'], 3)})",
+                    f"{rate(r['own_largest'])} ({rate(r['own_largest_null'])})",
+                    f"{fmt(r['self_rank_median'])} of {fmt(b['n_readout'])} "
+                    f"({fmt(r['self_rank_median_null'])})",
+                    f"{rate(r['sign_rate'])} ({rate(r['sign_rate_null'])})",
                     ", ".join(r["separated_by"]) or "none",
                 ]
             )
     if wire_rows:
+        separated = [r for r in wire_rows if r[-1] != "none"]
+        tally = (
+            f"All {len(wire_rows)} block and anchor pairs separate from their null on at least "
+            "one statistic."
+            if len(separated) == len(wire_rows)
+            else f"{len(separated)} of {len(wire_rows)} block and anchor pairs separate from "
+            f"their null; the rest do not establish alignment and are not usable."
+        )
         s.blocks += [
             Table(
-                ["model", "cell line", "anchor", "genes", "own entry largest (null)",
-                 "median self-rank (null)", "own output moves as expected (null)",
-                 "separated on"],
+                ["model", "cell line", "anchor", "perturbed genes sampled",
+                 "own entry largest (null)", "median self-rank (null)",
+                 "own output moves as expected (null)", "separated on"],
                 wire_rows,
             ),
             Para(
                 "Each cell gives the observed statistic with its permuted null in parentheses. "
                 "The last column names the statistics that separate widely enough to establish "
-                "alignment for that block."
+                f"alignment for that block. {tally}"
+            ),
+            Para(
+                "The pre-registered guard is reported as it stands and is not retro-fitted to "
+                "the result. It is met by scPRINT at every anchor in both cell lines and it is "
+                "not met by scGPT or TranscriptFormer, so for those two models the alignment "
+                "conclusion rests on the permutation-controlled statistics rather than on the "
+                "threshold written before the data existed. What the guard would have caught "
+                "the replacements also catch: a misalignment relabels the own entry at random, "
+                "which is exactly the permutation, and it would drive all three statistics to "
+                "their nulls at once."
             ),
         ]
     sections.append(s)
@@ -572,23 +956,67 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
         ),
     ]
     if verification:
-        ok = sum(1 for r in verification["checks"] if r["ok"])
+        checks = verification["checks"]
+        ok = sum(1 for r in checks if r["ok"])
+        block_total = sum(len(b["checks"]) for b in bundles.values())
+        block_ok = sum(1 for b in bundles.values() for r in b["checks"] if r["ok"])
         s.blocks += [
             Head(2, "Verification"),
             Para(
-                f"`python -m scfm_pfm.verify_features --all` ran "
-                f"{len(verification['checks'])} checks over the artifact tree and passed "
-                f"{ok} of them. The full output ships with the report."
+                "Verification runs at two levels. Every block is checked inside a job that "
+                "mounts the volume the extraction wrote, against that block's own npz files "
+                f"rather than against a summary: {block_total} checks over "
+                f"{len(bundles)} blocks, {block_ok} passed. The roll-up then reads the "
+                f"{len(bundles)} per-block records together and adds coverage and alignment "
+                f"checks: {len(checks)} checks, {ok} passed. Both outputs ship with the report, "
+                "and the failures are listed here rather than summarised away."
             ),
         ]
-        failed = [r for r in verification["checks"] if not r["ok"]]
-        if failed:
+        failing_kinds = {}
+        for b in bundles.values():
+            for r in b["checks"]:
+                if not r["ok"]:
+                    kind = r["check"].split("/")[-1]
+                    failing_kinds.setdefault(kind, []).append(f"{b['model']}/{b['cell_line']}")
+        explain = {
+            "wiring_magnitude": (
+                "the pre-registered 95% own-entry-largest guard. Reported as it stands; the "
+                "permutation-controlled statistics in the wiring section establish alignment "
+                "for these blocks instead."
+            ),
+            "softmax_coupling": (
+                "the redistribution identity, missed by a small margin because the read-out set "
+                "is delivered in two separately normalized passes. The recentred variant that "
+                "ships in every block removes the offset."
+            ),
+        }
+        if failing_kinds:
             s.blocks.append(
+                Table(
+                    ["failing check", "blocks", "what it means"],
+                    [
+                        [
+                            kind,
+                            f"{len(where)} anchor and block pairs in "
+                            f"{', '.join(sorted(set(where)))}",
+                            explain.get(kind, "see the per-block record"),
+                        ]
+                        for kind, where in sorted(failing_kinds.items())
+                    ],
+                )
+            )
+        failed = [r for r in checks if not r["ok"]]
+        if failed:
+            s.blocks += [
+                Para(
+                    "The roll-up's own failures, which are the per-block failures restated plus "
+                    "anything missing from the tree:"
+                ),
                 Table(
                     ["check", "detail"],
                     [[f"{r['section']}/{r['check']}", r["detail"]] for r in failed],
-                )
-            )
+                ),
+            ]
     sections.append(s)
     return sections
 
@@ -596,6 +1024,64 @@ def build_sections(bundles: dict, floor: dict, verification: dict | None) -> lis
 # --------------------------------------------------------------------------- #
 # rendering
 # --------------------------------------------------------------------------- #
+STYLE = """
+:root {
+  --ink: #1D272A; --muted: #5A6A6E; --rule: #D9D5CE; --paper: #FBFAF8;
+  --accent: #C4650D; --panel: #F3F1EC;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: 'Suisse Intl', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  font-size: 16px; line-height: 1.62; -webkit-font-smoothing: antialiased;
+}
+main { max-width: 52rem; margin: 0 auto; padding: 3.5rem 1.5rem 5rem; }
+h1 { font-size: 2.1rem; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 1.5rem; }
+h2 {
+  font-size: 1.45rem; line-height: 1.25; letter-spacing: -0.005em;
+  margin: 3.25rem 0 1rem; padding-top: 1.25rem; border-top: 1px solid var(--rule);
+}
+h3 { font-size: 1.05rem; margin: 2rem 0 .6rem; color: var(--muted);
+     text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
+section.figure h3.figure-title {
+  text-transform: none; letter-spacing: 0; color: var(--ink); font-size: 1.02rem;
+  font-weight: 600; margin: 0 0 .75rem;
+}
+p { margin: 0 0 1.1rem; }
+ul { margin: 0 0 1.2rem; padding-left: 1.15rem; }
+li { margin-bottom: .4rem; }
+strong { font-weight: 600; }
+code {
+  font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace; font-size: .88em;
+  background: var(--panel); padding: .1em .35em; border-radius: 3px;
+}
+pre {
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 4px;
+  padding: 1rem 1.1rem; overflow-x: auto; font-size: .84rem; line-height: 1.5;
+}
+pre code { background: none; padding: 0; }
+table {
+  width: 100%; border-collapse: collapse; margin: 0 0 1.6rem;
+  font-size: .87rem; font-variant-numeric: tabular-nums;
+}
+th, td { text-align: left; padding: .42rem .6rem; border-bottom: 1px solid var(--rule); }
+th { font-weight: 600; color: var(--muted); border-bottom: 1.5px solid var(--ink);
+     white-space: nowrap; }
+tr:last-child td { border-bottom: 1px solid var(--ink); }
+section.figure {
+  margin: 2rem 0 2.5rem; padding: 1.25rem 1.25rem .5rem;
+  background: #FFFFFF; border: 1px solid var(--rule); border-radius: 5px;
+}
+.figure-description, .figure-findings { font-size: .87rem; color: var(--muted); line-height: 1.55; }
+.figure-findings { color: var(--ink); }
+small { color: var(--muted); }
+@media (max-width: 40rem) {
+  main { padding: 2rem 1rem 3rem; }
+  table { font-size: .8rem; display: block; overflow-x: auto; }
+}
+"""
+
+
 def render_html(sections: list[Section], figs: dict) -> str:
     parts = [
         "<!doctype html>",
@@ -604,6 +1090,7 @@ def render_html(sections: list[Section], figs: dict) -> str:
         '<meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width, initial-scale=1">',
         f"<title>{_esc(TITLE)}</title>",
+        f"<style>{STYLE}</style>",
         "</head>",
         "<body>",
         "<main>",

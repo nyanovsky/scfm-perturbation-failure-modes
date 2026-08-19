@@ -21,3 +21,6 @@ __pycache__/
 *.pyc
 # Stranded _atomic_write temps (name.<pid>.<hex>.tmp) from a crashed write.
 *.*.*.tmp
+# the built report HTML embeds plotly.js (~5 MB); the durable copy lives in the
+# artifact store, and the Markdown reading copy beside it is what git carries
+results/report/feature_extraction_report.html

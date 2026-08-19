@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -101,6 +100,14 @@ class Fig:
         except Exception as exc:  # noqa: BLE001
             print(f"[figures] static export failed for {self.name}: {exc}", flush=True)
         return self.meta
+
+
+def lighten(hex_color: str, amount: float = 0.62) -> str:
+    """Mix a hex colour toward white, so a null series reads as a pale sibling."""
+    h = hex_color.lstrip("#")
+    rgb = [int(h[i:i + 2], 16) for i in (0, 2, 4)]
+    mixed = [round(c + (255 - c) * amount) for c in rgb]
+    return "#" + "".join(f"{c:02X}" for c in mixed)
 
 
 def _panel_grid(rows: int, cols: int, titles: list[str], **kw) -> go.Figure:
@@ -470,9 +477,11 @@ def fig_softmax_coupling(bundles: dict, out: Path) -> Fig:
             "raising one gene's share must lower the others, so the response differences sum to "
             "about zero by construction. The bars show the median cross-gene mean divided by the "
             "cross-gene spread (log axis).",
-            "findings": "The two softmax models sit at or below the tolerance line, which is the "
-            "signature of exact redistribution; the two regression-headed models do not, so their "
-            "cross-gene mean carries information rather than an identity.",
+            "findings": "scPRINT sits below the tolerance at every query, which is the signature "
+            "of exact redistribution. TranscriptFormer sits below it at the low values and rises "
+            "above it at the top of the grid: its read-out set is delivered in two separately "
+            "normalized passes, so the shares sum to one inside a pass and not across the union. "
+            "scGPT, whose head is not a softmax over the supplied genes, sits well above.",
             "sources": "experiments/experiment-2-nygwcv/results/report/bundles",
         },
     )
@@ -533,8 +542,9 @@ def fig_masked_regime(bundles: dict, out: Path) -> Fig:
             "read-out gene's own input value visible and with it replaced by each model's own mask "
             "convention (log axis, each model in its own output units). TranscriptFormer has no "
             "masked variant: it is autoregressive, so a gene never sees its own value.",
-            "findings": "The gap between the two bars is the part of the unmasked response that "
-            "was suppressed by the model already being told the answer.",
+            "findings": "Masking shrinks the response for both bidirectional models, by about a "
+            "factor of two for scGPT and by an order of magnitude for scPRINT. Removing the "
+            "gene's own value made the model less sensitive to the perturbed gene, not more.",
             "sources": "experiments/experiment-2-nygwcv/results/report/bundles",
         },
     )
@@ -583,7 +593,10 @@ def fig_wiring(bundles: dict, out: Path) -> Fig:
             )
             fig.add_trace(
                 go.Bar(x=names, y=null[nk], name=label + ", permuted", legendgroup=label,
-                       showlegend=ci == 1, marker=dict(color=col[ck], opacity=0.35),
+                       showlegend=ci == 1,
+                       marker=dict(color=lighten(col[ck]),
+                                   pattern=dict(shape="/", fgcolor=col[ck], size=4, solidity=0.25),
+                                   line=dict(color=col[ck], width=1)),
                        hovertemplate="%{x}<br>" + label + ", permuted %{y:.3f}<extra></extra>"),
                 row=1, col=ci,
             )
@@ -612,7 +625,7 @@ def fig_wiring(bundles: dict, out: Path) -> Fig:
             "TranscriptFormer scores exactly zero on that guard, and so does its null: with the "
             "perturbed gene placed first, an autoregressive model never conditions on its own "
             "value, so the guard cannot have power there. The other two statistics do, and "
-            "TranscriptFormer separates from its null on both.",
+            "TranscriptFormer separates from its null on at least one of them at every anchor.",
             "sources": "experiments/experiment-2-nygwcv/results/report/bundles",
         },
     )

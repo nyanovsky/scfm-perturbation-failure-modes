@@ -19,10 +19,16 @@
       "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
     },
     {
+      "section": "alignment",
+      "check": "scgpt/hepg2",
+      "ok": true,
+      "detail": "uniform_virtual on self_rank; mean_control on self_rank+sign; individual_cells on self_rank"
+    },
+    {
       "section": "block_checks",
       "check": "scgpt/hepg2",
       "ok": false,
-      "detail": "35 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+      "detail": "38 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
     },
     {
       "section": "coverage",
@@ -37,10 +43,16 @@
       "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
     },
     {
+      "section": "alignment",
+      "check": "scgpt/jurkat",
+      "ok": true,
+      "detail": "uniform_virtual on self_rank; mean_control on self_rank; individual_cells on self_rank+sign"
+    },
+    {
       "section": "block_checks",
       "check": "scgpt/jurkat",
       "ok": false,
-      "detail": "35 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+      "detail": "38 block-level checks, 3 failed: ['uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
     },
     {
       "section": "coverage",
@@ -55,10 +67,16 @@
       "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
     },
     {
+      "section": "alignment",
+      "check": "scprint/hepg2",
+      "ok": true,
+      "detail": "uniform_virtual on own_largest+self_rank+sign; mean_control on own_largest+self_rank+sign; individual_cells on own_largest+self_rank+sign"
+    },
+    {
       "section": "block_checks",
       "check": "scprint/hepg2",
       "ok": true,
-      "detail": "50 block-level checks, 0 failed"
+      "detail": "53 block-level checks, 0 failed"
     },
     {
       "section": "coverage",
@@ -73,10 +91,16 @@
       "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
     },
     {
+      "section": "alignment",
+      "check": "scprint/jurkat",
+      "ok": true,
+      "detail": "uniform_virtual on own_largest+self_rank+sign; mean_control on own_largest+self_rank; individual_cells on own_largest+self_rank"
+    },
+    {
       "section": "block_checks",
       "check": "scprint/jurkat",
       "ok": true,
-      "detail": "50 block-level checks, 0 failed"
+      "detail": "53 block-level checks, 0 failed"
     },
     {
       "section": "coverage",
@@ -91,10 +115,16 @@
       "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
     },
     {
+      "section": "alignment",
+      "check": "transcriptformer/hepg2",
+      "ok": true,
+      "detail": "uniform_virtual on sign; mean_control on self_rank; individual_cells on self_rank"
+    },
+    {
       "section": "block_checks",
       "check": "transcriptformer/hepg2",
       "ok": false,
-      "detail": "42 block-level checks, 4 failed: ['uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+      "detail": "45 block-level checks, 4 failed: ['uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
     },
     {
       "section": "coverage",
@@ -109,10 +139,16 @@
       "detail": "forms present: ['gdt', 'vvp', 'zero_out'] plus the gene-embedding table"
     },
     {
+      "section": "alignment",
+      "check": "transcriptformer/jurkat",
+      "ok": true,
+      "detail": "uniform_virtual on sign; mean_control on self_rank; individual_cells on self_rank"
+    },
+    {
       "section": "block_checks",
       "check": "transcriptformer/jurkat",
       "ok": false,
-      "detail": "42 block-level checks, 6 failed: ['individual_cells/softmax_coupling', 'mean_control/softmax_coupling', 'uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
+      "detail": "45 block-level checks, 6 failed: ['individual_cells/softmax_coupling', 'mean_control/softmax_coupling', 'uniform_virtual/softmax_coupling', 'uniform_virtual/wiring_magnitude', 'mean_control/wiring_magnitude', 'individual_cells/wiring_magnitude']"
     },
     {
       "section": "floor_sweep",

@@ -1,0 +1,1 @@
+Adjacent-step agreement of the finite-difference gradient column, by model and anchor.

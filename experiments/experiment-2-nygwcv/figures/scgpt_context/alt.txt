@@ -1,0 +1,1 @@
+scGPT responses agree in direction but not magnitude across supplied-set widths.

@@ -1,0 +1,1 @@
+Three alignment statistics per model beside their permuted nulls; every model separates from its null on at least one of them.

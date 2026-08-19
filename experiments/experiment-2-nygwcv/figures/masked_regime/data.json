@@ -1,0 +1,44 @@
+[
+  {
+    "model": "scgpt",
+    "cell_line": "hepg2",
+    "unmasked_abs_median": 0.0038909912109375,
+    "masked_abs_median": 0.0022792816162109375,
+    "ratio": 0.5857843137254902
+  },
+  {
+    "model": "scprint",
+    "cell_line": "hepg2",
+    "unmasked_abs_median": 0.0022287368774414062,
+    "masked_abs_median": 0.00021677216864190996,
+    "ratio": 0.09726234210777038
+  },
+  {
+    "model": "transcriptformer",
+    "cell_line": "hepg2",
+    "unmasked_abs_median": 3.138411557301879e-06,
+    "masked_abs_median": null,
+    "ratio": null
+  },
+  {
+    "model": "scgpt",
+    "cell_line": "jurkat",
+    "unmasked_abs_median": 0.00360107421875,
+    "masked_abs_median": 0.0020039875525981188,
+    "ratio": 0.556497153589281
+  },
+  {
+    "model": "scprint",
+    "cell_line": "jurkat",
+    "unmasked_abs_median": 0.0011091232299804688,
+    "masked_abs_median": 0.00015057125710882246,
+    "ratio": 0.13575701332256288
+  },
+  {
+    "model": "transcriptformer",
+    "cell_line": "jurkat",
+    "unmasked_abs_median": 2.094544470310211e-06,
+    "masked_abs_median": null,
+    "ratio": null
+  }
+]
