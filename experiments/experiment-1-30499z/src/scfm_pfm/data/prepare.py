@@ -439,9 +439,9 @@ def run(cell_line: str, out_dir: Path, raw_dir: Path) -> dict:
     dl, funnel, acc = st.download, st.funnel, st.acc
     obs, var = st.obs, st.var
     n_cells, n_genes = st.n_cells, st.n_genes
-    targets, target_idx, target_label = st.targets, st.target_idx, st.target_label
+    targets, target_label = st.targets, st.target_label
     n_targets, n_batches = targets.size, st.batches.size
-    keep, is_control = st.keep, st.is_control
+    keep = st.keep
     pert_keep, batches_per_target = st.pert_keep, st.batches_per_target
 
     gene_ids = var["gene_id"].to_numpy().astype(str)

@@ -17,6 +17,7 @@ import pandas as pd
 
 from . import config as C
 from . import paths
+from .data.ceilings_grid import ADAPTIVE_K_MAX, ADAPTIVE_K_MIN, K_GRID
 
 MODELS = ("scgpt", "aido_cell", "scprint", "transcriptformer")
 
@@ -103,6 +104,127 @@ def check_effects(ch: Checks, root: Path) -> None:
             ch.add(sec, f"ceiling_{split}", top is not None and bot is not None and top > bot,
                    f"pearson_lfc {C.STRATUM_NAMES[0]}={bot:.4f} < {C.STRATUM_NAMES[-1]}={top:.4f}"
                    if top is not None and bot is not None else "strata missing")
+
+        check_ceiling_grid(ch, d, cl, pert, genes)
+
+
+def check_ceiling_grid(
+    ch: Checks, d: Path, cl: str, pert: pd.DataFrame, genes: pd.DataFrame
+) -> None:
+    """The top-k overlap grid: k values, chance levels, adaptive k, persisted vectors.
+
+    The grid is a recompute of one metric of the ceiling stage, so the first thing
+    checked is that it reproduces the ceiling columns already published rather than
+    a second, slightly different measurement.
+    """
+    sec = f"grid:{cl}"
+    need = [
+        "topk_overlap_grid.parquet",
+        "topk_overlap_grid_summary.parquet",
+        "topk_overlap_grid_qc.json",
+        "split_half_vectors.npz",
+    ]
+    missing = [f for f in need if not (d / f).exists()]
+    if not ch.add(sec, "files", not missing,
+                  f"missing {missing}" if missing else f"{len(need)} files under {d}"):
+        return
+    grid = pd.read_parquet(d / "topk_overlap_grid.parquet")
+    summary = pd.read_parquet(d / "topk_overlap_grid_summary.parquet")
+    qc = json.loads((d / "topk_overlap_grid_qc.json").read_text())
+    n_expressed = int(genes.expressed.sum())
+
+    repro = qc["reproduction_of_published_ceilings"]["max_abs_diff"]
+    worst = max(repro.values())
+    ch.add(sec, "reproduces_ceilings", worst == 0.0,
+           f"recompute reproduces every published ceiling column exactly "
+           f"(max abs diff {worst:g} over {len(repro)} split x metric combinations, "
+           f"pooled control CP10K {qc['reproduction_of_published_ceilings']['max_abs_diff_pooled_control_cp10k']:g})")
+
+    worst_k50 = 0.0
+    for split in C.CEILING_SPLITS:
+        g = grid[(grid.split == split) & (grid.k_label == str(C.EFFECTS.topk))]
+        merged = g.merge(
+            pert[["target", f"{split}__topk_overlap"]], on="target", how="left"
+        )
+        worst_k50 = max(
+            worst_k50, float((merged.overlap - merged[f"{split}__topk_overlap"]).abs().max())
+        )
+    ch.add(sec, "k50_column_unchanged", worst_k50 == 0.0,
+           f"the k={C.EFFECTS.topk} column of the grid is the published topk_overlap "
+           f"column, both splits (max abs diff {worst_k50:g} over {pert.shape[0]:,} perturbations)")
+
+    expect = grid.k.to_numpy(dtype=float) / n_expressed
+    ch.add(sec, "chance_level", bool(np.allclose(grid.chance.to_numpy(dtype=float), expect)),
+           f"chance = k/{n_expressed:,} expressed genes: "
+           + ", ".join(f"k={k} -> {k / n_expressed:.4f}" for k in K_GRID))
+
+    fin = grid[np.isfinite(grid.overlap.to_numpy(dtype=float))]
+    ex = (fin.overlap - fin.chance) / (1.0 - fin.chance)
+    ch.add(sec, "excess_over_chance",
+           bool(np.allclose(fin.excess_over_chance.to_numpy(dtype=float), ex.to_numpy())
+                and (fin.excess_over_chance > 0).mean() > 0.9),
+           f"(overlap - chance)/(1 - chance) on {fin.shape[0]:,} rows, "
+           f"{100 * float((fin.excess_over_chance > 0).mean()):.1f}% above chance")
+
+    # At k = 10 the per-perturbation overlap can only take the eleven values
+    # 0, 0.1, ... 1, so the median is quantised and the strata can tie; the
+    # ordering claim is therefore strict only for the k values that can resolve
+    # it, and non-decreasing at k = 10.
+    labels = [str(k) for k in K_GRID] + ["adaptive"]
+    order_ok, detail = True, []
+    for split in C.CEILING_SPLITS:
+        for label in labels:
+            s = summary[(summary.split == split) & (summary.k_label == label)].set_index("stratum")
+            lo = float(s.loc[C.STRATUM_NAMES[0], "median_excess_over_chance"])
+            hi = float(s.loc[C.STRATUM_NAMES[-1], "median_excess_over_chance"])
+            order_ok &= hi >= lo if label == "10" else hi > lo
+            if split == "split_half_cells":
+                detail.append(f"k={label}: {lo:.4f} -> {hi:.4f}")
+    ch.add(sec, "excess_rises_with_effect", order_ok,
+           f"{C.STRATUM_NAMES[0]} -> {C.STRATUM_NAMES[-1]} excess over chance, "
+           f"split by cell ({'; '.join(detail)}); strict for k >= "
+           f"{K_GRID[1]}, non-decreasing at k = {K_GRID[0]} where the median is "
+           f"quantised to steps of {1 / K_GRID[0]:g}")
+
+    ad = grid[grid.k_label == "adaptive"]
+    want = np.clip(ad.n_de_genes.to_numpy(dtype=np.int64), ADAPTIVE_K_MIN, ADAPTIVE_K_MAX)
+    ch.add(sec, "adaptive_k", bool((ad.k.to_numpy(dtype=np.int64) == want).all()),
+           f"k = clip(n_de_genes, {ADAPTIVE_K_MIN}, {ADAPTIVE_K_MAX}) on every row; "
+           f"median k {float(ad.k.median()):.0f}, "
+           f"{100 * float((ad.k == ADAPTIVE_K_MIN).mean()):.1f}% at the floor and "
+           f"{100 * float((ad.k == ADAPTIVE_K_MAX).mean()):.1f}% at the ceiling")
+
+    floor_ok = bool((fin.tie_fraction >= 1.0 / fin.k - 1e-9).all() and (fin.tie_fraction <= 1).all())
+    contested = float((fin.n_tied_excluded > 0).mean())
+    ch.add(sec, "selection_diagnostics",
+           floor_ok and bool((fin.median_control_cp10k_selected > 0).all()),
+           f"tie fraction within [1/k, 1] everywhere; {100 * contested:.2f}% of selections "
+           f"have any gene tied with the k-th value; median control level of the selected "
+           f"genes {float(fin.median_control_cp10k_selected.median()):.4f} CP10K against "
+           f"{float(genes[genes.expressed].pooled_control_cp10k.median()):.4f} over all expressed genes")
+
+    npz = np.load(d / "split_half_vectors.npz", allow_pickle=False)
+    arrays = [k for k in npz.files if npz[k].ndim == 2]
+    shape_ok = all(npz[k].shape == (pert.shape[0], n_expressed) for k in arrays)
+    targets_ok = list(npz["targets"]) == list(pert.target)
+    rng = np.random.default_rng(C.SEED)
+    sample = rng.choice(pert.shape[0], size=min(25, pert.shape[0]), replace=False)
+    worst_vec = 0.0
+    for split in C.CEILING_SPLITS:
+        a0, a1 = npz[f"{split}__lfc_side0"], npz[f"{split}__lfc_side1"]
+        ref = pert[f"{split}__topk_overlap"].to_numpy(dtype=float)
+        k = C.EFFECTS.topk
+        for i in sample:
+            s0 = set(np.argpartition(-np.abs(a0[i]), k - 1)[:k].tolist())
+            s1 = set(np.argpartition(-np.abs(a1[i]), k - 1)[:k].tolist())
+            if np.isfinite(ref[i]):
+                worst_vec = max(worst_vec, abs(len(s0 & s1) / k - ref[i]))
+    ch.add(sec, "persisted_vectors",
+           len(arrays) == 8 and shape_ok and targets_ok and worst_vec <= 0.02,
+           f"{len(arrays)} float32 arrays of {pert.shape[0]:,} x {n_expressed:,} "
+           f"({(d / 'split_half_vectors.npz').stat().st_size / 1e6:.0f} MB); rows follow "
+           f"perturbations.parquet; overlap recomputed from them differs from the "
+           f"published column by at most {worst_vec:g} over {sample.size} sampled perturbations")
 
 
 def check_crosscheck(ch: Checks, root: Path) -> None:

@@ -9,6 +9,7 @@ data:
 outputs:
   artifact_root: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m09d588jez38j6trqk30499z/"
   effects: "effects/{hepg2,jurkat}/{effects.npz,perturbations.parquet,genes.parquet,noise_ceiling_summary.parquet,qc.json}"
+  ceiling_grid: "effects/{hepg2,jurkat}/{topk_overlap_grid.parquet,topk_overlap_grid_summary.parquet,split_half_vectors.npz,topk_overlap_grid_qc.json}; results/ceiling_grid/ (tracked summaries)"
   gene_universe: "gene_universe/{gene_universe.parquet,vocabulary_<model>.parquet,coverage.json}"
   models: "models/{scgpt,aido_cell,scprint,transcriptformer}/{response_vector,jacobian_column}.parquet + {contract,environment,demo}.json"
   crosscheck: "crosscheck/reference_accumulated.npz; results/crosscheck/*.parquet + summary.json"
@@ -25,9 +26,17 @@ results:
   reference_pooled_entries: 8464986
   reference_shared_pairs: 2877
   models_with_response_and_jacobian: 4
-  verify: "84/84 checks passed"
+  topk_overlap_k_grid: [10, 50, 100, 500]
+  topk_overlap_adaptive_k: "clip(n_de_genes, 10, 500) per perturbation"
+  topk_chance_level_hepg2_k500: 0.1603
+  topk_chance_level_jurkat_k500: 0.1441
+  topk_excess_over_chance_hepg2_s1_to_s4_k100: [0.0805, 0.4215]
+  topk_excess_over_chance_jurkat_s1_to_s4_k100: [0.0527, 0.1660]
+  ceiling_grid_reproduces_published_columns: "max abs diff 0.0"
+  verify: "102/102 checks passed"
 slurm_jobs:
   - {id: "209514077812", what: "effect matrices, both cell lines"}
+  - {id: "999230088447", what: "top-k ceiling grid recompute, both cell lines"}
   - {id: "393902382560", what: "gene universe + four vocabularies"}
   - {id: "172313890488", what: "real non-targeting control demo cells"}
   - {id: "334694176457", what: "reference cross-check accumulation (29.8 GB streamed)"}

@@ -8,7 +8,7 @@ The most consequential number here is not an agreement statistic but a limit. Sp
 
 Each of the three areas below is written in two parts: first the quantity and the exact procedure that produced it, including sample sizes and thresholds, then the measured values with what each one implies. Every number is read at build time out of the artifact files the run produced, which are listed at the end.
 
-_Generated 2026-08-18 20:08 UTC._
+_Generated 2026-08-19 02:08 UTC._
 
 ## The effect matrices
 
@@ -99,6 +99,14 @@ Two split forms are reported, and both keep the control cells of the two sides d
 
 Three metrics are computed per split, chosen to match the ways a later run will score a model against these effects: Pearson correlation across expressed genes on log2 fold changes (`pearson_lfc`), cosine similarity on the linear CP10K deltas (`cosine_delta`), and the overlap of the top 50 genes ranked by absolute log2 fold change (`topk_overlap`). Per-perturbation values live in `perturbations.parquet`; `noise_ceiling_summary.parquet` holds the median and the quartiles per stratum.
 
+The overlap metric is reported over a grid of k rather than at one k. For every perturbation and both split forms, the two sides' top-k sets are compared at k = 10, 50, 100, 500, and at an adaptive k defined below. The expensive part of this measurement is rebuilding the two split-half effect vectors from the raw count matrices; once they exist, another k costs microseconds, so the whole grid is computed and any k can be read off it. The k = 50 column is the `topk_overlap` column already in `perturbations.parquet`, recomputed and identical to it. Per-perturbation values live in `topk_overlap_grid.parquet`, per-stratum medians in `topk_overlap_grid_summary.parquet`, and the split-half vectors themselves in `split_half_vectors.npz` (log2FC and delta, both sides, both split forms, float32 over expressed genes), so a later question about another k or another metric is a file read rather than another pass over the raw data. The stage re-reads the raw count matrices, because those vectors were not kept the first time, and it reproduces every published ceiling column exactly on the way through (largest absolute difference 0 over both split forms and all three metrics), so nothing already reported changes meaning.
+
+**Overlap has a floor that moves with k, so raw overlap is not comparable across k.** Two independent sets of size k drawn from n expressed genes share k/n of their members by chance. In HepG2, with 3,119 expressed genes, that chance level is 0.003206 at k = 10 and 0.1603 at k = 500; in Jurkat, with 3,469 expressed genes, 0.002883 and 0.1441. A top-500 overlap of 0.30 is therefore under twice what two random draws reach, while a top-10 overlap of 0.30 is roughly a hundred times chance. Every cell of the grid is reported twice for that reason: the raw overlap, and the excess over chance, (overlap - chance) / (1 - chance), which is 0 when the two halves agree no better than two random draws and 1 when they select exactly the same genes.
+
+A fifth column sets k per perturbation rather than per stratum: k is that perturbation's own `n_de_genes`, clipped to [10, 500]. The strata are rank quartiles cut inside a cell line, so a stratum label does not fix a response size: the median S3 perturbation has 79 differentially expressed genes in HepG2 against 130 in Jurkat, and the median S4 perturbation 984 against 448. Asking both lines for their top 500 genes asks a much harder question of Jurkat's top stratum than of HepG2's. A k tied to the perturbation's own response asks both the same question, at the cost of a chance level that changes from row to row, so the adaptive column carries its own chance value per perturbation.
+
+Two diagnostics travel with every cell, because the overlap can be quietly meaningless without them. Selecting the top k with `argpartition` breaks ties arbitrarily, which matters at small k where many genes sit near zero log2 fold change, so `tie_fraction` records the share of the selected set within numerical tolerance (relative 1e-06) of the k-th value; its floor is 1/k because the k-th value ties itself, and membership is only actually contested when a gene outside the set falls inside that tolerance too. Selection is on absolute log2 fold change with no expression or significance filter, so a small-k set can be dominated by low-expression genes whose ratios are large and unreliable; `median_control_cp10k_selected` records the median pooled control level of the selected genes, to be read against the median over all expressed genes (1.0108 CP10K in HepG2, 1.0232 in Jurkat).
+
 **A model score has to be read as a fraction of this number, not on its own.** If two independent measurements of the same perturbation agree at 0.30, then a prediction that correlates with a measured effect vector at 0.30 has reached the level at which the experiment agrees with itself, and a prediction at 0.30 in a stratum whose ceiling is 0.70 has reached less than half of it. Reporting the raw correlation alone makes the first look as weak as the second. The ceilings are per stratum and per cell line for exactly this reason: they are the denominators.
 
 ### Results and what they imply
@@ -130,6 +138,52 @@ More cells help, but effect size decides: agreement correlates with cell count a
 
 The low ceiling in the weak strata is not a matter of too few cells. Agreement correlates with effect size at Spearman 0.7243 (HepG2) and 0.5291 (Jurkat) but with cell count at only 0.3836 and 0.2679, and cell count runs *against* effect size (-0.2427 in HepG2, -0.5980 in Jurkat): the weakest quartile has a median of 71 cells in HepG2 against 54 in the strongest. The weak perturbations were measured more deeply and still did not reproduce, so their response is small relative to cell-level variation rather than merely undersampled, and sequencing more cells of the same perturbations is not an obvious route to a usable signal there.
 
+#### The top-k overlap grid
+
+Median overlap of the two halves' top-k gene sets, split by cell, with excess over chance in parentheses and each stratum's own k in bold. The chance row is the overlap two independent draws of the same size reach, and the adaptive column uses each perturbation's own differentially expressed gene count as its k. Splitting by sequencing batch instead of by cell moves no cell of this table by more than 0.0200.
+
+| cell line | stratum | k = 10 | k = 50 | k = 100 | k = 500 | adaptive k |
+|---|---|---|---|---|---|---|
+| HepG2 | chance level | 0.003206 | 0.01603 | 0.03206 | 0.1603 | 0.01154 (median) |
+| HepG2 | S1_lowest | **0.2000 (0.1974)** | 0.1000 (0.0853) | 0.1100 (0.0805) | 0.2380 (0.0925) | 0.1722 (0.1558) at k = 10 |
+| HepG2 | S2 | 0.1000 (0.0971) | **0.1000 (0.0853)** | 0.1100 (0.0805) | 0.2400 (0.0949) | 0.1304 (0.1130) at k = 10 |
+| HepG2 | S3 | 0.2000 (0.1974) | 0.1600 (0.1463) | **0.1700 (0.1425)** | 0.2760 (0.1378) | 0.2000 (0.1846) at k = 79 |
+| HepG2 | S4_highest | 0.2000 (0.1974) | 0.3800 (0.3699) | 0.4400 (0.4215) | **0.5120 (0.4188)** | 0.5120 (0.4188) at k = 500 |
+| Jurkat | chance level | 0.002883 | 0.01441 | 0.02883 | 0.1441 | 0.01758 (median) |
+| Jurkat | S1_lowest | **0.1000 (0.0974)** | 0.0600 (0.0463) | 0.0800 (0.0527) | 0.2160 (0.0840) | 0.1000 (0.0974) at k = 10 |
+| Jurkat | S2 | 0.2000 (0.1977) | **0.1000 (0.0868)** | 0.1000 (0.0733) | 0.2260 (0.0957) | 0.1290 (0.1031) at k = 31 |
+| Jurkat | S3 | 0.2000 (0.1977) | 0.1600 (0.1477) | **0.1600 (0.1351)** | 0.2460 (0.1190) | 0.1943 (0.1469) at k = 130 |
+| Jurkat | S4_highest | 0.2000 (0.1977) | 0.1700 (0.1579) | 0.1900 (0.1660) | **0.2980 (0.1798)** | 0.2854 (0.1873) at k = 448.5 |
+
+**Reading across a row shows why the chance level has to be quoted with the number.** The weakest HepG2 quartile appears to improve from 0.2000 at k = 10 to 0.2380 at k = 500, which looks like a better measurement at larger k. It is not: chance rises from 0.003206 to 0.1603 over the same span, so the excess over chance stays near 0.0925 throughout. Two thirds of that top-500 overlap is what two random draws would have produced. The same row in Jurkat reads 0.2160 against a chance level of 0.1441.
+
+**Reading down a column shows which k can see the effect-size ordering.** At k = 50 and above, the top stratum separates cleanly from the bottom one in both cell lines: in HepG2 the excess runs 0.0805 to 0.4215 at k = 100, and in Jurkat 0.0527 to 0.1660. At k = 10 it cannot: a per-perturbation overlap of ten genes takes only the eleven values 0, 0.1, ..., 1, so the median collapses onto that grid and three of the four HepG2 strata land on exactly 0.2000. k = 10 is a legitimate question about the few strongest genes, but it is too coarse to rank perturbations by, and a model compared at k = 10 on a single perturbation is being scored on a ten-way coin toss.
+
+**Figure 7: Top-k overlap against the chance level it has to beat** ([interactive render](figures/topk_overlap_grid/topk_overlap_grid.html), [plot data](figures/topk_overlap_grid/data.json))
+
+Median overlap between the two split halves' top-k gene sets, over k = 10, 50, 100 and 500 on a logarithmic axis, by effect-size stratum and cell line. The dashed line is the chance level k/n for n expressed genes; the open square marks the k quoted for that stratum and the cross the median adaptive k. The lower panels show the same numbers as excess over chance, where 0 is chance and 1 is an identical set.
+
+Raw overlap climbs with k in every stratum, and most of that climb is the chance level climbing underneath it: in the weakest HepG2 quartile the top-500 overlap of 0.2380 sits against a chance level of 0.1603, while the strongest quartile reaches 0.5120. In the excess panels the curves are nearly flat, so the ranking of the strata, not the value of k, is what the metric is telling you.
+
+**The adaptive column is the one that compares the two cell lines.** Each perturbation is asked for as many genes as it actually moved, so the median k is 79 in HepG2's S3 against 130 in Jurkat's, and 500 against 448.5 in S4. On that footing the top HepG2 stratum reproduces its own response at an excess of 0.4188 against 0.1873 in Jurkat, so the S4 label covers a substantially more reproducible set of perturbations in HepG2 than in Jurkat. In the bottom two strata the adaptive k collapses to the floor of 10 in HepG2, because the median perturbation there has fewer than ten differentially expressed genes at all, which is another way of saying the same thing the correlation ceiling says: there is little there to reproduce.
+
+| cell line | k | median tie fraction | selections with a contested boundary | median control level of the selected genes (CP10K) |
+|---|---|---|---|---|
+| HepG2 | 10 | 0.1 | 0.05% | 0.7652 |
+| HepG2 | 50 | 0.02 | 0.00% | 0.7165 |
+| HepG2 | 100 | 0.01 | 0.10% | 0.7184 |
+| HepG2 | 500 | 0.002 | 0.35% | 0.7702 |
+| HepG2 | adaptive | 0.02778 | 0.25% | 0.7649 |
+| Jurkat | 10 | 0.1 | 0.05% | 0.6538 |
+| Jurkat | 50 | 0.02 | 0.05% | 0.6632 |
+| Jurkat | 100 | 0.01 | 0.00% | 0.6794 |
+| Jurkat | 500 | 0.002 | 0.27% | 0.7632 |
+| Jurkat | adaptive | 0.01639 | 0.09% | 0.6861 |
+
+The two diagnostics land differently. Ties are not a practical problem in this data: the median tie fraction is exactly the 1/k floor in every cell, so the only value tied with the k-th value is the k-th value itself, and the share of selections where any gene outside the set is indistinguishable from the boundary peaks at 1.01% across every cell of the grid. The expression diagnostic is the one worth carrying: the selected genes sit below the typical expressed gene everywhere, from 0.6202 to 0.8907 CP10K against about 1 CP10K over all expressed genes, and the lean is strongest exactly where the signal is weakest (0.6202 CP10K for the lowest Jurkat stratum at k = 10 against 0.8907 for the highest HepG2 stratum at k = 500). Ranking by absolute log2 fold change with no expression filter does pull in genes whose ratios are large because their denominators are small, so a later run that wants a top-k comparison to be about biology rather than about counting noise should either add an expression floor or read this column as the caveat it is.
+
+None of this changes a number that was already reported: the k = 50 column is the published `topk_overlap` column, recomputed to the last bit, and the correlation and cosine ceilings are untouched. What the grid adds is the ability to quote an overlap honestly. A top-k overlap without its k, its chance level and its expressed-gene count is not interpretable, and the same overlap value can mean a strong result at k = 10 and a near-chance result at k = 500.
+
 ## Agreement with an independent reanalysis
 
 ### Definition, procedure, and thresholds
@@ -160,7 +214,7 @@ Agreement with the reference rises with effect size in the same way the self-agr
 
 The two control estimators agree at median Pearson 0.9963 on log2 fold changes, so the batch-matched correction is small on most perturbations. It is kept as the primary estimate because where the two disagree, the disagreement is exactly the batch-composition confound that the weighting removes; a later run that prefers the pooled column can read it from the same file and should say which one it used.
 
-**Figure 7: Agreement with the published reanalysis, per gene and per perturbation** ([interactive render](figures/reference_crosscheck/reference_crosscheck.html), [plot data](figures/reference_crosscheck/data.json))
+**Figure 8: Agreement with the published reanalysis, per gene and per perturbation** ([interactive render](figures/reference_crosscheck/reference_crosscheck.html), [plot data](figures/reference_crosscheck/data.json))
 
 Left: a random sample of per-gene log2 fold changes, ours against the published reference release, with the identity line. Right: the distribution of per-perturbation agreement, ours against the reference and our two control estimators against each other.
 
@@ -182,7 +236,7 @@ Symmetry is measured rather than assumed. A run that reads one column of a respo
 
 **Asymmetry constrains how a response matrix may be indexed.** The object a later run builds is directional: entry (i, j) is the change in gene j's response caused by a change in gene i, and the two indices are not interchangeable. Where the measurement below is decisive it comes out asymmetric, so a run may not fill the other half of the matrix by transposition, may not average the two triangles, and may not use one column to stand in for the corresponding row. Getting both directions costs two passes per pair. For TranscriptFormer the restriction is structural: with a causal mask only the entries where the source precedes the target are reachable at all, and the rest are exactly zero by construction rather than small by measurement.
 
-**Figure 8: Vocabulary size and assay coverage for the four models** ([interactive render](figures/model_gene_coverage/model_gene_coverage.html), [plot data](figures/model_gene_coverage/data.json))
+**Figure 9: Vocabulary size and assay coverage for the four models** ([interactive render](figures/model_gene_coverage/model_gene_coverage.html), [plot data](figures/model_gene_coverage/data.json))
 
 For each model: how many tokens its vocabulary holds, how many resolve to a distinct Ensembl gene id, and how many of the genes measured in each cell line it can address. The axis is logarithmic because the vocabularies differ by a factor of three; the marked line is the shared universe.
 
@@ -208,7 +262,7 @@ The vocabularies differ by a factor of three and use different identifier kinds,
 
 The recorded Jacobian route is the one that actually ran, which is not always the one the contract declares as preferred: scGPT's forward-mode pass over 7,444 genes exhausted the GPU, so its column is a central finite difference. Reading the declared field instead of the recorded one would misdescribe the number.
 
-**Figure 9: Each model's per-gene response on the same control cell** ([interactive render](figures/model_responses_on_one_cell/model_responses_on_one_cell.html), [plot data](figures/model_responses_on_one_cell/data.json))
+**Figure 10: Each model's per-gene response on the same control cell** ([interactive render](figures/model_responses_on_one_cell/model_responses_on_one_cell.html), [plot data](figures/model_responses_on_one_cell/data.json))
 
 One panel per model: the response the model returns for each of the 7,444 universe genes, against that gene's observed count in the cell. Vertical scales are per panel and are not comparable.
 
@@ -281,6 +335,10 @@ effects/<cell_line>/effects.npz              delta and log2FC matrices, both est
 effects/<cell_line>/perturbations.parquet    per-perturbation metadata, knockdown, DE, strata, ceilings
 effects/<cell_line>/genes.parquet            gene index, pooled control level, expressed flag
 effects/<cell_line>/noise_ceiling_summary.parquet   per-stratum medians and quartiles
+effects/<cell_line>/topk_overlap_grid.parquet        per-perturbation overlap at every k, with chance and diagnostics
+effects/<cell_line>/topk_overlap_grid_summary.parquet  per-stratum medians of that grid
+effects/<cell_line>/split_half_vectors.npz   the two split halves' log2FC and delta vectors
+effects/<cell_line>/topk_overlap_grid_qc.json  grid config, chance levels, reproduction of the published ceilings
 effects/<cell_line>/qc.json                  provenance, filter funnel, config, environment
 crosscheck/summary.json                      agreement with the published reanalysis
 gene_universe/gene_universe.parquet          one row per shared gene, with each model's token position
@@ -293,7 +351,7 @@ models/<model>/environment.json              pinned packages, image, device
 models/<model>/demo.json                     what was run, timings, checks, symmetry probe
 ```
 
-`uv run python -m scfm_pfm.verify --all` re-checks every claim on this page against those files: matrix shapes and finiteness, knockdown and differential-expression ranges, the four strata, ceilings bounded in (0, 1] and ordered across strata, the reference Spearman against its gate, vocabulary positions inside each model's vocabulary, and one finite response vector per model with its contract fields filled in, including a symmetry field that is either answered or explicitly measured and inconclusive.
+`uv run python -m scfm_pfm.verify --all` re-checks every claim on this page against those files: matrix shapes and finiteness, knockdown and differential-expression ranges, the four strata, ceilings bounded in (0, 1] and ordered across strata, the reference Spearman against its gate, vocabulary positions inside each model's vocabulary, and one finite response vector per model with its contract fields filled in, including a symmetry field that is either answered or explicitly measured and inconclusive. For the overlap grid it also re-derives the chance levels from the expressed-gene count, re-checks the excess-over-chance definition and the adaptive k on every row, confirms that the k = 50 column still equals the published `topk_overlap` column, and recomputes the overlap from the persisted split-half vectors to confirm they are the vectors that were scored.
 
 ## Provenance
 

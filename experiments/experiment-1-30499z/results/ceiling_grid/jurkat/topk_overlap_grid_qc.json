@@ -1,0 +1,109 @@
+{
+  "cell_line": "jurkat",
+  "stage": "topk_overlap ceiling grid (recompute of the ceiling stage only)",
+  "source": {
+    "url": "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE264nnn/GSE264667/suppl/GSE264667_jurkat_raw_singlecell_01.h5ad",
+    "path": "/__modal/volumes/vo-5o7tTj1xH6dC6mxu5rOtnU/experiments/experiment-1-30499z/_raw/GSE264667_jurkat_raw_singlecell_01.h5ad",
+    "size_bytes": 9366490264,
+    "declared_size_bytes": 9366490264,
+    "size_verified": true,
+    "transfer_attempts": 1,
+    "md5": "dae9fab2a8b0430099a76ce60d0c5405",
+    "seconds": 149.4,
+    "reused_existing": false
+  },
+  "n_perturbations": 2201,
+  "n_expressed_genes": 3469,
+  "n_scored_perturbations": {
+    "split_half_cells": 2201,
+    "split_by_batch": 2201
+  },
+  "config": {
+    "k_grid": [
+      10,
+      50,
+      100,
+      500
+    ],
+    "diagonal_k_by_stratum": {
+      "S1_lowest": 10,
+      "S2": 50,
+      "S3": 100,
+      "S4_highest": 500
+    },
+    "adaptive_k": {
+      "definition": "clip(n_de_genes, min, max) per perturbation",
+      "min": 10,
+      "max": 500,
+      "median_k": {
+        "S1_lowest": 10.0,
+        "S2": 31.0,
+        "S3": 130.0,
+        "S4_highest": 448.5
+      }
+    },
+    "chance_level": {
+      "definition": "k / n_expressed_genes, the expected overlap of two independent size-k draws",
+      "by_k": {
+        "10": 0.0028826751225136927,
+        "50": 0.014413375612568464,
+        "100": 0.028826751225136928,
+        "500": 0.14413375612568463
+      }
+    },
+    "excess_over_chance": "(overlap - chance) / (1 - chance)",
+    "tie_tolerance": {
+      "rtol": 1e-06,
+      "atol": 1e-09
+    },
+    "selection": "top k by |log2FC| over expressed genes, no expression or significance filter",
+    "min_cells_per_side": 5,
+    "expressed_min_cp10k": 0.5,
+    "seed": 42
+  },
+  "reproduction_of_published_ceilings": {
+    "reference_dir": "/__modal/volumes/vo-5o7tTj1xH6dC6mxu5rOtnU/experiments/experiment-1-30499z/results/handoff/effects/jurkat",
+    "max_abs_diff": {
+      "split_half_cells__pearson_lfc": 0.0,
+      "split_half_cells__cosine_delta": 0.0,
+      "split_half_cells__topk_overlap": 0.0,
+      "split_by_batch__pearson_lfc": 0.0,
+      "split_by_batch__cosine_delta": 0.0,
+      "split_by_batch__topk_overlap": 0.0
+    },
+    "max_abs_diff_pooled_control_cp10k": 0.0,
+    "note": "the same split assignment, control estimator and metric code as the published run; these are the largest per-perturbation differences against perturbations.parquet"
+  },
+  "outputs": {
+    "topk_overlap_grid.parquet": 22010,
+    "topk_overlap_grid_summary.parquet": 50,
+    "split_half_vectors.npz": {
+      "bytes": 227787017,
+      "arrays": [
+        "split_by_batch__delta_side0",
+        "split_by_batch__delta_side1",
+        "split_by_batch__lfc_side0",
+        "split_by_batch__lfc_side1",
+        "split_half_cells__delta_side0",
+        "split_half_cells__delta_side1",
+        "split_half_cells__lfc_side0",
+        "split_half_cells__lfc_side1"
+      ],
+      "shape": [
+        2201,
+        3469
+      ],
+      "dtype": "float32",
+      "rows_follow": "targets (same order as perturbations.parquet)",
+      "columns_follow": "gene_ids (the expressed genes, in matrix order)"
+    }
+  },
+  "runtime_seconds": 269.1,
+  "environment": {
+    "python": "3.12.14 (main, Aug 13 2026, 19:41:13) [GCC 14.2.0]",
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.41",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "h5py": "3.15.1"
+  }
+}
