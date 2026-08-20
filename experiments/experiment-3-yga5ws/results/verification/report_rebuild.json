@@ -1,0 +1,39 @@
+{
+  "what": "Whether runs 2 and 3 can regenerate their reports from tracked files alone, given that only run 1's rendered HTML is committed",
+  "how": "git archive HEAD | tar -x into a scratch directory, which yields tracked files only, then run each report builder there with no artifact-store credential and no GPU",
+  "date": "2026-08-20",
+  "runs": [
+    {
+      "run": 2,
+      "eid": "exp_01m0c7ecnnf3fvxskxj5nygwcv",
+      "directory": "experiments/experiment-2-nygwcv",
+      "command": "PYTHONPATH=src python -m scfm_pfm.report.build --bundles results/report/bundles --out OUT",
+      "reads": "results/report/bundles/*.json (8 verification bundles), all tracked",
+      "rebuilds": true,
+      "needs_artifact_store": false,
+      "needs_gpu": false,
+      "outputs": {
+        "feature_extraction_report.html": 4999781,
+        "feature_extraction_report.md": 55351,
+        "no_op_queries.csv": 5202
+      },
+      "equality_check": "the rebuilt feature_extraction_report.md and no_op_queries.csv are byte-identical to the copies committed under results/report/"
+    },
+    {
+      "run": 3,
+      "eid": "exp_01m0emwktvfe892x6ebqyga5ws",
+      "directory": "experiments/experiment-3-yga5ws",
+      "command": "PYTHONPATH=src python -m scfm_pfm.report.build --summary results/summary --out OUT",
+      "reads": "results/summary/{runs,contrasts,transfer_runs,control_cell_overlap,sensitivity,ordering_agreement}.parquet, results/summary/headline.json, results/{recompute_report,beeline_reproduction,discrimination_versions,bundle_inventory}.json, results/verification/no_op_correction.json; all tracked",
+      "rebuilds": true,
+      "needs_artifact_store": false,
+      "needs_gpu": false,
+      "outputs": {
+        "index.html": 136401
+      },
+      "equality_check": "the tracked-files-only build and a build from the live worktree are identical after normalizing the random div identifiers Plotly assigns per render; both are 136401 bytes"
+    }
+  ],
+  "caveat": "Both builders need their run's declared dependencies (uv sync inside the run directory). The house figure-style package is a local path dependency supplied by the platform, so a clone taken off-platform needs that package made available first. Regenerating the underlying results, as opposed to the reports, still needs GPU jobs and the artifact store.",
+  "conclusion": "Leaving runs 2 and 3 without a committed rendered report is safe: both regenerate from tracked files on CPU, and run 2's rebuild reproduces its committed reading copy byte for byte."
+}
