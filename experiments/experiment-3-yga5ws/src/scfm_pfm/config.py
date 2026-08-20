@@ -121,7 +121,7 @@ RIDGE_ALPHAS = tuple(float(10.0**k) for k in range(-2, 8))
 # --------------------------------------------------------------------------- #
 #: the pre-registered primary cell of the correlation grid
 PRIMARY_METRIC = "residual__weighted__disattenuated"
-GRID_TARGETS = ("residual", "raw")
+GRID_TARGETS = ("residual", "centered", "raw")
 GRID_WEIGHTINGS = ("weighted", "unweighted")
 GRID_CORRECTIONS = ("disattenuated", "attenuated")
 
@@ -202,6 +202,10 @@ def sensitivity_arms(models: tuple[str, ...] = MODELS) -> list[ArmSpec]:
 #: across perturbed genes. Run on these arms only (it is a property of the
 #: pipeline, not of the feature).
 SHUFFLE_NULL_ARMS = ("coexp", "scgpt_full")
+
+#: how many independent permutations to draw for each shuffled-label arm. One
+#: draw is a single sample from the null and says nothing about its spread.
+N_SHUFFLE_DRAWS = 5
 
 
 @dataclass(frozen=True)

@@ -39,7 +39,17 @@ def fold_reference(bundle: LineBundle, rows: np.ndarray, fold: np.ndarray, n_fol
     effect = bundle.effect[torch.as_tensor(rows, device=bundle.effect.device)].cpu().numpy()
     self_cols = bundle.self_col_np[rows]
     per_fold = []
-    ceil = {k: [] for k in ("residual_weighted", "residual_unweighted", "raw_weighted", "raw_unweighted")}
+    ceil = {
+        k: []
+        for k in (
+            "residual_weighted",
+            "residual_unweighted",
+            "raw_weighted",
+            "raw_unweighted",
+            "centered_weighted",
+            "centered_unweighted",
+        )
+    }
     for f in range(n_folds):
         te = np.flatnonzero(fold == f)
         tr = np.flatnonzero(fold != f)
@@ -57,11 +67,43 @@ def fold_reference(bundle: LineBundle, rows: np.ndarray, fold: np.ndarray, n_fol
         ceil["residual_unweighted"].append(metrics.weighted_pearson_rows(r0[te], r1[te], ones))
         ceil["raw_weighted"].append(metrics.weighted_pearson_rows(half0[te], half1[te], wmat))
         ceil["raw_unweighted"].append(metrics.weighted_pearson_rows(half0[te], half1[te], ones))
+        c0 = r0[te] - r0[te].mean(axis=0, keepdims=True)
+        c1 = r1[te] - r1[te].mean(axis=0, keepdims=True)
+        ceil["centered_weighted"].append(metrics.weighted_pearson_rows(c0, c1, wmat))
+        ceil["centered_unweighted"].append(metrics.weighted_pearson_rows(c0, c1, ones))
     ceilings = {
         k: float(np.clip(metrics.spearman_brown(np.nanmedian(np.concatenate(v))), 1e-6, 1.0))
         for k, v in ceil.items()
     }
     return {"folds": per_fold, "ceilings": ceilings, "effect": effect, "self_cols": self_cols}
+
+
+def bundle_inventory(bundle: LineBundle) -> dict:
+    """What this bundle actually holds, read off the loaded arrays.
+
+    Written next to the sweep so the report describes the inputs the runs used
+    rather than what a manifest written by an earlier pass claims.
+    """
+    feats = {}
+    for (model, anchor), e in sorted(bundle.features.items()):
+        feats[f"{model}__{anchor}"] = {
+            "n_perturbed": int(e["pert_index"].size),
+            "values": [float(v) for v in e["values"]],
+            "forms": sorted([f for f in ("zero_out", "vvp", "gdt") if f in e]),
+            "gdt_rank_only": bool(e.get("gdt_rank_only", False)),
+        }
+    return {
+        "cell_line": bundle.cell_line,
+        "n_perturbations": int(bundle.n_pert),
+        "n_readout": int(bundle.n_readout),
+        "embeddings": {m: int(v.shape[1]) for m, v in sorted(bundle.emb.items())},
+        "features": feats,
+        "coexpr_keys": sorted(bundle.coexpr),
+        "node_features": list(bundle.node_names),
+        "strata": sorted(set(bundle.pert_stratum.tolist())),
+        "perturbed_genes_in_readout": int((bundle.self_col_np >= 0).sum()),
+        "reference": bundle.reference,
+    }
 
 
 def _keep_predictions(arm: str, translator: str, scope: str, split: str) -> bool:
@@ -71,7 +113,8 @@ def _keep_predictions(arm: str, translator: str, scope: str, split: str) -> bool
         return False
     return (
         arm in {"coexp", "node", "coexp_node", "mean_only", "null_randpair"}
-        or arm.endswith(("_full", "_resp", "+shuffled_labels"))
+        or arm.endswith(("_full", "_resp"))
+        or arm.endswith("+shuffled_labels_d0")
     )
 
 
@@ -87,12 +130,27 @@ def score_run(
     n, r = effect.shape
     true_resid = np.zeros_like(effect)
     pred_raw = np.zeros_like(effect)
+    # float64 for the centred pair: a prediction that barely varies across
+    # perturbations leaves float32 dust behind, and a correlation of dust with
+    # anything is a number with no meaning.
+    true_cen = np.zeros(effect.shape, dtype=np.float64)
+    pred_cen = np.zeros(effect.shape, dtype=np.float64)
     weights = np.zeros_like(effect)
     for f in range(n_folds):
         info = ref["folds"][f]
         te = info["test"]
         true_resid[te] = effect[te] - info["mean"][None, :]
         pred_raw[te] = pred_resid[te] + info["mean"][None, :]
+        # Held-out perturbations share a per-gene offset: the mean subtracted
+        # comes from the training fold, and a grouped fold is a whole response
+        # family with a real shared response. Any prediction that is constant
+        # across perturbations correlates with that offset, by luck rather than
+        # by matching a perturbation. Removing the held-out fold's own mean from
+        # both sides scores only what separates one perturbation from another.
+        t64 = true_resid[te].astype(np.float64)
+        p64 = pred_resid[te].astype(np.float64)
+        true_cen[te] = t64 - t64.mean(axis=0, keepdims=True)
+        pred_cen[te] = p64 - p64.mean(axis=0, keepdims=True)
         weights[te] = info["weights"][None, :]
     weights[np.arange(n), self_cols] = 0.0
     ones = np.ones_like(weights)
@@ -103,6 +161,8 @@ def score_run(
         ("residual", "unweighted"): metrics.weighted_pearson_rows(pred_resid, true_resid, ones),
         ("raw", "weighted"): metrics.weighted_pearson_rows(pred_raw, effect, weights),
         ("raw", "unweighted"): metrics.weighted_pearson_rows(pred_raw, effect, ones),
+        ("centered", "weighted"): metrics.weighted_pearson_rows(pred_cen, true_cen, weights),
+        ("centered", "unweighted"): metrics.weighted_pearson_rows(pred_cen, true_cen, ones),
     }
     summary: dict = {}
     for (target, weighting), values in cells.items():
@@ -127,6 +187,8 @@ def score_run(
             "residual_unweighted": cells[("residual", "unweighted")],
             "raw_weighted": cells[("raw", "weighted")],
             "raw_unweighted": cells[("raw", "unweighted")],
+            "centered_weighted": cells[("centered", "weighted")],
+            "centered_unweighted": cells[("centered", "unweighted")],
         }
     )
     return summary, per_pert, pred_raw, true_resid
@@ -165,12 +227,17 @@ def run_cell(
     if shuffle_null:
         for name in C.SHUFFLE_NULL_ARMS:
             base = [s for s in specs if s.name == name]
-            if base:
-                s = base[0]
+            if not base:
+                continue
+            s = base[0]
+            # Several draws, not one: a single permutation is one sample from
+            # the null, and the spread between draws is the thing a score has
+            # to clear.
+            for draw in range(C.N_SHUFFLE_DRAWS):
                 specs.append(
                     C.ArmSpec(
-                        f"{s.name}+shuffled_labels", "null", s.blocks, s.model, s.anchor,
-                        note="perturbation labels permuted",
+                        f"{s.name}+shuffled_labels_d{draw}", "null", s.blocks, s.model, s.anchor,
+                        note="perturbation labels permuted within the training fold",
                     )
                 )
 
@@ -196,7 +263,8 @@ def run_cell(
             t0 = time.time()
             pred = np.zeros((rows.size, bundle.n_readout), dtype=np.float32)
             detail: list[dict] = []
-            shuffled = spec.name.endswith("+shuffled_labels")
+            shuffled = "+shuffled_labels" in spec.name
+            draw = int(spec.name.rsplit("_d", 1)[1]) if shuffled else 0
             for f in range(C.N_FOLDS):
                 info = ref["folds"][f]
                 tr_local, te_local = info["train"], info["test"]
@@ -209,10 +277,19 @@ def run_cell(
                     # targets into the training set, and those rows share a
                     # per-gene offset (their mean minus the training mean) that
                     # a null model could then learn and score on.
-                    rng = np.random.default_rng(C.SEED + f)
+                    rng = np.random.default_rng(C.SEED + 101 * (draw + 1) + f)
                     perm = np.arange(rows.size)
                     perm[tr_local] = tr_local[rng.permutation(tr_local.size)]
                     target = target[torch.as_tensor(perm, device=device)]
+                    # A permuted row carries its own knockdown column with it,
+                    # and that is not the column the pair index drops for this
+                    # row. Those few hundred large negative values are then the
+                    # one systematic thing left for a null model to fit, so set
+                    # them to the training-fold mean, which is zero here.
+                    target[
+                        torch.arange(rows.size, device=device),
+                        torch.as_tensor(local_self[perm], device=device),
+                    ] = 0.0
                 w = torch.as_tensor(info["weights"], device=device, dtype=torch.float32)
                 arm = _bind(spec, bundle, row_lookup)
                 if spec.name == "mean_only":
@@ -337,6 +414,14 @@ def run_transfer(
     r0, _ = metrics.residualize(dv.half0[rows_dst], all_dst)
     r1, _ = metrics.residualize(dv.half1[rows_dst], all_dst)
     ceilings = {
+        "centered_weighted": float(
+            np.clip(metrics.spearman_brown(
+                np.nanmedian(metrics.weighted_pearson_rows(r0, r1, w_dst))), 1e-6, 1.0)
+        ),
+        "centered_unweighted": float(
+            np.clip(metrics.spearman_brown(
+                np.nanmedian(metrics.weighted_pearson_rows(r0, r1, ones))), 1e-6, 1.0)
+        ),
         "residual_weighted": float(
             np.clip(metrics.spearman_brown(
                 np.nanmedian(metrics.weighted_pearson_rows(r0, r1, w_dst))), 1e-6, 1.0)
@@ -382,9 +467,13 @@ def run_transfer(
                 arm_test=arm_te, n_readout_test=int(sv.n_readout),
             )
             pred = res["prediction"]
+            pred_c = pred - pred.mean(axis=0, keepdims=True)
+            true_c = resid_dst - resid_dst.mean(axis=0, keepdims=True)
             cells = {
                 ("residual", "weighted"): metrics.weighted_pearson_rows(pred, resid_dst, w_dst),
                 ("residual", "unweighted"): metrics.weighted_pearson_rows(pred, resid_dst, ones),
+                ("centered", "weighted"): metrics.weighted_pearson_rows(pred_c, true_c, w_dst),
+                ("centered", "unweighted"): metrics.weighted_pearson_rows(pred_c, true_c, ones),
                 ("raw", "weighted"): metrics.weighted_pearson_rows(
                     pred + mean_dst, eff_dst, w_dst),
                 ("raw", "unweighted"): metrics.weighted_pearson_rows(
@@ -430,6 +519,8 @@ def run_transfer(
                         "residual_unweighted": cells[("residual", "unweighted")],
                         "raw_weighted": cells[("raw", "weighted")],
                         "raw_unweighted": cells[("raw", "unweighted")],
+                        "centered_weighted": cells[("centered", "weighted")],
+                        "centered_unweighted": cells[("centered", "unweighted")],
                         "cell_line": record["cell_line"],
                         "scope": "transfer",
                         "split": "cross_line",
@@ -492,6 +583,7 @@ def main(argv: list[str] | None = None) -> int:
 
     records: list[dict] = []
     tables: list[pd.DataFrame] = []
+    inventory: dict[str, dict] = {}
     if args.transfer:
         a, b = (x.strip() for x in args.lines.split(","))
         ba = LineBundle(a, root, args.device)
@@ -515,6 +607,7 @@ def main(argv: list[str] | None = None) -> int:
             continue
         bundle = LineBundle(line, root, args.device)
         print(f"=== {line}: {bundle.n_pert} perturbations x {bundle.n_readout} genes ===", flush=True)
+        inventory[line] = bundle_inventory(bundle)
         for scope in args.scopes.split(","):
             for split in args.splits.split(","):
                 if scope == "common" and split == "random":
@@ -542,6 +635,10 @@ def main(argv: list[str] | None = None) -> int:
         pd.DataFrame(records).to_parquet(out_dir / f"runs_shard{args.shard}.parquet", index=False)
         pd.concat(tables, ignore_index=True).to_parquet(
             out_dir / f"per_perturbation_shard{args.shard}.parquet", index=False
+        )
+    if inventory:
+        (out_dir / f"bundle_inventory_shard{args.shard}.json").write_text(
+            json.dumps(inventory, indent=2, sort_keys=True)
         )
     print(json.dumps({"n_runs": len(records), "out": str(out_dir)}))
     return 0
