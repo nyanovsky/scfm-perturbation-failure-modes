@@ -110,6 +110,10 @@ The discrimination axis is computed with Arc Institute's `cell-eval`. The pre-re
 0.5.18 to 0.5.21), so the jobs resolved 0.8.2 and `scratch/disc_version_check.py` rescores the
 saved predictions under 0.5.18, 0.5.21 and 0.8.2 to show what that choice costs.
 
+`scratch/verify_claims.py` re-reads each entry of `claims_manifest.json` from the file and key it
+names and reports any disagreement. It resolves 95 of the 159 keys; the rest use prose locators
+that the script does not parse, and none of the values it could re-read disagreed.
+
 No external model provider is used anywhere in this run: every number comes from the four
 open single-cell foundation models' cached features and from code in this worktree.
 
