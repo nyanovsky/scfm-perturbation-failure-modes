@@ -1,0 +1,11 @@
+{
+  "_note": "Worker-owned entity colors for run 3. Entities are the thing being compared: the four single-cell foundation models, the statistical baseline, the node-only control, the mean-effect baseline, and the null draws. It extends figures/checkpoint-renders/entity_colors.json: scGPT keeps the ember it had as scgpt_full, co-expression keeps #4E728A, the shuffled-label null keeps #2E6E4E, and mean_only keeps #988453. Arm-level keys from that file collapse into their model (scgpt_emb is scGPT), and the remaining EDITORIAL_8 slots go to the other three models and the node control.",
+  "scgpt": "#C4650D",
+  "coexp": "#4E728A",
+  "null": "#2E6E4E",
+  "mean_only": "#988453",
+  "scprint": "#B9605B",
+  "transcriptformer": "#7495AB",
+  "aido_cell": "#84713A",
+  "node": "#31362E"
+}

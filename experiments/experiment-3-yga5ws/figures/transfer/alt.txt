@@ -1,0 +1,1 @@
+Cross-cell-line transfer in both directions, over every shared gene and over only the genes never perturbed in the training line, with the fixed-random-vector-per-gene null marked in each panel.

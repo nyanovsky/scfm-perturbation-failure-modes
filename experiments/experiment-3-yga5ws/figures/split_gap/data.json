@@ -1,0 +1,425 @@
+{
+  "records": [
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp",
+      "entity": "coexp",
+      "grouped": 0.00517619255164999,
+      "random": 0.046966669120455606
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp+shuffled_labels_d0",
+      "entity": "null",
+      "grouped": 0.0007617342043085653,
+      "random": -0.020419318033237478
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp+shuffled_labels_d1",
+      "entity": "null",
+      "grouped": 0.004872866332445108,
+      "random": 0.012545398027657962
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp+shuffled_labels_d2",
+      "entity": "null",
+      "grouped": -0.008250138375446248,
+      "random": -0.000796951025256683
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp+shuffled_labels_d3",
+      "entity": "null",
+      "grouped": 0.007550642274456673,
+      "random": 0.005512208400211672
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp+shuffled_labels_d4",
+      "entity": "null",
+      "grouped": -0.00026831981841774416,
+      "random": -0.00016722694965587098
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp_node",
+      "entity": "coexp",
+      "grouped": 0.03199929374634928,
+      "random": 0.17206284903427613
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "node",
+      "entity": "node",
+      "grouped": 0.0021702616203332047,
+      "random": 0.0020538691890268856
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "node_check",
+      "entity": "node",
+      "grouped": 0.0006017766831370153,
+      "random": -0.001729848918989296
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "node_pairmlp",
+      "entity": "node",
+      "grouped": 0.036564355768129296,
+      "random": 0.20215514910966462
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d1024",
+      "entity": "null",
+      "grouped": 0.012313377486208275,
+      "random": 0.02781605773433018
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d512",
+      "entity": "null",
+      "grouped": 0.020023245928175712,
+      "random": -0.02965231171340395
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "grouped": -0.014815905139365971,
+      "random": 0.025137422223992185
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randpair",
+      "entity": "null",
+      "grouped": -0.002945783912355803,
+      "random": -0.0003235372966758999
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "grouped": 0.10887821051526674,
+      "random": 0.3517528339462375
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full",
+      "entity": "scgpt",
+      "grouped": 0.10870180170737176,
+      "random": 0.3403216939972425
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full+shuffled_labels_d0",
+      "entity": "null",
+      "grouped": -0.005541157556470244,
+      "random": 0.00295799056195797
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full+shuffled_labels_d1",
+      "entity": "null",
+      "grouped": 0.016477729958918674,
+      "random": 0.009655938143618177
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full+shuffled_labels_d2",
+      "entity": "null",
+      "grouped": 0.028601970174156315,
+      "random": -0.035368120087715615
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full+shuffled_labels_d3",
+      "entity": "null",
+      "grouped": -0.04773524278347006,
+      "random": 0.038143430674709634
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full+shuffled_labels_d4",
+      "entity": "null",
+      "grouped": 0.00774902565085,
+      "random": -0.02128311081649973
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_hybrid",
+      "entity": "scgpt",
+      "grouped": 0.10949398083303497,
+      "random": 0.3611855086141018
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_resp",
+      "entity": "scgpt",
+      "grouped": 0.003837494762953757,
+      "random": 0.039681558849322666
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "grouped": 0.08459949606608556,
+      "random": 0.3894470014294391
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scprint_full",
+      "entity": "scprint",
+      "grouped": 0.0926865096936866,
+      "random": 0.3916709554020777
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scprint_hybrid",
+      "entity": "scprint",
+      "grouped": 0.11413853876535048,
+      "random": 0.39341415409696256
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scprint_resp",
+      "entity": "scprint",
+      "grouped": 0.006874742485344232,
+      "random": 0.030805702485717845
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "grouped": 0.0847984206926103,
+      "random": 0.46465232326045214
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "transcriptformer_full",
+      "entity": "transcriptformer",
+      "grouped": 0.07767480546017676,
+      "random": 0.4756185053120074
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "transcriptformer_hybrid",
+      "entity": "transcriptformer",
+      "grouped": 0.08595139806994788,
+      "random": 0.49202424511856657
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "transcriptformer_resp",
+      "entity": "transcriptformer",
+      "grouped": 0.01212184944463636,
+      "random": 0.05509701387910942
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp",
+      "entity": "coexp",
+      "grouped": 0.03363644111375723,
+      "random": 0.05348318310778289
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp+shuffled_labels_d0",
+      "entity": "null",
+      "grouped": -0.014024159240602492,
+      "random": -0.004783089947253242
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp+shuffled_labels_d1",
+      "entity": "null",
+      "grouped": 0.01080872314664713,
+      "random": 0.005615517083412074
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp+shuffled_labels_d2",
+      "entity": "null",
+      "grouped": 0.0023935808289055754,
+      "random": -0.0038721763312333205
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp+shuffled_labels_d3",
+      "entity": "null",
+      "grouped": -0.014419707177806778,
+      "random": 0.0016527691618622635
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp+shuffled_labels_d4",
+      "entity": "null",
+      "grouped": 0.0034766910713194495,
+      "random": 0.006172332507892124
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp_node",
+      "entity": "coexp",
+      "grouped": 0.0290069332301276,
+      "random": 0.06431277457852191
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "node_pairmlp",
+      "entity": "node",
+      "grouped": 0.018928220530529012,
+      "random": 0.0576220984087857
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d1024",
+      "entity": "null",
+      "grouped": 0.008511022013566866,
+      "random": -0.00292291382752594
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d512",
+      "entity": "null",
+      "grouped": 0.026447945664681602,
+      "random": 0.023034160694943514
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "grouped": -0.009526331997169254,
+      "random": -0.02896048491880101
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randpair",
+      "entity": "null",
+      "grouped": -0.002879687668652312,
+      "random": 0.0017010526780186278
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "grouped": 0.11257733813165048,
+      "random": 0.17812329329569623
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full",
+      "entity": "scgpt",
+      "grouped": 0.11582865688385009,
+      "random": 0.17485757205515326
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full+shuffled_labels_d0",
+      "entity": "null",
+      "grouped": 0.0008202054571078014,
+      "random": 0.007717660628359463
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full+shuffled_labels_d1",
+      "entity": "null",
+      "grouped": 0.005377308818923434,
+      "random": 0.011576594094555017
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full+shuffled_labels_d2",
+      "entity": "null",
+      "grouped": -0.013371729219642648,
+      "random": -0.009871552984618705
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full+shuffled_labels_d3",
+      "entity": "null",
+      "grouped": -0.010506918085161755,
+      "random": -0.018488134830071532
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full+shuffled_labels_d4",
+      "entity": "null",
+      "grouped": 0.020402085523727964,
+      "random": -0.017812012331338445
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_hybrid",
+      "entity": "scgpt",
+      "grouped": 0.115153675852878,
+      "random": 0.1881997711990525
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_resp",
+      "entity": "scgpt",
+      "grouped": 0.01300619907645793,
+      "random": 0.02778695652085418
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "grouped": 0.15874266972479487,
+      "random": 0.21139271193161335
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scprint_full",
+      "entity": "scprint",
+      "grouped": 0.13863880132243903,
+      "random": 0.2282635892094308
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scprint_hybrid",
+      "entity": "scprint",
+      "grouped": 0.13251371818754748,
+      "random": 0.21644718995214454
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scprint_resp",
+      "entity": "scprint",
+      "grouped": 0.027499173528583266,
+      "random": 0.04602679963656128
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "grouped": 0.17260292953650547,
+      "random": 0.24733580558428256
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "transcriptformer_full",
+      "entity": "transcriptformer",
+      "grouped": 0.16586850867423908,
+      "random": 0.2589797605714994
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "transcriptformer_hybrid",
+      "entity": "transcriptformer",
+      "grouped": 0.18555251522074842,
+      "random": 0.2568332077393171
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "transcriptformer_resp",
+      "entity": "transcriptformer",
+      "grouped": 0.03438076130368694,
+      "random": 0.04804046884872637
+    }
+  ],
+  "metric": "centered__weighted__disattenuated"
+}

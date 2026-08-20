@@ -1,0 +1,1 @@
+Scatter of the pre-registered residual correlation against the fold-centred correlation for every arm, one panel per cell line; the shuffled-label draws are away from zero on the horizontal axis and at zero on the vertical one.

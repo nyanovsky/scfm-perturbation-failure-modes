@@ -1,0 +1,438 @@
+{
+  "records": [
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp_check",
+      "entity": "coexp",
+      "residual__weighted__disattenuated": 0.056986574697378174,
+      "centered__weighted__disattenuated": 0.004038224400509134
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp_check",
+      "entity": "coexp",
+      "residual__weighted__disattenuated": 0.05241874933117553,
+      "centered__weighted__disattenuated": 0.025464730043449357
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp_node",
+      "entity": "coexp",
+      "residual__weighted__disattenuated": 0.06125522205381311,
+      "centered__weighted__disattenuated": 0.0290069332301276
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.025441093143015455,
+      "centered__weighted__disattenuated": -0.009526331997169254
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_hybrid",
+      "entity": "scgpt",
+      "residual__weighted__disattenuated": 0.15749262527437932,
+      "centered__weighted__disattenuated": 0.115153675852878
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scprint_hybrid",
+      "entity": "scprint",
+      "residual__weighted__disattenuated": 0.21142747420541516,
+      "centered__weighted__disattenuated": 0.13251371818754748
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "transcriptformer_hybrid",
+      "entity": "transcriptformer",
+      "residual__weighted__disattenuated": 0.23897037183095007,
+      "centered__weighted__disattenuated": 0.18555251522074842
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp+shuffled_labels_d3",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.017834308352840045,
+      "centered__weighted__disattenuated": -0.014419707177806778
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full+shuffled_labels_d2",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.023511483136266508,
+      "centered__weighted__disattenuated": -0.013371729219642648
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp",
+      "entity": "coexp",
+      "residual__weighted__disattenuated": 0.04879340318413257,
+      "centered__weighted__disattenuated": 0.00517619255164999
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d512",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.01950715683664353,
+      "centered__weighted__disattenuated": 0.020023245928175712
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "residual__weighted__disattenuated": 0.27186890674361275,
+      "centered__weighted__disattenuated": 0.10887821051526674
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "residual__weighted__disattenuated": 0.23945296144747263,
+      "centered__weighted__disattenuated": 0.08459949606608556
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "residual__weighted__disattenuated": 0.21144337936424742,
+      "centered__weighted__disattenuated": 0.0847984206926103
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp+shuffled_labels_d1",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.01441037308645755,
+      "centered__weighted__disattenuated": 0.004872866332445108
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full+shuffled_labels_d0",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.015213915078236512,
+      "centered__weighted__disattenuated": -0.005541157556470244
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full+shuffled_labels_d4",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.013732666136176064,
+      "centered__weighted__disattenuated": 0.00774902565085
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randpair",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.003215777694398703,
+      "centered__weighted__disattenuated": -0.002879687668652312
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_resp",
+      "entity": "scgpt",
+      "residual__weighted__disattenuated": 0.01852835731884817,
+      "centered__weighted__disattenuated": 0.01300619907645793
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scprint_resp",
+      "entity": "scprint",
+      "residual__weighted__disattenuated": 0.055357472902686354,
+      "centered__weighted__disattenuated": 0.027499173528583266
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "transcriptformer_resp",
+      "entity": "transcriptformer",
+      "residual__weighted__disattenuated": 0.05500705976835099,
+      "centered__weighted__disattenuated": 0.03438076130368694
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp+shuffled_labels_d0",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.013785644911234872,
+      "centered__weighted__disattenuated": -0.014024159240602492
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp+shuffled_labels_d4",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.0033422123591505567,
+      "centered__weighted__disattenuated": 0.0034766910713194495
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full+shuffled_labels_d3",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.0021835539074461546,
+      "centered__weighted__disattenuated": -0.010506918085161755
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d1024",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.0017221673002676319,
+      "centered__weighted__disattenuated": 0.012313377486208275
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full",
+      "entity": "scgpt",
+      "residual__weighted__disattenuated": 0.2608865657674228,
+      "centered__weighted__disattenuated": 0.10870180170737176
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scprint_full",
+      "entity": "scprint",
+      "residual__weighted__disattenuated": 0.25952897727723956,
+      "centered__weighted__disattenuated": 0.0926865096936866
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "transcriptformer_full",
+      "entity": "transcriptformer",
+      "residual__weighted__disattenuated": 0.2159308037272165,
+      "centered__weighted__disattenuated": 0.07767480546017676
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp+shuffled_labels_d2",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.031022047479202213,
+      "centered__weighted__disattenuated": -0.008250138375446248
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full+shuffled_labels_d1",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.02286446783816254,
+      "centered__weighted__disattenuated": 0.016477729958918674
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp",
+      "entity": "coexp",
+      "residual__weighted__disattenuated": 0.044622162296810125,
+      "centered__weighted__disattenuated": 0.03363644111375723
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d512",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.01519770730939211,
+      "centered__weighted__disattenuated": 0.026447945664681602
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "residual__weighted__disattenuated": 0.17327587924554624,
+      "centered__weighted__disattenuated": 0.11257733813165048
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "residual__weighted__disattenuated": 0.2307567853836837,
+      "centered__weighted__disattenuated": 0.15874266972479487
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "residual__weighted__disattenuated": 0.23135329957684056,
+      "centered__weighted__disattenuated": 0.17260292953650547
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp+shuffled_labels_d1",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.005547998209557311,
+      "centered__weighted__disattenuated": 0.01080872314664713
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full+shuffled_labels_d0",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.0010270680667860284,
+      "centered__weighted__disattenuated": 0.0008202054571078014
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full+shuffled_labels_d4",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.01631926640475187,
+      "centered__weighted__disattenuated": 0.020402085523727964
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp_node",
+      "entity": "coexp",
+      "residual__weighted__disattenuated": 0.11136707742670544,
+      "centered__weighted__disattenuated": 0.03199929374634928
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.024658697414011745,
+      "centered__weighted__disattenuated": -0.014815905139365971
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_hybrid",
+      "entity": "scgpt",
+      "residual__weighted__disattenuated": 0.28543193562432917,
+      "centered__weighted__disattenuated": 0.10949398083303497
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scprint_hybrid",
+      "entity": "scprint",
+      "residual__weighted__disattenuated": 0.2567609623939594,
+      "centered__weighted__disattenuated": 0.11413853876535048
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "transcriptformer_hybrid",
+      "entity": "transcriptformer",
+      "residual__weighted__disattenuated": 0.2333825078182724,
+      "centered__weighted__disattenuated": 0.08595139806994788
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp+shuffled_labels_d3",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.026616425215650726,
+      "centered__weighted__disattenuated": 0.007550642274456673
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full+shuffled_labels_d2",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.017353506264835766,
+      "centered__weighted__disattenuated": 0.028601970174156315
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d1024",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.024550959425715845,
+      "centered__weighted__disattenuated": 0.008511022013566866
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full",
+      "entity": "scgpt",
+      "residual__weighted__disattenuated": 0.15946403019194785,
+      "centered__weighted__disattenuated": 0.11582865688385009
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scprint_full",
+      "entity": "scprint",
+      "residual__weighted__disattenuated": 0.20328801280719938,
+      "centered__weighted__disattenuated": 0.13863880132243903
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "transcriptformer_full",
+      "entity": "transcriptformer",
+      "residual__weighted__disattenuated": 0.23707784129326945,
+      "centered__weighted__disattenuated": 0.16586850867423908
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp+shuffled_labels_d2",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.007883995614463837,
+      "centered__weighted__disattenuated": 0.0023935808289055754
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_full+shuffled_labels_d1",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.022450713081846405,
+      "centered__weighted__disattenuated": 0.005377308818923434
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randpair",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.0028568745022386826,
+      "centered__weighted__disattenuated": -0.002945783912355803
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_resp",
+      "entity": "scgpt",
+      "residual__weighted__disattenuated": 0.026315465055612337,
+      "centered__weighted__disattenuated": 0.003837494762953757
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scprint_resp",
+      "entity": "scprint",
+      "residual__weighted__disattenuated": 0.04372803619153438,
+      "centered__weighted__disattenuated": 0.006874742485344232
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "transcriptformer_resp",
+      "entity": "transcriptformer",
+      "residual__weighted__disattenuated": 0.06533348242743559,
+      "centered__weighted__disattenuated": 0.01212184944463636
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp+shuffled_labels_d0",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.0253665504044111,
+      "centered__weighted__disattenuated": 0.0007617342043085653
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp+shuffled_labels_d4",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.014453623781784532,
+      "centered__weighted__disattenuated": -0.00026831981841774416
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_full+shuffled_labels_d3",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.05123566813103824,
+      "centered__weighted__disattenuated": -0.04773524278347006
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "node",
+      "entity": "node",
+      "residual__weighted__disattenuated": 0.03172514475359911,
+      "centered__weighted__disattenuated": 0.0021702616203332047
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "node_pairmlp",
+      "entity": "node",
+      "residual__weighted__disattenuated": 0.11535160409659252,
+      "centered__weighted__disattenuated": 0.036564355768129296
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "node_check",
+      "entity": "node",
+      "residual__weighted__disattenuated": -0.009707960713831083,
+      "centered__weighted__disattenuated": 0.0006017766831370153
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "node_pairmlp",
+      "entity": "node",
+      "residual__weighted__disattenuated": 0.04770225196064183,
+      "centered__weighted__disattenuated": 0.018928220530529012
+    }
+  ]
+}

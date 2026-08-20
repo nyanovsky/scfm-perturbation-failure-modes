@@ -90,6 +90,8 @@ def num(x: float, digits: int = 4) -> str:
         return "n/a"
     if abs(v) >= 1000:
         return f"{v:,.0f}"
+    if abs(v) < 1e-3:
+        return f"{v:.5f}"
     return f"{v:.{digits}g}"
 
 

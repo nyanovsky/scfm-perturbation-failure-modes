@@ -311,10 +311,12 @@ def ordering_agreement(grid: pd.DataFrame) -> pd.DataFrame:
         for (t, w, c), sub in block.groupby(["target", "weighting", "correction"]):
             s = sub.set_index("arm")["value"]
             shared = base.index.intersection(s.index)
-            if shared.size < 3:
+            pair = pd.DataFrame({"a": base.loc[shared], "b": s.loc[shared]}).dropna()
+            if pair.shape[0] < 3:
                 continue
-            a = base.loc[shared].rank()
-            b = s.loc[shared].rank()
+            a = pair["a"].rank()
+            b = pair["b"].rank()
+            shared = pair.index
             rows.append(
                 {
                     **dict(zip(keys, key)),
@@ -359,7 +361,10 @@ def main(argv: list[str] | None = None) -> int:
         t_runs, t_pert = load_sweep(*[Path(x) for x in args.transfer_sweep.split(",") if x])
         t_runs.to_parquet(out / "transfer_runs.parquet", index=False)
         t_pert.to_parquet(out / "transfer_per_perturbation.parquet", index=False)
-        t_con = contrasts(t_pert)
+        t_con = pd.concat(
+            [contrasts(t_pert, metric=m) for m in ("residual_weighted", "centered_weighted")],
+            ignore_index=True,
+        )
         t_con.to_parquet(out / "transfer_contrasts.parquet", index=False)
         head["transfer"] = {
             f"{line}|{scope}|{split}": [

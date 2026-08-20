@@ -16,7 +16,11 @@ dependencies = ["pyyaml"]
 # the pod can import it directly. Dev-group deps do NOT travel into sbatch
 # container jobs; `uv add` anything a job itself must import.
 [dependency-groups]
-dev = ["silico-figures"]
+dev = [
+    "pandas>=3.0.5",
+    "pyarrow>=25.0.1",
+    "silico-figures",
+]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"

@@ -1,0 +1,1 @@
+Each transfer arm's score under the held-out-reference mode against its score under the two other choices of reference, with the equality line drawn.

@@ -1,0 +1,1283 @@
+{
+  "records": [
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "aido_cell_emb",
+      "entity": "aido_cell",
+      "dest_all": 0.12094723944198572,
+      "dest_reference": 0.16717913730239345,
+      "source_only": 0.12844057469321896
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "aido_cell_full",
+      "entity": "aido_cell",
+      "dest_all": 0.1171379697058856,
+      "dest_reference": 0.16299394117132912,
+      "source_only": 0.11888477478160496
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "aido_cell_hybrid",
+      "entity": "aido_cell",
+      "dest_all": 0.12288173074007963,
+      "dest_reference": 0.19815317477171862,
+      "source_only": 0.12348655155559195
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "aido_cell_resp",
+      "entity": "aido_cell",
+      "dest_all": 0.010882238103177119,
+      "dest_reference": 0.008718571713523714,
+      "source_only": 0.010856995094906409
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "coexp",
+      "entity": "coexp",
+      "dest_all": 0.017624631001833216,
+      "dest_reference": 0.002109556159871881,
+      "source_only": 0.012545897014947079
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "coexp_check",
+      "entity": "coexp",
+      "dest_all": 0.01358019618701943,
+      "dest_reference": 0.0021806488955358424,
+      "source_only": 0.016779039628200706
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "coexp_node",
+      "entity": "coexp",
+      "dest_all": 0.027733429587077356,
+      "dest_reference": 0.03926427413228396,
+      "source_only": 0.031608964881070116
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "node",
+      "entity": "node",
+      "dest_all": 0.004303987121641667,
+      "dest_reference": 0.0050683648980766735,
+      "source_only": 0.003555519189298016
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "node_check",
+      "entity": "node",
+      "dest_all": -0.001716099238789572,
+      "dest_reference": 0.002951494189046739,
+      "source_only": 6.252832155459124e-05
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "node_pairmlp",
+      "entity": "node",
+      "dest_all": 0.019913256216614758,
+      "dest_reference": 0.04950615432298925,
+      "source_only": 0.019026242530776588
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "null_randgene_d1024",
+      "entity": "null",
+      "dest_all": 0.11057339267754422,
+      "dest_reference": 0.14108837885014444,
+      "source_only": 0.11347899368372517
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "null_randgene_d1280",
+      "entity": "null",
+      "dest_all": 0.11601715722051519,
+      "dest_reference": 0.1282069250344114,
+      "source_only": 0.11148693707790752
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "null_randgene_d512",
+      "entity": "null",
+      "dest_all": 0.10834114309407974,
+      "dest_reference": 0.14226303130409354,
+      "source_only": 0.12392131617959758
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "dest_all": 0.10376624565284842,
+      "dest_reference": 0.15870153188720384,
+      "source_only": 0.09906439899250953
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "null_randpair",
+      "entity": "null",
+      "dest_all": -0.004030760241429063,
+      "dest_reference": -0.003961362691413087,
+      "source_only": -0.004713106421217127
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "dest_all": 0.18794474961745694,
+      "dest_reference": 0.1852550849123496,
+      "source_only": 0.1928579206360333
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "scgpt_full",
+      "entity": "scgpt",
+      "dest_all": 0.19098698396175864,
+      "dest_reference": 0.19983059884030324,
+      "source_only": 0.1867042555263037
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "scgpt_hybrid",
+      "entity": "scgpt",
+      "dest_all": 0.20379058724187743,
+      "dest_reference": 0.2059408762901729,
+      "source_only": 0.20085263615928925
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "scgpt_resp",
+      "entity": "scgpt",
+      "dest_all": 0.009839539666101986,
+      "dest_reference": 0.017605426514829887,
+      "source_only": 0.01072627141396601
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "dest_all": 0.15932561293073327,
+      "dest_reference": 0.17104095314809642,
+      "source_only": 0.15751339337511067
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "scprint_full",
+      "entity": "scprint",
+      "dest_all": 0.18125390785685566,
+      "dest_reference": 0.1831948130084539,
+      "source_only": 0.1749903918514551
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "scprint_hybrid",
+      "entity": "scprint",
+      "dest_all": 0.17549491363098257,
+      "dest_reference": 0.18681983316431022,
+      "source_only": 0.1768769719809225
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "scprint_resp",
+      "entity": "scprint",
+      "dest_all": 0.03080541740961704,
+      "dest_reference": 0.026272042592418096,
+      "source_only": 0.0242303697923192
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "dest_all": 0.18429895162251533,
+      "dest_reference": 0.20297513770340556,
+      "source_only": 0.18509180644395964
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "transcriptformer_full",
+      "entity": "transcriptformer",
+      "dest_all": 0.19063467915066237,
+      "dest_reference": 0.20548613789531306,
+      "source_only": 0.18650634694116733
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "transcriptformer_hybrid",
+      "entity": "transcriptformer",
+      "dest_all": 0.19377920101974133,
+      "dest_reference": 0.20307534691124882,
+      "source_only": 0.19619875480691762
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_common",
+      "arm": "transcriptformer_resp",
+      "entity": "transcriptformer",
+      "dest_all": 0.03676830526224499,
+      "dest_reference": 0.03938679607382999,
+      "source_only": 0.031468803258075946
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "coexp",
+      "entity": "coexp",
+      "dest_all": -0.006378803067601571,
+      "dest_reference": -0.023469549136396203,
+      "source_only": -0.006899622310016353
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "coexp_check",
+      "entity": "coexp",
+      "dest_all": 0.00024167663009300666,
+      "dest_reference": -0.012834747887793601,
+      "source_only": 0.003234951952216244
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "coexp_node",
+      "entity": "coexp",
+      "dest_all": 0.007773316195037433,
+      "dest_reference": 0.009558980910520598,
+      "source_only": 0.005270250852005657
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "node",
+      "entity": "node",
+      "dest_all": -0.0087368947884482,
+      "dest_reference": -0.0013856235512552195,
+      "source_only": -0.005243660299327863
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "node_check",
+      "entity": "node",
+      "dest_all": 0.012999634509998453,
+      "dest_reference": -0.013788600366286312,
+      "source_only": 0.013942332296057623
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "node_pairmlp",
+      "entity": "node",
+      "dest_all": 0.05033523774288888,
+      "dest_reference": 0.055902084662863435,
+      "source_only": 0.04314479815641796
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "null_randgene_d1024",
+      "entity": "null",
+      "dest_all": 0.21097706457572002,
+      "dest_reference": 0.24152937300863686,
+      "source_only": 0.20058782017321244
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "null_randgene_d512",
+      "entity": "null",
+      "dest_all": 0.1988444512470935,
+      "dest_reference": 0.21770039429737953,
+      "source_only": 0.18615214269749675
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "dest_all": 0.2294962695196254,
+      "dest_reference": 0.2516594327773732,
+      "source_only": 0.2273466064898082
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "null_randpair",
+      "entity": "null",
+      "dest_all": -0.0013355483816530193,
+      "dest_reference": -0.0019139619906126148,
+      "source_only": -0.0018475613226165617
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "dest_all": 0.2445613415565751,
+      "dest_reference": 0.2644120608274519,
+      "source_only": 0.24068949313978316
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "scgpt_full",
+      "entity": "scgpt",
+      "dest_all": 0.2503828957040659,
+      "dest_reference": 0.28608648985286717,
+      "source_only": 0.2420831499655279
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "scgpt_hybrid",
+      "entity": "scgpt",
+      "dest_all": 0.2539096384785471,
+      "dest_reference": 0.28636184096277545,
+      "source_only": 0.25007076433215153
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "scgpt_resp",
+      "entity": "scgpt",
+      "dest_all": 0.026250740168997123,
+      "dest_reference": 0.02243823820347303,
+      "source_only": 0.02406000957056434
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "dest_all": 0.24763855566769727,
+      "dest_reference": 0.28014192638746216,
+      "source_only": 0.2368079011990723
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "scprint_full",
+      "entity": "scprint",
+      "dest_all": 0.23057350909929764,
+      "dest_reference": 0.27066757146050296,
+      "source_only": 0.22948413418139252
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "scprint_hybrid",
+      "entity": "scprint",
+      "dest_all": 0.2623326835844326,
+      "dest_reference": 0.29220549694517634,
+      "source_only": 0.2622474635181478
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "scprint_resp",
+      "entity": "scprint",
+      "dest_all": 0.04739203855512093,
+      "dest_reference": 0.05175203844619231,
+      "source_only": 0.04240070552467318
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "dest_all": 0.2564441266735518,
+      "dest_reference": 0.2896473625690525,
+      "source_only": 0.24697100637772113
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "transcriptformer_full",
+      "entity": "transcriptformer",
+      "dest_all": 0.25591708769737903,
+      "dest_reference": 0.2896166148659799,
+      "source_only": 0.2492977428797653
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "transcriptformer_hybrid",
+      "entity": "transcriptformer",
+      "dest_all": 0.2666361398721611,
+      "dest_reference": 0.29863815286276363,
+      "source_only": 0.2557306943320376
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_full",
+      "arm": "transcriptformer_resp",
+      "entity": "transcriptformer",
+      "dest_all": 0.05169551506720192,
+      "dest_reference": 0.05430013005181209,
+      "source_only": 0.04210316640103616
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "coexp",
+      "entity": "coexp",
+      "dest_all": -0.005537009870411353,
+      "dest_reference": -0.009072121542023437,
+      "source_only": -0.0045374501807241
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "coexp_check",
+      "entity": "coexp",
+      "dest_all": 0.0007360454171960445,
+      "dest_reference": -0.00741576720885773,
+      "source_only": 0.0036344216730382736
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "coexp_node",
+      "entity": "coexp",
+      "dest_all": 0.022529623265842364,
+      "dest_reference": 0.049919100163707625,
+      "source_only": 0.02472003237252655
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "node",
+      "entity": "node",
+      "dest_all": 0.009581087329943692,
+      "dest_reference": 0.005299683187721595,
+      "source_only": 0.012036690153956508
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "node_check",
+      "entity": "node",
+      "dest_all": 0.0030712490559515436,
+      "dest_reference": -0.003690116671775613,
+      "source_only": 0.005298183593273068
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "node_pairmlp",
+      "entity": "node",
+      "dest_all": 0.013764763019195077,
+      "dest_reference": 0.027640214328809396,
+      "source_only": 0.013910902817584427
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "null_randgene_d1024",
+      "entity": "null",
+      "dest_all": -0.011788408999114203,
+      "dest_reference": -0.02704474197937147,
+      "source_only": -0.019851053488062886
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "null_randgene_d512",
+      "entity": "null",
+      "dest_all": 0.0022455033035347675,
+      "dest_reference": -0.0390976909828421,
+      "source_only": 0.0020728495284288756
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "dest_all": -0.010526918270830658,
+      "dest_reference": 0.003235993381285271,
+      "source_only": -0.01495697246244841
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "null_randpair",
+      "entity": "null",
+      "dest_all": -0.008725909267903132,
+      "dest_reference": -0.007550546037357536,
+      "source_only": -0.007368092243521855
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "dest_all": 0.03406728511397768,
+      "dest_reference": 0.02215881596569805,
+      "source_only": 0.03417357687394495
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "scgpt_full",
+      "entity": "scgpt",
+      "dest_all": 0.04316950472201647,
+      "dest_reference": 0.0671207239025925,
+      "source_only": 0.03496108528136519
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "scgpt_hybrid",
+      "entity": "scgpt",
+      "dest_all": 0.004521759864811084,
+      "dest_reference": 0.0009099336538467194,
+      "source_only": 0.00817252095741267
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "scgpt_resp",
+      "entity": "scgpt",
+      "dest_all": 0.00223652037717304,
+      "dest_reference": -0.010348752647172528,
+      "source_only": 0.0018071836884647027
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "dest_all": 0.059568777139255104,
+      "dest_reference": 0.02844289908100535,
+      "source_only": 0.06067168071194066
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "scprint_full",
+      "entity": "scprint",
+      "dest_all": 0.0631576063381805,
+      "dest_reference": 0.027940353280270187,
+      "source_only": 0.05917218853702902
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "scprint_hybrid",
+      "entity": "scprint",
+      "dest_all": 0.062248175457043614,
+      "dest_reference": 0.051265209587668906,
+      "source_only": 0.07144204120591902
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "scprint_resp",
+      "entity": "scprint",
+      "dest_all": 0.014754663801037337,
+      "dest_reference": 0.01650166871306819,
+      "source_only": 0.015162682063415627
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "dest_all": 0.07043475360218518,
+      "dest_reference": 0.07168902044554358,
+      "source_only": 0.06953869928821238
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "transcriptformer_full",
+      "entity": "transcriptformer",
+      "dest_all": 0.061080568618760406,
+      "dest_reference": 0.08496481728118072,
+      "source_only": 0.06159156301299728
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "transcriptformer_hybrid",
+      "entity": "transcriptformer",
+      "dest_all": 0.08344004430051412,
+      "dest_reference": 0.08752170470221779,
+      "source_only": 0.07773454037832983
+    },
+    {
+      "cell_line": "hepg2->jurkat",
+      "scope": "transfer_unseen",
+      "arm": "transcriptformer_resp",
+      "entity": "transcriptformer",
+      "dest_all": 0.01602140384915086,
+      "dest_reference": 0.021950634429914573,
+      "source_only": 0.014980925094206753
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "aido_cell_emb",
+      "entity": "aido_cell",
+      "dest_all": 0.06882569344869595,
+      "dest_reference": 0.05510971524948648,
+      "source_only": 0.07760116309770969
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "aido_cell_full",
+      "entity": "aido_cell",
+      "dest_all": 0.0631307830503148,
+      "dest_reference": 0.04275704827709565,
+      "source_only": 0.06145421679309115
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "aido_cell_hybrid",
+      "entity": "aido_cell",
+      "dest_all": 0.11992334992284183,
+      "dest_reference": 0.10321029242914097,
+      "source_only": 0.12592401861226463
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "aido_cell_resp",
+      "entity": "aido_cell",
+      "dest_all": 0.014164739664711276,
+      "dest_reference": 0.012369724264669528,
+      "source_only": 0.01448071912559049
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "coexp",
+      "entity": "coexp",
+      "dest_all": 0.012465560947555111,
+      "dest_reference": 0.025799019975066124,
+      "source_only": 0.015638560791843472
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "coexp_check",
+      "entity": "coexp",
+      "dest_all": 0.020925738798196345,
+      "dest_reference": 0.015547422288495717,
+      "source_only": 0.017403396497195064
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "coexp_node",
+      "entity": "coexp",
+      "dest_all": 0.059380710203954114,
+      "dest_reference": 0.07819160389667446,
+      "source_only": 0.06057950235196428
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "node",
+      "entity": "node",
+      "dest_all": -0.00047399978002132115,
+      "dest_reference": 0.00018036120393797502,
+      "source_only": -0.0012441898370676523
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "node_check",
+      "entity": "node",
+      "dest_all": 0.006662492402755755,
+      "dest_reference": 0.0026703069997898563,
+      "source_only": 0.006975355003889543
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "node_pairmlp",
+      "entity": "node",
+      "dest_all": 0.0005577440301987109,
+      "dest_reference": -0.03581791124972605,
+      "source_only": 0.012884300051456694
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "null_randgene_d1024",
+      "entity": "null",
+      "dest_all": 0.06862888598635888,
+      "dest_reference": 0.04653733688492856,
+      "source_only": 0.0752017892476062
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "null_randgene_d1280",
+      "entity": "null",
+      "dest_all": 0.06058623841124153,
+      "dest_reference": 0.1034314794079921,
+      "source_only": 0.0695863773052859
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "null_randgene_d512",
+      "entity": "null",
+      "dest_all": 0.09629831551561555,
+      "dest_reference": 0.08632500674164482,
+      "source_only": 0.10710731032399073
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "dest_all": 0.08872540850466738,
+      "dest_reference": 0.09585119732833429,
+      "source_only": 0.09681504535794039
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "null_randpair",
+      "entity": "null",
+      "dest_all": -0.0022127000101809595,
+      "dest_reference": -0.0007458408553141093,
+      "source_only": -0.003036668301458037
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "dest_all": 0.17598801580969964,
+      "dest_reference": 0.1736029929131637,
+      "source_only": 0.17384421319909962
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "scgpt_full",
+      "entity": "scgpt",
+      "dest_all": 0.16409320108338224,
+      "dest_reference": 0.15458392534267573,
+      "source_only": 0.17019145518264928
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "scgpt_hybrid",
+      "entity": "scgpt",
+      "dest_all": 0.18536669653962767,
+      "dest_reference": 0.16473645582792654,
+      "source_only": 0.190429882264814
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "scgpt_resp",
+      "entity": "scgpt",
+      "dest_all": 0.016844815560083406,
+      "dest_reference": 0.01366774101676,
+      "source_only": 0.02081348475037293
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "dest_all": 0.1640978874359719,
+      "dest_reference": 0.16609162016408552,
+      "source_only": 0.1730066076358765
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "scprint_full",
+      "entity": "scprint",
+      "dest_all": 0.1617554001084161,
+      "dest_reference": 0.16987885017847976,
+      "source_only": 0.16697901281333666
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "scprint_hybrid",
+      "entity": "scprint",
+      "dest_all": 0.1737878943846999,
+      "dest_reference": 0.18846265279283056,
+      "source_only": 0.17533058059147638
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "scprint_resp",
+      "entity": "scprint",
+      "dest_all": 0.024580702843140154,
+      "dest_reference": 0.011690723182473016,
+      "source_only": 0.023641497744335063
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "dest_all": 0.16733362664375667,
+      "dest_reference": 0.18749802093077544,
+      "source_only": 0.16527003080260294
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "transcriptformer_full",
+      "entity": "transcriptformer",
+      "dest_all": 0.17473091554776296,
+      "dest_reference": 0.18202926829651486,
+      "source_only": 0.1765612514618566
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "transcriptformer_hybrid",
+      "entity": "transcriptformer",
+      "dest_all": 0.16699186216437875,
+      "dest_reference": 0.17373358756466403,
+      "source_only": 0.17938513672945872
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_common",
+      "arm": "transcriptformer_resp",
+      "entity": "transcriptformer",
+      "dest_all": 0.02520157508511253,
+      "dest_reference": 0.019357592644389954,
+      "source_only": 0.02914571377679396
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "coexp",
+      "entity": "coexp",
+      "dest_all": 0.009319609536119482,
+      "dest_reference": 0.0024356531490913546,
+      "source_only": 0.009302779955540932
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "coexp_check",
+      "entity": "coexp",
+      "dest_all": 0.006247770290778159,
+      "dest_reference": 0.009454753750574713,
+      "source_only": 0.006002566793521674
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "coexp_node",
+      "entity": "coexp",
+      "dest_all": 0.08064372112118161,
+      "dest_reference": 0.07469157678538035,
+      "source_only": 0.08335047862972146
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "node",
+      "entity": "node",
+      "dest_all": 0.029563453084663842,
+      "dest_reference": 0.024285793270406843,
+      "source_only": 0.031496473482556596
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "node_check",
+      "entity": "node",
+      "dest_all": 0.030854183224285608,
+      "dest_reference": -0.014779039571324688,
+      "source_only": 0.028229093138357586
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "node_pairmlp",
+      "entity": "node",
+      "dest_all": 0.1540917800978808,
+      "dest_reference": 0.1312080083573882,
+      "source_only": 0.15962990820480458
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "null_randgene_d1024",
+      "entity": "null",
+      "dest_all": 0.22946295111621184,
+      "dest_reference": 0.2262831485391484,
+      "source_only": 0.24554570082918667
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "null_randgene_d512",
+      "entity": "null",
+      "dest_all": 0.21885478833847333,
+      "dest_reference": 0.20597613054057168,
+      "source_only": 0.2411029760956265
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "dest_all": 0.24368355720858012,
+      "dest_reference": 0.23644391550538174,
+      "source_only": 0.2520110487291807
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "null_randpair",
+      "entity": "null",
+      "dest_all": -0.002479615585791761,
+      "dest_reference": -0.0006719280860119514,
+      "source_only": -0.002887278195054634
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "dest_all": 0.26288680942069687,
+      "dest_reference": 0.25202772426682973,
+      "source_only": 0.27313385193586776
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "scgpt_full",
+      "entity": "scgpt",
+      "dest_all": 0.2548622276617584,
+      "dest_reference": 0.24895290602876294,
+      "source_only": 0.26963358524421527
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "scgpt_hybrid",
+      "entity": "scgpt",
+      "dest_all": 0.2854470278928367,
+      "dest_reference": 0.2654971681364,
+      "source_only": 0.29651186042910516
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "scgpt_resp",
+      "entity": "scgpt",
+      "dest_all": 0.012430509564550992,
+      "dest_reference": 0.012385633350815994,
+      "source_only": 0.015235624236091637
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "dest_all": 0.25460477626072997,
+      "dest_reference": 0.24667351924007044,
+      "source_only": 0.2746522447953603
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "scprint_full",
+      "entity": "scprint",
+      "dest_all": 0.25022944366336264,
+      "dest_reference": 0.227816941030108,
+      "source_only": 0.2615842107299091
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "scprint_hybrid",
+      "entity": "scprint",
+      "dest_all": 0.2906807157009273,
+      "dest_reference": 0.2689448697460155,
+      "source_only": 0.30321690342762003
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "scprint_resp",
+      "entity": "scprint",
+      "dest_all": 0.028418597422614898,
+      "dest_reference": 0.01997582817858947,
+      "source_only": 0.028504768029896776
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "dest_all": 0.25704762226827643,
+      "dest_reference": 0.2547641634542399,
+      "source_only": 0.26411760708818477
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "transcriptformer_full",
+      "entity": "transcriptformer",
+      "dest_all": 0.2602052842650356,
+      "dest_reference": 0.2386173530757824,
+      "source_only": 0.269866098031366
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "transcriptformer_hybrid",
+      "entity": "transcriptformer",
+      "dest_all": 0.26891800882631967,
+      "dest_reference": 0.25416858763368533,
+      "source_only": 0.2828755304363909
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_full",
+      "arm": "transcriptformer_resp",
+      "entity": "transcriptformer",
+      "dest_all": 0.03169811016248612,
+      "dest_reference": 0.02410807237685229,
+      "source_only": 0.03613840911678224
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "coexp",
+      "entity": "coexp",
+      "dest_all": 0.006094785122021438,
+      "dest_reference": -0.007117000292288443,
+      "source_only": 0.0068941562903525695
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "coexp_check",
+      "entity": "coexp",
+      "dest_all": 0.010328399325732441,
+      "dest_reference": 0.0031031821254172355,
+      "source_only": 0.009752628505667594
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "coexp_node",
+      "entity": "coexp",
+      "dest_all": 0.012077762106709331,
+      "dest_reference": 0.011858360185548443,
+      "source_only": 0.009448729199261619
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "node",
+      "entity": "node",
+      "dest_all": 0.007042672346247497,
+      "dest_reference": -0.00220310006140748,
+      "source_only": 0.0036611230391047607
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "node_check",
+      "entity": "node",
+      "dest_all": 0.009890480162051487,
+      "dest_reference": 0.007964163143540709,
+      "source_only": 0.009751654106570772
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "node_pairmlp",
+      "entity": "node",
+      "dest_all": 0.05192091835942539,
+      "dest_reference": 0.041702438979728106,
+      "source_only": 0.05523680572062225
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "null_randgene_d1024",
+      "entity": "null",
+      "dest_all": -0.013924147829139711,
+      "dest_reference": -0.018198233621306754,
+      "source_only": -0.004351623150487675
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "null_randgene_d512",
+      "entity": "null",
+      "dest_all": 0.012141378531233572,
+      "dest_reference": -0.020574780930624537,
+      "source_only": 0.026606904505399258
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "dest_all": 0.012271778126741312,
+      "dest_reference": -0.01506851170934811,
+      "source_only": 0.016913833409664618
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "null_randpair",
+      "entity": "null",
+      "dest_all": 0.0015635037376786026,
+      "dest_reference": 0.0008186825359356323,
+      "source_only": -0.001027252415720017
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "dest_all": 0.0323431290433036,
+      "dest_reference": -0.014408461592569189,
+      "source_only": 0.043092301359794936
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "scgpt_full",
+      "entity": "scgpt",
+      "dest_all": 0.03967369317716011,
+      "dest_reference": 0.00992440952831345,
+      "source_only": 0.04709451039398938
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "scgpt_hybrid",
+      "entity": "scgpt",
+      "dest_all": 0.08705086428546004,
+      "dest_reference": 0.04523980495964349,
+      "source_only": 0.07731027953637361
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "scgpt_resp",
+      "entity": "scgpt",
+      "dest_all": -0.005551299024448879,
+      "dest_reference": -0.0018276635953088872,
+      "source_only": -0.002572675048335988
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "dest_all": 0.07458937663738809,
+      "dest_reference": 0.08024742467943892,
+      "source_only": 0.07773464438736802
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "scprint_full",
+      "entity": "scprint",
+      "dest_all": 0.08019592021907111,
+      "dest_reference": 0.05337532547869153,
+      "source_only": 0.0863781274389608
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "scprint_hybrid",
+      "entity": "scprint",
+      "dest_all": 0.06478165568587568,
+      "dest_reference": 0.11907961307528162,
+      "source_only": 0.06470983828602817
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "scprint_resp",
+      "entity": "scprint",
+      "dest_all": -0.022227727235578573,
+      "dest_reference": -0.043561701928255356,
+      "source_only": -0.02442416783956901
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "dest_all": 0.08815438888738676,
+      "dest_reference": 0.09392448963999318,
+      "source_only": 0.0961346667312693
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "transcriptformer_full",
+      "entity": "transcriptformer",
+      "dest_all": 0.06319680473517215,
+      "dest_reference": 0.05793337594758549,
+      "source_only": 0.054353252693617404
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "transcriptformer_hybrid",
+      "entity": "transcriptformer",
+      "dest_all": 0.06968202653572676,
+      "dest_reference": 0.07764943848325935,
+      "source_only": 0.07238443381193028
+    },
+    {
+      "cell_line": "jurkat->hepg2",
+      "scope": "transfer_unseen",
+      "arm": "transcriptformer_resp",
+      "entity": "transcriptformer",
+      "dest_all": -0.001334366219946573,
+      "dest_reference": -0.0017706499533586813,
+      "source_only": 0.0043747879955251655
+    }
+  ],
+  "metric": "centered__weighted__disattenuated"
+}
