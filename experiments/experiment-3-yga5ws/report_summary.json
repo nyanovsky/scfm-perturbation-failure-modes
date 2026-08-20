@@ -35,7 +35,9 @@
         "shuffled_label_ceiling_preregistered": 0.026616425215650726,
         "best_response_only_score": 0.01212184944463636,
         "node_free_score": 0.036564355768129296,
-        "residual_ceiling": 0.654599714269554
+        "residual_ceiling": 0.654599714269554,
+        "residual_ceiling_weighted": 0.6847125460703934,
+        "fold_centred_ceiling_weighted": 0.5744401635887746
       },
       "jurkat": {
         "n_perturbations": 705,
@@ -56,7 +58,9 @@
         "shuffled_label_ceiling_preregistered": 0.023511483136266508,
         "best_response_only_score": 0.03438076130368694,
         "node_free_score": 0.018928220530529012,
-        "residual_ceiling": 0.5013870706269954
+        "residual_ceiling": 0.5013870706269954,
+        "residual_ceiling_weighted": 0.5071819396306456,
+        "fold_centred_ceiling_weighted": 0.4437062127878906
       }
     },
     "paired_vs_coexpression": {

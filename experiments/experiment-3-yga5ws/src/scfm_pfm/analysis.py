@@ -299,6 +299,84 @@ def grid_table(runs: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def anchor_sensitivity(sens: pd.DataFrame, primary: pd.DataFrame) -> dict:
+    """Anchor and form sensitivity, against two references.
+
+    The sensitivity job re-runs each model's mean-control response arm beside
+    the other anchors, so the anchor comparison is within one job. Those re-runs
+    are also compared against the same arm in the main sweep, which is a
+    reproducibility check on the rebuilt bundle rather than part of the
+    sensitivity question.
+    """
+    if sens.empty:
+        return {}
+    s = sens[sens.translator == "mlp"]
+    base = {
+        (r.cell_line, r.arm): float(getattr(r, VERDICT_COL))
+        for r in primary[
+            (primary.translator == "mlp")
+            & (primary.scope == "full")
+            & (primary.split == "grouped")
+            & (primary.target_source == "run1_all_controls")
+        ].itertuples()
+    }
+    rows = []
+    for r in s.itertuples():
+        model, anchor = (r.arm.split("@") + ["mean_control"])[:2]
+        rows.append(
+            {
+                "cell_line": r.cell_line,
+                "arm": r.arm,
+                "model": model.replace("_resp", ""),
+                "anchor": anchor,
+                "score": float(getattr(r, VERDICT_COL)),
+                "lo": float(getattr(r, VERDICT_COL + "_lo")),
+                "hi": float(getattr(r, VERDICT_COL + "_hi")),
+                "preregistered": float(getattr(r, PREREG_COL)),
+                "n_perturbations": int(r.n_perturbations),
+                "feature_dim": int(r.feature_dim),
+            }
+        )
+    out = pd.DataFrame(rows)
+    ref = {
+        (r.cell_line, r.model): r.score
+        for r in out[out.anchor == "mean_control"].itertuples()
+    }
+    out["minus_mean_control"] = [
+        r.score - ref.get((r.cell_line, r.model), float("nan")) for r in out.itertuples()
+    ]
+    rerun = [
+        {
+            "cell_line": r.cell_line,
+            "arm": r.arm,
+            "sensitivity_job": r.score,
+            "main_sweep": base.get((r.cell_line, r.arm), float("nan")),
+            "difference": r.score - base.get((r.cell_line, r.arm), float("nan")),
+        }
+        for r in out[out.anchor == "mean_control"].itertuples()
+        if (r.cell_line, r.arm) in base
+    ]
+    coexp = s[s.arm == "coexp"]
+    if not coexp.empty:
+        rerun.append(
+            {
+                "cell_line": str(coexp.cell_line.iloc[0]),
+                "arm": "coexp",
+                "sensitivity_job": float(coexp[VERDICT_COL].iloc[0]),
+                "main_sweep": base.get((str(coexp.cell_line.iloc[0]), "coexp"), float("nan")),
+                "difference": float(coexp[VERDICT_COL].iloc[0])
+                - base.get((str(coexp.cell_line.iloc[0]), "coexp"), float("nan")),
+            }
+        )
+    return {
+        "rows": out.to_dict("records"),
+        "rerun_check": rerun,
+        "max_abs_rerun_difference": (
+            float(np.nanmax([abs(x["difference"]) for x in rerun])) if rerun else float("nan")
+        ),
+    }
+
+
 def ordering_agreement(grid: pd.DataFrame) -> pd.DataFrame:
     """Does the grid agree about which arm is ahead?
 
@@ -333,6 +411,16 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sweep", default=None, help="comma-separated shard directories, in order")
     ap.add_argument("--transfer-sweep", default=None)
+    ap.add_argument(
+        "--sensitivity-sweep",
+        default=None,
+        help=(
+            "shard directories for the anchor/form sensitivity job. Kept in their own "
+            "table rather than merged into runs.parquet: that job re-runs some of the "
+            "primary arms as its own reference, and a merge would silently overwrite "
+            "the scored primary rows with the re-run ones."
+        ),
+    )
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
     sweep_dirs = (
@@ -384,6 +472,11 @@ def main(argv: list[str] | None = None) -> int:
             ]
             for (line, scope, split), block in t_runs.groupby(["cell_line", "scope", "split"])
         }
+
+    if args.sensitivity_sweep:
+        s_runs, _ = load_sweep(*[Path(x) for x in args.sensitivity_sweep.split(",") if x])
+        s_runs.to_parquet(out / "sensitivity.parquet", index=False)
+        head["sensitivity"] = anchor_sensitivity(s_runs, runs)
 
     runs.to_parquet(out / "runs.parquet", index=False)
     per_pert.to_parquet(out / "per_perturbation.parquet", index=False)

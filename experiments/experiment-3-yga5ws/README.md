@@ -60,7 +60,9 @@ Small reviewable copies live in this worktree.
 | transfer | `transfer2/`, `transfer_unseen/` (store) | cross-line transfer, three reference modes, full / common / unseen-gene scopes |
 | control-split targets | `ctrl_split_targets/` (store) | effect recomputed against each control half and against all control cells, plus `recompute_report.json` |
 | control-overlap scoring | `alt_target_ctrl0/`, `alt_target_ctrl1/`, `alt_target_ctrlall/` (store) | the key arms rescored against each of those targets |
-| merged tables | `results/summary/` (worktree) | `runs.parquet`, `contrasts.parquet`, `grid.parquet`, `transfer_runs.parquet`, `ordering_agreement.parquet`, `headline.json` |
+| merged tables | `results/summary/` (worktree) | `runs.parquet`, `contrasts.parquet`, `grid.parquet`, `transfer_runs.parquet`, `ordering_agreement.parquet`, `control_cell_overlap.parquet`, `null_band.parquet`, `headline.json` |
+| target recompute report | `results/recompute_report.json` (worktree) | agreement of each recomputed target with run 1's effect matrix, reliability weights, cells kept |
+| report contract | `report_summary.json`, `claims_manifest.json` (worktree) | generated from the tables; every claim names its source file and row |
 | figures | `figures/<name>/` (worktree) | one bundle per figure: interactive HTML, `data.json`, alt text |
 | report | published Results page for this experiment | built by `scfm_pfm.report.build` from `results/summary` |
 

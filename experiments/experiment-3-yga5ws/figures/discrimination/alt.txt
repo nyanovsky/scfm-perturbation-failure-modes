@@ -1,0 +1,1 @@
+Sorted dot plot of perturbation discrimination for every arm, one panel per cell line, with the 0.5 chance line marked; embedding arms sit above chance and co-expression and response-only arms at or below it.

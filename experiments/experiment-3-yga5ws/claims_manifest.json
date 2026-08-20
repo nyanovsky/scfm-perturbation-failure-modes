@@ -43,6 +43,18 @@
       "key": "cell_line=hepg2, arm=node_pairmlp, column=centered__weighted__disattenuated"
     },
     {
+      "claim": "reliability-weighted split-half ceiling the pre-registered score in hepg2 divides by",
+      "value": 0.684713,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, column=residual__weighted__ceiling"
+    },
+    {
+      "claim": "reliability-weighted split-half ceiling the fold-centred score in hepg2 divides by",
+      "value": 0.57444,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, column=centered__weighted__ceiling"
+    },
+    {
       "claim": "best foundation-model arm in jurkat scores this on the fold-centred cell",
       "value": 0.172603,
       "source": "results/summary/runs.parquet",
@@ -83,6 +95,18 @@
       "value": 0.018928,
       "source": "results/summary/runs.parquet",
       "key": "cell_line=jurkat, arm=node_pairmlp, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "reliability-weighted split-half ceiling the pre-registered score in jurkat divides by",
+      "value": 0.507182,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, column=residual__weighted__ceiling"
+    },
+    {
+      "claim": "reliability-weighted split-half ceiling the fold-centred score in jurkat divides by",
+      "value": 0.443706,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, column=centered__weighted__ceiling"
     },
     {
       "claim": "paired difference of scgpt_emb against co-expression in hepg2",

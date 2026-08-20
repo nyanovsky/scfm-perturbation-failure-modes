@@ -285,6 +285,100 @@ def vs_coexpression(summary_dir: Path, out_root: Path, translator: str = "mlp") 
     return {"figure": "vs_coexpression", "n_records": int(d.shape[0]), "fig": fig}
 
 
+def discrimination(summary_dir: Path, out_root: Path, translator: str = "mlp") -> dict:
+    """The second scoring axis: is a prediction closer to its own perturbation?
+
+    No residualization anywhere. The prediction is put back on the effect scale
+    by adding the training fold's mean effect, and Arc Institute's ``cell-eval``
+    ranks its distance to every held-out perturbation's measured profile.
+    Chance is 0.5.
+    """
+    runs = pd.read_parquet(summary_dir / "runs.parquet")
+    d = _with_entity(_primary(runs)[lambda x: x.translator == translator])
+    d = d[~d.arm.str.contains(SHUFFLE_TAG, regex=False)]
+    d = d[d.discrimination_cell_eval_mean.notna()]
+    if d.empty:
+        return {}
+    lines = sorted(d.cell_line.unique())
+    ref = {line: [(0.5, "chance")] for line in lines}
+    fig = _dot_grid(
+        d.assign(_lo=d.discrimination_cell_eval_mean, _hi=d.discrimination_cell_eval_mean),
+        "discrimination_cell_eval_mean", "_lo", "_hi", "cell_line",
+        {x: _line_label(x) for x in lines},
+        "Perturbation discrimination (cell-eval, effect scale)", ref, 640,
+    )
+    payload = d[[
+        "cell_line", "arm", "entity", "family", "cell_eval_version",
+        "discrimination_cell_eval_mean", "discrimination_cell_eval_median",
+        "discrimination_ours_residual_mean", VERDICT, PREREG,
+    ]].to_dict("records")
+    save_figure_bundle(
+        fig, "discrimination",
+        data={"records": payload, "chance": 0.5, "translator": translator,
+              "package": "cell-eval",
+              "versions": sorted(set(d.cell_eval_version.dropna().astype(str)))},
+        alt=(
+            "Sorted dot plot of perturbation discrimination for every arm, one panel per "
+            "cell line, with the 0.5 chance line marked; embedding arms sit above chance "
+            "and co-expression and response-only arms at or below it."
+        ),
+        root=out_root,
+    )
+    return {"figure": "discrimination", "n_records": len(payload), "fig": fig}
+
+
+def anchor_sensitivity(summary_dir: Path, out_root: Path) -> dict | None:
+    """Does the query the model was asked change what the response features carry?"""
+    path = summary_dir / "sensitivity.parquet"
+    if not path.exists():
+        return None
+    s = pd.read_parquet(path)
+    s = s[(s.translator == "mlp") & s.arm.str.contains("_resp")]
+    if s.empty:
+        return None
+    s = s.assign(
+        model=[a.split("@")[0].replace("_resp", "") for a in s.arm],
+        anchor=[a.split("@")[1] if "@" in a else "mean_control" for a in s.arm],
+    )
+    anchors = ["mean_control", "uniform_virtual", "individual_cells", "mean_control_masked"]
+    anchors = [a for a in anchors if a in set(s.anchor)]
+    models = [m for m in ENTITY_ORDER if m in set(s.model)]
+    fig = go.Figure()
+    for m in models:
+        sub = s[s.model == m].set_index("anchor").reindex(anchors).reset_index()
+        fig.add_trace(
+            go.Scatter(
+                x=sub[VERDICT], y=sub["anchor"], mode="markers", name=ENTITY_LABEL[m],
+                marker=dict(color=COLOR[m], size=9),
+                error_x=dict(
+                    type="data", symmetric=False,
+                    array=sub[VERDICT + "_hi"] - sub[VERDICT],
+                    arrayminus=sub[VERDICT] - sub[VERDICT + "_lo"],
+                    thickness=1.2, width=0, color=GUIDE,
+                ),
+                hovertemplate="%{y}: %{x:.4f}<extra></extra>",
+            )
+        )
+    runs = pd.read_parquet(summary_dir / "runs.parquet")
+    null = _null_ceiling(_primary(runs)[lambda x: x.cell_line == "hepg2"])
+    add_reference_line(fig, x=null, label="shuffled-label null")
+    fig.update_xaxes(title_text="Fold-centred correlation (disattenuated)")
+    fig.update_yaxes(title_text="Anchor the model was queried at", automargin=True)
+    apply_theme(fig, height=420)
+    save_figure_bundle(
+        fig, "anchor_sensitivity",
+        data={"records": s.to_dict("records"), "metric": VERDICT,
+              "cell_line": "hepg2", "null_ceiling": null},
+        alt=(
+            "Response-only score in HepG2 for each model at four query anchors: the "
+            "on-distribution mean control, the uniform virtual cell, individual control "
+            "cells, and the masked read-out, against the shuffled-label null."
+        ),
+        root=out_root,
+    )
+    return {"figure": "anchor_sensitivity", "n_records": int(s.shape[0]), "fig": fig}
+
+
 def split_gap(summary_dir: Path, out_root: Path) -> dict:
     """Grouped against random split: how much of a score is family memorisation."""
     runs = pd.read_parquet(summary_dir / "runs.parquet")
@@ -515,6 +609,8 @@ def build_all(summary_dir: Path, out_root: Path | None = None) -> list[dict]:
         metric_check(summary_dir, out_root),
         arm_scores(summary_dir, out_root),
         vs_coexpression(summary_dir, out_root),
+        discrimination(summary_dir, out_root),
+        anchor_sensitivity(summary_dir, out_root),
         split_gap(summary_dir, out_root),
         grid_cells(summary_dir, out_root),
         control_cell_overlap(summary_dir, out_root),

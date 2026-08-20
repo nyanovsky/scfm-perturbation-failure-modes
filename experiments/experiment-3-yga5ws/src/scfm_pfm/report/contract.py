@@ -92,6 +92,18 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             "residual_ceiling": float(
                 r.manifest[line]["reference"]["residual_ceiling"]["median_spearman_brown"]
             ),
+            "residual_ceiling_weighted": claim(
+                f"reliability-weighted split-half ceiling the pre-registered score in {line} "
+                "divides by",
+                r.ceiling(line, PREREG), RUNS,
+                key(cell_line=line, column="residual__weighted__ceiling"),
+            ),
+            "fold_centred_ceiling_weighted": claim(
+                f"reliability-weighted split-half ceiling the fold-centred score in {line} "
+                "divides by",
+                r.ceiling(line), RUNS,
+                key(cell_line=line, column="centered__weighted__ceiling"),
+            ),
         }
 
     con = r.con[(r.con.scope == "full") & (r.con.split == "grouped")
