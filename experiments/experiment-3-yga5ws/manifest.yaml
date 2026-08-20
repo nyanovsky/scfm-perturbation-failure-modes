@@ -1,0 +1,9 @@
+experiment: 3
+eid: "exp_01m0emwktvfe892x6ebqyga5ws"
+title: "Do scFM response features beat co-expression at predicting perturbation response"
+date: "2026-08-20"
+status: in-progress
+data: {}
+outputs: {}
+results: {}
+slurm_jobs: []
