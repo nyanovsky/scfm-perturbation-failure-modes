@@ -93,6 +93,8 @@ class Results:
         self.transfer = pd.read_parquet(t) if t.exists() else pd.DataFrame()
         o = summary_dir / "control_cell_overlap.parquet"
         self.overlap = pd.read_parquet(o) if o.exists() else pd.DataFrame()
+        rc = summary_dir.parent / "recompute_report.json"
+        self.recompute = json.loads(rc.read_text())["lines"] if rc.exists() else {}
 
     def primary(self, line: str) -> pd.DataFrame:
         return self.runs[
@@ -337,8 +339,10 @@ def verdict_section(r: Results, chart: str, chart2: str) -> str:
                 & (r.con.target_source == "run1_all_controls")]
     hd = con[(con.cell_line == "hepg2") & (con.arm == hb.arm)]
     jd = con[(con.cell_line == "jurkat") & (con.arm == jb.arm)]
-    mrd_h = float(np.nanmedian(con[con.cell_line == "hepg2"]
-                               .min_resolvable_difference_achieved.to_numpy()))
+    mrd = {
+        "hepg2": float(hd.min_resolvable_difference_achieved.iloc[0]),
+        "jurkat": float(jd.min_resolvable_difference_achieved.iloc[0]),
+    }
     counts = {}
     for line in ("hepg2", "jurkat"):
         m = r.model_arms(line)
@@ -354,8 +358,10 @@ def verdict_section(r: Results, chart: str, chart2: str) -> str:
         f"perturbations is {ci(float(hd.median_difference.iloc[0]), float(hd.lo.iloc[0]), float(hd.hi.iloc[0]))} "
         f"for {label(hb.arm)} in HepG2 and "
         f"{ci(float(jd.median_difference.iloc[0]), float(jd.lo.iloc[0]), float(jd.hi.iloc[0]))} "
-        f"for {label(jb.arm)} in Jurkat, against a smallest resolvable difference of "
-        f"{P.num(mrd_h)}.</p>"
+        f"for {label(jb.arm)} in Jurkat, against a smallest difference this design can resolve "
+        f"of {P.num(mrd['hepg2'])} and {P.num(mrd['jurkat'])} respectively. The paired "
+        "difference is taken on the per-perturbation correlations before the ceiling "
+        "correction, so it is smaller than the gap between the two corrected scores above.</p>"
         "<p>Ridge regression on the same features scores near zero for almost every arm, so "
         "whatever the network finds is not linear in the concatenated pair feature.</p>"
     )
@@ -386,16 +392,25 @@ def where_signal(r: Results) -> str:
     resp_max = max(
         abs(r.score(line, f"{m}_resp"))
         for line in ("hepg2", "jurkat")
-        for m in ("scgpt", "scprint", "transcriptformer")
+        for m in FULL_SCOPE_MODELS
+    )
+    add_resp = max(
+        abs(r.score(line, f"{m}_full") - r.score(line, f"{m}_emb"))
+        for line in ("hepg2", "jurkat") for m in FULL_SCOPE_MODELS
+    )
+    add_co = max(
+        abs(r.score(line, f"{m}_hybrid") - r.score(line, f"{m}_emb"))
+        for line in ("hepg2", "jurkat") for m in FULL_SCOPE_MODELS
     )
     body = (
         "<p>The previous run harvested response features by querying each model with a gene set "
         "to a different expression level and recording how the read-out genes moved. Those "
         "features are eleven numbers per pair. On their own they never leave the null band: the "
         f"largest response-only score in either cell line is {P.num(resp_max)}. Added to the "
-        "embedding they move the score by a few thousandths in either direction, and adding "
-        "co-expression to the embedding does the same. What predicts the response is the static "
-        "gene embedding, not the model's simulated reaction to a perturbation.</p>"
+        f"embedding they change the score by at most {P.num(add_resp)}, with no consistent "
+        f"sign, and adding co-expression to the embedding changes it by at most {P.num(add_co)}, "
+        "also with no consistent sign. What predicts the response is the static gene embedding, "
+        "not the model's simulated reaction to a perturbation.</p>"
     )
     return P.section("The signal is in the gene embedding, not the response features",
                      body + tab, sources=[S_ANALYSIS, S_ARMS])
@@ -421,7 +436,8 @@ def controls_section(r: Results, split_chart: str, overlap_chart: str) -> str:
         "measurement, which is why the free version is the informative one.</p>"
         "<p>The gap between the two splits is the second bound. Under a random split, where "
         "correlated perturbations can fall on both sides, node statistics alone reach "
-        f"{P.num(npm_hr)} in HepG2, five times their grouped-split score. Every arm gains, so "
+        f"{P.num(npm_hr)} in HepG2, {P.num(npm_hr / npm_h)} times their grouped-split score. "
+        "Every arm gains, so "
         "the grouped split is the one that answers the question.</p>"
     )
     return P.section("Controls: node statistics, split design, and shared control cells",
@@ -437,26 +453,37 @@ def overlap_text(r: Results) -> str:
             "against a target built from its own cells.</p>"
         )
     d = r.overlap[r.overlap.translator == "mlp"]
-    piv = d.pivot_table(index=["cell_line", "arm"], columns="target_source",
+    piv = d.pivot_table(index=["cell_line", "arm"], columns="variant",
                         values=VERDICT).reset_index()
     if not {"ctrl0", "ctrl1"}.issubset(piv.columns):
         return ""
     piv = piv.assign(delta=piv["ctrl1"] - piv["ctrl0"])
-    co = piv[piv.arm.str.startswith("coexp")]
-    mo = piv[~piv.arm.str.startswith("coexp")]
+    co = piv[piv.arm.isin(["coexp", "coexp_check"])]
+    mo = piv[piv.arm.isin(["scgpt_emb", "transcriptformer_emb"])]
+    agree = {
+        line: r.recompute[line]["targets"]["ctrlall"]["median_agreement_with_run1_effect"]
+        for line in ("hepg2", "jurkat")
+        if line in r.recompute
+    }
+    agree_txt = (
+        "The three targets agree with the original effect matrix to a median per-perturbation "
+        f"correlation of {P.num(agree['hepg2'])} in HepG2 and {P.num(agree['jurkat'])} in "
+        "Jurkat, and with each other more closely still. "
+        if len(agree) == 2
+        else ""
+    )
     return (
         "<p>Co-expression is computed from control cells, and the log2 fold change it predicts "
         "is measured against control cells too, so the baseline could be helped by sharing "
         "them. The target was rebuilt from the raw matrices three times: against the control "
         "half the co-expression features use, against the other half, and against all control "
-        "cells. The three targets agree with the original effect matrix to a median "
-        "per-perturbation correlation of 0.7712 in HepG2 and 0.7161 in Jurkat, and with each "
-        "other more closely still. Moving the co-expression arms from a disjoint control half "
-        f"to the shared one changes their score by at most {P.num(float(co.delta.abs().max()))}, "
-        "and the model arms, which touch no control cell, move by at most "
-        f"{P.num(float(mo.delta.abs().max()))}. Any advantage from sharing control cells is "
-        "smaller than the gap the report reads, and it would favour the baseline rather than "
-        "the models.</p>"
+        f"cells. {agree_txt}Moving the two plain co-expression arms from a target built on a "
+        "disjoint control half to one built on the half they were computed from changes their "
+        f"score by at most {P.num(float(co.delta.abs().max()))}. The embedding arms, which "
+        f"touch no control cell, move by up to {P.num(float(mo.delta.abs().max()))} across the "
+        "same pair of targets, so a shift of this size is retraining and target-estimation "
+        "noise rather than an advantage the baseline draws from shared cells. Either way it is "
+        "far smaller than the distance between co-expression and the embedding arms.</p>"
     )
 
 
@@ -598,8 +625,8 @@ def robustness_section(r: Results, chart: str) -> str:
         "which says nothing about the perturbation. That is the component the pre-registered "
         "target removes and the fold-centred target removes again on the held-out side.</p>"
     )
-    return P.section("Weighting and the ceiling correction do not change the ranking; the raw "
-                     "target does", body + chart, sources=[S_ANALYSIS, S_FIGS])
+    return P.section("The ranking holds under every scoring choice except the raw target",
+                     body + chart, sources=[S_ANALYSIS, S_FIGS])
 
 
 def limitations(r: Results) -> str:
@@ -702,8 +729,8 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "Each arm's score against a target built from the same control cells the co-expression "
         "features use, minus its score against a target built from the other half of the "
         "control cells. Both targets were recomputed from the raw count matrices.",
-        "The co-expression arms gain little from sharing control cells with the target, and the "
-        "model arms, which touch no control cell, move by a similar amount.",
+        "The plain co-expression arms gain little from sharing control cells with the target, "
+        "and the embedding arms, which touch no control cell, move by a similar amount.",
         sources=[S_RECOMPUTE, S_ANALYSIS, S_FIGS],
     ) if "control_cell_overlap" in made else ""
     f_transfer = P.figure(

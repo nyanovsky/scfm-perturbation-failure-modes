@@ -1,0 +1,1 @@
+Difference between each arm's score against a target built from the same control cells the co-expression features use and one built from the other half of the control cells, one panel per cell line.

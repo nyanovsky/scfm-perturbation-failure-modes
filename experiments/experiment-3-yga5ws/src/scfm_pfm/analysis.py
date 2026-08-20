@@ -266,7 +266,8 @@ def control_cell_overlap(runs: pd.DataFrame) -> pd.DataFrame:
         "discrimination_ours_residual_mean",
     ]
     wide = d[[c for c in keep if c in d.columns]].copy()
-    return wide.sort_values(["cell_line", "arm", "translator", "target_source"])
+    wide["variant"] = wide["target_source"].astype(str).str.rsplit("__", n=1).str[-1]
+    return wide.sort_values(["cell_line", "arm", "translator", "variant"])
 
 
 def grid_table(runs: pd.DataFrame) -> pd.DataFrame:

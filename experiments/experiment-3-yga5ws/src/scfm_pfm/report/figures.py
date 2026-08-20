@@ -425,7 +425,7 @@ def control_cell_overlap(summary_dir: Path, out_root: Path) -> dict | None:
         return None
     d = _with_entity(pd.read_parquet(path))
     d = d[d.translator == "mlp"]
-    piv = d.pivot_table(index=["cell_line", "arm", "entity"], columns="target_source",
+    piv = d.pivot_table(index=["cell_line", "arm", "entity"], columns="variant",
                         values=VERDICT).reset_index()
     if not {"ctrl0", "ctrl1"}.issubset(piv.columns):
         return None

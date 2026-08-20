@@ -1,0 +1,326 @@
+{
+  "headline": "A gene-pair feature built from a single-cell foundation model's gene embedding predicts the perturbation-specific part of a CRISPRi knockdown response better than statistical co-expression computed from the same control cells. The response features harvested in the previous run add nothing and do not clear the null on their own.",
+  "assessment": "Supported for the embedding arms against co-expression, on both cell lines, on a post-hoc scoring cell. The pre-registered cell of the scoring grid fails its own shuffled-label control, so the verdict is read from the fold-centred cell, which the pre-registration also defined but did not designate. Both are reported for every arm and they rank the arms the same way (rank correlation at least 0.8247). The refuted part of the pre-registered hypothesis is the response features: they were the object of the previous run and they carry no usable signal here.",
+  "decision_rule": {
+    "preregistered": "residual target, reliability-weighted, ceiling-corrected per-perturbation Pearson correlation, median over held-out perturbations of a grouped split, compared to co-expression as a paired difference",
+    "used_for_the_verdict": "the same quantity after the held-out fold's per-gene mean is removed from both prediction and measurement (the fold-centred cell of the same grid), chosen post hoc because the shuffled-label control does not sit at zero on the pre-registered cell",
+    "null": "labels permuted inside the training fold, five draws per null-bearing arm; an arm counts only if it exceeds the largest draw in its cell of the sweep"
+  },
+  "methods": {
+    "data": "Genome-wide CRISPRi Perturb-seq, GSE264667, HepG2 and Jurkat. HepG2 524 in-scope perturbations x 2721 read-out genes; Jurkat 705 x 3247.",
+    "target": "per-gene log2 fold change against the pooled non-targeting control, residualised by removing each read-out gene's mean effect across perturbations; split-half reproducibility ceiling 0.6546 (HepG2) and 0.5014 (Jurkat), Spearman-Brown corrected",
+    "arms": "four models (scGPT, AIDO.Cell, scPRINT, TranscriptFormer) x four feature sets (gene embedding, run 2 response summary, both, either plus co-expression); statistical co-expression (Pearson, Spearman, mutual information, partial correlation) from one half of the non-targeting control cells; node-only controls (additive and free); random vector per gene and per pair; shuffled-label draws",
+    "translator": "one fixed network for every arm: 128 and 64 ReLU units, Adam 1e-3, batch 4096, 30 epochs, reliability-weighted MSE. Ridge regression alongside as a capacity control. Seed 42, five folds, grouped and random splits.",
+    "transfer": "fitted on one cell line and scored on the other over the shared read-out set, with three choices of what the destination response is measured against and an unseen-gene scope that drops any destination perturbation whose gene was perturbed in the training line",
+    "control_cell_overlap": "the effect target was recomputed from the raw count matrices three times, against the control half the co-expression features use, the other half, and all control cells, and the key arms rescored against each"
+  },
+  "results": {
+    "lines": {
+      "hepg2": {
+        "n_perturbations": 524,
+        "n_readout": 2721,
+        "best_model_arm": "scgpt_emb",
+        "best_model_score_fold_centred": 0.10887821051526674,
+        "best_model_ci": [
+          0.0790922144775752,
+          0.1417428348371028
+        ],
+        "best_model_score_preregistered": 0.27186890674361275,
+        "coexpression_score_fold_centred": 0.00517619255164999,
+        "coexpression_ci": [
+          -0.006354608820104509,
+          0.016917808922339926
+        ],
+        "shuffled_label_ceiling_fold_centred": 0.028601970174156315,
+        "shuffled_label_ceiling_preregistered": 0.026616425215650726,
+        "best_response_only_score": 0.01212184944463636,
+        "node_free_score": 0.036564355768129296,
+        "residual_ceiling": 0.654599714269554
+      },
+      "jurkat": {
+        "n_perturbations": 705,
+        "n_readout": 3247,
+        "best_model_arm": "transcriptformer_emb",
+        "best_model_score_fold_centred": 0.17260292953650547,
+        "best_model_ci": [
+          0.13934274496444046,
+          0.20539077506138154
+        ],
+        "best_model_score_preregistered": 0.23135329957684056,
+        "coexpression_score_fold_centred": 0.03363644111375723,
+        "coexpression_ci": [
+          0.01679300819737662,
+          0.049287191592748865
+        ],
+        "shuffled_label_ceiling_fold_centred": 0.020402085523727964,
+        "shuffled_label_ceiling_preregistered": 0.023511483136266508,
+        "best_response_only_score": 0.03438076130368694,
+        "node_free_score": 0.018928220530529012,
+        "residual_ceiling": 0.5013870706269954
+      }
+    },
+    "paired_vs_coexpression": {
+      "hepg2": {
+        "arm": "scgpt_emb",
+        "median_difference": 0.038620726192005406,
+        "ci": [
+          0.011831537384347408,
+          0.06500279350238777
+        ],
+        "min_resolvable_difference": 0.031074854134122174
+      },
+      "jurkat": {
+        "arm": "transcriptformer_emb",
+        "median_difference": 0.07466061184064277,
+        "ci": [
+          0.051495871138448904,
+          0.10062858168218769
+        ],
+        "min_resolvable_difference": 0.029195090065073162
+      }
+    },
+    "metric_check": {
+      "shuffled_draw_ridge_preregistered_hepg2": 0.04123434296740153,
+      "shuffled_draw_ridge_fold_centred_hepg2": 0.011431149329559149,
+      "coexpression_preregistered_hepg2": 0.04879340318413257,
+      "model_arms_clearing_null_hepg2": "9 of 12",
+      "shuffled_draw_ridge_preregistered_jurkat": 0.04439969952222918,
+      "shuffled_draw_ridge_fold_centred_jurkat": 0.017821899627748813,
+      "coexpression_preregistered_jurkat": 0.044622162296810125,
+      "model_arms_clearing_null_jurkat": "11 of 12"
+    },
+    "feature_deltas": {
+      "largest_response_only": 0.03438076130368694,
+      "largest_change_from_adding_response": 0.02010386840235584,
+      "largest_change_from_adding_coexpression": 0.02953904269926491
+    },
+    "split_design": {
+      "node_free_random_split_hepg2": 0.20215514910966462,
+      "node_free_grouped_split_hepg2": 0.036564355768129296
+    },
+    "transfer": {
+      "transfer_full|hepg2->jurkat": {
+        "n_held_out": 261,
+        "best_model_arm": "transcriptformer_emb",
+        "best_model_score": 0.2896473625690525,
+        "best_model_ci": [
+          0.2440276925441045,
+          0.3264797839696275
+        ],
+        "gene_identity_null": 0.2516594327773732,
+        "coexpression": -0.023469549136396203
+      },
+      "transfer_full|jurkat->hepg2": {
+        "n_held_out": 250,
+        "best_model_arm": "transcriptformer_emb",
+        "best_model_score": 0.2547641634542399,
+        "best_model_ci": [
+          0.21040438634209824,
+          0.2830722913632741
+        ],
+        "gene_identity_null": 0.23644391550538174,
+        "coexpression": 0.0024356531490913546
+      },
+      "transfer_unseen|hepg2->jurkat": {
+        "n_held_out": 89,
+        "best_model_arm": "transcriptformer_full",
+        "best_model_score": 0.08496481728118072,
+        "best_model_ci": [
+          0.02483380746796159,
+          0.12611484802560186
+        ],
+        "gene_identity_null": 0.003235993381285271,
+        "coexpression": -0.009072121542023437
+      },
+      "transfer_unseen|jurkat->hepg2": {
+        "n_held_out": 78,
+        "best_model_arm": "transcriptformer_emb",
+        "best_model_score": 0.09392448963999318,
+        "best_model_ci": [
+          0.060810579297615464,
+          0.14941236168159255
+        ],
+        "gene_identity_null": -0.01506851170934811,
+        "coexpression": -0.007117000292288443
+      }
+    },
+    "transfer_reference_mode": {
+      "largest_shift_from_reference_choice": 0.07527144403163899,
+      "lowest_rank_correlation_across_modes": 0.7752682100508189
+    },
+    "ordering_agreement_min": {
+      "centered": 0.8246941045606229,
+      "raw": -0.13192436040044492,
+      "residual": 0.9817575083426029
+    },
+    "common_scope": {
+      "hepg2": {
+        "shuffled_label_ceiling": 0.023987556316609406,
+        "n_perturbations": 250,
+        "scgpt": 0.08541538576822985,
+        "scprint": 0.030158908509280286,
+        "transcriptformer": 0.0788348633866773,
+        "aido_cell": -0.0005498499915655824
+      },
+      "jurkat": {
+        "shuffled_label_ceiling": 0.026461468326643773,
+        "n_perturbations": 250,
+        "scgpt": 0.08540041034176676,
+        "scprint": 0.10995496367030134,
+        "transcriptformer": 0.07899366141783182,
+        "aido_cell": 0.018098790112290285
+      }
+    },
+    "control_cell_overlap": {
+      "largest_shift_coexpression_arms": 0.02397178537696014,
+      "largest_shift_embedding_arms": 0.0191519276253313,
+      "per_arm": [
+        {
+          "cell_line": "hepg2",
+          "arm": "coexp",
+          "ctrl0": 0.02280865350752324,
+          "ctrl1": 0.02537839731870703,
+          "ctrlall": 0.02047522745395003,
+          "delta": 0.0025697438111837896
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "coexp_check",
+          "ctrl0": 0.022782673939888556,
+          "ctrl1": 0.027199590941860637,
+          "ctrlall": 0.013982499769147953,
+          "delta": 0.004416917001972082
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "coexp_node",
+          "ctrl0": 0.056874846962621205,
+          "ctrl1": 0.08812145903546119,
+          "ctrlall": 0.049472634999329836,
+          "delta": 0.031246612072839984
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "node_pairmlp",
+          "ctrl0": 0.04156912632213379,
+          "ctrl1": 0.06617438175601739,
+          "ctrlall": 0.04091748343620901,
+          "delta": 0.024605255433883602
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "null_randpair",
+          "ctrl0": -4.423053365883352e-05,
+          "ctrl1": 0.0012192742652461237,
+          "ctrlall": -0.00011848872709309153,
+          "delta": 0.0012635047989049573
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "scgpt_emb",
+          "ctrl0": 0.0721568746926623,
+          "ctrl1": 0.07038129566034439,
+          "ctrlall": 0.07408929474797911,
+          "delta": -0.0017755790323179116
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "transcriptformer_emb",
+          "ctrl0": 0.05795835321000803,
+          "ctrl1": 0.05892146761476271,
+          "ctrlall": 0.06213831944291482,
+          "delta": 0.0009631144047546822
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "coexp",
+          "ctrl0": 0.019334224232015293,
+          "ctrl1": 0.029082045375606467,
+          "ctrlall": 0.024574696720907247,
+          "delta": 0.009747821143591174
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "coexp_check",
+          "ctrl0": 0.020720226605978234,
+          "ctrl1": 0.04469201198293837,
+          "ctrlall": 0.025678193121798604,
+          "delta": 0.02397178537696014
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "coexp_node",
+          "ctrl0": 0.06593898294163118,
+          "ctrl1": 0.05702096549366537,
+          "ctrlall": 0.07759943512726558,
+          "delta": -0.00891801744796581
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "node_pairmlp",
+          "ctrl0": 0.056387378600081375,
+          "ctrl1": 0.048949762491540816,
+          "ctrlall": 0.05682079245093024,
+          "delta": -0.0074376161085405595
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "null_randpair",
+          "ctrl0": -0.002709410221046382,
+          "ctrl1": -0.0018661010851957506,
+          "ctrlall": -0.0032700907556226628,
+          "delta": 0.0008433091358506313
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "scgpt_emb",
+          "ctrl0": 0.097917416582175,
+          "ctrl1": 0.1170693442075063,
+          "ctrlall": 0.11654452201145854,
+          "delta": 0.0191519276253313
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "transcriptformer_emb",
+          "ctrl0": 0.17921129468485705,
+          "ctrl1": 0.16160200380147635,
+          "ctrlall": 0.14641027616661595,
+          "delta": -0.0176092908833807
+        }
+      ],
+      "recomputed_target_agreement_hepg2": 0.7712414639996538,
+      "recomputed_reliability_weight_hepg2": 0.27689638221410134,
+      "recomputed_target_agreement_jurkat": 0.716054297215079,
+      "recomputed_reliability_weight_jurkat": 0.15690502388833077
+    }
+  },
+  "limitations": [
+    "The ranking metric is post hoc; the pre-registered cell is reported everywhere and fails its own shuffled-label control.",
+    "Scores are small in absolute terms even after the ceiling correction: the best arm reaches 0.1089 in HepG2 and 0.1726 in Jurkat on a scale where 1.0 is the reproducibility limit.",
+    "One anchor (mean control) and one translator shape for every arm.",
+    "Two cell lines from a single screen, so the cross-line result is a weak test of generality.",
+    "The additive node control is identically zero on the fold-centred score by construction, so the free node network is the informative version.",
+    "AIDO.Cell is only comparable on the 250-gene subset it was harvested on; it is not shown to be worse than the others there, only not shown to work.",
+    "Co-expression is represented by four statistics over control cells; a fitted network-inference method could do better."
+  ],
+  "artifacts": [
+    "results/summary/runs.parquet",
+    "results/summary/contrasts.parquet",
+    "results/summary/transfer_runs.parquet",
+    "results/summary/ordering_agreement.parquet",
+    "results/summary/control_cell_overlap.parquet",
+    "results/recompute_report.json",
+    "results/bundle_inventory.json",
+    "results/summary/headline.json",
+    "results/summary/grid.parquet",
+    "results/summary/null_band.parquet",
+    "src/scfm_pfm/translate/runner.py",
+    "src/scfm_pfm/translate/arms.py",
+    "src/scfm_pfm/translate/trainers.py",
+    "src/scfm_pfm/metrics.py",
+    "src/scfm_pfm/analysis.py",
+    "src/scfm_pfm/ingest/recompute_effects.py",
+    "src/scfm_pfm/report/figures.py",
+    "src/scfm_pfm/report/build.py"
+  ]
+}
