@@ -54,6 +54,12 @@ SENSITIVITY_CELL_LINE = "hepg2"
 FEATURE_FORM = "standardized"
 VALUE_GRID_CP10K = (0.0, 1.0, 4.0, 16.0, 64.0)
 
+#: forms a no-op query can touch. A no-op is a value substitution that changed
+#: nothing because the gene already carried that value, so it makes the value
+#: response an exact zero; a gradient at the same base value is a derivative
+#: rather than a substitution and is unaffected.
+NO_OP_AFFECTED_FORMS = ("vvp", "zero_out")
+
 #: TranscriptFormer's gradient magnitudes were measured unstable in run 2, so
 #: its GDT features enter as signed rank percentile within a query only
 RANK_ONLY_GDT_MODELS = ("transcriptformer",)

@@ -1,0 +1,140 @@
+{
+ "blocks": [
+  {
+   "model": "scgpt",
+   "cell_line": "hepg2",
+   "anchor": "individual_cells",
+   "n_perturbed": 524,
+   "n_values": 5,
+   "n_readout": 2721,
+   "cells_per_query": 4,
+   "n_no_op_queries": 379,
+   "n_query_rows_touched": 244,
+   "n_query_rows_everywhere_no_op": 2,
+   "max_correction_factor": 4.0,
+   "median_correction_factor_where_touched": 1.3333333333333333,
+   "max_abs_feature_change_partial_rows": 1.9058454441278627e-06,
+   "values_the_whole_dose_rule_deleted": [
+    0.0
+   ],
+   "checks": {
+    "standardized_is_per_query_zscore": {
+     "value": 1.9058454441278627e-06,
+     "tolerance": 0.0001,
+     "pass": true
+    },
+    "raw_is_plain_cell_mean": {
+     "value": 3.502506734079921e-16,
+     "tolerance": 1e-07,
+     "pass": true
+    },
+    "undefined_rows_are_everywhere_no_op": {
+     "value": 0.0,
+     "tolerance": 0.5,
+     "pass": true
+    },
+    "shipped_feature_zero_on_undefined_rows": {
+     "value": 0.0,
+     "tolerance": 0.0,
+     "pass": true
+    },
+    "correction_reproduces_shipped_feature": {
+     "value": 1.9058454441278627e-06,
+     "tolerance": 0.0001,
+     "pass": true
+    }
+   }
+  },
+  {
+   "model": "scprint",
+   "cell_line": "hepg2",
+   "anchor": "individual_cells",
+   "n_perturbed": 524,
+   "n_values": 5,
+   "n_readout": 2721,
+   "cells_per_query": 4,
+   "n_no_op_queries": 126,
+   "n_query_rows_touched": 117,
+   "n_query_rows_everywhere_no_op": 0,
+   "max_correction_factor": 2.0,
+   "median_correction_factor_where_touched": 1.3333333333333333,
+   "max_abs_feature_change_partial_rows": 1.8936748276132676e-06,
+   "values_the_whole_dose_rule_deleted": [
+    0.0
+   ],
+   "checks": {
+    "standardized_is_per_query_zscore": {
+     "value": 2.3875102783676994e-06,
+     "tolerance": 0.0001,
+     "pass": true
+    },
+    "raw_is_plain_cell_mean": {
+     "value": 1.1403968558145906e-09,
+     "tolerance": 1e-07,
+     "pass": true
+    },
+    "undefined_rows_are_everywhere_no_op": {
+     "value": 0.0,
+     "tolerance": 0.5,
+     "pass": true
+    },
+    "shipped_feature_zero_on_undefined_rows": {
+     "value": 0.0,
+     "tolerance": 0.0,
+     "pass": true
+    },
+    "correction_reproduces_shipped_feature": {
+     "value": 2.3875102783676994e-06,
+     "tolerance": 0.0001,
+     "pass": true
+    }
+   }
+  },
+  {
+   "model": "transcriptformer",
+   "cell_line": "hepg2",
+   "anchor": "individual_cells",
+   "n_perturbed": 524,
+   "n_values": 5,
+   "n_readout": 2721,
+   "cells_per_query": 4,
+   "n_no_op_queries": 79,
+   "n_query_rows_touched": 70,
+   "n_query_rows_everywhere_no_op": 0,
+   "max_correction_factor": 4.0,
+   "median_correction_factor_where_touched": 1.3333333333333333,
+   "max_abs_feature_change_partial_rows": 1.808860254470801e-06,
+   "values_the_whole_dose_rule_deleted": [
+    0.0,
+    64.0
+   ],
+   "checks": {
+    "standardized_is_per_query_zscore": {
+     "value": 2.683247778634268e-06,
+     "tolerance": 0.0001,
+     "pass": true
+    },
+    "raw_is_plain_cell_mean": {
+     "value": 1.9643914469092145e-09,
+     "tolerance": 1e-07,
+     "pass": true
+    },
+    "undefined_rows_are_everywhere_no_op": {
+     "value": 0.0,
+     "tolerance": 0.5,
+     "pass": true
+    },
+    "shipped_feature_zero_on_undefined_rows": {
+     "value": 0.0,
+     "tolerance": 0.0,
+     "pass": true
+    },
+    "correction_reproduces_shipped_feature": {
+     "value": 2.683247778634268e-06,
+     "tolerance": 0.0001,
+     "pass": true
+    }
+   }
+  }
+ ]
+}

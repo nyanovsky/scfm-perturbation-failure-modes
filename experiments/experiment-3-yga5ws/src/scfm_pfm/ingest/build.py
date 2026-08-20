@@ -30,6 +30,7 @@ import pandas as pd
 from .. import config as C
 from .. import fetch, metrics, paths
 from . import cells as cellmod
+from . import no_op as no_op_mod
 from . import coexpr as coexprmod
 
 ANCHOR_FORMS = {
@@ -46,6 +47,16 @@ def _mirror_block(mirror: Path, model: str, line: str) -> Path:
 
 def _load_no_op(repo: Path) -> pd.DataFrame:
     return pd.read_csv(repo / "results" / "handoff" / "no_op_queries.csv")
+
+
+def _load_no_op_per_gene(repo: Path) -> pd.DataFrame:
+    """Which (perturbed gene, value) queries were no-ops, and in how many cells.
+
+    Derived from run 2's per-query records by ``scfm_pfm.ingest.no_op`` and
+    committed, because the aggregate count per value cannot say which queries
+    it refers to.
+    """
+    return pd.read_csv(repo / "results" / "handoff" / "no_op_queries_per_gene.csv")
 
 
 # --------------------------------------------------------------------------- #
@@ -178,7 +189,14 @@ def _zero_self(w: np.ndarray, self_cols: np.ndarray) -> np.ndarray:
 # --------------------------------------------------------------------------- #
 # features
 # --------------------------------------------------------------------------- #
-def build_features(mirror: Path, line: str, t: dict, no_op: pd.DataFrame, out: Path) -> list[dict]:
+def build_features(
+    mirror: Path,
+    line: str,
+    t: dict,
+    no_op: pd.DataFrame,
+    no_op_per_gene: pd.DataFrame,
+    out: Path,
+) -> list[dict]:
     readout_ids = t["readout"]["gene_id"].to_numpy().astype(str)
     gene_to_scope = {
         g: i for i, g in enumerate(t["scope"]["gene_id"].to_numpy().astype(str))
@@ -204,12 +222,23 @@ def build_features(mirror: Path, line: str, t: dict, no_op: pd.DataFrame, out: P
             present = {f: adir / f"{f}.npz" for f in forms if (adir / f"{f}.npz").exists()}
             if "vvp" not in present:
                 continue
+            # No-op queries -- the value asked for was the value the input
+            # already carried, so the two passes were the same call -- are
+            # excluded per (perturbed gene, value) rather than by deleting the
+            # dose, whose other perturbations are real measurements.
+            sel = no_op[
+                (no_op.model == model) & (no_op.cell_line == line) & (no_op.anchor == anchor)
+            ]
+            n_no_op = int(sel.n_no_op_queries.sum()) if len(sel) else 0
             arrays: dict[str, np.ndarray] = {}
+            raws: dict[str, np.ndarray] = {}
             pert_ids = None
             values = None
             for form, path in present.items():
                 z = np.load(path, allow_pickle=False)
                 arr = z[C.FEATURE_FORM].astype(np.float32)
+                if n_no_op and form in C.NO_OP_AFFECTED_FORMS:
+                    raws[form] = z["raw"].astype(np.float64)
                 ids = z["perturbed_gene_id"].astype(str)
                 if pert_ids is None:
                     pert_ids = ids
@@ -225,18 +254,43 @@ def build_features(mirror: Path, line: str, t: dict, no_op: pd.DataFrame, out: P
             pert_index = np.array([gene_to_scope[g] for g in pert_ids], dtype=np.int64)
             if values is None:
                 values = np.asarray(C.VALUE_GRID_CP10K, dtype=np.float64)
-            sel = no_op[
-                (no_op.model == model) & (no_op.cell_line == line) & (no_op.anchor == anchor)
-            ]
-            keep = np.ones(values.size, dtype=bool)
-            for rec in sel.itertuples():
-                if rec.n_no_op_queries > 0:
-                    hit = np.flatnonzero(np.isclose(values, float(rec.value_cp10k)))
-                    keep[hit] = False
+            correction: dict = {"n_no_op_queries": n_no_op}
+            if n_no_op:
+                if C.FEATURE_FORM != "standardized":
+                    raise RuntimeError(
+                        f"{model}/{line}/{anchor}: the no-op correction is defined for the "
+                        f"per-query standardized form, not {C.FEATURE_FORM!r}"
+                    )
+                factor = no_op_mod.correction_factors(
+                    no_op_per_gene, model, line, anchor, pert_ids, values
+                )
+                if np.allclose(factor, 1.0):
+                    raise RuntimeError(
+                        f"{model}/{line}/{anchor}: {n_no_op} no-op queries recorded but the "
+                        "per-(gene, value) record covers none of this block's genes"
+                    )
+                dev = 0.0
+                for form in sorted(raws):
+                    at_zero = raws[form].ndim == 2
+                    f = factor[:, no_op_mod.zero_index(values)] if at_zero else factor
+                    fixed = no_op_mod.standardize_rows(raws[form] * f[..., None])
+                    dev = max(dev, float(np.abs(fixed - arrays[form]).max()))
+                    arrays[form] = fixed.astype(np.float32)
+                undefined = factor == 0.0
+                correction.update(
+                    {
+                        "forms_corrected": sorted(raws),
+                        "n_query_rows_corrected": int(((factor > 0) & (factor != 1.0)).sum()),
+                        "n_query_rows_everywhere_no_op": int(undefined.sum()),
+                        "max_factor": float(factor.max()),
+                        "max_abs_change_vs_shipped_feature": dev,
+                    }
+                )
             payload = {
                 "pert_index": pert_index,
                 "values": values,
-                "value_keep": keep,
+                # every value is kept: the field stays for the reader's contract
+                "value_keep": np.ones(values.size, dtype=bool),
             }
             for form, arr in arrays.items():
                 payload[form] = arr
@@ -247,8 +301,8 @@ def build_features(mirror: Path, line: str, t: dict, no_op: pd.DataFrame, out: P
                     "anchor": anchor,
                     "forms": sorted(arrays),
                     "n_perturbed": int(pert_index.size),
-                    "values_kept": [float(v) for v, k in zip(values, keep) if k],
-                    "values_dropped_no_op": [float(v) for v, k in zip(values, keep) if not k],
+                    "values": [float(v) for v in values],
+                    "no_op": correction,
                     "shapes": {f: list(a.shape) for f, a in arrays.items()},
                 }
             )
@@ -261,7 +315,11 @@ def build_features(mirror: Path, line: str, t: dict, no_op: pd.DataFrame, out: P
 # --------------------------------------------------------------------------- #
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--urls", required=True, help="presigned link manifest (JSON)")
+    ap.add_argument("--urls", help="presigned link manifest (JSON)")
+    ap.add_argument(
+        "--mirror",
+        help="an existing artifact mirror to read instead of downloading one",
+    )
     ap.add_argument("--work", default="_work", help="scratch dir for the mirror and raw h5ads")
     ap.add_argument("--cell-lines", default="hepg2,jurkat")
     ap.add_argument("--skip-control-cells", action="store_true")
@@ -269,15 +327,35 @@ def main(argv: list[str] | None = None) -> int:
 
     t_start = time.time()
     work = Path(args.work)
-    mirror = work / "mirror"
     out_root = paths.ensure(paths.data_root() / "bundle")
-    receipt = fetch.download_manifest(Path(args.urls), mirror)
-    print(
-        f"fetched {receipt['n_objects']} objects, {receipt['total_bytes'] / 1e9:.2f} GB",
-        flush=True,
-    )
+    if bool(args.urls) == bool(args.mirror):
+        raise SystemExit("pass exactly one of --urls (download) or --mirror (already fetched)")
+    if args.mirror:
+        mirror = Path(args.mirror)
+        if not (mirror / C.RUN2).is_dir():
+            raise SystemExit(f"{mirror} does not look like an artifact mirror")
+        objects = sorted(p for p in mirror.rglob("*") if p.is_file())
+        receipt = {
+            "mode": "mounted_mirror",
+            "mirror": str(mirror),
+            "n_objects": len(objects),
+            "total_bytes": int(sum(p.stat().st_size for p in objects)),
+        }
+        print(
+            f"reading {receipt['n_objects']} objects already fetched into {mirror} "
+            f"({receipt['total_bytes'] / 1e9:.2f} GB)",
+            flush=True,
+        )
+    else:
+        mirror = work / "mirror"
+        receipt = fetch.download_manifest(Path(args.urls), mirror)
+        print(
+            f"fetched {receipt['n_objects']} objects, {receipt['total_bytes'] / 1e9:.2f} GB",
+            flush=True,
+        )
 
     no_op = _load_no_op(paths.repo_dir())
+    no_op_per_gene = _load_no_op_per_gene(paths.repo_dir())
     manifest = {
         "written_by": "scfm_pfm.ingest.build",
         "run": 3,
@@ -383,7 +461,7 @@ def main(argv: list[str] | None = None) -> int:
             }
             print(f"[{line}] co-expression {payload['pearson'].shape}", flush=True)
 
-        feature_records = build_features(mirror, line, t, no_op, out)
+        feature_records = build_features(mirror, line, t, no_op, no_op_per_gene, out)
         (out / "reference.json").write_text(json.dumps(ref, indent=2))
         manifest["lines"][line] = {
             "reference": ref,

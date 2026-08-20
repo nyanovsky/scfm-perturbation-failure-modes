@@ -5,11 +5,17 @@
 # scope, grouped split, MLP — exactly the cell config.py gates the step to.
 #
 # The first sweep only ever fetched anchor=mean_control, so the sensitivity arms
-# resolved to nothing and were silently skipped. This job mounts the ingest
-# job's volume for everything that does not change (co-expression, node
-# statistics, embeddings), re-ingests HepG2 with the three sensitivity anchors
-# beside them, and scores the sensitivity arms against their own mean-control
-# arms re-run in the same job.
+# resolved to nothing and were silently skipped. The first sensitivity job
+# fetched the three anchors and scored them, but excluded no-op queries by
+# deleting the whole dose, which also deleted every other perturbation's real
+# response at that value — the 0 CP10K value for all three models, and 64 CP10K
+# as well for TranscriptFormer. This job re-derives the features from the same
+# bytes with the exclusion done per (perturbed gene, value), and rescores.
+#
+# It mounts the earlier sensitivity job's volume for two things: the bundle it
+# built (co-expression, node statistics, embeddings, targets) and the artifact
+# mirror it downloaded, so nothing is re-fetched and the features are rebuilt
+# from the same files.
 set -euo pipefail
 cd "$SILICO_EXPERIMENT_RELATIVE_DIR"
 export PYTHONPATH="${PWD}/src${PYTHONPATH:+:$PYTHONPATH}"
@@ -25,31 +31,31 @@ else
 fi
 
 uv run python - <<'PY'
-import pathlib, shutil, os
-from scfm_pfm import paths
+import os, pathlib, shutil
+from scfm_pfm import config as C, paths
 
-mount = os.environ.get("SILICO_REUSED_VOLUME_DIR", "")
-src = paths.find_bundle(pathlib.Path(mount)) if mount else None
-if src is None:
-    raise SystemExit(f"no bundle found under SILICO_REUSED_VOLUME_DIR={mount!r}")
+mount = pathlib.Path(os.environ.get("SILICO_REUSED_VOLUME_DIR", ""))
+src = paths.find_bundle(mount)
+mirror = paths.find_mirror(mount, C.RUN2)
+if src is None or mirror is None:
+    for p in sorted(mount.glob("*/*/*")):
+        print("  ", p, flush=True)
+    raise SystemExit(f"bundle={src} mirror={mirror} under {mount}")
 dst = pathlib.Path.cwd() / "_sensroot" / "bundle" / "hepg2"
 dst.parent.mkdir(parents=True, exist_ok=True)
 if dst.exists():
     shutil.rmtree(dst)
 shutil.copytree(src / "hepg2", dst)
-total = 0
-for p in sorted(dst.rglob("*")):
-    if p.is_file():
-        total += p.stat().st_size
-        print(f"  {p.relative_to(dst)} {p.stat().st_size / 1e6:.1f} MB", flush=True)
+total = sum(p.stat().st_size for p in dst.rglob("*") if p.is_file())
 print(f"[bundle] copied {src / 'hepg2'} -> {dst} ({total / 1e9:.2f} GB)", flush=True)
+print(f"[mirror] {mirror}", flush=True)
+pathlib.Path("_mirror_path").write_text(str(mirror))
 PY
 
-# Re-ingest HepG2 only. --skip-control-cells leaves the copied coexpr.npz alone;
-# targets and every anchor present in the new link manifest are rebuilt.
+# Rebuild HepG2's targets and every anchor in the mirror from the mounted bytes.
+# --skip-control-cells leaves the copied co-expression features alone.
 SCFM_PFM3_DATA_ROOT="$SENS_ROOT" uv run python -m scfm_pfm.ingest.build \
-  --urls results/handoff/urls/artifact_urls_sens.json \
-  --work ./_work --cell-lines hepg2 --skip-control-cells
+  --mirror "$(cat _mirror_path)" --work ./_work --cell-lines hepg2 --skip-control-cells
 
 ARMS="coexp,scgpt_resp,scprint_resp,transcriptformer_resp"
 ARMS="${ARMS},scgpt_resp@uniform_virtual,scgpt_resp@individual_cells,scgpt_resp@mean_control_masked"
@@ -60,6 +66,9 @@ uv run python -m scfm_pfm.translate.runner \
   --lines hepg2 --scopes full --splits grouped --translators mlp \
   --bundle "${SENS_ROOT}/bundle" --no-shuffle-null --arms "$ARMS" \
   --out "$SILICO_EXPERIMENT_ARTIFACTS_DIR/sensitivity"
+
+cp "${SENS_ROOT}/bundle/MANIFEST.json" \
+  "$SILICO_EXPERIMENT_ARTIFACTS_DIR/sensitivity/ingest_manifest.json"
 
 echo "[done] sensitivity runs in $SILICO_EXPERIMENT_ARTIFACTS_DIR/sensitivity"
 ls -la "$SILICO_EXPERIMENT_ARTIFACTS_DIR/sensitivity"

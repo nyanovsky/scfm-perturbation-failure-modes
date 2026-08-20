@@ -94,6 +94,34 @@ def find_bundle(mount: Path, max_depth: int = 6) -> Path | None:
     return None
 
 
+def find_mirror(mount: Path, run: str, max_depth: int = 8) -> Path | None:
+    """A previous job's artifact mirror on a mounted volume.
+
+    The ingest downloads run 1 and run 2 objects into ``<work>/mirror/<eid>/...``
+    through presigned links that live an hour. A rerun that mounts the volume of
+    the job that already fetched them reads that tree instead of minting new
+    links, which is also the only way to re-derive a feature from bytes another
+    job verified rather than from a fresh download.
+    """
+    if not mount.exists():
+        return None
+    frontier = [(mount, 0)]
+    while frontier:
+        here, depth = frontier.pop(0)
+        candidate = here / "mirror"
+        if (candidate / run).is_dir():
+            return candidate
+        if depth >= max_depth:
+            continue
+        try:
+            for child in sorted(here.iterdir()):
+                if child.is_dir() and not child.name.startswith("."):
+                    frontier.append((child, depth + 1))
+        except PermissionError:  # pragma: no cover
+            continue
+    return None
+
+
 def line_dir(cell_line: str, root: Path | None = None) -> Path:
     return (root or bundle_root()) / cell_line
 
