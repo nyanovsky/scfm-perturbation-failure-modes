@@ -6756,5 +6756,277 @@
         "n_perturbations": 156
       }
     ]
+  },
+  "sensitivity": {
+    "rows": [
+      {
+        "cell_line": "hepg2",
+        "arm": "coexp",
+        "model": "coexp",
+        "anchor": "mean_control",
+        "score": 0.00517619255164999,
+        "lo": -0.006354608820104509,
+        "hi": 0.016917808922339926,
+        "preregistered": 0.04879340318413257,
+        "n_perturbations": 524,
+        "feature_dim": 4,
+        "minus_mean_control": 0.0
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "scgpt_resp",
+        "model": "scgpt",
+        "anchor": "mean_control",
+        "score": 0.003837494762953757,
+        "lo": -0.0012758223457016364,
+        "hi": 0.007271720796838894,
+        "preregistered": 0.026315465055612337,
+        "n_perturbations": 524,
+        "feature_dim": 11,
+        "minus_mean_control": 0.0
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "scprint_resp",
+        "model": "scprint",
+        "anchor": "mean_control",
+        "score": 0.006874742485344232,
+        "lo": -0.0017914291491620328,
+        "hi": 0.014789998399633476,
+        "preregistered": 0.04372803619153438,
+        "n_perturbations": 524,
+        "feature_dim": 11,
+        "minus_mean_control": 0.0
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "transcriptformer_resp",
+        "model": "transcriptformer",
+        "anchor": "mean_control",
+        "score": 0.01212184944463636,
+        "lo": 0.0063026002877132545,
+        "hi": 0.018670191517373258,
+        "preregistered": 0.06533348242743559,
+        "n_perturbations": 524,
+        "feature_dim": 11,
+        "minus_mean_control": 0.0
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "scgpt_resp@uniform_virtual",
+        "model": "scgpt",
+        "anchor": "uniform_virtual",
+        "score": 0.013165212150305739,
+        "lo": 0.004589013525620648,
+        "hi": 0.019796716356412173,
+        "preregistered": 0.047793288813355796,
+        "n_perturbations": 524,
+        "feature_dim": 11,
+        "minus_mean_control": 0.009327717387351983
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "scgpt_resp@individual_cells",
+        "model": "scgpt",
+        "anchor": "individual_cells",
+        "score": 0.00538848286621011,
+        "lo": -7.251917078079364e-05,
+        "hi": 0.01048174513739479,
+        "preregistered": 0.027002998485310924,
+        "n_perturbations": 524,
+        "feature_dim": 8,
+        "minus_mean_control": 0.0015509881032563528
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "scgpt_resp@mean_control_masked",
+        "model": "scgpt",
+        "anchor": "mean_control_masked",
+        "score": 0.005883320991035053,
+        "lo": 0.0009413034027856661,
+        "hi": 0.010954129057098824,
+        "preregistered": 0.008000157243367964,
+        "n_perturbations": 524,
+        "feature_dim": 4,
+        "minus_mean_control": 0.0020458262280812958
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "scprint_resp@uniform_virtual",
+        "model": "scprint",
+        "anchor": "uniform_virtual",
+        "score": 0.019230538550475566,
+        "lo": 0.014894428394179952,
+        "hi": 0.02711702481138267,
+        "preregistered": 0.02284461022971444,
+        "n_perturbations": 524,
+        "feature_dim": 11,
+        "minus_mean_control": 0.012355796065131333
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "scprint_resp@individual_cells",
+        "model": "scprint",
+        "anchor": "individual_cells",
+        "score": 0.025832345952915527,
+        "lo": 0.01849122816164607,
+        "hi": 0.030327905068625205,
+        "preregistered": 0.03843488025745232,
+        "n_perturbations": 524,
+        "feature_dim": 8,
+        "minus_mean_control": 0.018957603467571294
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "scprint_resp@mean_control_masked",
+        "model": "scprint",
+        "anchor": "mean_control_masked",
+        "score": 0.008804479414763994,
+        "lo": 0.0007449894024442325,
+        "hi": 0.017743037780689194,
+        "preregistered": 0.0513216826751823,
+        "n_perturbations": 524,
+        "feature_dim": 4,
+        "minus_mean_control": 0.0019297369294197621
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "transcriptformer_resp@uniform_virtual",
+        "model": "transcriptformer",
+        "anchor": "uniform_virtual",
+        "score": -0.003639864258383379,
+        "lo": -0.00808521602774202,
+        "hi": 0.0010235905174586187,
+        "preregistered": 0.056681256163711634,
+        "n_perturbations": 524,
+        "feature_dim": 11,
+        "minus_mean_control": -0.01576171370301974
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "transcriptformer_resp@individual_cells",
+        "model": "transcriptformer",
+        "anchor": "individual_cells",
+        "score": 0.008224324388715332,
+        "lo": 0.002854157504116057,
+        "hi": 0.015530303157388261,
+        "preregistered": 0.06219042067856138,
+        "n_perturbations": 524,
+        "feature_dim": 6,
+        "minus_mean_control": -0.003897525055921027
+      }
+    ],
+    "rerun_check": [
+      {
+        "cell_line": "hepg2",
+        "arm": "coexp",
+        "sensitivity_job": 0.00517619255164999,
+        "main_sweep": 0.00517619255164999,
+        "difference": 0.0
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "scgpt_resp",
+        "sensitivity_job": 0.003837494762953757,
+        "main_sweep": 0.003837494762953757,
+        "difference": 0.0
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "scprint_resp",
+        "sensitivity_job": 0.006874742485344232,
+        "main_sweep": 0.006874742485344232,
+        "difference": 0.0
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "transcriptformer_resp",
+        "sensitivity_job": 0.01212184944463636,
+        "main_sweep": 0.01212184944463636,
+        "difference": 0.0
+      },
+      {
+        "cell_line": "hepg2",
+        "arm": "coexp",
+        "sensitivity_job": 0.00517619255164999,
+        "main_sweep": 0.00517619255164999,
+        "difference": 0.0
+      }
+    ],
+    "max_abs_rerun_difference": 0.0,
+    "paired_against_mean_control": [
+      {
+        "model": "scgpt",
+        "anchor": "individual_cells",
+        "median_difference": 0.0011755222809814577,
+        "lo": -0.003198214328904309,
+        "hi": 0.006606890975762245,
+        "min_resolvable_difference_achieved": 0.0062235368562623475,
+        "n_paired": 524
+      },
+      {
+        "model": "scgpt",
+        "anchor": "mean_control_masked",
+        "median_difference": 0.0015505691559313814,
+        "lo": -0.0028558195747641316,
+        "hi": 0.007238533027006686,
+        "min_resolvable_difference_achieved": 0.006830664858595532,
+        "n_paired": 524
+      },
+      {
+        "model": "scgpt",
+        "anchor": "uniform_virtual",
+        "median_difference": 0.007069647791952201,
+        "lo": 0.0009063676553101863,
+        "hi": 0.013376486298023243,
+        "min_resolvable_difference_achieved": 0.007734294739752191,
+        "n_paired": 524
+      },
+      {
+        "model": "scprint",
+        "anchor": "individual_cells",
+        "median_difference": 0.014368314768729108,
+        "lo": 0.007075544373262735,
+        "hi": 0.021168494542361922,
+        "min_resolvable_difference_achieved": 0.008380203349718132,
+        "n_paired": 524
+      },
+      {
+        "model": "scprint",
+        "anchor": "mean_control_masked",
+        "median_difference": 0.0014625829509607377,
+        "lo": -0.006944369506537285,
+        "hi": 0.01107645117080853,
+        "min_resolvable_difference_achieved": 0.009860308846529841,
+        "n_paired": 524
+      },
+      {
+        "model": "scprint",
+        "anchor": "uniform_virtual",
+        "median_difference": 0.009364684063875275,
+        "lo": 0.0026734185007692645,
+        "hi": 0.017621964704313695,
+        "min_resolvable_difference_achieved": 0.008240374833535144,
+        "n_paired": 524
+      },
+      {
+        "model": "transcriptformer",
+        "anchor": "individual_cells",
+        "median_difference": -0.0029540056008807453,
+        "lo": -0.00814582843771126,
+        "hi": 0.0036948288581848923,
+        "min_resolvable_difference_achieved": 0.005413099477145111,
+        "n_paired": 524
+      },
+      {
+        "model": "transcriptformer",
+        "anchor": "uniform_virtual",
+        "median_difference": -0.011946091401636012,
+        "lo": -0.017358993146884043,
+        "hi": -0.006611968659706104,
+        "min_resolvable_difference_achieved": 0.005654504902401072,
+        "n_paired": 524
+      }
+    ]
   }
 }

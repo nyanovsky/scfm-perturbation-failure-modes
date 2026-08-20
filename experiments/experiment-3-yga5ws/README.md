@@ -60,6 +60,9 @@ Small reviewable copies live in this worktree.
 | transfer | `transfer2/`, `transfer_unseen/` (store) | cross-line transfer, three reference modes, full / common / unseen-gene scopes |
 | control-split targets | `ctrl_split_targets/` (store) | effect recomputed against each control half and against all control cells, plus `recompute_report.json` |
 | control-overlap scoring | `alt_target_ctrl0/`, `alt_target_ctrl1/`, `alt_target_ctrlall/` (store) | the key arms rescored against each of those targets |
+| anchor sensitivity | `sensitivity/` (store) | HepG2 response arms at the uniform-virtual, individual-cells and masked anchors, with each model's mean-control arm re-run as the in-job reference |
+| BEELINE reproduction | `beeline/beeline_reproduction.json` (store), `results/beeline_reproduction.json` (worktree) | the source paper's scGPT embedding baseline re-fitted on its own benchmark, with a permuted-embedding control and an unseen-gene slice |
+| discrimination versions | `results/discrimination_versions.json`, `results/discrimination/` (worktree) | the same saved predictions rescored under cell-eval 0.5.18, 0.5.21 and 0.8.2 |
 | merged tables | `results/summary/` (worktree) | `runs.parquet`, `contrasts.parquet`, `grid.parquet`, `transfer_runs.parquet`, `ordering_agreement.parquet`, `control_cell_overlap.parquet`, `null_band.parquet`, `headline.json` |
 | target recompute report | `results/recompute_report.json` (worktree) | agreement of each recomputed target with run 1's effect matrix, reliability weights, cells kept |
 | report contract | `report_summary.json`, `claims_manifest.json` (worktree) | generated from the tables; every claim names its source file and row |
@@ -78,11 +81,17 @@ PYTHONPATH=src apy -m scfm_pfm.analysis \
 scratch/dl/sweep_node,scratch/dl/sweep_node_common,scratch/dl/alt_target_ctrl0,\
 scratch/dl/alt_target_ctrl1,scratch/dl/alt_target_ctrlall \
   --transfer-sweep scratch/dl/transfer2,scratch/dl/transfer_unseen \
+  --sensitivity-sweep scratch/dl/sensitivity \
   --out results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.contract --summary results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.build \
   --summary results/summary --out "$SILICO_APP_DIR"
 ```
+
+The discrimination axis is computed with Arc Institute's `cell-eval`. The pre-registration pinned
+0.5.19, which was never released (PyPI publishes 0.1.0 then 0.5.33 onward; the upstream tags jump
+0.5.18 to 0.5.21), so the jobs resolved 0.8.2 and `scratch/disc_version_check.py` rescores the
+saved predictions under 0.5.18, 0.5.21 and 0.8.2 to show what that choice costs.
 
 No external model provider is used anywhere in this run: every number comes from the four
 open single-cell foundation models' cached features and from code in this worktree.

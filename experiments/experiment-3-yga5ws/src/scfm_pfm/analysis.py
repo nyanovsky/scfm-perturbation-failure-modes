@@ -299,7 +299,9 @@ def grid_table(runs: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def anchor_sensitivity(sens: pd.DataFrame, primary: pd.DataFrame) -> dict:
+def anchor_sensitivity(
+    sens: pd.DataFrame, primary: pd.DataFrame, sens_pert: pd.DataFrame | None = None
+) -> dict:
     """Anchor and form sensitivity, against two references.
 
     The sensitivity job re-runs each model's mean-control response arm beside
@@ -368,12 +370,33 @@ def anchor_sensitivity(sens: pd.DataFrame, primary: pd.DataFrame) -> dict:
                 - base.get((str(coexp.cell_line.iloc[0]), "coexp"), float("nan")),
             }
         )
+    paired: list[dict] = []
+    if sens_pert is not None and not sens_pert.empty:
+        for model in sorted(set(out.model)):
+            ref = f"{model}_resp"
+            if ref not in set(sens_pert.arm):
+                continue
+            con = contrasts(sens_pert, reference=ref, metric="centered_weighted")
+            con = con[con.arm.str.startswith(f"{ref}@")]
+            for row in con.itertuples():
+                paired.append({
+                    "model": model,
+                    "anchor": row.arm.split("@")[1],
+                    "median_difference": float(row.median_difference),
+                    "lo": float(row.lo),
+                    "hi": float(row.hi),
+                    "min_resolvable_difference_achieved": float(
+                        row.min_resolvable_difference_achieved
+                    ),
+                    "n_paired": int(row.n_paired),
+                })
     return {
         "rows": out.to_dict("records"),
         "rerun_check": rerun,
         "max_abs_rerun_difference": (
             float(np.nanmax([abs(x["difference"]) for x in rerun])) if rerun else float("nan")
         ),
+        "paired_against_mean_control": paired,
     }
 
 
@@ -474,9 +497,9 @@ def main(argv: list[str] | None = None) -> int:
         }
 
     if args.sensitivity_sweep:
-        s_runs, _ = load_sweep(*[Path(x) for x in args.sensitivity_sweep.split(",") if x])
+        s_runs, s_pert = load_sweep(*[Path(x) for x in args.sensitivity_sweep.split(",") if x])
         s_runs.to_parquet(out / "sensitivity.parquet", index=False)
-        head["sensitivity"] = anchor_sensitivity(s_runs, runs)
+        head["sensitivity"] = anchor_sensitivity(s_runs, runs, s_pert)
 
     runs.to_parquet(out / "runs.parquet", index=False)
     per_pert.to_parquet(out / "per_perturbation.parquet", index=False)

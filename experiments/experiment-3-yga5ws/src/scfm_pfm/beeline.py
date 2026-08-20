@@ -171,7 +171,9 @@ def scgpt_gene_embeddings(work: Path) -> tuple[dict, np.ndarray]:
 # --------------------------------------------------------------------------- #
 # the projector, as the paper specifies it
 # --------------------------------------------------------------------------- #
-def features(pairs: pd.DataFrame, vocab: dict, emb: np.ndarray) -> tuple[np.ndarray, np.ndarray, dict]:
+def features(
+    pairs: pd.DataFrame, vocab: dict, emb: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, dict, pd.DataFrame]:
     keep = [s in vocab and t in vocab for s, t in zip(pairs.source, pairs.target)]
     kept = pairs[keep]
     a = emb[[vocab[s] for s in kept.source]]
@@ -184,7 +186,7 @@ def features(pairs: pd.DataFrame, vocab: dict, emb: np.ndarray) -> tuple[np.ndar
         "fraction_kept": float(kept.shape[0] / max(pairs.shape[0], 1)),
         "positive_fraction": float(y.mean()) if y.size else float("nan"),
     }
-    return x, y, cover
+    return x, y, cover, kept.reset_index(drop=True)
 
 
 def train_projector(x: np.ndarray, y: np.ndarray, seed: int = SEED) -> dict:
@@ -278,20 +280,28 @@ def main(argv: list[str] | None = None) -> int:
 
     train_tables = cell_files(*TRAIN_CELL, work)
     train_pairs = pair_set(train_tables, rng)
-    xtr, ytr, cover_tr = features(train_pairs, vocab, emb)
+    xtr, ytr, cover_tr, kept_tr = features(train_pairs, vocab, emb)
     print(f"[train] {TRAIN_CELL} {xtr.shape} kept {cover_tr['fraction_kept']:.3f}", flush=True)
     model = train_projector(xtr, ytr)
-    xtr_s, ytr_s, _ = features(train_pairs, vocab, shuffled)
+    xtr_s, ytr_s, _, _ = features(train_pairs, vocab, shuffled)
     model_shuf = train_projector(xtr_s, ytr_s)
+    train_genes = set(kept_tr.source) | set(kept_tr.target)
 
     rows = []
     for cell in EVAL_CELLS:
         tables = cell_files(*cell, work)
         pairs = pair_set(tables, np.random.default_rng(SEED))
-        x, y, cover = features(pairs, vocab, emb)
+        x, y, cover, kept = features(pairs, vocab, emb)
         s = predict(model, x)
-        xs, ys, _ = features(pairs, vocab, shuffled)
+        xs, ys, _, _ = features(pairs, vocab, shuffled)
         ss = predict(model_shuf, xs)
+        # The paper's claim is that the projector generalizes to genes it never
+        # saw. Both genes of these pairs are outside the training pair set, so
+        # nothing about them can have been memorised by identity.
+        unseen = np.array(
+            [(a not in train_genes) and (b not in train_genes)
+             for a, b in zip(kept.source, kept.target)]
+        )
         paper = PAPER_BASELINE_EMB[cell]
         rows.append({
             "network": cell[0],
@@ -301,9 +311,21 @@ def main(argv: list[str] | None = None) -> int:
             "auprc_shuffled_embedding": auprc(ys, ss),
             "paper_baseline_emb_auprc": paper,
             "difference_from_paper": auprc(y, s) - paper,
+            "n_pairs_unseen_genes": int(unseen.sum()),
+            "fraction_pairs_unseen_genes": float(unseen.mean()),
+            "positive_fraction_unseen": float(y[unseen].mean()) if unseen.any() else float("nan"),
+            "auprc_unseen_genes": auprc(y[unseen], s[unseen]) if unseen.sum() > 20 else float("nan"),
+            "auprc_unseen_genes_shuffled_embedding": (
+                auprc(ys[unseen], ss[unseen]) if unseen.sum() > 20 else float("nan")
+            ),
             **cover,
         })
-        print(f"[eval] {cell}: AUPRC {rows[-1]['auprc']:.4f} vs paper {paper}", flush=True)
+        print(
+            f"[eval] {cell}: AUPRC {rows[-1]['auprc']:.4f} vs paper {paper}; "
+            f"unseen-gene pairs {rows[-1]['n_pairs_unseen_genes']} "
+            f"AUPRC {rows[-1]['auprc_unseen_genes']:.4f}",
+            flush=True,
+        )
 
     got = np.array([r["auprc"] for r in rows])
     ref = np.array([r["paper_baseline_emb_auprc"] for r in rows])
@@ -317,7 +339,10 @@ def main(argv: list[str] | None = None) -> int:
             "VVP and GDT: would need a fresh feature extraction against the BEELINE datasets",
             "the mouse datasets: their symbols are outside the human checkpoint's vocabulary",
         ],
-        "train_cell": {"network": TRAIN_CELL[0], "dataset": TRAIN_CELL[1], **cover_tr},
+            "train_cell": {
+            "network": TRAIN_CELL[0], "dataset": TRAIN_CELL[1],
+            "n_genes": len(train_genes), **cover_tr,
+        },
         "projector": {
             "hidden": list(HIDDEN), "lr": LR, "batch_size": BATCH, "epochs": EPOCHS,
             "loss": "binary cross-entropy", "optimizer": "Adam", "seed": SEED,
@@ -333,6 +358,15 @@ def main(argv: list[str] | None = None) -> int:
             "n_cells": len(rows),
             "shuffled_embedding_mean_auprc": float(
                 np.mean([r["auprc_shuffled_embedding"] for r in rows])
+            ),
+            "mean_auprc_unseen_genes": float(
+                np.nanmean([r["auprc_unseen_genes"] for r in rows])
+            ),
+            "shuffled_embedding_mean_auprc_unseen_genes": float(
+                np.nanmean([r["auprc_unseen_genes_shuffled_embedding"] for r in rows])
+            ),
+            "mean_fraction_pairs_unseen_genes": float(
+                np.mean([r["fraction_pairs_unseen_genes"] for r in rows])
             ),
         },
         "paper_other_arms": {

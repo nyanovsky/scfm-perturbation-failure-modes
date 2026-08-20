@@ -81,6 +81,15 @@ def label(arm: str) -> str:
     return ARM_LABEL.get(arm, arm)
 
 
+def _join(items: list[str]) -> str:
+    """'a', 'a and b', 'a, b and c' — lists read as sentences, not as tuples."""
+    if not items:
+        return ""
+    if len(items) == 1:
+        return items[0]
+    return ", ".join(items[:-1]) + " and " + items[-1]
+
+
 # --------------------------------------------------------------------------
 # reading the tables
 
@@ -413,7 +422,9 @@ def verdict_section(r: Results, chart: str, chart2: str) -> str:
     body = (
         f"<p>{counts['hepg2'][0]} of the {counts['hepg2'][1]} foundation-model arms clear the "
         f"shuffled-label null in HepG2 and {counts['jurkat'][0]} of "
-        f"{counts['jurkat'][1]} in Jurkat; the ones that fail are the response-only arms. "
+        f"{counts['jurkat'][1]} in Jurkat. The ones that fail are response-only arms: all three "
+        "in HepG2, and scGPT's alone in Jurkat, where scPRINT's and TranscriptFormer's response "
+        "features clear the lower null there. "
         f"Co-expression does not clear it in HepG2, where it scores {ci(*hc)} "
         f"against a null ceiling of {P.num(hnull)}, and barely clears it in Jurkat "
         f"({ci(*jc)} against {P.num(jnull)}). The paired difference on the same held-out "
@@ -554,7 +565,7 @@ def _disc_version_note(r: Results) -> str:
         "exist: the package publishes 0.1.0 and then 0.5.33 onward, and the upstream tag list "
         "jumps 0.5.18 to 0.5.21, so the pin was unattainable when it was written and the jobs "
         f"resolved {v['resolved_in_the_sweep']}. Rescoring the same saved prediction matrices "
-        f"under {', '.join(vers)} shows the choice matters: the number moves by up to "
+        f"under {_join(vers)} shows the choice matters: the number moves by up to "
         f"{P.num(spread)}, and the 0.5.x line ranks co-expression above the model arms while "
         "0.8.2 ranks them the other way. The implementations differ in one line — 0.5.x scores "
         "the absolute effect profile, 0.8.2 the signed one — and a distance on absolute values "
@@ -576,48 +587,68 @@ def sensitivity_section(r: Results, chart: str) -> str:
         cells = [MODEL_LABEL[m]]
         for a in anchors:
             v = r.sens_score(m, a)
-            cells.append(P.num(v) if v == v else "not extracted")
+            dim = r.sens_score(m, a, "feature_dim")
+            cells.append(f"{P.num(v)} ({dim:.0f})" if v == v else "not extracted")
         rows.append(cells)
     tab = P.table(
         ["Model", "Mean control", "Uniform virtual", "Individual cells", "Masked read-out"],
         rows, sources=[S_SENS],
+        caption="Fold-centred score, with the number of feature values in brackets.",
     )
-    deltas = [
-        (m, a, r.sens_score(m, a) - r.sens_score(m, "mean_control"))
-        for m in models for a in anchors[1:]
-        if r.sens_score(m, a) == r.sens_score(m, a)
+    head = r.head.get("sensitivity", {})
+    paired = head.get("paired_against_mean_control", [])
+    rerun = head.get("max_abs_rerun_difference", float("nan"))
+    uv = {p["model"]: p for p in paired if p["anchor"] == "uniform_virtual"}
+    uv_better = [m for m, p in uv.items() if p["lo"] > 0]
+    uv_worse = [m for m, p in uv.items() if p["hi"] < 0]
+    biggest = max(paired, key=lambda p: abs(p["median_difference"])) if paired else None
+    best_score = max(
+        (r.sens_score(m, a) for m in models for a in anchors
+         if r.sens_score(m, a) == r.sens_score(m, a)),
+        default=float("nan"),
+    )
+    emb_best = max(r.score("hepg2", f"{m}_emb") for m in FULL_SCOPE_MODELS)
+    prows = [
+        [MODEL_LABEL[p["model"]], p["anchor"].replace("_", " "),
+         ci(p["median_difference"], p["lo"], p["hi"]),
+         P.num(p["min_resolvable_difference_achieved"])]
+        for p in paired
     ]
-    worst = max(deltas, key=lambda x: abs(x[2])) if deltas else None
-    uv = [d for d in deltas if d[1] == "uniform_virtual"]
-    uv_better = [d for d in uv if d[2] > 0]
-    cleared = [
-        (m, a) for m in models for a in anchors
-        if r.sens_score(m, a) > null
-    ]
-    rerun = r.head.get("sensitivity", {}).get("max_abs_rerun_difference", float("nan"))
+    ptab = P.table(
+        ["Model", "Anchor", "Paired difference against the mean-control anchor",
+         "Smallest resolvable"],
+        prows, sources=[S_ANALYSIS],
+    )
     body = (
         "<p>The paper's mechanism claim is that querying the model at a uniform virtual value, "
-        "rather than at the expression the cell actually has, gives a cleaner read of one "
-        "gene's influence on another. The response features were harvested at four queries in "
-        "the previous run, and this step scores the same arm at each of them in HepG2 under the "
-        "grouped split. Everything else — translator, split, scope, scoring rule — is "
-        "identical, so the only thing that varies is what the model was asked.</p>"
-        f"<p>The anchor does not rescue the response features. The largest move away from the "
-        f"on-distribution mean-control anchor is {P.signed(worst[2], 4) if worst else 'n/a'} "
-        f"({MODEL_LABEL[worst[0]] if worst else ''} at the "
-        f"{worst[1].replace('_', ' ') if worst else ''} anchor), and the uniform-virtual anchor "
-        f"beats the on-distribution one for {len(uv_better)} of {len(uv)} models. "
-        f"{'No arm at any anchor clears' if not cleared else str(len(cleared)) + ' of the scored arms clear'} "
-        f"the shuffled-label ceiling of {P.num(null)}, against embedding arms at four to nine "
-        "times that. Masking the read-out gene hides its own value together with its whole "
-        "block, so the masked column confounds hiding the gene with removing part of the "
-        "context and is not a clean mechanistic contrast.</p>"
-        f"<p>The mean-control arms were re-run inside this job as its own reference: they "
-        f"reproduce the main sweep to within {P.num(rerun)}, which also checks that the rebuilt "
-        "bundle is the same bundle.</p>"
+        "rather than at the expression the cell actually has, gives a cleaner read of one gene's "
+        "influence on another. The features were harvested at four queries in the previous run, "
+        "and this step scores the same response-only arm at each of them in HepG2 under the "
+        "grouped split. Translator, split, scope and scoring rule are identical, so the only "
+        "thing that varies is what the model was asked. The feature width varies with the query: "
+        "queries that would have asked a gene for the value it already has are structural no-ops "
+        "and were dropped, which is why the individual-cells and masked columns carry fewer "
+        "numbers.</p>"
+        f"<p>The anchor moves the score, but never out of the null band. The largest paired move "
+        f"is {ci(biggest['median_difference'], biggest['lo'], biggest['hi']) if biggest else 'n/a'} "
+        f"({MODEL_LABEL[biggest['model']] if biggest else ''} at the "
+        f"{biggest['anchor'].replace('_', ' ') if biggest else ''} anchor). The uniform-virtual "
+        f"anchor beats the on-distribution one for "
+        f"{_join([MODEL_LABEL[m] for m in uv_better]) or 'no model'} and loses for "
+        f"{_join([MODEL_LABEL[m] for m in uv_worse]) or 'no model'}, so the "
+        "mechanism claim holds for some models and reverses for others on this task. The best "
+        f"score at any anchor is {P.num(best_score)}, still below the shuffled-label ceiling of "
+        f"{P.num(null)} and a fraction of the {P.num(emb_best)} the same models' embeddings "
+        "reach in this cell line. Masking is not a clean mechanistic contrast: it hides the "
+        "read-out gene's own value together with its whole block, so it removes context as well "
+        "as the value.</p>"
+        "<p>The mean-control arms were re-run inside this job as its own reference. They "
+        + ("reproduce the main sweep exactly, to every digit stored, "
+           if rerun == 0 else f"reproduce the main sweep to within {P.num(rerun)}, ")
+        + "which also confirms the rebuilt bundle is the same bundle.</p>"
     )
-    return P.section("The query anchor does not change what the response features carry",
-                     body + tab + chart, sources=[S_SENS, S_CONFIG])
+    return P.section("No query anchor lifts the response features out of the null band",
+                     body + tab + ptab + chart, sources=[S_SENS, S_CONFIG])
 
 
 def controls_section(r: Results, split_chart: str, overlap_chart: str) -> str:
@@ -871,7 +902,7 @@ def limitations(r: Results) -> str:
     return P.section("Limitations", body, sources=[S_CONFIG, S_ANALYSIS])
 
 
-def beeline_section(r: Results) -> str:
+def beeline_section(r: Results, chart: str = "") -> str:
     """The source paper's own benchmark, its embedding baseline re-run here."""
     b = r.beeline
     if not b:
@@ -879,18 +910,23 @@ def beeline_section(r: Results) -> str:
     rows = [
         [
             f"{row['network']} / {row['dataset']}",
+            f"{row['n_pairs_kept']:,}",
             P.num(row["auprc"]),
             P.num(row["paper_baseline_emb_auprc"]),
-            P.signed(row["difference_from_paper"], 4),
             P.num(row["auprc_shuffled_embedding"]),
-            f"{row['n_pairs_kept']:,}",
+            f"{P.num(row['auprc_unseen_genes'])} ({P.num(row['positive_fraction_unseen'])})",
+            P.num(row["auprc_unseen_genes_shuffled_embedding"]),
         ]
         for row in b["rows"]
     ]
     tab = P.table(
-        ["Benchmark cell", "AUPRC here", "AUPRC reported", "Difference",
-         "Shuffled-embedding control", "Pairs scored"],
+        ["Benchmark cell", "Pairs scored", "AUPRC here", "AUPRC reported",
+         "Gene identity only", "Unseen genes (chance)", "Unseen genes, identity only"],
         rows, sources=[S_BEELINE],
+        caption=(
+            "Chance is the positive fraction, 0.50 on the balanced sets and the value in "
+            "brackets on the unseen-gene slice."
+        ),
     )
     s = b["summary"]
     train = b["train_cell"]
@@ -898,24 +934,33 @@ def beeline_section(r: Results) -> str:
         "<p>The response features this run tests come from a paper whose own evidence is a "
         "different task: BEELINE network inference, where a projector maps a gene-pair feature "
         "to a regulatory edge and is scored by AUPRC on held-out datasets. Disagreeing with its "
-        "conclusion is worth more if its setting reproduces here first, so its scGPT embedding "
-        "baseline was re-run on its own benchmark files: the projector is fitted on the "
-        f"{train['network']}/{train['dataset']} pair set "
-        f"({train['n_pairs_kept']:,} pairs, balanced) and scored on the held-out cells, with the "
-        "paper's projector shape, optimizer, batch size and epoch count.</p>"
+        "conclusion is worth more after reproducing its setting, so its scGPT embedding baseline "
+        "was re-run on its own benchmark files: the projector is fitted on the "
+        f"{train['network']}/{train['dataset']} pair set ({train['n_pairs_kept']:,} pairs, "
+        "balanced 1:1) and scored on the held-out cells with the paper's projector shape, "
+        "optimizer, batch size and epoch count.</p>"
         f"<p>It reproduces. Mean AUPRC over the three held-out cells is {P.num(s['mean_auprc'])} "
         f"against {P.num(s['paper_mean_auprc'])} reported, a mean difference of "
-        f"{P.signed(s['mean_difference'], 4)} and at most {P.num(s['max_abs_difference'])} on any "
-        "one cell. Permuting which gene gets which embedding, and refitting, drops it to "
-        f"{P.num(s['shuffled_embedding_mean_auprc'])}, so the score is carried by the identity "
-        "of the embedding rather than by the pair-set construction. The gradient-trajectory and "
-        "virtual-value arms are not reproduced here: they would need the feature extraction "
-        "re-run against these datasets, which is a separate harvest. So this run confirms the "
-        "paper's setting and its embedding baseline, and its disagreement is about what response "
-        "features do on perturbation response, not about its benchmark numbers.</p>"
+        f"{P.signed(s['mean_difference'], 4)} and at most {P.num(s['max_abs_difference'])} on "
+        "any one cell. Two controls say what that number is made of. Permuting which gene gets "
+        "which embedding, which keeps every gene's identity and destroys the biology in its "
+        f"vector, still reaches {P.num(s['shuffled_embedding_mean_auprc'])}. And restricting to "
+        "pairs whose two genes never appear in the training pair set, where identity cannot be "
+        f"memorised ({P.num(s['mean_fraction_pairs_unseen_genes'])} of held-out pairs), the real "
+        f"embedding reaches {P.num(s['mean_auprc_unseen_genes'])} against a chance level of "
+        "0.3987 to 0.5962 depending on the cell, and the identity control falls to "
+        f"{P.num(s['shuffled_embedding_mean_auprc_unseen_genes'])}. Most of the benchmark number "
+        "is gene identity; what survives for genuinely unseen genes is real on the STRING "
+        "network and absent on the cell-type-specific one.</p>"
+        "<p>That is the same shape as this run's own cross-line transfer result, where a fixed "
+        "random vector per gene nearly matches the models over shared genes and collapses over "
+        "unseen ones. The gradient-trajectory and virtual-value arms are not reproduced here: "
+        "they would need the feature extraction re-run against these datasets, which is a "
+        "separate harvest. So this run confirms the paper's setting and its embedding baseline, "
+        "and its disagreement is about what response features do on perturbation response.</p>"
     )
-    return P.section("The source paper's embedding baseline reproduces on its own benchmark",
-                     body + tab, sources=[S_BEELINE])
+    return P.section("The source paper's embedding baseline reproduces, and rests on gene identity",
+                     body + tab + chart, sources=[S_BEELINE])
 
 
 def _beeline_limitation(r: Results) -> str:
@@ -967,9 +1012,9 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "perturbations under the grouped split, with 95% bootstrap intervals over 2,000 "
         "resamples (524 perturbations in HepG2, 705 in Jurkat). The dotted line is the largest "
         "shuffled-label draw in that cell line.",
-        "Every arm that carries a foundation-model gene embedding sits above the null line; "
-        "co-expression, the response-only arms and the random-vector controls sit at or below "
-        "it.",
+        "Every arm that carries a foundation-model gene embedding sits above the null line. "
+        "Co-expression, the random-vector controls and the HepG2 response-only arms sit at or "
+        "below it; two of the three Jurkat response-only arms sit just above it.",
         sources=[S_RUNNER, S_ANALYSIS, S_FIGS],
     )
     con = r.con[(r.con.scope == "full") & (r.con.split == "grouped")
@@ -1010,8 +1055,19 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "null band, including at the uniform virtual value the source paper argues for.",
         sources=[S_SENS, S_FIGS],
     ) if "anchor_sensitivity" in made else ""
+    f_beeline = P.figure(
+        6, "The source paper's BEELINE benchmark, reproduced with its controls",
+        frag("beeline"),
+        "AUPRC on each held-out benchmark cell for the paper's scGPT embedding baseline: what it "
+        "reports, what this reproduction gets, the same pipeline with gene embeddings permuted "
+        "between genes, and the score restricted to pairs whose genes never appear in training "
+        "with its own chance level beside it.",
+        "The reproduction lands near the reported values, and a control that keeps gene identity "
+        "but destroys the embedding's biology recovers most of the score.",
+        sources=[S_BEELINE, S_FIGS],
+    ) if "beeline" in made else ""
     f_split = P.figure(
-        6, "Grouped split against random split, every arm",
+        7, "Grouped split against random split, every arm",
         frag("split_gap"),
         "Each point is one arm in one cell line, scored under both splits. The dotted line is "
         "equality.",
@@ -1020,7 +1076,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RUNNER, S_FIGS],
     )
     f_overlap = P.figure(
-        7, "Effect of sharing control cells with the target",
+        8, "Effect of sharing control cells with the target",
         frag("control_cell_overlap"),
         "Each arm's score against a target built from the same control cells the co-expression "
         "features use, minus its score against a target built from the other half of the "
@@ -1030,7 +1086,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RECOMPUTE, S_ANALYSIS, S_FIGS],
     ) if "control_cell_overlap" in made else ""
     f_transfer = P.figure(
-        8, "Cross-cell-line transfer, over shared genes and over unseen genes",
+        9, "Cross-cell-line transfer, over shared genes and over unseen genes",
         frag("transfer"),
         "The translator is fitted on one screen and scored on the other. The top row scores "
         "every gene shared by the two screens; the bottom row scores only perturbations whose "
@@ -1041,7 +1097,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RUNNER, S_FIGS],
     ) if "transfer" in made else ""
     f_grid = P.figure(
-        9, "All twelve cells of the scoring grid",
+        10, "All twelve cells of the scoring grid",
         frag("grid_cells"),
         "Every arm scored under each combination of target (residual, fold-centred, raw), "
         "weighting, and ceiling correction, grouped split, MLP translator.",
@@ -1060,7 +1116,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         where_signal(r),
         discrimination_section(r, f_disc),
         sensitivity_section(r, f_sens),
-        beeline_section(r),
+        beeline_section(r, f_beeline),
         scope_section(r),
         controls_section(r, f_split, f_overlap),
         transfer_section(r, f_transfer),

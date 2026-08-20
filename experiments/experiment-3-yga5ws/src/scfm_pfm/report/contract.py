@@ -29,6 +29,10 @@ ORDER = "results/summary/ordering_agreement.parquet"
 OVERLAP = "results/summary/control_cell_overlap.parquet"
 RECOMPUTE = "results/recompute_report.json"
 INVENTORY = "results/bundle_inventory.json"
+SENS = "results/summary/sensitivity.parquet"
+HEAD = "results/summary/headline.json"
+DISCV = "results/discrimination_versions.json"
+BEELINE = "results/beeline_reproduction.json"
 
 
 def key(**kw) -> str:
@@ -318,6 +322,129 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             ),
         }
 
+    # the second scoring axis, and what its version pin cost
+    disc: dict = {}
+    for line in ("hepg2", "jurkat"):
+        for arm in ("coexp", "scgpt_emb", "scprint_emb", "transcriptformer_emb",
+                    "scgpt_resp", "transcriptformer_resp", "null_randpair"):
+            disc[f"{arm}_{line}"] = claim(
+                f"perturbation discrimination of {arm} in {line}, cell-eval on effect profiles",
+                r.disc(line, arm), RUNS,
+                key(cell_line=line, scope="full", split="grouped", translator="mlp", arm=arm,
+                    column="discrimination_cell_eval_mean"),
+            )
+    disc["chance"] = 0.5
+    disc["package_version_used"] = str(
+        r.primary("hepg2").cell_eval_version.dropna().iloc[0]
+    )
+    if r.disc_versions:
+        v = r.disc_versions
+        disc["version_pinned_in_preregistration"] = v["pinned_in_preregistration"]
+        disc["pinned_version_exists"] = v["pinned_version_exists"]
+        disc["largest_difference_between_versions"] = claim(
+            "largest difference in the discrimination score of one saved prediction matrix "
+            "between cell-eval 0.5.18/0.5.21 and 0.8.2",
+            v["max_abs_difference_any_file"], DISCV, key(field="max_abs_difference_any_file"),
+        )
+        same = [
+            f for f, d in v["per_file"].items()
+            if abs(d["values"]["0.5.18"] - d["values"]["0.5.21"]) < 1e-12
+        ]
+        disc["versions_0_5_18_and_0_5_21_identical_on"] = f"{len(same)} of {len(v['per_file'])}"
+        claims.append({
+            "claim": "saved prediction matrices where cell-eval 0.5.18 and 0.5.21 agree exactly",
+            "value": disc["versions_0_5_18_and_0_5_21_identical_on"],
+            "source": DISCV, "key": key(field="per_file[*].values"),
+        })
+
+    # anchor and form sensitivity
+    sens: dict = {}
+    head_sens = r.head.get("sensitivity", {})
+    if not r.sens.empty:
+        for model in B.FULL_SCOPE_MODELS:
+            for anchor in ("mean_control", "uniform_virtual", "individual_cells",
+                           "mean_control_masked"):
+                v = r.sens_score(model, anchor)
+                if v != v:
+                    continue
+                sens[f"{model}_at_{anchor}"] = claim(
+                    f"response-only score for {model} at the {anchor} anchor, HepG2",
+                    v, SENS,
+                    key(cell_line="hepg2", scope="full", split="grouped", translator="mlp",
+                        arm=f"{model}_resp@{anchor}" if anchor != "mean_control"
+                        else f"{model}_resp", column=VERDICT),
+                )
+        for p in head_sens.get("paired_against_mean_control", []):
+            sens[f"paired_{p['model']}_{p['anchor']}"] = claim(
+                f"paired difference of the {p['anchor']} anchor against mean control for "
+                f"{p['model']}, HepG2",
+                p["median_difference"], HEAD,
+                key(field="sensitivity.paired_against_mean_control", model=p["model"],
+                    anchor=p["anchor"], statistic="median_difference"),
+            )
+        sens["largest_rerun_difference_against_main_sweep"] = claim(
+            "largest difference between an arm re-run in the sensitivity job and the same arm "
+            "in the main sweep",
+            head_sens.get("max_abs_rerun_difference", float("nan")), HEAD,
+            key(field="sensitivity.max_abs_rerun_difference"),
+        )
+        sens["best_score_at_any_anchor"] = claim(
+            "best response-only score at any anchor in HepG2",
+            max(r.sens_score(m, a)
+                for m in B.FULL_SCOPE_MODELS
+                for a in ("mean_control", "uniform_virtual", "individual_cells",
+                          "mean_control_masked")
+                if r.sens_score(m, a) == r.sens_score(m, a)),
+            SENS, key(cell_line="hepg2", arms="*_resp@*", statistic="max", column=VERDICT),
+        )
+        sens["shuffled_label_ceiling_hepg2"] = lines["hepg2"]["shuffled_label_ceiling_fold_centred"]
+
+    # the source paper's own benchmark
+    bee: dict = {}
+    if r.beeline:
+        b = r.beeline
+        for row in b["rows"]:
+            cell = f"{row['network']}_{row['dataset']}"
+            bee[f"auprc_{cell}"] = claim(
+                f"AUPRC reproduced here on {row['network']}/{row['dataset']}",
+                row["auprc"], BEELINE, key(row=cell, field="auprc"),
+            )
+            bee[f"auprc_reported_{cell}"] = claim(
+                f"AUPRC the source paper reports for its scGPT embedding baseline on "
+                f"{row['network']}/{row['dataset']}",
+                row["paper_baseline_emb_auprc"], BEELINE,
+                key(row=cell, field="paper_baseline_emb_auprc"),
+            )
+            bee[f"auprc_gene_identity_only_{cell}"] = claim(
+                f"AUPRC with gene embeddings permuted between genes on "
+                f"{row['network']}/{row['dataset']}",
+                row["auprc_shuffled_embedding"], BEELINE,
+                key(row=cell, field="auprc_shuffled_embedding"),
+            )
+            bee[f"auprc_unseen_genes_{cell}"] = claim(
+                f"AUPRC on pairs whose genes never appear in training, "
+                f"{row['network']}/{row['dataset']}",
+                row["auprc_unseen_genes"], BEELINE, key(row=cell, field="auprc_unseen_genes"),
+            )
+            bee[f"chance_unseen_genes_{cell}"] = claim(
+                f"chance AUPRC on that unseen-gene slice (its positive fraction), "
+                f"{row['network']}/{row['dataset']}",
+                row["positive_fraction_unseen"], BEELINE,
+                key(row=cell, field="positive_fraction_unseen"),
+            )
+        for field in ("mean_auprc", "paper_mean_auprc", "mean_difference",
+                      "max_abs_difference", "shuffled_embedding_mean_auprc",
+                      "mean_auprc_unseen_genes",
+                      "shuffled_embedding_mean_auprc_unseen_genes",
+                      "mean_fraction_pairs_unseen_genes"):
+            bee[field] = claim(
+                f"BEELINE reproduction, {field.replace('_', ' ')}",
+                b["summary"][field], BEELINE, key(field=f"summary.{field}"),
+            )
+        bee["train_cell"] = f"{b['train_cell']['network']}/{b['train_cell']['dataset']}"
+        bee["train_pairs"] = b["train_cell"]["n_pairs_kept"]
+        bee["arms_not_reproduced"] = b["arms_not_reproduced"]
+
     summary = {
         "lines": lines,
         "paired_vs_coexpression": paired,
@@ -329,6 +456,9 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
         "ordering_agreement_min": ordering,
         "common_scope": common,
         "control_cell_overlap": overlap,
+        "discrimination": disc,
+        "anchor_sensitivity": sens,
+        "beeline_reproduction": bee,
     }
     return summary, claims
 
@@ -343,19 +473,26 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
         "headline": (
             "A gene-pair feature built from a single-cell foundation model's gene embedding "
             "predicts the perturbation-specific part of a CRISPRi knockdown response better "
-            "than statistical co-expression computed from the same control cells. The response "
-            "features harvested in the previous run add nothing and do not clear the null on "
-            "their own."
+            "than statistical co-expression computed from the same control cells, on both cell "
+            "lines and on two scoring axes. The response features harvested in the previous run "
+            "add nothing to the embedding; on their own they are weak, and whether they beat "
+            "co-expression depends on which score is read."
         ),
         "assessment": (
             "Supported for the embedding arms against co-expression, on both cell lines, on a "
-            "post-hoc scoring cell. The pre-registered cell of the scoring grid fails its own "
-            "shuffled-label control, so the verdict is read from the fold-centred cell, which "
-            "the pre-registration also defined but did not designate. Both are reported for "
-            "every arm and they rank the arms the same way (rank correlation at least "
-            f"{n['ordering_agreement_min']['centered']:.4f}). The refuted part of the "
-            "pre-registered hypothesis is the response features: they were the object of the "
-            "previous run and they carry no usable signal here."
+            "post-hoc scoring cell, and corroborated by perturbation discrimination, which uses "
+            "no residualization at all. The pre-registered cell of the scoring grid fails its "
+            "own shuffled-label control, so the verdict is read from the fold-centred cell, "
+            "which the pre-registration also defined but did not designate. Both are reported "
+            "for every arm; they rank the arms similarly (rank correlation at least "
+            f"{n['ordering_agreement_min']['centered']:.4f}) but not identically, and the arms "
+            "that move are the weak ones. The response features are therefore only partly "
+            "refuted: they add nothing to the embedding on either score, but on the "
+            "pre-registered score TranscriptFormer's response features beat co-expression in "
+            "HepG2 by more than the resolvable difference, and on the fold-centred score two of "
+            "three models' response arms clear the null in Jurkat. 'Response features carry no "
+            "usable signal' holds for the fold-centred score in HepG2 and is too strong "
+            "elsewhere."
         ),
         "decision_rule": {
             "preregistered": (
@@ -420,7 +557,19 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             f"arm reaches {hep['best_model_score_fold_centred']:.4f} in HepG2 and "
             f"{jur['best_model_score_fold_centred']:.4f} in Jurkat on a scale where 1.0 is the "
             "reproducibility limit.",
-            "One anchor (mean control) and one translator shape for every arm.",
+            "One translator shape for every arm. The query anchor was varied in HepG2 only, "
+            "over the three models with full-coverage feature blocks; no anchor lifts a "
+            "response-only arm above the shuffled-label ceiling there, and the uniform-virtual "
+            "anchor helps two models and hurts the third.",
+            "The discrimination axis is version-dependent. The pre-registered pin "
+            "cell-eval==0.5.19 was never released; the run used 0.8.2, and the two real "
+            "versions either side of the pin differ from it by up to "
+            f"{n['discrimination'].get('largest_difference_between_versions', float('nan')):.4f} "
+            "on the same predictions, enough to reverse the co-expression-versus-model ranking "
+            "on that axis.",
+            "The source paper's benchmark is reproduced only for its embedding baseline on its "
+            "three human held-out cells; its virtual-value and gradient-trajectory arms would "
+            "need a fresh extraction against those datasets.",
             "Two cell lines from a single screen, so the cross-line result is a weak test of "
             "generality.",
             "The additive node control is identically zero on the fold-centred score by "
@@ -431,7 +580,12 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             "network-inference method could do better.",
         ],
         "artifacts": [
-            RUNS, CON, TRANS, ORDER, OVERLAP, RECOMPUTE, INVENTORY,
+            RUNS, CON, TRANS, ORDER, OVERLAP, RECOMPUTE, INVENTORY, SENS, HEAD, DISCV, BEELINE,
+            "src/scfm_pfm/beeline.py",
+            "src/scfm_pfm/discrimination.py",
+            "scratch/disc_version_check.py",
+            "jobs/run_sensitivity.sh",
+            "jobs/run_beeline.sh",
             "results/summary/headline.json",
             "results/summary/grid.parquet",
             "results/summary/null_band.parquet",

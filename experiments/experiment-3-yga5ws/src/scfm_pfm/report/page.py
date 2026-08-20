@@ -40,14 +40,20 @@ def figure(
     )
 
 
-def table(headers: list[str], rows: list[list[str]], sources: Iterable[str] = ()) -> str:
+def table(
+    headers: list[str],
+    rows: list[list[str]],
+    sources: Iterable[str] = (),
+    caption: str = "",
+) -> str:
     src = f' data-sources="{";".join(sources)}"' if sources else ""
     head = "".join(f"<th>{esc(h)}</th>" for h in headers)
     body = "".join(
         "<tr>" + "".join(f"<td>{c if c.startswith('<') else esc(c)}</td>" for c in row) + "</tr>"
         for row in rows
     )
-    return f"<table{src}><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
+    cap = f"<caption>{esc(caption)}</caption>" if caption else ""
+    return f"<table{src}>{cap}<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
 
 
 def spec(groups: list[tuple[str, list[tuple[str, str]]]]) -> str:
