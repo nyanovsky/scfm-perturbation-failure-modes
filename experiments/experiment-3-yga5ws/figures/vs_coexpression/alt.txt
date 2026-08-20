@@ -1,0 +1,1 @@
+Paired difference between each arm and the co-expression arm on the same held-out perturbations, with bootstrap intervals; zero marks the co-expression baseline itself.

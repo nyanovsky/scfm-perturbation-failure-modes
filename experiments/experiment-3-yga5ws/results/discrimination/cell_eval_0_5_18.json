@@ -1,0 +1,54 @@
+{
+  "tag": "0.5.18",
+  "python": "3.11.12",
+  "runs": [
+    {
+      "file": "hepg2__full__grouped__coexp__mlp.npz",
+      "n_perturbations": 524,
+      "n_genes": 2721,
+      "mean": 0.5134643960142182,
+      "median": 0.5238549618320612,
+      "package_version": "0.5.18"
+    },
+    {
+      "file": "hepg2__full__grouped__scgpt_full__mlp.npz",
+      "n_perturbations": 524,
+      "n_genes": 2721,
+      "mean": 0.46916336460579217,
+      "median": 0.4484732824427481,
+      "package_version": "0.5.18"
+    },
+    {
+      "file": "hepg2__full__grouped__transcriptformer_resp__mlp.npz",
+      "n_perturbations": 524,
+      "n_genes": 2721,
+      "mean": 0.5125903210768603,
+      "median": 0.5209923664122138,
+      "package_version": "0.5.18"
+    },
+    {
+      "file": "jurkat__full__grouped__coexp__mlp.npz",
+      "n_perturbations": 705,
+      "n_genes": 3247,
+      "mean": 0.4986429254061667,
+      "median": 0.4950354609929078,
+      "package_version": "0.5.18"
+    },
+    {
+      "file": "jurkat__full__grouped__transcriptformer_full__mlp.npz",
+      "n_perturbations": 705,
+      "n_genes": 3247,
+      "mean": 0.46318796841205173,
+      "median": 0.4524822695035461,
+      "package_version": "0.5.18"
+    },
+    {
+      "file": "jurkat__full__grouped__transcriptformer_resp__mlp.npz",
+      "n_perturbations": 705,
+      "n_genes": 3247,
+      "mean": 0.49722247371862577,
+      "median": 0.4950354609929078,
+      "package_version": "0.5.18"
+    }
+  ]
+}

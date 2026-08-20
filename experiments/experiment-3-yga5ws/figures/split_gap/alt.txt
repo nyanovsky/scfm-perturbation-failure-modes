@@ -1,0 +1,1 @@
+Each arm's fold-centred score under the grouped split against the random split; the dotted diagonal is equality, and points above it score better when related perturbed genes can appear on both sides.

@@ -1,0 +1,123 @@
+# Run 3 — do scFM response features beat co-expression at predicting perturbation response?
+
+One fixed translator maps a **gene-pair feature** to the **residual** (perturbation-specific)
+log2 fold change of a read-out gene under CRISPRi knockdown of a perturbed gene. Only the input
+feature varies across arms. The arms that matter are the four single-cell foundation models'
+response features against plain statistical co-expression computed from the same control cells —
+the control the UGRN paper never ran.
+
+## Layout
+
+| path | what |
+|---|---|
+| `src/scfm_pfm/config.py` | the pre-registration: scoring rule, splits, translator, arms |
+| `src/scfm_pfm/metrics.py` | reliability weights, residual ceiling, weighted correlation, bootstrap, power |
+| `src/scfm_pfm/fetch.py` | pulls run 1 / run 2 artifacts into a job from a signed-link manifest |
+| `src/scfm_pfm/ingest/` | the one bundle every later job reads: targets, co-expression, features |
+| `src/scfm_pfm/translate/` | arms, splits, the translator, the sweep runner |
+| `src/scfm_pfm/report/` | figures and the report |
+| `results/handoff/` | small tables that travel with the worktree into a job |
+
+## How to reproduce
+
+```sh
+# 1. mint signed links for the run 1 / run 2 objects (pod-side, see note below),
+#    then build the bundle in one CPU job
+python -m scfm_pfm.ingest.build --urls results/handoff/urls/artifact_urls.json --work ./_work
+
+# 2. the translator sweep (GPU job, mounts the ingest job's volume)
+python -m scfm_pfm.translate.runner --shard <k> --n-shards <n>
+
+# 3. scoring, figures, report
+python -m scfm_pfm.report.build
+```
+
+### Reading run 1 and run 2 from inside a job
+
+A fresh on-demand job has no artifact-store credential, and run 2's job volumes have passed their
+retention, so the feature blocks cannot be mounted. The supported path is a short-lived signed
+download link per object, minted pod-side with the artifact-store tool and written to
+`results/handoff/urls/artifact_urls.json`, which travels in the untracked part of the worktree
+snapshot. Both that file and the helper that composes it embed live one-hour AWS session
+credentials and are deliberately **not** committed; the durable `artifact://` refs they point at
+are listed in `config.py` (`RUN1`, `RUN2`, `BLOCK_PREFIX`). The ingest job consolidates everything
+into one bundle, so every later job reads the bundle rather than the store.
+
+## Outputs
+
+Durable outputs live under this experiment's artifact root
+`artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/`,
+written by on-demand jobs whose output flow-back uploads `$SILICO_EXPERIMENT_ARTIFACTS_DIR`.
+Small reviewable copies live in this worktree.
+
+| output | location | what it is |
+|---|---|---|
+| bundle | `bundle/<line>/` (store) | targets (effect + both half-estimates), co-expression and node features, per-model response features, `reference.json` |
+| main sweep | `sweep/` (store), 8 shards | 374 runs: both lines x full and 250-gene common scopes x grouped and random splits, every arm, both translators |
+| common + random | `sweep_common_random/` (store) | the common-scope random split, added after review |
+| node controls | `sweep_node/`, `sweep_node_common/` (store) | additive node, free node, shuffled-gene node |
+| co-expression half check | `leakcheck/` (store) | `coexp_check` on the other control half |
+| transfer | `transfer2/`, `transfer_unseen/` (store) | cross-line transfer, three reference modes, full / common / unseen-gene scopes |
+| control-split targets | `ctrl_split_targets/` (store) | effect recomputed against each control half and against all control cells, plus `recompute_report.json` |
+| control-overlap scoring | `alt_target_ctrl0/`, `alt_target_ctrl1/`, `alt_target_ctrlall/` (store) | the key arms rescored against each of those targets |
+| anchor sensitivity | `sensitivity/` (store) | HepG2 response arms at the uniform-virtual, individual-cells and masked anchors, with each model's mean-control arm re-run as the in-job reference |
+| no-op query record | `results/handoff/no_op_queries_per_gene.csv`, `results/verification/no_op_correction.json` (worktree) | which (perturbed gene, value) queries were no-ops and in how many cells, derived from run 2's per-query records, plus the five checks behind the per-query exclusion |
+| BEELINE reproduction | `beeline/beeline_reproduction.json` (store), `results/beeline_reproduction.json` (worktree) | the source paper's scGPT embedding baseline re-fitted on its own benchmark, with a permuted-embedding control and an unseen-gene slice |
+| discrimination versions | `results/discrimination_versions.json`, `results/discrimination/` (worktree) | the same saved predictions rescored under cell-eval 0.5.18, 0.5.21 and 0.8.2 |
+| merged tables | `results/summary/` (worktree) | `runs.parquet`, `contrasts.parquet`, `grid.parquet`, `transfer_runs.parquet`, `ordering_agreement.parquet`, `control_cell_overlap.parquet`, `null_band.parquet`, `headline.json` |
+| target recompute report | `results/recompute_report.json` (worktree) | agreement of each recomputed target with run 1's effect matrix, reliability weights, cells kept |
+| report contract | `report_summary.json`, `claims_manifest.json` (worktree) | generated from the tables; every claim names its source file and row |
+| figures | `figures/<name>/` (worktree) | one bundle per figure: interactive HTML, `data.json`, alt text |
+| report | published Results page for this experiment | built by `scfm_pfm.report.build` from `results/summary` |
+
+`results/summary/per_perturbation.parquet` and its transfer twin are regenerated by the
+analysis command from the shards and are deliberately not committed.
+
+### Reproducing the analysis and the report
+
+```sh
+# shards pulled from the store into scratch/dl/<wave>/, later waves winning on overlap
+PYTHONPATH=src apy -m scfm_pfm.analysis \
+  --sweep scratch/dl/leakcheck,scratch/dl/sweep,scratch/dl/sweep_common_random,\
+scratch/dl/sweep_node,scratch/dl/sweep_node_common,scratch/dl/alt_target_ctrl0,\
+scratch/dl/alt_target_ctrl1,scratch/dl/alt_target_ctrlall \
+  --transfer-sweep scratch/dl/transfer2,scratch/dl/transfer_unseen \
+  --sensitivity-sweep scratch/dl/sensitivity \
+  --out results/summary
+PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.contract --summary results/summary
+PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.build \
+  --summary results/summary --out "$SILICO_APP_DIR"
+```
+
+The no-op query table is derived once on the pod from run 2's per-query records and committed,
+because the aggregate count per value cannot say which queries it refers to:
+
+```sh
+# the three run 2 query_summary.parquet files are pulled with signed links first
+PYTHONPATH=src apy -m scfm_pfm.ingest.no_op \
+  --aggregate results/handoff/no_op_queries.csv \
+  --query-summary scgpt:hepg2:individual_cells:scratch/noop/qs_scgpt_hepg2_ic.parquet \
+  --query-summary scprint:hepg2:individual_cells:scratch/noop/qs_scprint_hepg2_ic.parquet \
+  --query-summary transcriptformer:hepg2:individual_cells:scratch/noop/qs_transcriptformer_hepg2_ic.parquet \
+  --out results/handoff/no_op_queries_per_gene.csv
+# the checks behind the correction, against run 2's own arrays
+PYTHONPATH=src apy -m scfm_pfm.ingest.no_op_check --block <model>:<line>:<anchor>:<vvp>:<qs> \
+  --out results/verification/no_op_correction.json
+```
+
+The discrimination axis is computed with Arc Institute's `cell-eval`. The pre-registration pinned
+0.5.19, which was never released (PyPI publishes 0.1.0 then 0.5.33 onward; the upstream tags jump
+0.5.18 to 0.5.21), so the jobs resolved 0.8.2 and `scratch/disc_version_check.py` rescores the
+saved predictions under 0.5.18, 0.5.21 and 0.8.2 to show what that choice costs.
+
+`scratch/verify_claims.py` re-reads each entry of `claims_manifest.json` from the file and key it
+names and reports any disagreement. It resolves 95 of the 159 keys; the rest use prose locators
+that the script does not parse, and none of the values it could re-read disagreed.
+
+No external model provider is used anywhere in this run: every number comes from the four
+open single-cell foundation models' cached features and from code in this worktree.
+
+Source experiments: run 1 `exp_01m09d588jez38j6trqk30499z` (effect matrices, split-half vectors),
+run 2 `exp_01m0c7ecnnf3fvxskxj5nygwcv` (response features for four models at three anchors).
+Raw control cells are rebuilt from GEO GSE264667 because run 1 persisted only pooled control means.
+Seed 42.

@@ -1,0 +1,474 @@
+{
+  "headline": "A gene-pair feature built from a single-cell foundation model's gene embedding predicts the perturbation-specific part of a CRISPRi knockdown response better than statistical co-expression computed from the same control cells, in both cell lines and on both splits. The response features harvested in the previous run add nothing to the embedding; on their own they are weak, and whether they beat co-expression depends on which score is read.",
+  "assessment": "Supported for the embedding arms against co-expression, on both cell lines, on a post-hoc scoring cell. The second pre-registered scoring axis, perturbation discrimination, does not settle it either way: the version pinned before the run does not exist upstream, and the two existing versions nearest it reverse the model-versus-co-expression ordering on the same saved predictions, so that axis is reported as version-dependent and inconclusive. The pre-registered cell of the scoring grid fails its own shuffled-label control, so the verdict is read from the fold-centred cell, which the pre-registration also defined but did not designate. Both are reported for every arm; they rank the arms similarly (rank correlation at least 0.8247) but not identically, and the arms that move are the weak ones. The response features are therefore only partly refuted: they add nothing to the embedding on either score, but on the pre-registered score TranscriptFormer's response features beat co-expression in HepG2 by more than the resolvable difference, and on the fold-centred score two of three models' response arms clear the null in Jurkat. 'Response features carry no usable signal' holds for the fold-centred score in HepG2 and is too strong elsewhere.",
+  "decision_rule": {
+    "preregistered": "residual target, reliability-weighted, ceiling-corrected per-perturbation Pearson correlation, median over held-out perturbations of a grouped split, compared to co-expression as a paired difference",
+    "used_for_the_verdict": "the same quantity after the held-out fold's per-gene mean is removed from both prediction and measurement (the fold-centred cell of the same grid), chosen post hoc because the shuffled-label control does not sit at zero on the pre-registered cell",
+    "null": "labels permuted inside the training fold, five draws per null-bearing arm; an arm counts only if it exceeds the largest draw in its cell of the sweep"
+  },
+  "methods": {
+    "data": "Genome-wide CRISPRi Perturb-seq, GSE264667, HepG2 and Jurkat. HepG2 524 in-scope perturbations x 2721 read-out genes; Jurkat 705 x 3247.",
+    "target": "per-gene log2 fold change against the pooled non-targeting control, residualised by removing each read-out gene's mean effect across perturbations; split-half reproducibility ceiling 0.6546 (HepG2) and 0.5014 (Jurkat), Spearman-Brown corrected",
+    "arms": "four models (scGPT, AIDO.Cell, scPRINT, TranscriptFormer) x four feature sets (gene embedding, run 2 response summary, both, either plus co-expression); statistical co-expression (Pearson, Spearman, mutual information, partial correlation) from one half of the non-targeting control cells; node-only controls (additive and free); random vector per gene and per pair; shuffled-label draws",
+    "translator": "one fixed network for every arm: 128 and 64 ReLU units, Adam 1e-3, batch 4096, 30 epochs, reliability-weighted MSE. Ridge regression alongside as a capacity control. Seed 42, five folds, grouped and random splits.",
+    "transfer": "fitted on one cell line and scored on the other over the shared read-out set, with three choices of what the destination response is measured against and an unseen-gene scope that drops any destination perturbation whose gene was perturbed in the training line",
+    "control_cell_overlap": "the effect target was recomputed from the raw count matrices three times, against the control half the co-expression features use, the other half, and all control cells, and the key arms rescored against each"
+  },
+  "results": {
+    "lines": {
+      "hepg2": {
+        "n_perturbations": 524,
+        "n_readout": 2721,
+        "best_model_arm": "scgpt_emb",
+        "best_model_score_fold_centred": 0.10887821051526674,
+        "best_model_ci": [
+          0.0790922144775752,
+          0.1417428348371028
+        ],
+        "best_model_score_preregistered": 0.27186890674361275,
+        "coexpression_score_fold_centred": 0.00517619255164999,
+        "coexpression_ci": [
+          -0.006354608820104509,
+          0.016917808922339926
+        ],
+        "shuffled_label_ceiling_fold_centred": 0.028601970174156315,
+        "shuffled_label_ceiling_preregistered": 0.026616425215650726,
+        "best_response_only_score": 0.01212184944463636,
+        "node_free_score": 0.036564355768129296,
+        "residual_ceiling": 0.654599714269554,
+        "residual_ceiling_weighted": 0.6847125460703934,
+        "fold_centred_ceiling_weighted": 0.5744401635887746
+      },
+      "jurkat": {
+        "n_perturbations": 705,
+        "n_readout": 3247,
+        "best_model_arm": "transcriptformer_emb",
+        "best_model_score_fold_centred": 0.17260292953650547,
+        "best_model_ci": [
+          0.13934274496444046,
+          0.20539077506138154
+        ],
+        "best_model_score_preregistered": 0.23135329957684056,
+        "coexpression_score_fold_centred": 0.03363644111375723,
+        "coexpression_ci": [
+          0.01679300819737662,
+          0.049287191592748865
+        ],
+        "shuffled_label_ceiling_fold_centred": 0.020402085523727964,
+        "shuffled_label_ceiling_preregistered": 0.023511483136266508,
+        "best_response_only_score": 0.03438076130368694,
+        "node_free_score": 0.018928220530529012,
+        "residual_ceiling": 0.5013870706269954,
+        "residual_ceiling_weighted": 0.5071819396306456,
+        "fold_centred_ceiling_weighted": 0.4437062127878906
+      }
+    },
+    "paired_vs_coexpression": {
+      "hepg2": {
+        "arm": "scgpt_emb",
+        "median_difference": 0.038620726192005406,
+        "ci": [
+          0.011831537384347408,
+          0.06500279350238777
+        ],
+        "min_resolvable_difference": 0.031074854134122174
+      },
+      "jurkat": {
+        "arm": "transcriptformer_emb",
+        "median_difference": 0.07466061184064277,
+        "ci": [
+          0.051495871138448904,
+          0.10062858168218769
+        ],
+        "min_resolvable_difference": 0.029195090065073162
+      }
+    },
+    "metric_check": {
+      "shuffled_draw_ridge_preregistered_hepg2": 0.04123434296740153,
+      "shuffled_draw_ridge_fold_centred_hepg2": 0.011431149329559149,
+      "coexpression_preregistered_hepg2": 0.04879340318413257,
+      "model_arms_clearing_null_hepg2": "9 of 12",
+      "shuffled_draw_ridge_preregistered_jurkat": 0.04439969952222918,
+      "shuffled_draw_ridge_fold_centred_jurkat": 0.017821899627748813,
+      "coexpression_preregistered_jurkat": 0.044622162296810125,
+      "model_arms_clearing_null_jurkat": "11 of 12"
+    },
+    "feature_deltas": {
+      "largest_response_only": 0.03438076130368694,
+      "largest_change_from_adding_response": 0.02010386840235584,
+      "largest_change_from_adding_coexpression": 0.02953904269926491
+    },
+    "split_design": {
+      "node_free_random_split_hepg2": 0.20215514910966462,
+      "node_free_grouped_split_hepg2": 0.036564355768129296
+    },
+    "transfer": {
+      "transfer_full|hepg2->jurkat": {
+        "n_held_out": 261,
+        "best_model_arm": "transcriptformer_emb",
+        "best_model_score": 0.2896473625690525,
+        "best_model_ci": [
+          0.2440276925441045,
+          0.3264797839696275
+        ],
+        "gene_identity_null": 0.2516594327773732,
+        "coexpression": -0.023469549136396203
+      },
+      "transfer_full|jurkat->hepg2": {
+        "n_held_out": 250,
+        "best_model_arm": "transcriptformer_emb",
+        "best_model_score": 0.2547641634542399,
+        "best_model_ci": [
+          0.21040438634209824,
+          0.2830722913632741
+        ],
+        "gene_identity_null": 0.23644391550538174,
+        "coexpression": 0.0024356531490913546
+      },
+      "transfer_unseen|hepg2->jurkat": {
+        "n_held_out": 89,
+        "best_model_arm": "transcriptformer_full",
+        "best_model_score": 0.08496481728118072,
+        "best_model_ci": [
+          0.02483380746796159,
+          0.12611484802560186
+        ],
+        "gene_identity_null": 0.003235993381285271,
+        "coexpression": -0.009072121542023437
+      },
+      "transfer_unseen|jurkat->hepg2": {
+        "n_held_out": 78,
+        "best_model_arm": "transcriptformer_emb",
+        "best_model_score": 0.09392448963999318,
+        "best_model_ci": [
+          0.060810579297615464,
+          0.14941236168159255
+        ],
+        "gene_identity_null": -0.01506851170934811,
+        "coexpression": -0.007117000292288443
+      }
+    },
+    "transfer_reference_mode": {
+      "largest_shift_from_reference_choice": 0.07527144403163899,
+      "lowest_rank_correlation_across_modes": 0.7752682100508189
+    },
+    "ordering_agreement_min": {
+      "centered": 0.8246941045606229,
+      "raw": -0.13192436040044492,
+      "residual": 0.9817575083426029
+    },
+    "common_scope": {
+      "hepg2": {
+        "shuffled_label_ceiling": 0.023987556316609406,
+        "n_perturbations": 250,
+        "scgpt": 0.08541538576822985,
+        "scprint": 0.030158908509280286,
+        "transcriptformer": 0.0788348633866773,
+        "aido_cell": -0.0005498499915655824
+      },
+      "jurkat": {
+        "shuffled_label_ceiling": 0.026461468326643773,
+        "n_perturbations": 250,
+        "scgpt": 0.08540041034176676,
+        "scprint": 0.10995496367030134,
+        "transcriptformer": 0.07899366141783182,
+        "aido_cell": 0.018098790112290285
+      }
+    },
+    "control_cell_overlap": {
+      "largest_shift_coexpression_arms": 0.02397178537696014,
+      "largest_shift_embedding_arms": 0.0191519276253313,
+      "per_arm": [
+        {
+          "cell_line": "hepg2",
+          "arm": "coexp",
+          "ctrl0": 0.02280865350752324,
+          "ctrl1": 0.02537839731870703,
+          "ctrlall": 0.02047522745395003,
+          "delta": 0.0025697438111837896
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "coexp_check",
+          "ctrl0": 0.022782673939888556,
+          "ctrl1": 0.027199590941860637,
+          "ctrlall": 0.013982499769147953,
+          "delta": 0.004416917001972082
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "coexp_node",
+          "ctrl0": 0.056874846962621205,
+          "ctrl1": 0.08812145903546119,
+          "ctrlall": 0.049472634999329836,
+          "delta": 0.031246612072839984
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "node_pairmlp",
+          "ctrl0": 0.04156912632213379,
+          "ctrl1": 0.06617438175601739,
+          "ctrlall": 0.04091748343620901,
+          "delta": 0.024605255433883602
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "null_randpair",
+          "ctrl0": -4.423053365883352e-05,
+          "ctrl1": 0.0012192742652461237,
+          "ctrlall": -0.00011848872709309153,
+          "delta": 0.0012635047989049573
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "scgpt_emb",
+          "ctrl0": 0.0721568746926623,
+          "ctrl1": 0.07038129566034439,
+          "ctrlall": 0.07408929474797911,
+          "delta": -0.0017755790323179116
+        },
+        {
+          "cell_line": "hepg2",
+          "arm": "transcriptformer_emb",
+          "ctrl0": 0.05795835321000803,
+          "ctrl1": 0.05892146761476271,
+          "ctrlall": 0.06213831944291482,
+          "delta": 0.0009631144047546822
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "coexp",
+          "ctrl0": 0.019334224232015293,
+          "ctrl1": 0.029082045375606467,
+          "ctrlall": 0.024574696720907247,
+          "delta": 0.009747821143591174
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "coexp_check",
+          "ctrl0": 0.020720226605978234,
+          "ctrl1": 0.04469201198293837,
+          "ctrlall": 0.025678193121798604,
+          "delta": 0.02397178537696014
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "coexp_node",
+          "ctrl0": 0.06593898294163118,
+          "ctrl1": 0.05702096549366537,
+          "ctrlall": 0.07759943512726558,
+          "delta": -0.00891801744796581
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "node_pairmlp",
+          "ctrl0": 0.056387378600081375,
+          "ctrl1": 0.048949762491540816,
+          "ctrlall": 0.05682079245093024,
+          "delta": -0.0074376161085405595
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "null_randpair",
+          "ctrl0": -0.002709410221046382,
+          "ctrl1": -0.0018661010851957506,
+          "ctrlall": -0.0032700907556226628,
+          "delta": 0.0008433091358506313
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "scgpt_emb",
+          "ctrl0": 0.097917416582175,
+          "ctrl1": 0.1170693442075063,
+          "ctrlall": 0.11654452201145854,
+          "delta": 0.0191519276253313
+        },
+        {
+          "cell_line": "jurkat",
+          "arm": "transcriptformer_emb",
+          "ctrl0": 0.17921129468485705,
+          "ctrl1": 0.16160200380147635,
+          "ctrlall": 0.14641027616661595,
+          "delta": -0.0176092908833807
+        }
+      ],
+      "recomputed_target_agreement_hepg2": 0.7712414639996538,
+      "recomputed_reliability_weight_hepg2": 0.27689638221410134,
+      "recomputed_target_agreement_jurkat": 0.716054297215079,
+      "recomputed_reliability_weight_jurkat": 0.15690502388833077
+    },
+    "discrimination": {
+      "coexp_hepg2": 0.46472015034088926,
+      "scgpt_emb_hepg2": 0.5308803391410757,
+      "scprint_emb_hepg2": 0.52105428005361,
+      "transcriptformer_emb_hepg2": 0.522481935784628,
+      "scgpt_resp_hepg2": 0.4671384243342462,
+      "transcriptformer_resp_hepg2": 0.46654113979371825,
+      "null_randpair_hepg2": 0.4636821863527766,
+      "coexp_jurkat": 0.48445450430058845,
+      "scgpt_emb_jurkat": 0.5572194557617826,
+      "scprint_emb_jurkat": 0.5698888385896081,
+      "transcriptformer_emb_jurkat": 0.5793350435088779,
+      "scgpt_resp_jurkat": 0.4925064131582919,
+      "transcriptformer_resp_jurkat": 0.49307378904481663,
+      "null_randpair_jurkat": 0.4796881444595342,
+      "chance": 0.5,
+      "package_version_used": "0.8.2",
+      "version_pinned_in_preregistration": "0.5.19",
+      "pinned_version_exists": false,
+      "largest_difference_between_versions": 0.1140666968462351,
+      "versions_0_5_18_and_0_5_21_identical_on": "6 of 6",
+      "hepg2_scgpt_full_at_cell_eval_0_5_18": 0.46916336460579217,
+      "hepg2_scgpt_full_at_cell_eval_0_8_2": 0.5377126915680905,
+      "hepg2_coexp_at_cell_eval_0_5_18": 0.5134643960142182,
+      "hepg2_coexp_at_cell_eval_0_8_2": 0.46472015034088926,
+      "jurkat_transcriptformer_full_at_cell_eval_0_5_18": 0.46318796841205173,
+      "jurkat_transcriptformer_full_at_cell_eval_0_8_2": 0.5772546652582868,
+      "jurkat_coexp_at_cell_eval_0_5_18": 0.4986429254061667,
+      "jurkat_coexp_at_cell_eval_0_8_2": 0.48445450430058845,
+      "ordering_reverses_between_versions": true
+    },
+    "anchor_sensitivity": {
+      "scgpt_at_mean_control": 0.003837494762953757,
+      "scgpt_at_uniform_virtual": 0.013165212150305739,
+      "scgpt_at_individual_cells": 0.0017487609077429754,
+      "scgpt_at_mean_control_masked": 0.005883320991035053,
+      "scprint_at_mean_control": 0.006874742485344232,
+      "scprint_at_uniform_virtual": 0.019230538550475566,
+      "scprint_at_individual_cells": 0.020762120270280134,
+      "scprint_at_mean_control_masked": 0.008804479414763994,
+      "transcriptformer_at_mean_control": 0.01212184944463636,
+      "transcriptformer_at_uniform_virtual": -0.003639864258383379,
+      "transcriptformer_at_individual_cells": 0.007589210858422742,
+      "paired_scgpt_individual_cells": -0.001583089632141906,
+      "paired_scgpt_mean_control_masked": 0.0015505691559313814,
+      "paired_scgpt_uniform_virtual": 0.007069647791952201,
+      "paired_scprint_individual_cells": 0.010525497891521116,
+      "paired_scprint_mean_control_masked": 0.0014625829509607377,
+      "paired_scprint_uniform_virtual": 0.009364684063875275,
+      "paired_transcriptformer_individual_cells": -0.0034353697739806163,
+      "paired_transcriptformer_uniform_virtual": -0.011946091401636012,
+      "largest_rerun_difference_against_main_sweep": 0.0,
+      "best_score_at_any_anchor": 0.020762120270280134,
+      "shuffled_label_ceiling_hepg2": 0.028601970174156315
+    },
+    "no_op_query_correction": {
+      "scgpt_hepg2_individual_cells__n_no_op_queries": 379.0,
+      "scgpt_hepg2_individual_cells__n_query_rows_touched": 244.0,
+      "scgpt_hepg2_individual_cells__n_query_rows_everywhere_no_op": 2.0,
+      "scgpt_hepg2_individual_cells__max_abs_feature_change_partial_rows": 1.9058454441278627e-06,
+      "scgpt_hepg2_individual_cells__check__standardized_is_per_query_zscore": 1.9058454441278627e-06,
+      "scgpt_hepg2_individual_cells__check__raw_is_plain_cell_mean": 3.502506734079921e-16,
+      "scgpt_hepg2_individual_cells__check__undefined_rows_are_everywhere_no_op": 0.0,
+      "scgpt_hepg2_individual_cells__check__shipped_feature_zero_on_undefined_rows": 0.0,
+      "scgpt_hepg2_individual_cells__check__correction_reproduces_shipped_feature": 1.9058454441278627e-06,
+      "scprint_hepg2_individual_cells__n_no_op_queries": 126.0,
+      "scprint_hepg2_individual_cells__n_query_rows_touched": 117.0,
+      "scprint_hepg2_individual_cells__n_query_rows_everywhere_no_op": 0.0,
+      "scprint_hepg2_individual_cells__max_abs_feature_change_partial_rows": 1.8936748276132676e-06,
+      "scprint_hepg2_individual_cells__check__standardized_is_per_query_zscore": 2.3875102783676994e-06,
+      "scprint_hepg2_individual_cells__check__raw_is_plain_cell_mean": 1.1403968558145906e-09,
+      "scprint_hepg2_individual_cells__check__undefined_rows_are_everywhere_no_op": 0.0,
+      "scprint_hepg2_individual_cells__check__shipped_feature_zero_on_undefined_rows": 0.0,
+      "scprint_hepg2_individual_cells__check__correction_reproduces_shipped_feature": 2.3875102783676994e-06,
+      "transcriptformer_hepg2_individual_cells__n_no_op_queries": 79.0,
+      "transcriptformer_hepg2_individual_cells__n_query_rows_touched": 70.0,
+      "transcriptformer_hepg2_individual_cells__n_query_rows_everywhere_no_op": 0.0,
+      "transcriptformer_hepg2_individual_cells__max_abs_feature_change_partial_rows": 1.808860254470801e-06,
+      "transcriptformer_hepg2_individual_cells__check__standardized_is_per_query_zscore": 2.683247778634268e-06,
+      "transcriptformer_hepg2_individual_cells__check__raw_is_plain_cell_mean": 1.9643914469092145e-09,
+      "transcriptformer_hepg2_individual_cells__check__undefined_rows_are_everywhere_no_op": 0.0,
+      "transcriptformer_hepg2_individual_cells__check__shipped_feature_zero_on_undefined_rows": 0.0,
+      "transcriptformer_hepg2_individual_cells__check__correction_reproduces_shipped_feature": 2.683247778634268e-06,
+      "checks_passed": "15 of 15",
+      "values_the_earlier_whole_dose_rule_deleted": {
+        "scgpt": [
+          0.0
+        ],
+        "scprint": [
+          0.0
+        ],
+        "transcriptformer": [
+          0.0,
+          64.0
+        ]
+      }
+    },
+    "beeline_reproduction": {
+      "auprc_STRING_hHEP": 0.8237577662933298,
+      "auprc_reported_STRING_hHEP": 0.732,
+      "auprc_gene_identity_only_STRING_hHEP": 0.7237763274495251,
+      "auprc_unseen_genes_STRING_hHEP": 0.5919840495632342,
+      "chance_unseen_genes_STRING_hHEP": 0.39870914816856384,
+      "auprc_Non-Specific_hHEP": 0.6625730364853395,
+      "auprc_reported_Non-Specific_hHEP": 0.586,
+      "auprc_gene_identity_only_Non-Specific_hHEP": 0.6331143305945971,
+      "auprc_unseen_genes_Non-Specific_hHEP": 0.545943083262657,
+      "chance_unseen_genes_Non-Specific_hHEP": 0.48878777027130127,
+      "auprc_Specific_hHEP": 0.5307612578292904,
+      "auprc_reported_Specific_hHEP": 0.556,
+      "auprc_gene_identity_only_Specific_hHEP": 0.5243049480358106,
+      "auprc_unseen_genes_Specific_hHEP": 0.6014810828693786,
+      "chance_unseen_genes_Specific_hHEP": 0.5961751341819763,
+      "mean_auprc": 0.6723640202026532,
+      "paper_mean_auprc": 0.6246666666666667,
+      "mean_difference": 0.04769735353598655,
+      "max_abs_difference": 0.09175776629332977,
+      "shuffled_embedding_mean_auprc": 0.6270652020266443,
+      "mean_auprc_unseen_genes": 0.5798027385650899,
+      "shuffled_embedding_mean_auprc_unseen_genes": 0.5119055777072363,
+      "mean_fraction_pairs_unseen_genes": 0.39817278267246903,
+      "train_cell": "STRING/hESC",
+      "train_pairs": 8065,
+      "arms_not_reproduced": [
+        "VVP and GDT: would need a fresh feature extraction against the BEELINE datasets",
+        "the mouse datasets: their symbols are outside the human checkpoint's vocabulary"
+      ]
+    }
+  },
+  "limitations": [
+    "The ranking metric is post hoc; the pre-registered cell is reported everywhere and fails its own shuffled-label control.",
+    "Scores are small in absolute terms even after the ceiling correction: the best arm reaches 0.1089 in HepG2 and 0.1726 in Jurkat on a scale where 1.0 is the reproducibility limit.",
+    "The individual-cells anchor is a four-cell sample. Its no-op queries are excluded per (perturbed gene, value) and the exclusion is exact on the standardized feature, but four control cells is a small sample of the anchor.",
+    "One translator shape for every arm. The query anchor was varied in HepG2 only, over the three models with full-coverage feature blocks; no anchor lifts a response-only arm above the shuffled-label ceiling there (0.0208 against 0.0286).",
+    "The discrimination axis is inconclusive, not a second confirmation. The pre-registered pin cell-eval==0.5.19 was never released; the run used 0.8.2, and the two existing versions nearest the pin differ from it by up to 0.1141 on the same saved predictions, which reverses the co-expression-versus-model ranking on that axis in both cell lines.",
+    "The source paper's benchmark is reproduced only for its embedding baseline on its three human held-out cells; its virtual-value and gradient-trajectory arms would need a fresh extraction against those datasets.",
+    "Two cell lines from a single screen, so the cross-line result is a weak test of generality.",
+    "The additive node control is identically zero on the fold-centred score by construction, so the free node network is the informative version.",
+    "AIDO.Cell is only comparable on the 250-gene subset it was harvested on; it is not shown to be worse than the others there, only not shown to work.",
+    "Co-expression is represented by four statistics over control cells; a fitted network-inference method could do better."
+  ],
+  "artifacts": [
+    "results/summary/runs.parquet",
+    "results/summary/contrasts.parquet",
+    "results/summary/transfer_runs.parquet",
+    "results/summary/ordering_agreement.parquet",
+    "results/summary/control_cell_overlap.parquet",
+    "results/recompute_report.json",
+    "results/bundle_inventory.json",
+    "results/summary/sensitivity.parquet",
+    "results/summary/headline.json",
+    "results/discrimination_versions.json",
+    "results/beeline_reproduction.json",
+    "results/verification/no_op_correction.json",
+    "results/handoff/no_op_queries_per_gene.csv",
+    "src/scfm_pfm/ingest/no_op.py",
+    "src/scfm_pfm/ingest/no_op_check.py",
+    "src/scfm_pfm/beeline.py",
+    "src/scfm_pfm/discrimination.py",
+    "scratch/disc_version_check.py",
+    "jobs/run_sensitivity.sh",
+    "jobs/run_beeline.sh",
+    "results/summary/headline.json",
+    "results/summary/grid.parquet",
+    "results/summary/null_band.parquet",
+    "src/scfm_pfm/translate/runner.py",
+    "src/scfm_pfm/translate/arms.py",
+    "src/scfm_pfm/translate/trainers.py",
+    "src/scfm_pfm/metrics.py",
+    "src/scfm_pfm/analysis.py",
+    "src/scfm_pfm/ingest/recompute_effects.py",
+    "src/scfm_pfm/report/figures.py",
+    "src/scfm_pfm/report/build.py"
+  ]
+}

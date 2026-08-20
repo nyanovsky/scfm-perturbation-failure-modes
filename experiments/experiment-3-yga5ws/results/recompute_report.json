@@ -1,0 +1,68 @@
+{
+  "eps_cp10k": 1.0,
+  "seed": 42,
+  "lines": {
+    "hepg2": {
+      "n_cells_kept": 142336,
+      "n_control_cells": 4916,
+      "n_batches": 56,
+      "targets": {
+        "ctrlall": {
+          "n_batches_used": 54,
+          "median_agreement_with_run1_effect": 0.7712414639996538,
+          "q10_agreement_with_run1_effect": 0.40207450991022164,
+          "median_reliability_weight": 0.27689638221410134,
+          "perturbations_without_cells": 55,
+          "median_abs_effect": 0.146267831325531
+        },
+        "ctrl0": {
+          "n_batches_used": 54,
+          "median_agreement_with_run1_effect": 0.768660409876813,
+          "q10_agreement_with_run1_effect": 0.39781783103094903,
+          "median_reliability_weight": 0.2714107722698761,
+          "perturbations_without_cells": 55,
+          "median_abs_effect": 0.1470937877893448
+        },
+        "ctrl1": {
+          "n_batches_used": 54,
+          "median_agreement_with_run1_effect": 0.7657731398180299,
+          "q10_agreement_with_run1_effect": 0.4006089036775959,
+          "median_reliability_weight": 0.27011126886276127,
+          "perturbations_without_cells": 55,
+          "median_abs_effect": 0.14739760756492615
+        }
+      }
+    },
+    "jurkat": {
+      "n_cells_kept": 262325,
+      "n_control_cells": 12004,
+      "n_batches": 55,
+      "targets": {
+        "ctrlall": {
+          "n_batches_used": 55,
+          "median_agreement_with_run1_effect": 0.716054297215079,
+          "q10_agreement_with_run1_effect": 0.3917758177789631,
+          "median_reliability_weight": 0.15690502388833077,
+          "perturbations_without_cells": 35,
+          "median_abs_effect": 0.14236678183078766
+        },
+        "ctrl0": {
+          "n_batches_used": 55,
+          "median_agreement_with_run1_effect": 0.7117592641754101,
+          "q10_agreement_with_run1_effect": 0.38691108836758914,
+          "median_reliability_weight": 0.15630364617685444,
+          "perturbations_without_cells": 35,
+          "median_abs_effect": 0.1427219808101654
+        },
+        "ctrl1": {
+          "n_batches_used": 55,
+          "median_agreement_with_run1_effect": 0.7111095973016486,
+          "q10_agreement_with_run1_effect": 0.3897768179226537,
+          "median_reliability_weight": 0.15609362417430356,
+          "perturbations_without_cells": 35,
+          "median_abs_effect": 0.14273004233837128
+        }
+      }
+    }
+  }
+}

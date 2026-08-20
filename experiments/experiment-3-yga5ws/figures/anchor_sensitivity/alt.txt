@@ -1,0 +1,1 @@
+Response-only score in HepG2 for each model at four query anchors: the on-distribution mean control, the uniform virtual cell, individual control cells, and the masked read-out, against the shuffled-label null.

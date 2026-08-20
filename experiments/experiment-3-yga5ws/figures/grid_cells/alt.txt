@@ -1,0 +1,1 @@
+Heatmap of all twelve cells of the correlation grid for every arm: the residual, fold-centred and raw targets, each weighted and unweighted, each with and without the ceiling correction.
