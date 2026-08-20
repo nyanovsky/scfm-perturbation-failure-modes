@@ -26,6 +26,16 @@ class ArmFeatures:
         self.entry = bundle.features[(spec.model, spec.anchor)] if spec.model else None
         self.parts: list[str] = list(spec.blocks)
         self.dim = self._dim()
+        # An additive arm needs to know where the perturbed gene's half of the
+        # feature vector ends. Every block an additive arm may use lays down the
+        # perturbed gene's features and then the read-out gene's, in that order
+        # and with equal width, so the split is the midpoint.
+        self.split_at: int | None = None
+        if spec.additive:
+            per_gene = {"emb", "node", "randgene"}
+            if not set(self.parts) <= per_gene:
+                raise ValueError(f"additive arm {spec.name!r} needs per-gene blocks only")
+            self.split_at = self.dim // 2
 
     # ---- dimensions ------------------------------------------------------ #
     def _resp_dim(self) -> int:
@@ -99,7 +109,31 @@ def resolve_arms(
     specs: list[C.ArmSpec] = [
         C.ArmSpec("mean_only", "baseline", (), note="predict the training mean effect"),
         C.ArmSpec("coexp", "statistical", ("coexp",)),
-        C.ArmSpec("node", "node_only", ("node",)),
+        C.ArmSpec(
+            "node", "node_only", ("node",), additive=True,
+            note="the two genes' separate control-cell properties, summed, no interaction",
+        ),
+        C.ArmSpec(
+            "node_pairmlp", "node_only", ("node",),
+            note="the same per-gene properties with pairwise interactions allowed",
+        ),
+    ]
+    if "pearson_check" in bundle.coexpr:
+        # The same features re-estimated on the OTHER half of the control
+        # cells. The measured effects were computed against all controls, so if
+        # co-expression's score depended on sharing cells with the target, the
+        # two halves would not agree.
+        specs += [
+            C.ArmSpec(
+                "coexp_check", "statistical", ("coexp",),
+                note="co-expression from the held-out control half",
+            ),
+            C.ArmSpec(
+                "node_check", "node_only", ("node",), additive=True,
+                note="node statistics from the held-out control half",
+            ),
+        ]
+    specs += [
         C.ArmSpec("coexp_node", "statistical", ("coexp", "node")),
         C.ArmSpec("null_randpair", "null", ("randpair",)),
     ]

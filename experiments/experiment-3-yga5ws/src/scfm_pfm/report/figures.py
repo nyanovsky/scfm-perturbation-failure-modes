@@ -89,7 +89,7 @@ def arm_scores(summary_dir: Path, out_root: Path, translator: str = "mlp") -> di
         ),
         root=out_root,
     )
-    return {"figure": "arm_scores", "n_records": len(payload)}
+    return {"figure": "arm_scores", "n_records": len(payload), "fig": fig}
 
 
 def vs_coexpression(summary_dir: Path, out_root: Path, translator: str = "mlp") -> dict:
@@ -140,7 +140,7 @@ def vs_coexpression(summary_dir: Path, out_root: Path, translator: str = "mlp") 
         ),
         root=out_root,
     )
-    return {"figure": "vs_coexpression", "n_records": len(payload)}
+    return {"figure": "vs_coexpression", "n_records": len(payload), "fig": fig}
 
 
 def grid_cells(summary_dir: Path, out_root: Path, arms: list[str] | None = None) -> dict:
@@ -182,7 +182,7 @@ def grid_cells(summary_dir: Path, out_root: Path, arms: list[str] | None = None)
         ),
         root=out_root,
     )
-    return {"figure": "grid_cells", "n_records": int(d.shape[0])}
+    return {"figure": "grid_cells", "n_records": int(d.shape[0]), "fig": fig}
 
 
 def split_gap(summary_dir: Path, out_root: Path) -> dict:
@@ -222,7 +222,7 @@ def split_gap(summary_dir: Path, out_root: Path) -> dict:
         ),
         root=out_root,
     )
-    return {"figure": "split_gap", "n_records": int(piv.shape[0])}
+    return {"figure": "split_gap", "n_records": int(piv.shape[0]), "fig": fig}
 
 
 def transfer_scores(summary_dir: Path, out_root: Path) -> dict | None:
@@ -259,7 +259,7 @@ def transfer_scores(summary_dir: Path, out_root: Path) -> dict | None:
         alt="Cross-cell-line transfer: trained on one screen, scored on the other.",
         root=out_root,
     )
-    return {"figure": "transfer", "n_records": int(d.shape[0])}
+    return {"figure": "transfer", "n_records": int(d.shape[0]), "fig": fig}
 
 
 def discrimination_vs_correlation(summary_dir: Path, out_root: Path) -> dict:
@@ -294,7 +294,7 @@ def discrimination_vs_correlation(summary_dir: Path, out_root: Path) -> dict:
         ),
         root=out_root,
     )
-    return {"figure": "discrimination_vs_correlation", "n_records": int(d.shape[0])}
+    return {"figure": "discrimination_vs_correlation", "n_records": int(d.shape[0]), "fig": fig}
 
 
 def reference_quantities(bundle_manifest: dict, out_root: Path) -> dict:
@@ -331,7 +331,7 @@ def reference_quantities(bundle_manifest: dict, out_root: Path) -> dict:
         ),
         root=out_root,
     )
-    return {"figure": "reference_quantities", "n_records": int(frame.shape[0])}
+    return {"figure": "reference_quantities", "n_records": int(frame.shape[0]), "fig": fig}
 
 
 def build_all(summary_dir: Path, manifest: dict, out_root: Path | None = None) -> list[dict]:

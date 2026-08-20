@@ -238,6 +238,8 @@ def run_cell(
                     C.ArmSpec(
                         f"{s.name}+shuffled_labels_d{draw}", "null", s.blocks, s.model, s.anchor,
                         note="perturbation labels permuted within the training fold",
+                        rand_dim=s.rand_dim,
+                        additive=s.additive,
                     )
                 )
 
@@ -305,6 +307,7 @@ def run_cell(
                 "cell_line": bundle.cell_line,
                 "scope": scope,
                 "split": split,
+                "target_source": bundle.target_source,
                 "arm": spec.name,
                 "family": spec.family,
                 "model": spec.model or "",
@@ -373,73 +376,171 @@ def run_cell(
     return records, tables
 
 
+def _reference_mask(n: int, seed: int) -> np.ndarray:
+    """Half the destination perturbations, drawn once.
+
+    They are used only to estimate the destination line's mean response profile
+    and its per-gene reliability weights, and are never scored; the transfer
+    number is read from the other half.
+    """
+    rng = np.random.default_rng(seed)
+    mask = np.zeros(n, dtype=bool)
+    mask[rng.permutation(n)[: n // 2]] = True
+    return mask
+
+
+def _transfer_quantities(
+    mode: str,
+    eff_dst: np.ndarray,
+    half0: np.ndarray,
+    half1: np.ndarray,
+    mean_src: np.ndarray,
+    w_src: np.ndarray,
+    seed: int,
+) -> dict:
+    """Which destination rows are scored, what is subtracted from them, and
+    which per-gene weights the correlation uses.
+
+    Predicting a held-out cell line means predicting the perturbation-specific
+    part of its response, and "perturbation-specific" is defined against some
+    mean. Where that mean and the reliability weights come from decides whether
+    the evaluation is transductive:
+
+    ``dest_reference``  a disjoint half of the destination perturbations, which
+                        is never scored — nothing that is scored contributed to
+                        the quantities used to score it.
+    ``source_only``     the training line, over the shared genes: no destination
+                        outcome enters at all.
+    ``dest_all``        every destination perturbation, leave-one-out. This is
+                        the convention used inside a cell line, kept here so the
+                        cost of the other two is visible.
+    """
+    n = eff_dst.shape[0]
+    all_rows = np.arange(n)
+    if mode == "dest_all":
+        _, means = metrics.residualize(eff_dst, all_rows)
+        return {
+            "eval_rows": all_rows,
+            "means": means,
+            "weights": metrics.per_gene_reliability(half0, half1, all_rows)["weights"],
+            "mean_rows": all_rows,
+        }
+    if mode == "dest_reference":
+        ref = _reference_mask(n, seed)
+        mean_rows = np.flatnonzero(ref)
+        return {
+            "eval_rows": np.flatnonzero(~ref),
+            "means": np.broadcast_to(eff_dst[mean_rows].mean(axis=0), eff_dst.shape).copy(),
+            "weights": metrics.per_gene_reliability(half0, half1, mean_rows)["weights"],
+            "mean_rows": mean_rows,
+        }
+    if mode == "source_only":
+        return {
+            "eval_rows": all_rows,
+            "means": np.broadcast_to(mean_src, eff_dst.shape).copy(),
+            "weights": np.asarray(w_src, dtype=np.float64),
+            "mean_rows": all_rows,
+        }
+    raise ValueError(f"unknown transfer mode {mode!r}")
+
+
+def _transfer_scoring(q: dict, eff_dst: np.ndarray, half0: np.ndarray, half1: np.ndarray,
+                      self_dst: np.ndarray) -> dict:
+    """Everything about a mode that does not depend on the arm: the weights
+    matrix over the scored rows, the truth it is scored against, and the four
+    split-half ceilings."""
+    te = q["eval_rows"]
+    means = q["means"][te]
+    w = np.broadcast_to(q["weights"], (te.size, eff_dst.shape[1])).copy()
+    w[np.arange(te.size), self_dst[te]] = 0.0
+    ones = np.ones_like(w)
+    ones[np.arange(te.size), self_dst[te]] = 0.0
+    mh = q["mean_rows"]
+    r0 = half0[te] - half0[mh].mean(axis=0, keepdims=True)
+    r1 = half1[te] - half1[mh].mean(axis=0, keepdims=True)
+    c0 = r0 - r0.mean(axis=0, keepdims=True)
+    c1 = r1 - r1.mean(axis=0, keepdims=True)
+    def sb(x):
+        return float(np.clip(metrics.spearman_brown(np.nanmedian(x)), 1e-6, 1.0))
+    ceilings = {
+        "residual_weighted": sb(metrics.weighted_pearson_rows(r0, r1, w)),
+        "residual_unweighted": sb(metrics.weighted_pearson_rows(r0, r1, ones)),
+        "centered_weighted": sb(metrics.weighted_pearson_rows(c0, c1, w)),
+        "centered_unweighted": sb(metrics.weighted_pearson_rows(c0, c1, ones)),
+        "raw_weighted": sb(metrics.weighted_pearson_rows(half0[te], half1[te], w)),
+        "raw_unweighted": sb(metrics.weighted_pearson_rows(half0[te], half1[te], ones)),
+    }
+    truth_resid = eff_dst[te] - means
+    return {
+        "rows": te,
+        "means": means,
+        "w": w,
+        "ones": ones,
+        "truth_resid": truth_resid,
+        "truth_centered": truth_resid - truth_resid.mean(axis=0, keepdims=True),
+        "ceilings": ceilings,
+    }
+
+
+def transfer_rows(bundle: LineBundle, scope: str) -> np.ndarray:
+    """Perturbations of one line that a transfer run can use.
+
+    ``full`` is every in-scope perturbation whose own gene is a shared read-out
+    column; ``common`` narrows that to the perturbations every model covers,
+    which is the only scope where AIDO.Cell — whose block is a 250-gene subset —
+    can be compared against the other three on the same rows.
+    """
+    rows = np.flatnonzero(bundle.self_col_np >= 0)
+    if scope == "common":
+        keep = set(bundle.scope_rows("common", C.PRIMARY_ANCHOR).tolist())
+        rows = np.array([r for r in rows if int(r) in keep], dtype=np.int64)
+    return rows
+
+
 def run_transfer(
     src: LineBundle,
     dst: LineBundle,
     translators: tuple[str, ...],
     only_arms: tuple[str, ...] = (),
+    scope: str = "full",
+    modes: tuple[str, ...] = C.TRANSFER_MODES,
 ) -> tuple[list[dict], list[pd.DataFrame]]:
     """Train on one cell line, test on the other, over the shared read-out set.
 
-    The translator sees nothing from the test line. The mean effect subtracted
-    from the test line's measurements is still estimated from the test line's
-    OTHER perturbations, because the shared growth-arrest response is a
-    population property of that screen rather than something a predictor could
-    know; the same leave-one-out rule is used inside a line.
+    The translator sees nothing from the test line. What the test line's
+    measurements are scored against is set by ``modes``; the model is fitted
+    once per arm and the same predictions are read under each of them.
     """
     shared = np.array(
         [g for g in src.readout_gene_id if g in set(dst.readout_gene_id.tolist())], dtype=object
     )
     sv, dv = src.restrict_columns(shared), dst.restrict_columns(shared)
-    rows_src = np.flatnonzero(sv.self_col_np >= 0)
-    rows_dst = np.flatnonzero(dv.self_col_np >= 0)
+    rows_src = transfer_rows(sv, scope)
+    rows_dst = transfer_rows(dv, scope)
+    if rows_src.size < 50 or rows_dst.size < 50:
+        return [], []
     device = str(sv.effect.device)
 
     eff_src = sv.effect[torch.as_tensor(rows_src, device=device)].cpu().numpy()
     eff_dst = dv.effect[torch.as_tensor(rows_dst, device=device)].cpu().numpy()
-    all_src, all_dst = np.arange(rows_src.size), np.arange(rows_dst.size)
+    all_src = np.arange(rows_src.size)
     rel_src = metrics.per_gene_reliability(sv.half0[rows_src], sv.half1[rows_src], all_src)
-    rel_dst = metrics.per_gene_reliability(dv.half0[rows_dst], dv.half1[rows_dst], all_dst)
     w_src = torch.as_tensor(rel_src["weights"], device=device, dtype=torch.float32)
-    resid_src, _ = metrics.residualize(eff_src, all_src)
-    resid_dst, mean_dst = metrics.residualize(eff_dst, all_dst)
+    resid_src, mean_src_rows = metrics.residualize(eff_src, all_src)
+    mean_src = eff_src.mean(axis=0)
     y_src = torch.as_tensor(resid_src, device=device, dtype=torch.float32)
 
     self_src = sv.self_col_np[rows_src]
     self_dst = dv.self_col_np[rows_dst]
-    w_dst = np.broadcast_to(rel_dst["weights"], resid_dst.shape).copy()
-    w_dst[np.arange(rows_dst.size), self_dst] = 0.0
-    ones = np.ones_like(w_dst)
-    ones[np.arange(rows_dst.size), self_dst] = 0.0
-    r0, _ = metrics.residualize(dv.half0[rows_dst], all_dst)
-    r1, _ = metrics.residualize(dv.half1[rows_dst], all_dst)
-    ceilings = {
-        "centered_weighted": float(
-            np.clip(metrics.spearman_brown(
-                np.nanmedian(metrics.weighted_pearson_rows(r0, r1, w_dst))), 1e-6, 1.0)
-        ),
-        "centered_unweighted": float(
-            np.clip(metrics.spearman_brown(
-                np.nanmedian(metrics.weighted_pearson_rows(r0, r1, ones))), 1e-6, 1.0)
-        ),
-        "residual_weighted": float(
-            np.clip(metrics.spearman_brown(
-                np.nanmedian(metrics.weighted_pearson_rows(r0, r1, w_dst))), 1e-6, 1.0)
-        ),
-        "residual_unweighted": float(
-            np.clip(metrics.spearman_brown(
-                np.nanmedian(metrics.weighted_pearson_rows(r0, r1, ones))), 1e-6, 1.0)
-        ),
-        "raw_weighted": float(
-            np.clip(metrics.spearman_brown(np.nanmedian(
-                metrics.weighted_pearson_rows(dv.half0[rows_dst], dv.half1[rows_dst], w_dst))),
-                1e-6, 1.0)
-        ),
-        "raw_unweighted": float(
-            np.clip(metrics.spearman_brown(np.nanmedian(
-                metrics.weighted_pearson_rows(dv.half0[rows_dst], dv.half1[rows_dst], ones))),
-                1e-6, 1.0)
-        ),
+    half0_dst, half1_dst = dv.half0[rows_dst], dv.half1[rows_dst]
+    scoring = {
+        mode: _transfer_scoring(
+            _transfer_quantities(
+                mode, eff_dst, half0_dst, half1_dst, mean_src, rel_src["weights"], C.SEED
+            ),
+            eff_dst, half0_dst, half1_dst, self_dst,
+        )
+        for mode in modes
     }
 
     models = [m for m in sv.models_present(C.PRIMARY_ANCHOR) if m in dv.emb]
@@ -452,6 +553,12 @@ def run_transfer(
     records, tables = [], []
     lookup_src = torch.as_tensor(rows_src, device=device)
     lookup_dst = torch.as_tensor(rows_dst, device=device)
+    print(
+        f"=== transfer {src.cell_line}->{dst.cell_line} [{scope}] "
+        f"{rows_src.size} train x {rows_dst.size} test perturbations, "
+        f"{shared.size} shared genes, models={models} ===",
+        flush=True,
+    )
     for spec in specs:
         if only_arms and spec.name not in only_arms:
             continue
@@ -463,85 +570,96 @@ def run_transfer(
             arm_te = _bind(spec, dv, lookup_dst)
             fit = trainers.fit_mlp if translator == "mlp" else trainers.fit_ridge
             res = fit(
-                arm_tr, y_src, w_src, all_src, all_dst, self_src,
+                arm_tr, y_src, w_src, all_src, np.arange(rows_dst.size), self_src,
                 arm_test=arm_te, n_readout_test=int(sv.n_readout),
             )
             pred = res["prediction"]
-            pred_c = pred - pred.mean(axis=0, keepdims=True)
-            true_c = resid_dst - resid_dst.mean(axis=0, keepdims=True)
-            cells = {
-                ("residual", "weighted"): metrics.weighted_pearson_rows(pred, resid_dst, w_dst),
-                ("residual", "unweighted"): metrics.weighted_pearson_rows(pred, resid_dst, ones),
-                ("centered", "weighted"): metrics.weighted_pearson_rows(pred_c, true_c, w_dst),
-                ("centered", "unweighted"): metrics.weighted_pearson_rows(pred_c, true_c, ones),
-                ("raw", "weighted"): metrics.weighted_pearson_rows(
-                    pred + mean_dst, eff_dst, w_dst),
-                ("raw", "unweighted"): metrics.weighted_pearson_rows(
-                    pred + mean_dst, eff_dst, ones),
-            }
-            record = {
-                "cell_line": f"{src.cell_line}->{dst.cell_line}",
-                "scope": "transfer",
-                "split": "cross_line",
-                "arm": spec.name,
-                "family": spec.family,
-                "model": spec.model or "",
-                "anchor": spec.anchor or "",
-                "translator": translator,
-                "n_perturbations": int(rows_dst.size),
-                "n_train_perturbations": int(rows_src.size),
-                "n_readout": int(sv.n_readout),
-                "feature_dim": int(res.get("dim", 0)),
-                "seconds": round(time.time() - t0, 1),
-            }
-            for (target, weighting), values in cells.items():
-                boot = metrics.bootstrap_median(
-                    values, C.BOOTSTRAP_RESAMPLES, C.BOOTSTRAP_CI, C.SEED)
-                ceiling = ceilings[f"{target}_{weighting}"]
-                key = f"{target}__{weighting}"
-                record[f"{key}__attenuated"] = boot["median"]
-                record[f"{key}__attenuated_lo"] = boot["lo"]
-                record[f"{key}__attenuated_hi"] = boot["hi"]
-                record[f"{key}__disattenuated"] = boot["median"] / np.sqrt(ceiling)
-                record[f"{key}__disattenuated_lo"] = boot["lo"] / np.sqrt(ceiling)
-                record[f"{key}__disattenuated_hi"] = boot["hi"] / np.sqrt(ceiling)
-                record[f"{key}__ceiling"] = ceiling
-                record[f"{key}__n_scored"] = boot["n"]
-            own = disc.own_discrimination(resid_dst, pred)
-            record["discrimination_ours_residual_mean"] = own["mean"]
-            record["discrimination_ours_residual_median"] = own["median"]
-            records.append(record)
-            tables.append(
-                pd.DataFrame(
-                    {
-                        "fold": np.zeros(rows_dst.size, dtype=np.int64),
-                        "residual_weighted": cells[("residual", "weighted")],
-                        "residual_unweighted": cells[("residual", "unweighted")],
-                        "raw_weighted": cells[("raw", "weighted")],
-                        "raw_unweighted": cells[("raw", "unweighted")],
-                        "centered_weighted": cells[("centered", "weighted")],
-                        "centered_unweighted": cells[("centered", "unweighted")],
-                        "cell_line": record["cell_line"],
-                        "scope": "transfer",
-                        "split": "cross_line",
-                        "arm": spec.name,
-                        "translator": translator,
-                        "perturbation": dv.pert_target[rows_dst],
-                    }
+            for mode in modes:
+                s = scoring[mode]
+                te = s["rows"]
+                p = pred[te]
+                pc = p - p.mean(axis=0, keepdims=True)
+                cells = {
+                    ("residual", "weighted"): metrics.weighted_pearson_rows(
+                        p, s["truth_resid"], s["w"]),
+                    ("residual", "unweighted"): metrics.weighted_pearson_rows(
+                        p, s["truth_resid"], s["ones"]),
+                    ("centered", "weighted"): metrics.weighted_pearson_rows(
+                        pc, s["truth_centered"], s["w"]),
+                    ("centered", "unweighted"): metrics.weighted_pearson_rows(
+                        pc, s["truth_centered"], s["ones"]),
+                    ("raw", "weighted"): metrics.weighted_pearson_rows(
+                        p + s["means"], eff_dst[te], s["w"]),
+                    ("raw", "unweighted"): metrics.weighted_pearson_rows(
+                        p + s["means"], eff_dst[te], s["ones"]),
+                }
+                record = {
+                    "cell_line": f"{src.cell_line}->{dst.cell_line}",
+                    "scope": f"transfer_{scope}",
+                    "split": f"cross_line__{mode}",
+                    "transfer_mode": mode,
+                    "target_source": dv.target_source,
+                    "arm": spec.name,
+                    "family": spec.family,
+                    "model": spec.model or "",
+                    "anchor": spec.anchor or "",
+                    "translator": translator,
+                    "n_perturbations": int(te.size),
+                    "n_train_perturbations": int(rows_src.size),
+                    "n_readout": int(sv.n_readout),
+                    "feature_dim": int(res.get("dim", 0)),
+                    "seconds": round(time.time() - t0, 1),
+                }
+                for (target, weighting), values in cells.items():
+                    boot = metrics.bootstrap_median(
+                        values, C.BOOTSTRAP_RESAMPLES, C.BOOTSTRAP_CI, C.SEED)
+                    ceiling = s["ceilings"][f"{target}_{weighting}"]
+                    key = f"{target}__{weighting}"
+                    record[f"{key}__attenuated"] = boot["median"]
+                    record[f"{key}__attenuated_lo"] = boot["lo"]
+                    record[f"{key}__attenuated_hi"] = boot["hi"]
+                    record[f"{key}__disattenuated"] = boot["median"] / np.sqrt(ceiling)
+                    record[f"{key}__disattenuated_lo"] = boot["lo"] / np.sqrt(ceiling)
+                    record[f"{key}__disattenuated_hi"] = boot["hi"] / np.sqrt(ceiling)
+                    record[f"{key}__ceiling"] = ceiling
+                    record[f"{key}__n_scored"] = boot["n"]
+                own = disc.own_discrimination(s["truth_resid"], p)
+                record["discrimination_ours_residual_mean"] = own["mean"]
+                record["discrimination_ours_residual_median"] = own["median"]
+                records.append(record)
+                tables.append(
+                    pd.DataFrame(
+                        {
+                            "fold": np.zeros(te.size, dtype=np.int64),
+                            "residual_weighted": cells[("residual", "weighted")],
+                            "residual_unweighted": cells[("residual", "unweighted")],
+                            "raw_weighted": cells[("raw", "weighted")],
+                            "raw_unweighted": cells[("raw", "unweighted")],
+                            "centered_weighted": cells[("centered", "weighted")],
+                            "centered_unweighted": cells[("centered", "unweighted")],
+                            "cell_line": record["cell_line"],
+                            "scope": record["scope"],
+                            "split": record["split"],
+                            "arm": spec.name,
+                            "translator": translator,
+                            "perturbation": dv.pert_target[rows_dst][te],
+                        }
+                    )
                 )
-            )
-            print(
-                f"  [{record['cell_line']}] {spec.name}/{translator} "
-                f"resid_w_dis={record['residual__weighted__disattenuated']:.4f} "
-                f"({record['seconds']}s)",
-                flush=True,
-            )
+                print(
+                    f"  [{record['cell_line']}/{scope}/{mode}] {spec.name}/{translator} "
+                    f"resid_w_dis={record['residual__weighted__disattenuated']:.4f} "
+                    f"cen_w_dis={record['centered__weighted__disattenuated']:.4f} "
+                    f"({record['seconds']}s)",
+                    flush=True,
+                )
     return records, tables
 
 
 def _bind(spec: C.ArmSpec, bundle: LineBundle, row_lookup: torch.Tensor) -> armsmod.ArmFeatures:
     """ArmFeatures over scope-local row indices."""
-    arm = armsmod.ArmFeatures(spec, bundle) if spec.blocks else None
+    suffix = "_check" if spec.name.endswith("_check") else ""
+    arm = armsmod.ArmFeatures(spec, bundle, suffix) if spec.blocks else None
     if arm is None:
         return arm
     arm._rows = row_lookup  # noqa: SLF001
@@ -569,10 +687,26 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-cell-eval", action="store_true")
     ap.add_argument("--no-shuffle-null", action="store_true")
     ap.add_argument("--transfer", action="store_true", help="cross-cell-line direction only")
+    ap.add_argument("--transfer-scopes", default=",".join(C.TRANSFER_SCOPES))
+    ap.add_argument("--transfer-modes", default=",".join(C.TRANSFER_MODES))
+    ap.add_argument(
+        "--targets",
+        default=None,
+        help="directory of recomputed targets; <line>__<tag>.npz replaces the bundle's",
+    )
+    ap.add_argument("--target-tag", default="", help="which recomputed target to read")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = ap.parse_args(argv)
 
     root = Path(args.bundle) if args.bundle else paths.bundle_root()
+
+    def targets_file(line: str) -> Path | None:
+        if not args.targets or not args.target_tag:
+            return None
+        p = Path(args.targets) / f"{line}__{args.target_tag}.npz"
+        if not p.exists():
+            raise FileNotFoundError(f"recomputed target {p} not found")
+        return p
     out_dir = paths.ensure(Path(args.out) if args.out else paths.results_dir() / "sweep")
     counter = {"i": 0}
 
@@ -586,14 +720,16 @@ def main(argv: list[str] | None = None) -> int:
     inventory: dict[str, dict] = {}
     if args.transfer:
         a, b = (x.strip() for x in args.lines.split(","))
-        ba = LineBundle(a, root, args.device)
-        bb = LineBundle(b, root, args.device)
+        ba = LineBundle(a, root, args.device, targets_file(a))
+        bb = LineBundle(b, root, args.device, targets_file(b))
         translators = tuple(x.strip() for x in args.translators.split(","))
         only = tuple(x for x in args.arms.split(",") if x)
-        for src, dst in ((ba, bb), (bb, ba)):
-            r, t = run_transfer(src, dst, translators, only)
-            records += r
-            tables += t
+        modes = tuple(x.strip() for x in args.transfer_modes.split(",") if x.strip())
+        for scope in (x.strip() for x in args.transfer_scopes.split(",")):
+            for src, dst in ((ba, bb), (bb, ba)):
+                r, t = run_transfer(src, dst, translators, only, scope, modes)
+                records += r
+                tables += t
         if records:
             pd.DataFrame(records).to_parquet(
                 out_dir / f"runs_shard{args.shard}.parquet", index=False)
@@ -605,13 +741,15 @@ def main(argv: list[str] | None = None) -> int:
         line = line.strip()
         if not line:
             continue
-        bundle = LineBundle(line, root, args.device)
-        print(f"=== {line}: {bundle.n_pert} perturbations x {bundle.n_readout} genes ===", flush=True)
+        bundle = LineBundle(line, root, args.device, targets_file(line))
+        print(
+            f"=== {line}: {bundle.n_pert} perturbations x {bundle.n_readout} genes "
+            f"[target={bundle.target_source}] ===",
+            flush=True,
+        )
         inventory[line] = bundle_inventory(bundle)
         for scope in args.scopes.split(","):
             for split in args.splits.split(","):
-                if scope == "common" and split == "random":
-                    continue  # the matched four-way ranking runs on the primary split
                 r, t = run_cell(
                     bundle,
                     scope.strip(),

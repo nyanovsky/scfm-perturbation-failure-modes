@@ -20,6 +20,21 @@ else
   tail -n 15 /tmp/cell_eval_install.log || true
 fi
 
+# A run against a recomputed target reads it from presigned links written into
+# the worktree just before submission; the bundle still comes from the mounted
+# producer volume.
+if [ -f jobs/target_urls.json ]; then
+  uv run python - <<'PY'
+import json, pathlib, urllib.request
+out = pathlib.Path("_targets")
+out.mkdir(exist_ok=True)
+for name, url in json.loads(pathlib.Path("jobs/target_urls.json").read_text()).items():
+    dest = out / name
+    urllib.request.urlretrieve(url, dest)
+    print(f"[env] fetched {name} ({dest.stat().st_size / 1e6:.1f} MB)", flush=True)
+PY
+fi
+
 uv run python - <<'PY'
 import torch, numpy, sys
 print(f"[env] python={sys.version.split()[0]} torch={torch.__version__} "

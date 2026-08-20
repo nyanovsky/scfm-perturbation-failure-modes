@@ -36,15 +36,37 @@ def _rank_percentile_signed(x: np.ndarray) -> np.ndarray:
 class LineBundle:
     """One cell line's targets, control-cell statistics and model features."""
 
-    def __init__(self, cell_line: str, root: Path | None = None, device: str = "cuda"):
+    def __init__(
+        self,
+        cell_line: str,
+        root: Path | None = None,
+        device: str = "cuda",
+        targets_file: Path | None = None,
+    ):
         self.cell_line = cell_line
         self.device = device
         base = paths.line_dir(cell_line, root)
         self.base = base
         t = np.load(base / "targets.npz", allow_pickle=False)
-        self.effect = torch.as_tensor(t["effect"], device=device)
-        self.half0 = t["half0"]
-        self.half1 = t["half1"]
+        self.target_source = "run1_all_controls"
+        effect, half0, half1 = t["effect"], t["half0"], t["half1"]
+        if targets_file is not None:
+            # A target recomputed against one half of the control cells, so that
+            # the co-expression features and the thing being predicted share no
+            # cell. Row and column order have to be identical to the bundle's,
+            # because every feature block is addressed by those indices.
+            alt = np.load(targets_file, allow_pickle=False)
+            if not np.array_equal(alt["pert_target"].astype(str), t["pert_target"].astype(str)):
+                raise RuntimeError(f"{targets_file}: perturbation order differs from the bundle")
+            if not np.array_equal(
+                alt["readout_gene_id"].astype(str), t["readout_gene_id"].astype(str)
+            ):
+                raise RuntimeError(f"{targets_file}: read-out gene order differs from the bundle")
+            effect, half0, half1 = alt["effect"], alt["half0"], alt["half1"]
+            self.target_source = Path(targets_file).stem
+        self.effect = torch.as_tensor(effect, device=device)
+        self.half0 = half0
+        self.half1 = half1
         self.pert_target = t["pert_target"].astype(str)
         self.pert_gene_id = t["pert_gene_id"].astype(str)
         self.self_col = torch.as_tensor(t["pert_readout_col"].astype(np.int64), device=device)
@@ -189,6 +211,7 @@ class LineBundle:
         view.n_pert = self.n_pert
         view.n_readout = int(idx.size)
         view.reference = self.reference
+        view.target_source = self.target_source
         view.coexpr = {k: v[:, tidx] for k, v in self.coexpr.items()}
         view.node = None if self.node is None else self.node[tidx]
         view.node_check = None if self.node_check is None else self.node_check[tidx]

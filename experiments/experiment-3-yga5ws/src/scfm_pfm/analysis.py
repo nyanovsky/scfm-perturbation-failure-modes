@@ -23,8 +23,19 @@ import pandas as pd
 from . import config as C
 from . import metrics, paths
 
-PRIMARY_COL = "residual__weighted__disattenuated"
+#: the cell config.py pre-registered. It is reported everywhere, but it is not
+#: what the verdict is read from: the shuffled-label control does not sit at
+#: zero on it, because a held-out grouped fold shares a per-gene offset that any
+#: near-constant prediction correlates with.
+PREREG_COL = "residual__weighted__disattenuated"
+PRIMARY_COL = PREREG_COL
 CENTERED_COL = "centered__weighted__disattenuated"
+#: the cell the verdict is read from instead: the same correlation after the
+#: held-out fold's own per-gene mean is removed from prediction and truth, which
+#: is the version whose shuffled-label control is at zero. Chosen after seeing
+#: the null fail, so it is post hoc, and it answers the narrower question of how
+#: well an arm separates one held-out perturbation from another.
+VERDICT_COL = CENTERED_COL
 REFERENCE_ARM = "coexp"
 SHUFFLE_TAG = "+shuffled_labels_d"
 
@@ -122,11 +133,28 @@ def contrasts(
     return pd.DataFrame(rows)
 
 
+def null_ceiling(runs: pd.DataFrame, cell: dict, col: str) -> float:
+    """The largest shuffled-label draw in one cell of the sweep: the number a
+    score has to be above before it means anything."""
+    d = runs
+    for k, v in cell.items():
+        d = d[d[k] == v]
+    d = d[d.arm.str.contains(SHUFFLE_TAG, regex=False)]
+    if d.empty:
+        return float("nan")
+    return float(np.nanmax(d[col].to_numpy(dtype=float)))
+
+
 def headline(runs: pd.DataFrame, con: pd.DataFrame, nulls: pd.DataFrame | None = None) -> dict:
-    """The primary cell of the grid, per cell line, on the primary split."""
+    """The verdict cell of the grid, per cell line, on the primary split."""
     out: dict = {
-        "primary_metric": PRIMARY_COL,
-        "secondary_metric": CENTERED_COL,
+        "verdict_metric": VERDICT_COL,
+        "preregistered_metric": PREREG_COL,
+        "verdict_metric_note": (
+            "the pre-registered cell is reported for every arm, but the verdict is read "
+            "from the fold-centred cell, because the shuffled-label control sits at zero "
+            "there and does not on the pre-registered one"
+        ),
         "reference_arm": REFERENCE_ARM,
         "lines": {},
     }
@@ -135,29 +163,39 @@ def headline(runs: pd.DataFrame, con: pd.DataFrame, nulls: pd.DataFrame | None =
         out["null_band"] = band.to_dict("records")
     primary = runs[(runs.scope == "full") & (runs.split == "grouped") & (runs.translator == "mlp")]
     for line, block in primary.groupby("cell_line"):
-        ranked = block.sort_values(PRIMARY_COL, ascending=False)
+        ranked = block.sort_values(VERDICT_COL, ascending=False)
+        cell = {"cell_line": line, "scope": "full", "split": "grouped", "translator": "mlp"}
+        null_prereg = null_ceiling(runs, cell, PREREG_COL)
+        null_verdict = null_ceiling(runs, cell, VERDICT_COL)
         c = con[
             (con.cell_line == line)
             & (con.scope == "full")
             & (con.split == "grouped")
             & (con.translator == "mlp")
-            & (con.metric == "residual_weighted")
+            & (con.metric == "centered_weighted")
         ]
         out["lines"][line] = {
             "n_perturbations": int(block.n_perturbations.iloc[0]),
             "n_readout": int(block.n_readout.iloc[0]),
             "residual_ceiling": float(block["residual__weighted__ceiling"].iloc[0]),
+            "centered_ceiling": float(block["centered__weighted__ceiling"].iloc[0]),
+            "largest_shuffled_draw_preregistered": null_prereg,
+            "largest_shuffled_draw_verdict": null_verdict,
             "arms": [
                 {
                     "arm": r.arm,
                     "family": r.family,
                     "dim": int(r.feature_dim),
-                    "score": float(getattr(r, PRIMARY_COL)),
-                    "lo": float(getattr(r, PRIMARY_COL + "_lo")),
-                    "hi": float(getattr(r, PRIMARY_COL + "_hi")),
-                    "centered": float(getattr(r, CENTERED_COL)),
-                    "centered_lo": float(getattr(r, CENTERED_COL + "_lo")),
-                    "centered_hi": float(getattr(r, CENTERED_COL + "_hi")),
+                    "score": float(getattr(r, VERDICT_COL)),
+                    "lo": float(getattr(r, VERDICT_COL + "_lo")),
+                    "hi": float(getattr(r, VERDICT_COL + "_hi")),
+                    "clears_null": bool(float(getattr(r, VERDICT_COL)) > null_verdict),
+                    "preregistered": float(getattr(r, PREREG_COL)),
+                    "preregistered_lo": float(getattr(r, PREREG_COL + "_lo")),
+                    "preregistered_hi": float(getattr(r, PREREG_COL + "_hi")),
+                    "preregistered_clears_null": bool(
+                        float(getattr(r, PREREG_COL)) > null_prereg
+                    ),
                     "discrimination_ours": float(r.discrimination_ours_residual_mean),
                     "discrimination_cell_eval": float(r.discrimination_cell_eval_mean),
                 }
@@ -264,19 +302,21 @@ def main(argv: list[str] | None = None) -> int:
         t_con = contrasts(t_pert)
         t_con.to_parquet(out / "transfer_contrasts.parquet", index=False)
         head["transfer"] = {
-            str(line): [
+            f"{line}|{scope}|{split}": [
                 {
                     "arm": r.arm,
                     "family": r.family,
-                    "score": float(getattr(r, PRIMARY_COL)),
-                    "lo": float(getattr(r, PRIMARY_COL + "_lo")),
-                    "hi": float(getattr(r, PRIMARY_COL + "_hi")),
+                    "score": float(getattr(r, VERDICT_COL)),
+                    "lo": float(getattr(r, VERDICT_COL + "_lo")),
+                    "hi": float(getattr(r, VERDICT_COL + "_hi")),
+                    "preregistered": float(getattr(r, PREREG_COL)),
+                    "n_perturbations": int(r.n_perturbations),
                 }
                 for r in block[block.translator == "mlp"]
-                .sort_values(PRIMARY_COL, ascending=False)
+                .sort_values(VERDICT_COL, ascending=False)
                 .itertuples()
             ]
-            for line, block in t_runs.groupby("cell_line")
+            for (line, scope, split), block in t_runs.groupby(["cell_line", "scope", "split"])
         }
 
     runs.to_parquet(out / "runs.parquet", index=False)

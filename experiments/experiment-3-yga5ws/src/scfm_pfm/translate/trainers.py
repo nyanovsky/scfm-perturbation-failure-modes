@@ -63,6 +63,28 @@ class MLP(torch.nn.Module):
         return self.net(x).squeeze(-1)
 
 
+class AdditiveMLP(torch.nn.Module):
+    """``f(perturbed gene) + g(read-out gene)``: same architecture per branch, no
+    path between the two genes.
+
+    The node-only control exists to answer whether a score can be had from the
+    two genes' separate properties — how variable each is, how many strong
+    partners it has — without knowing anything about the pair. A single MLP over
+    the concatenation answers a different question, because it can learn any
+    interaction between the two gene's properties. Summing two branches makes
+    the no-interaction restriction structural.
+    """
+
+    def __init__(self, dim: int, split_at: int, hidden: tuple[int, ...]):
+        super().__init__()
+        self.split_at = split_at
+        self.left = MLP(split_at, hidden)
+        self.right = MLP(dim - split_at, hidden)
+
+    def forward(self, x):  # noqa: D102
+        return self.left(x[:, : self.split_at]) + self.right(x[:, self.split_at :])
+
+
 def _rows_per_chunk(dim: int, budget: float, lo: int = 8192, hi: int = 262144) -> int:
     """Rows per gathered block, so a wide arm (TranscriptFormer's 5120-wide pair
     embedding) does not allocate a far larger block than a narrow one."""
@@ -102,7 +124,12 @@ def fit_mlp(
     torch.manual_seed(seed)
     tr_rows, tr_cols = pair_index(rows_train, y.shape[1], self_col, str(device))
     std = Standardizer(arm, tr_rows, tr_cols)
-    model = MLP(arm.dim, cfg.hidden).to(device)
+    split_at = getattr(arm, "split_at", None)
+    model = (
+        AdditiveMLP(arm.dim, split_at, cfg.hidden)
+        if split_at
+        else MLP(arm.dim, cfg.hidden)
+    ).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
     n = tr_rows.numel()
     y_sd = float(y[torch.as_tensor(rows_train, device=device)].std().clamp_min(1e-8))

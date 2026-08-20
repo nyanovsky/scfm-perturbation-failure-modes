@@ -125,6 +125,14 @@ GRID_TARGETS = ("residual", "centered", "raw")
 GRID_WEIGHTINGS = ("weighted", "unweighted")
 GRID_CORRECTIONS = ("disattenuated", "attenuated")
 
+#: how the destination line's mean response profile and reliability weights are
+#: estimated in the cross-cell-line direction. ``dest_reference`` holds out half
+#: the destination perturbations to estimate them and scores the other half;
+#: ``source_only`` takes both from the training line and touches no destination
+#: outcome; ``dest_all`` is the transductive convention, kept for comparison.
+TRANSFER_MODES = ("dest_reference", "source_only", "dest_all")
+TRANSFER_SCOPES = ("full", "common")
+
 BOOTSTRAP_RESAMPLES = 2000
 BOOTSTRAP_CI = 0.95
 #: per-gene reliability below this contributes no weight (clip, not threshold)
@@ -149,6 +157,12 @@ class ArmSpec:
     #: per-gene width of the ``randgene`` null, so it can be matched to the
     #: embedding arm it is the null for (feature dim is twice this)
     rand_dim: int = 256
+    #: the two genes' features go through separate copies of the translator and
+    #: are summed, so the arm cannot represent anything pairwise. This is what
+    #: makes the node-only control a control: it answers "how far do the two
+    #: genes' separate properties get you", not "how far does a free function of
+    #: both gene's properties get you".
+    additive: bool = False
 
 
 #: feature blocks an arm can concatenate:
