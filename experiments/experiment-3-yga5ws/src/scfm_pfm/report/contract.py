@@ -33,6 +33,7 @@ SENS = "results/summary/sensitivity.parquet"
 HEAD = "results/summary/headline.json"
 DISCV = "results/discrimination_versions.json"
 BEELINE = "results/beeline_reproduction.json"
+NOOP = "results/verification/no_op_correction.json"
 
 
 def key(**kw) -> str:
@@ -356,6 +357,26 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             "value": disc["versions_0_5_18_and_0_5_21_identical_on"],
             "source": DISCV, "key": key(field="per_file[*].values"),
         })
+        # the reversal itself: the same predictions, two versions, opposite ordering
+        pairs = {
+            "hepg2_scgpt_full": "hepg2__full__grouped__scgpt_full__mlp.npz",
+            "hepg2_coexp": "hepg2__full__grouped__coexp__mlp.npz",
+            "jurkat_transcriptformer_full":
+                "jurkat__full__grouped__transcriptformer_full__mlp.npz",
+            "jurkat_coexp": "jurkat__full__grouped__coexp__mlp.npz",
+        }
+        for lab, f in pairs.items():
+            for ver in ("0.5.18", "0.8.2"):
+                disc[f"{lab}_at_cell_eval_{ver.replace('.', '_')}"] = claim(
+                    f"discrimination of the {lab} predictions under cell-eval {ver}",
+                    v["per_file"][f]["values"][ver], DISCV, key(file=f, version=ver),
+                )
+        disc["ordering_reverses_between_versions"] = True
+        claims.append({
+            "claim": "the model arm scores below co-expression under 0.5.18/0.5.21 and above "
+                     "it under 0.8.2, in both cell lines",
+            "value": True, "source": DISCV, "key": key(field="per_file[*].values"),
+        })
 
     # anchor and form sensitivity
     sens: dict = {}
@@ -398,6 +419,42 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             SENS, key(cell_line="hepg2", arms="*_resp@*", statistic="max", column=VERDICT),
         )
         sens["shuffled_label_ceiling_hepg2"] = lines["hepg2"]["shuffled_label_ceiling_fold_centred"]
+
+    # excluding no-op queries: what it touches, and the checks behind it
+    no_op: dict = {}
+    if r.no_op:
+        for b in r.no_op:
+            tag = f"{b['model']}_{b['cell_line']}_{b['anchor']}"
+            for field in (
+                "n_no_op_queries",
+                "n_query_rows_touched",
+                "n_query_rows_everywhere_no_op",
+                "max_abs_feature_change_partial_rows",
+            ):
+                no_op[f"{tag}__{field}"] = claim(
+                    f"{field.replace('_', ' ')} for {tag}",
+                    b[field], NOOP, key(block=tag, field=field),
+                )
+            for name, c in b["checks"].items():
+                no_op[f"{tag}__check__{name}"] = claim(
+                    f"{name.replace('_', ' ')} for {tag}: measured value against its tolerance",
+                    c["value"], NOOP, key(block=tag, check=name, field="value"),
+                )
+        checks = [c for b in r.no_op for c in b["checks"].values()]
+        no_op["checks_passed"] = f"{sum(c['pass'] for c in checks)} of {len(checks)}"
+        claims.append({
+            "claim": "checks passed over the corrected individual-cells blocks",
+            "value": no_op["checks_passed"],
+            "source": NOOP, "key": key(field="blocks[*].checks[*].pass"),
+        })
+        no_op["values_the_earlier_whole_dose_rule_deleted"] = {
+            b["model"]: b["values_the_whole_dose_rule_deleted"] for b in r.no_op
+        }
+        claims.append({
+            "claim": "values in CP10K the earlier whole-dose rule deleted, per model",
+            "value": no_op["values_the_earlier_whole_dose_rule_deleted"],
+            "source": NOOP, "key": key(field="blocks[*].values_the_whole_dose_rule_deleted"),
+        })
 
     # the source paper's own benchmark
     bee: dict = {}
@@ -458,9 +515,25 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
         "control_cell_overlap": overlap,
         "discrimination": disc,
         "anchor_sensitivity": sens,
+        "no_op_query_correction": no_op,
         "beeline_reproduction": bee,
     }
     return summary, claims
+
+
+def _anchor_null_clause(n: dict) -> str:
+    """Whether any anchor lifted a response-only arm out of the null band."""
+    sens = n.get("anchor_sensitivity", {})
+    best = sens.get("best_score_at_any_anchor")
+    ceiling = sens.get("shuffled_label_ceiling_hepg2")
+    if best is None or ceiling is None:
+        return "the anchor sensitivity step did not run"
+    verdict = (
+        "no anchor lifts a response-only arm above the shuffled-label ceiling there"
+        if best <= ceiling
+        else "the best anchor lifts a response-only arm above the shuffled-label ceiling there"
+    )
+    return f"{verdict} ({best:.4f} against {ceiling:.4f})"
 
 
 def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
@@ -473,15 +546,19 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
         "headline": (
             "A gene-pair feature built from a single-cell foundation model's gene embedding "
             "predicts the perturbation-specific part of a CRISPRi knockdown response better "
-            "than statistical co-expression computed from the same control cells, on both cell "
-            "lines and on two scoring axes. The response features harvested in the previous run "
+            "than statistical co-expression computed from the same control cells, in both cell "
+            "lines and on both splits. The response features harvested in the previous run "
             "add nothing to the embedding; on their own they are weak, and whether they beat "
             "co-expression depends on which score is read."
         ),
         "assessment": (
             "Supported for the embedding arms against co-expression, on both cell lines, on a "
-            "post-hoc scoring cell, and corroborated by perturbation discrimination, which uses "
-            "no residualization at all. The pre-registered cell of the scoring grid fails its "
+            "post-hoc scoring cell. The second pre-registered scoring axis, perturbation "
+            "discrimination, does not settle it either way: the version pinned before the run "
+            "does not exist upstream, and the two existing versions nearest it reverse the "
+            "model-versus-co-expression ordering on the same saved predictions, so that axis "
+            "is reported as version-dependent and inconclusive. The pre-registered cell of the "
+            "scoring grid fails its "
             "own shuffled-label control, so the verdict is read from the fold-centred cell, "
             "which the pre-registration also defined but did not designate. Both are reported "
             "for every arm; they rank the arms similarly (rank correlation at least "
@@ -557,16 +634,18 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             f"arm reaches {hep['best_model_score_fold_centred']:.4f} in HepG2 and "
             f"{jur['best_model_score_fold_centred']:.4f} in Jurkat on a scale where 1.0 is the "
             "reproducibility limit.",
+            "The individual-cells anchor is a four-cell sample. Its no-op queries are "
+            "excluded per (perturbed gene, value) and the exclusion is exact on the "
+            "standardized feature, but four control cells is a small sample of the anchor.",
             "One translator shape for every arm. The query anchor was varied in HepG2 only, "
-            "over the three models with full-coverage feature blocks; no anchor lifts a "
-            "response-only arm above the shuffled-label ceiling there, and the uniform-virtual "
-            "anchor helps two models and hurts the third.",
-            "The discrimination axis is version-dependent. The pre-registered pin "
-            "cell-eval==0.5.19 was never released; the run used 0.8.2, and the two real "
-            "versions either side of the pin differ from it by up to "
+            "over the three models with full-coverage feature blocks; "
+            f"{_anchor_null_clause(n)}.",
+            "The discrimination axis is inconclusive, not a second confirmation. The "
+            "pre-registered pin cell-eval==0.5.19 was never released; the run used 0.8.2, and "
+            "the two existing versions nearest the pin differ from it by up to "
             f"{n['discrimination'].get('largest_difference_between_versions', float('nan')):.4f} "
-            "on the same predictions, enough to reverse the co-expression-versus-model ranking "
-            "on that axis.",
+            "on the same saved predictions, which reverses the co-expression-versus-model "
+            "ranking on that axis in both cell lines.",
             "The source paper's benchmark is reproduced only for its embedding baseline on its "
             "three human held-out cells; its virtual-value and gradient-trajectory arms would "
             "need a fresh extraction against those datasets.",
@@ -581,6 +660,10 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
         ],
         "artifacts": [
             RUNS, CON, TRANS, ORDER, OVERLAP, RECOMPUTE, INVENTORY, SENS, HEAD, DISCV, BEELINE,
+            NOOP,
+            "results/handoff/no_op_queries_per_gene.csv",
+            "src/scfm_pfm/ingest/no_op.py",
+            "src/scfm_pfm/ingest/no_op_check.py",
             "src/scfm_pfm/beeline.py",
             "src/scfm_pfm/discrimination.py",
             "scratch/disc_version_check.py",

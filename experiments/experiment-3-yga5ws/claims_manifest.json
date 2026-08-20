@@ -463,6 +463,60 @@
       "key": "field=per_file[*].values"
     },
     {
+      "claim": "discrimination of the hepg2_scgpt_full predictions under cell-eval 0.5.18",
+      "value": 0.469163,
+      "source": "results/discrimination_versions.json",
+      "key": "file=hepg2__full__grouped__scgpt_full__mlp.npz, version=0.5.18"
+    },
+    {
+      "claim": "discrimination of the hepg2_scgpt_full predictions under cell-eval 0.8.2",
+      "value": 0.537713,
+      "source": "results/discrimination_versions.json",
+      "key": "file=hepg2__full__grouped__scgpt_full__mlp.npz, version=0.8.2"
+    },
+    {
+      "claim": "discrimination of the hepg2_coexp predictions under cell-eval 0.5.18",
+      "value": 0.513464,
+      "source": "results/discrimination_versions.json",
+      "key": "file=hepg2__full__grouped__coexp__mlp.npz, version=0.5.18"
+    },
+    {
+      "claim": "discrimination of the hepg2_coexp predictions under cell-eval 0.8.2",
+      "value": 0.46472,
+      "source": "results/discrimination_versions.json",
+      "key": "file=hepg2__full__grouped__coexp__mlp.npz, version=0.8.2"
+    },
+    {
+      "claim": "discrimination of the jurkat_transcriptformer_full predictions under cell-eval 0.5.18",
+      "value": 0.463188,
+      "source": "results/discrimination_versions.json",
+      "key": "file=jurkat__full__grouped__transcriptformer_full__mlp.npz, version=0.5.18"
+    },
+    {
+      "claim": "discrimination of the jurkat_transcriptformer_full predictions under cell-eval 0.8.2",
+      "value": 0.577255,
+      "source": "results/discrimination_versions.json",
+      "key": "file=jurkat__full__grouped__transcriptformer_full__mlp.npz, version=0.8.2"
+    },
+    {
+      "claim": "discrimination of the jurkat_coexp predictions under cell-eval 0.5.18",
+      "value": 0.498643,
+      "source": "results/discrimination_versions.json",
+      "key": "file=jurkat__full__grouped__coexp__mlp.npz, version=0.5.18"
+    },
+    {
+      "claim": "discrimination of the jurkat_coexp predictions under cell-eval 0.8.2",
+      "value": 0.484455,
+      "source": "results/discrimination_versions.json",
+      "key": "file=jurkat__full__grouped__coexp__mlp.npz, version=0.8.2"
+    },
+    {
+      "claim": "the model arm scores below co-expression under 0.5.18/0.5.21 and above it under 0.8.2, in both cell lines",
+      "value": true,
+      "source": "results/discrimination_versions.json",
+      "key": "field=per_file[*].values"
+    },
+    {
       "claim": "response-only score for scgpt at the mean_control anchor, HepG2",
       "value": 0.003837,
       "source": "results/summary/sensitivity.parquet",
@@ -476,7 +530,7 @@
     },
     {
       "claim": "response-only score for scgpt at the individual_cells anchor, HepG2",
-      "value": 0.005388,
+      "value": 0.001749,
       "source": "results/summary/sensitivity.parquet",
       "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, arm=scgpt_resp@individual_cells, column=centered__weighted__disattenuated"
     },
@@ -500,7 +554,7 @@
     },
     {
       "claim": "response-only score for scprint at the individual_cells anchor, HepG2",
-      "value": 0.025832,
+      "value": 0.020762,
       "source": "results/summary/sensitivity.parquet",
       "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, arm=scprint_resp@individual_cells, column=centered__weighted__disattenuated"
     },
@@ -524,13 +578,13 @@
     },
     {
       "claim": "response-only score for transcriptformer at the individual_cells anchor, HepG2",
-      "value": 0.008224,
+      "value": 0.007589,
       "source": "results/summary/sensitivity.parquet",
       "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, arm=transcriptformer_resp@individual_cells, column=centered__weighted__disattenuated"
     },
     {
       "claim": "paired difference of the individual_cells anchor against mean control for scgpt, HepG2",
-      "value": 0.001176,
+      "value": -0.001583,
       "source": "results/summary/headline.json",
       "key": "field=sensitivity.paired_against_mean_control, model=scgpt, anchor=individual_cells, statistic=median_difference"
     },
@@ -548,7 +602,7 @@
     },
     {
       "claim": "paired difference of the individual_cells anchor against mean control for scprint, HepG2",
-      "value": 0.014368,
+      "value": 0.010525,
       "source": "results/summary/headline.json",
       "key": "field=sensitivity.paired_against_mean_control, model=scprint, anchor=individual_cells, statistic=median_difference"
     },
@@ -566,7 +620,7 @@
     },
     {
       "claim": "paired difference of the individual_cells anchor against mean control for transcriptformer, HepG2",
-      "value": -0.002954,
+      "value": -0.003435,
       "source": "results/summary/headline.json",
       "key": "field=sensitivity.paired_against_mean_control, model=transcriptformer, anchor=individual_cells, statistic=median_difference"
     },
@@ -584,9 +638,194 @@
     },
     {
       "claim": "best response-only score at any anchor in HepG2",
-      "value": 0.025832,
+      "value": 0.020762,
       "source": "results/summary/sensitivity.parquet",
       "key": "cell_line=hepg2, arms=*_resp@*, statistic=max, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "n no op queries for scgpt_hepg2_individual_cells",
+      "value": 379.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scgpt_hepg2_individual_cells, field=n_no_op_queries"
+    },
+    {
+      "claim": "n query rows touched for scgpt_hepg2_individual_cells",
+      "value": 244.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scgpt_hepg2_individual_cells, field=n_query_rows_touched"
+    },
+    {
+      "claim": "n query rows everywhere no op for scgpt_hepg2_individual_cells",
+      "value": 2.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scgpt_hepg2_individual_cells, field=n_query_rows_everywhere_no_op"
+    },
+    {
+      "claim": "max abs feature change partial rows for scgpt_hepg2_individual_cells",
+      "value": 2e-06,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scgpt_hepg2_individual_cells, field=max_abs_feature_change_partial_rows"
+    },
+    {
+      "claim": "standardized is per query zscore for scgpt_hepg2_individual_cells: measured value against its tolerance",
+      "value": 2e-06,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scgpt_hepg2_individual_cells, check=standardized_is_per_query_zscore, field=value"
+    },
+    {
+      "claim": "raw is plain cell mean for scgpt_hepg2_individual_cells: measured value against its tolerance",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scgpt_hepg2_individual_cells, check=raw_is_plain_cell_mean, field=value"
+    },
+    {
+      "claim": "undefined rows are everywhere no op for scgpt_hepg2_individual_cells: measured value against its tolerance",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scgpt_hepg2_individual_cells, check=undefined_rows_are_everywhere_no_op, field=value"
+    },
+    {
+      "claim": "shipped feature zero on undefined rows for scgpt_hepg2_individual_cells: measured value against its tolerance",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scgpt_hepg2_individual_cells, check=shipped_feature_zero_on_undefined_rows, field=value"
+    },
+    {
+      "claim": "correction reproduces shipped feature for scgpt_hepg2_individual_cells: measured value against its tolerance",
+      "value": 2e-06,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scgpt_hepg2_individual_cells, check=correction_reproduces_shipped_feature, field=value"
+    },
+    {
+      "claim": "n no op queries for scprint_hepg2_individual_cells",
+      "value": 126.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scprint_hepg2_individual_cells, field=n_no_op_queries"
+    },
+    {
+      "claim": "n query rows touched for scprint_hepg2_individual_cells",
+      "value": 117.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scprint_hepg2_individual_cells, field=n_query_rows_touched"
+    },
+    {
+      "claim": "n query rows everywhere no op for scprint_hepg2_individual_cells",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scprint_hepg2_individual_cells, field=n_query_rows_everywhere_no_op"
+    },
+    {
+      "claim": "max abs feature change partial rows for scprint_hepg2_individual_cells",
+      "value": 2e-06,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scprint_hepg2_individual_cells, field=max_abs_feature_change_partial_rows"
+    },
+    {
+      "claim": "standardized is per query zscore for scprint_hepg2_individual_cells: measured value against its tolerance",
+      "value": 2e-06,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scprint_hepg2_individual_cells, check=standardized_is_per_query_zscore, field=value"
+    },
+    {
+      "claim": "raw is plain cell mean for scprint_hepg2_individual_cells: measured value against its tolerance",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scprint_hepg2_individual_cells, check=raw_is_plain_cell_mean, field=value"
+    },
+    {
+      "claim": "undefined rows are everywhere no op for scprint_hepg2_individual_cells: measured value against its tolerance",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scprint_hepg2_individual_cells, check=undefined_rows_are_everywhere_no_op, field=value"
+    },
+    {
+      "claim": "shipped feature zero on undefined rows for scprint_hepg2_individual_cells: measured value against its tolerance",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scprint_hepg2_individual_cells, check=shipped_feature_zero_on_undefined_rows, field=value"
+    },
+    {
+      "claim": "correction reproduces shipped feature for scprint_hepg2_individual_cells: measured value against its tolerance",
+      "value": 2e-06,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=scprint_hepg2_individual_cells, check=correction_reproduces_shipped_feature, field=value"
+    },
+    {
+      "claim": "n no op queries for transcriptformer_hepg2_individual_cells",
+      "value": 79.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=transcriptformer_hepg2_individual_cells, field=n_no_op_queries"
+    },
+    {
+      "claim": "n query rows touched for transcriptformer_hepg2_individual_cells",
+      "value": 70.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=transcriptformer_hepg2_individual_cells, field=n_query_rows_touched"
+    },
+    {
+      "claim": "n query rows everywhere no op for transcriptformer_hepg2_individual_cells",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=transcriptformer_hepg2_individual_cells, field=n_query_rows_everywhere_no_op"
+    },
+    {
+      "claim": "max abs feature change partial rows for transcriptformer_hepg2_individual_cells",
+      "value": 2e-06,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=transcriptformer_hepg2_individual_cells, field=max_abs_feature_change_partial_rows"
+    },
+    {
+      "claim": "standardized is per query zscore for transcriptformer_hepg2_individual_cells: measured value against its tolerance",
+      "value": 3e-06,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=transcriptformer_hepg2_individual_cells, check=standardized_is_per_query_zscore, field=value"
+    },
+    {
+      "claim": "raw is plain cell mean for transcriptformer_hepg2_individual_cells: measured value against its tolerance",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=transcriptformer_hepg2_individual_cells, check=raw_is_plain_cell_mean, field=value"
+    },
+    {
+      "claim": "undefined rows are everywhere no op for transcriptformer_hepg2_individual_cells: measured value against its tolerance",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=transcriptformer_hepg2_individual_cells, check=undefined_rows_are_everywhere_no_op, field=value"
+    },
+    {
+      "claim": "shipped feature zero on undefined rows for transcriptformer_hepg2_individual_cells: measured value against its tolerance",
+      "value": 0.0,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=transcriptformer_hepg2_individual_cells, check=shipped_feature_zero_on_undefined_rows, field=value"
+    },
+    {
+      "claim": "correction reproduces shipped feature for transcriptformer_hepg2_individual_cells: measured value against its tolerance",
+      "value": 3e-06,
+      "source": "results/verification/no_op_correction.json",
+      "key": "block=transcriptformer_hepg2_individual_cells, check=correction_reproduces_shipped_feature, field=value"
+    },
+    {
+      "claim": "checks passed over the corrected individual-cells blocks",
+      "value": "15 of 15",
+      "source": "results/verification/no_op_correction.json",
+      "key": "field=blocks[*].checks[*].pass"
+    },
+    {
+      "claim": "values in CP10K the earlier whole-dose rule deleted, per model",
+      "value": {
+        "scgpt": [
+          0.0
+        ],
+        "scprint": [
+          0.0
+        ],
+        "transcriptformer": [
+          0.0,
+          64.0
+        ]
+      },
+      "source": "results/verification/no_op_correction.json",
+      "key": "field=blocks[*].values_the_whole_dose_rule_deleted"
     },
     {
       "claim": "AUPRC reproduced here on STRING/hHEP",

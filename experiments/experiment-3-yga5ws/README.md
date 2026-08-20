@@ -61,6 +61,7 @@ Small reviewable copies live in this worktree.
 | control-split targets | `ctrl_split_targets/` (store) | effect recomputed against each control half and against all control cells, plus `recompute_report.json` |
 | control-overlap scoring | `alt_target_ctrl0/`, `alt_target_ctrl1/`, `alt_target_ctrlall/` (store) | the key arms rescored against each of those targets |
 | anchor sensitivity | `sensitivity/` (store) | HepG2 response arms at the uniform-virtual, individual-cells and masked anchors, with each model's mean-control arm re-run as the in-job reference |
+| no-op query record | `results/handoff/no_op_queries_per_gene.csv`, `results/verification/no_op_correction.json` (worktree) | which (perturbed gene, value) queries were no-ops and in how many cells, derived from run 2's per-query records, plus the five checks behind the per-query exclusion |
 | BEELINE reproduction | `beeline/beeline_reproduction.json` (store), `results/beeline_reproduction.json` (worktree) | the source paper's scGPT embedding baseline re-fitted on its own benchmark, with a permuted-embedding control and an unseen-gene slice |
 | discrimination versions | `results/discrimination_versions.json`, `results/discrimination/` (worktree) | the same saved predictions rescored under cell-eval 0.5.18, 0.5.21 and 0.8.2 |
 | merged tables | `results/summary/` (worktree) | `runs.parquet`, `contrasts.parquet`, `grid.parquet`, `transfer_runs.parquet`, `ordering_agreement.parquet`, `control_cell_overlap.parquet`, `null_band.parquet`, `headline.json` |
@@ -86,6 +87,22 @@ scratch/dl/alt_target_ctrl1,scratch/dl/alt_target_ctrlall \
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.contract --summary results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.build \
   --summary results/summary --out "$SILICO_APP_DIR"
+```
+
+The no-op query table is derived once on the pod from run 2's per-query records and committed,
+because the aggregate count per value cannot say which queries it refers to:
+
+```sh
+# the three run 2 query_summary.parquet files are pulled with signed links first
+PYTHONPATH=src apy -m scfm_pfm.ingest.no_op \
+  --aggregate results/handoff/no_op_queries.csv \
+  --query-summary scgpt:hepg2:individual_cells:scratch/noop/qs_scgpt_hepg2_ic.parquet \
+  --query-summary scprint:hepg2:individual_cells:scratch/noop/qs_scprint_hepg2_ic.parquet \
+  --query-summary transcriptformer:hepg2:individual_cells:scratch/noop/qs_transcriptformer_hepg2_ic.parquet \
+  --out results/handoff/no_op_queries_per_gene.csv
+# the checks behind the correction, against run 2's own arrays
+PYTHONPATH=src apy -m scfm_pfm.ingest.no_op_check --block <model>:<line>:<anchor>:<vvp>:<qs> \
+  --out results/verification/no_op_correction.json
 ```
 
 The discrimination axis is computed with Arc Institute's `cell-eval`. The pre-registration pinned

@@ -113,6 +113,8 @@ class Results:
         self.beeline = json.loads(bl.read_text()) if bl.exists() else {}
         dv = summary_dir.parent / "discrimination_versions.json"
         self.disc_versions = json.loads(dv.read_text()) if dv.exists() else {}
+        nc = summary_dir.parent / "verification" / "no_op_correction.json"
+        self.no_op = json.loads(nc.read_text())["blocks"] if nc.exists() else []
 
     def disc(self, line: str, arm: str, col: str = "discrimination_cell_eval_mean") -> float:
         d = self.primary(line)
@@ -220,9 +222,9 @@ def opening(r: Results) -> str:
         f"HepG2 the best model feature reaches {ci(h[VERDICT], h[VERDICT + '_lo'], h[VERDICT + '_hi'])} "
         f"(fold-centred correlation, {label(h.arm)}) against {ci(*hc)} for co-expression, and in "
         f"Jurkat {ci(j[VERDICT], j[VERDICT + '_lo'], j[VERDICT + '_hi'])} ({label(j.arm)}) against "
-        f"{ci(*jc)}. Perturbation discrimination, a second scoring axis with no residualization "
-        "in it at all, puts the same arms in the same order: the embedding arms above chance and "
-        "co-expression below it.</p>"
+        f"{ci(*jc)}. The second pre-registered scoring axis, perturbation discrimination, turns "
+        "out to depend on which release of the metric computes it, so it neither confirms nor "
+        "contradicts that ranking; the verdict rests on the correlation score alone.</p>"
         "<p>What carries that signal is the model's static gene embedding, not its simulated "
         "reaction to a perturbation. Adding the response features to the embedding changes the "
         "score by less than the design can resolve, and on their own the response features are "
@@ -541,17 +543,17 @@ def discrimination_section(r: Results, chart: str) -> str:
         "anywhere. It is computed with Arc Institute's own <code>cell-eval</code> rather than a "
         "reimplementation, on effect-scale profiles reconstituted by adding the training fold's "
         "mean effect back to the predicted residual. Chance is 0.5.</p>"
-        f"<p>The embedding arms clear chance in both lines ({P.num(best_h)} in HepG2, "
-        f"{P.num(best_j)} in Jurkat). Co-expression does not ({P.num(r.disc('hepg2', 'coexp'))} "
-        f"and {P.num(r.disc('jurkat', 'coexp'))}), and neither do the response-only arms. This "
-        "axis was pre-registered precisely so that a disagreement with the residual correlation "
-        "would be visible; it agrees with the fold-centred score and disagrees with the "
-        "pre-registered residual one, which is independent support for reading the fold-centred "
-        "score as the one that tracks perturbation-specific signal.</p>"
+        f"<p>Under the version the jobs resolved, the embedding arms clear chance in both lines "
+        f"({P.num(best_h)} in HepG2, {P.num(best_j)} in Jurkat), co-expression does not "
+        f"({P.num(r.disc('hepg2', 'coexp'))} and {P.num(r.disc('jurkat', 'coexp'))}), and "
+        "neither do the response-only arms. That ordering is the same one the fold-centred "
+        "correlation gives, and the opposite of the pre-registered residual one. It would be "
+        "independent support for reading the fold-centred score, except that the ordering is "
+        "not stable across releases of the metric.</p>"
         + _disc_version_note(r)
     )
-    return P.section("Discrimination, the second scoring axis, agrees with the fold-centred score",
-                     body + tab + chart, sources=[S_DISC, S_ANALYSIS])
+    return P.section("Discrimination, the second scoring axis, depends on the version that "
+                     "computes it", body + tab + chart, sources=[S_DISC, S_ANALYSIS])
 
 
 def _disc_version_note(r: Results) -> str:
@@ -560,17 +562,58 @@ def _disc_version_note(r: Results) -> str:
         return ""
     spread = float(v["max_abs_difference_any_file"])
     vers = sorted({k for f in v["per_file"].values() for k in f["values"]})
+    old_v = "0.5.18"
+
+    def at(file: str, version: str) -> str:
+        return P.num(v["per_file"][file]["values"][version])
+
+    hep_m, hep_c = (
+        "hepg2__full__grouped__scgpt_full__mlp.npz",
+        "hepg2__full__grouped__coexp__mlp.npz",
+    )
+    jur_m, jur_c = (
+        "jurkat__full__grouped__transcriptformer_full__mlp.npz",
+        "jurkat__full__grouped__coexp__mlp.npz",
+    )
     return (
         "<p>The pre-registration pinned <code>cell-eval==0.5.19</code>. That version does not "
         "exist: the package publishes 0.1.0 and then 0.5.33 onward, and the upstream tag list "
         "jumps 0.5.18 to 0.5.21, so the pin was unattainable when it was written and the jobs "
         f"resolved {v['resolved_in_the_sweep']}. Rescoring the same saved prediction matrices "
-        f"under {_join(vers)} shows the choice matters: the number moves by up to "
-        f"{P.num(spread)}, and the 0.5.x line ranks co-expression above the model arms while "
-        "0.8.2 ranks them the other way. The implementations differ in one line — 0.5.x scores "
-        "the absolute effect profile, 0.8.2 the signed one — and a distance on absolute values "
-        "discards the direction of every response. The numbers above are 0.8.2, the current "
-        "implementation of the challenge metric, and the version is recorded with them.</p>"
+        f"under {_join(vers)} reverses the comparison this axis is being asked about. Under "
+        f"{old_v}, which is identical to 0.5.21 on every file, the HepG2 scGPT full arm scores "
+        f"{at(hep_m, old_v)} against {at(hep_c, old_v)} for co-expression and the Jurkat "
+        f"TranscriptFormer full arm {at(jur_m, old_v)} against {at(jur_c, old_v)}; under 0.8.2 "
+        f"the same matrices give {at(hep_m, '0.8.2')} against {at(hep_c, '0.8.2')} and "
+        f"{at(jur_m, '0.8.2')} against {at(jur_c, '0.8.2')}. The largest move on any file is "
+        f"{P.num(spread)}. The implementations differ in one line — 0.5.x scores the absolute "
+        "effect profile, 0.8.2 the signed one — and a distance on absolute values discards the "
+        "direction of every response, which is why 0.8.2 is the reported number and the "
+        "version travels with it.</p>"
+        "<p>Because the two existing versions nearest the unattainable pin rank co-expression "
+        "and the model arms the other way round, this axis cannot serve as independent "
+        "confirmation of the correlation result, and it is reported as inconclusive rather "
+        "than as corroboration. It is not evidence against the correlation result either: the "
+        "reversal is a property of the metric implementation, not of the predictions, which "
+        "are the same matrices in both cases.</p>"
+    )
+
+
+def _no_op_note(r: Results) -> str:
+    """How many queries the per-query exclusion touched, and how far it moved them."""
+    if not r.no_op:
+        return ""
+    total = sum(b["n_no_op_queries"] for b in r.no_op)
+    rows = sum(b["n_query_rows_touched"] for b in r.no_op)
+    gone = sum(b["n_query_rows_everywhere_no_op"] for b in r.no_op)
+    per_block = r.no_op[0]["n_perturbed"] * r.no_op[0]["n_values"]
+    move = max(b["max_abs_feature_change_partial_rows"] for b in r.no_op)
+    checks = [c for b in r.no_op for c in b["checks"].values()]
+    return (
+        f": {total} no-op queries over the three blocks touch {rows} query rows of "
+        f"{per_block * len(r.no_op)}, the corrected feature differs from the shipped one by at "
+        f"most {move:.1e}, and {sum(c['pass'] for c in checks)} of {len(checks)} checks pass. "
+        f"{gone} rows were no-ops in every cell and carry no measurement at all"
     )
 
 
@@ -625,19 +668,33 @@ def sensitivity_section(r: Results, chart: str) -> str:
         "influence on another. The features were harvested at four queries in the previous run, "
         "and this step scores the same response-only arm at each of them in HepG2 under the "
         "grouped split. Translator, split, scope and scoring rule are identical, so the only "
-        "thing that varies is what the model was asked. The feature width varies with the query: "
-        "queries that would have asked a gene for the value it already has are structural no-ops "
-        "and were dropped, which is why the individual-cells and masked columns carry fewer "
-        "numbers.</p>"
-        f"<p>The anchor moves the score, but never out of the null band. The largest paired move "
-        f"is {ci(biggest['median_difference'], biggest['lo'], biggest['hi']) if biggest else 'n/a'} "
+        "thing that varies is what the model was asked.</p>"
+        "<p>One query needs care. At the individual-cells anchor the response is averaged over "
+        "4 real control cells, and a gene that already reads zero in one of them is unchanged "
+        "by being set to 0 CP10K: that cell's two forward passes are the same call, so it "
+        "contributes an exact zero. Those no-op queries are excluded per (perturbed gene, "
+        "value) rather than by deleting the whole dose, because the same dose is a real "
+        "measurement for every other perturbation. Since the stored row is the plain mean over "
+        "the cells and the feature is that row z-scored across read-out genes, excluding them "
+        "is a positive scale factor the z-score removes exactly, which is checked against the "
+        f"shipped arrays{_no_op_note(r)}. The masked column is narrower for an unrelated "
+        "reason: that variant ships no gradient form.</p>"
+        "<p>"
+        + (
+            "The anchor moves the score, but never out of the null band. "
+            if best_score <= null
+            else "The anchor moves the score, and the best of them clears the null band. "
+        )
+        + f"The largest paired move is "
+        f"{ci(biggest['median_difference'], biggest['lo'], biggest['hi']) if biggest else 'n/a'} "
         f"({MODEL_LABEL[biggest['model']] if biggest else ''} at the "
         f"{biggest['anchor'].replace('_', ' ') if biggest else ''} anchor). The uniform-virtual "
         f"anchor beats the on-distribution one for "
         f"{_join([MODEL_LABEL[m] for m in uv_better]) or 'no model'} and loses for "
         f"{_join([MODEL_LABEL[m] for m in uv_worse]) or 'no model'}, so the "
         "mechanism claim holds for some models and reverses for others on this task. The best "
-        f"score at any anchor is {P.num(best_score)}, still below the shuffled-label ceiling of "
+        f"score at any anchor is {P.num(best_score)}, "
+        f"{'still below' if best_score <= null else 'above'} the shuffled-label ceiling of "
         f"{P.num(null)} and a fraction of the {P.num(emb_best)} the same models' embeddings "
         "reach in this cell line. Masking is not a clean mechanistic contrast: it hides the "
         "read-out gene's own value together with its whole block, so it removes context as well "
@@ -647,8 +704,12 @@ def sensitivity_section(r: Results, chart: str) -> str:
            if rerun == 0 else f"reproduce the main sweep to within {P.num(rerun)}, ")
         + "which also confirms the rebuilt bundle is the same bundle.</p>"
     )
-    return P.section("No query anchor lifts the response features out of the null band",
-                     body + tab + ptab + chart, sources=[S_SENS, S_CONFIG])
+    title = (
+        "No query anchor lifts the response features out of the null band"
+        if best_score <= null
+        else "One query anchor lifts the response features out of the null band"
+    )
+    return P.section(title, body + tab + ptab + chart, sources=[S_SENS, S_CONFIG])
 
 
 def controls_section(r: Results, split_chart: str, overlap_chart: str) -> str:
@@ -886,10 +947,10 @@ def limitations(r: Results) -> str:
         "in HepG2 only, over the three models with full-coverage feature blocks; AIDO.Cell's "
         "block covers 250 perturbations, so it cannot enter the full-scope sensitivity step at "
         "all.</li>"
-        "<li>The discrimination axis depends on which release of the metric computes it. The "
-        "version pinned before the run does not exist upstream, and the two real versions on "
-        "either side of it disagree with the current one about whether co-expression or the "
-        "model arms rank higher. The reported numbers name their version.</li>"
+        "<li>The discrimination axis is inconclusive. The version pinned before the run does "
+        "not exist upstream, and the two real versions nearest it rank co-expression above the "
+        "model arms while the current one ranks them below, on the same saved predictions. The "
+        "reported numbers name their version, and the verdict does not rest on them.</li>"
         + _beeline_limitation(r)
         + "<li>Two cell lines from one screen. Both come from the same CRISPRi Perturb-seq study "
         "with the same protocol, so the cross-line result is a weaker test of generality than "
@@ -1041,8 +1102,10 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "predicted effect profile is to its own measured profile compared with every other "
         "held-out perturbation. Computed with cell-eval on effect-scale profiles. The dotted "
         "line is chance.",
-        "Arms carrying a gene embedding sit above chance; co-expression, the response-only arms "
-        "and the random-vector control sit at or below it.",
+        "Under cell-eval 0.8.2 the arms carrying a gene embedding sit above chance while "
+        "co-expression, the response-only arms and the random-vector control sit at or below "
+        "it. Two earlier releases of the same metric reverse that ordering, so the axis is "
+        "reported as version-dependent rather than as a second confirmation.",
         sources=[S_DISC, S_FIGS],
     ) if "discrimination" in made else ""
     f_sens = P.figure(

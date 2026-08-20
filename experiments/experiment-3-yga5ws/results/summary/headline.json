@@ -6829,13 +6829,13 @@
         "arm": "scgpt_resp@individual_cells",
         "model": "scgpt",
         "anchor": "individual_cells",
-        "score": 0.00538848286621011,
-        "lo": -7.251917078079364e-05,
-        "hi": 0.01048174513739479,
-        "preregistered": 0.027002998485310924,
+        "score": 0.0017487609077429754,
+        "lo": -0.0029342006256545903,
+        "hi": 0.007203922879758035,
+        "preregistered": 0.025948432656804323,
         "n_perturbations": 524,
-        "feature_dim": 8,
-        "minus_mean_control": 0.0015509881032563528
+        "feature_dim": 11,
+        "minus_mean_control": -0.0020887338552107813
       },
       {
         "cell_line": "hepg2",
@@ -6868,13 +6868,13 @@
         "arm": "scprint_resp@individual_cells",
         "model": "scprint",
         "anchor": "individual_cells",
-        "score": 0.025832345952915527,
-        "lo": 0.01849122816164607,
-        "hi": 0.030327905068625205,
-        "preregistered": 0.03843488025745232,
+        "score": 0.020762120270280134,
+        "lo": 0.01270915736063207,
+        "hi": 0.026486544392758576,
+        "preregistered": 0.0367348513017711,
         "n_perturbations": 524,
-        "feature_dim": 8,
-        "minus_mean_control": 0.018957603467571294
+        "feature_dim": 11,
+        "minus_mean_control": 0.0138873777849359
       },
       {
         "cell_line": "hepg2",
@@ -6907,13 +6907,13 @@
         "arm": "transcriptformer_resp@individual_cells",
         "model": "transcriptformer",
         "anchor": "individual_cells",
-        "score": 0.008224324388715332,
-        "lo": 0.002854157504116057,
-        "hi": 0.015530303157388261,
-        "preregistered": 0.06219042067856138,
+        "score": 0.007589210858422742,
+        "lo": 0.0020786123316771468,
+        "hi": 0.012199192783668435,
+        "preregistered": 0.06769501205435989,
         "n_perturbations": 524,
-        "feature_dim": 6,
-        "minus_mean_control": -0.003897525055921027
+        "feature_dim": 11,
+        "minus_mean_control": -0.004532638586213618
       }
     ],
     "rerun_check": [
@@ -6958,10 +6958,10 @@
       {
         "model": "scgpt",
         "anchor": "individual_cells",
-        "median_difference": 0.0011755222809814577,
-        "lo": -0.003198214328904309,
-        "hi": 0.006606890975762245,
-        "min_resolvable_difference_achieved": 0.0062235368562623475,
+        "median_difference": -0.001583089632141906,
+        "lo": -0.006011365810255986,
+        "hi": 0.003861015070922908,
+        "min_resolvable_difference_achieved": 0.00625090222091911,
         "n_paired": 524
       },
       {
@@ -6985,10 +6985,10 @@
       {
         "model": "scprint",
         "anchor": "individual_cells",
-        "median_difference": 0.014368314768729108,
-        "lo": 0.007075544373262735,
-        "hi": 0.021168494542361922,
-        "min_resolvable_difference_achieved": 0.008380203349718132,
+        "median_difference": 0.010525497891521116,
+        "lo": 0.002805886809827083,
+        "hi": 0.018223000860167756,
+        "min_resolvable_difference_achieved": 0.007786629043250066,
         "n_paired": 524
       },
       {
@@ -7012,10 +7012,10 @@
       {
         "model": "transcriptformer",
         "anchor": "individual_cells",
-        "median_difference": -0.0029540056008807453,
-        "lo": -0.00814582843771126,
-        "hi": 0.0036948288581848923,
-        "min_resolvable_difference_achieved": 0.005413099477145111,
+        "median_difference": -0.0034353697739806163,
+        "lo": -0.008471141553132607,
+        "hi": 0.0012205896534879333,
+        "min_resolvable_difference_achieved": 0.004144847858509084,
         "n_paired": 524
       },
       {

@@ -60,7 +60,8 @@ results:
     node_free: 0.01893
   response_features: "largest response-only score anywhere 0.03438; adding them to the embedding moves the score by at most 0.02010 with no consistent sign. Score-dependent on their own: none clears the HepG2 null (ceiling 0.02860), scPRINT and TranscriptFormer clear the Jurkat null (0.02040), and on the pre-registered score TranscriptFormer beats co-expression in HepG2 by 0.02094 [0.01125, 0.03279]"
   discrimination: "cell-eval 0.8.2 on effect profiles, chance 0.5: embedding arms 0.5211-0.5793, co-expression 0.4647 (HepG2) and 0.4845 (Jurkat), response-only arms 0.4665-0.4965. The pre-registered pin 0.5.19 was never released; 0.5.18 and 0.5.21 differ from 0.8.2 by up to 0.1141 on the same predictions and reverse the ranking"
-  anchor_sensitivity: "HepG2, three models: no anchor lifts a response-only arm above the 0.02860 null (best 0.02583, scPRINT at individual cells). Uniform virtual beats mean control for scGPT (+0.00707 [0.00091, 0.01338]) and scPRINT (+0.00936 [0.00267, 0.01762]) and loses for TranscriptFormer (-0.01195 [-0.01736, -0.00661]). Re-run mean-control arms reproduce the main sweep exactly"
+  anchor_sensitivity: "HepG2, three models: no anchor lifts a response-only arm above the 0.02860 null (best 0.02076, scPRINT at individual cells). Uniform virtual beats mean control for scGPT (+0.00707 [0.00091, 0.01338]) and scPRINT (+0.00936 [0.00267, 0.01762]) and loses for TranscriptFormer (-0.01195 [-0.01736, -0.00661]). Re-run mean-control arms reproduce the main sweep exactly"
+  no_op_query_correction: "individual-cells no-op queries are dropped per (perturbed gene, value), not by deleting the whole dose: 584 no-op queries touch 431 of 7860 query rows, the correction is a per-row positive scale factor the z-score removes (max change 2.68e-06 against the shipped arrays), 15 of 15 checks pass"
   beeline_reproduction: "source paper's scGPT embedding baseline, trained on STRING/hESC and scored on three hHEP cells: mean AUPRC 0.6724 against 0.6247 reported. A permuted-embedding control keeping gene identity reaches 0.6271; restricted to unseen-gene pairs the real embedding gets 0.5798 against per-cell chance 0.3987-0.5962 and the identity control 0.5119"
   transfer_shared_genes: "best arm 0.2896 against a gene-identity null of 0.2517"
   transfer_unseen_genes: "best arm 0.09392 against a gene-identity null of 0.003236 or below; 89 and 78 held-out perturbations"
@@ -71,6 +72,6 @@ on_demand_jobs:
   ingest: ["644361486469"]
   sweep: ["wave-1 8 shards", "342858905025", "380623868985", "843421409990", "964772506062", "805439637081"]
   transfer: ["440917637831", "588807486940"]
-  sensitivity: ["310778967349"]
+  sensitivity: ["310778967349", "344694057936 (per-query no-op correction; supersedes 310778967349 for the individual-cells arms)"]
   beeline: ["795184437273", "428360524347"]
   control_cell_overlap: ["917782461666", "720458530319", "396121807697", "334831674029"]
