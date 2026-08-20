@@ -55,7 +55,7 @@ def null_band(runs: pd.DataFrame) -> pd.DataFrame:
     if d.empty:
         return pd.DataFrame()
     d["base_arm"] = d.arm.map(base_arm)
-    keys = ["cell_line", "scope", "split", "translator", "base_arm"]
+    keys = ["cell_line", "scope", "split", "translator", "target_source", "base_arm"]
     rows = []
     for key, block in d.groupby(keys, dropna=False):
         rec = {**dict(zip(keys, key)), "n_draws": int(block.shape[0])}
@@ -69,16 +69,33 @@ def null_band(runs: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def load_sweep(sweep_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
-    runs = pd.concat(
-        [pd.read_parquet(p) for p in sorted(sweep_dir.glob("runs_shard*.parquet"))],
-        ignore_index=True,
-    )
-    per_pert = pd.concat(
-        [pd.read_parquet(p) for p in sorted(sweep_dir.glob("per_perturbation_shard*.parquet"))],
-        ignore_index=True,
-    )
-    return runs, per_pert
+#: what identifies one run. A later wave that re-ran a cell of the sweep — the
+#: node control after it was made additive, say — replaces the earlier one.
+RUN_KEYS = ["cell_line", "scope", "split", "arm", "translator", "target_source"]
+
+
+def load_sweep(*sweep_dirs: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Every shard of every wave, later waves winning where they overlap.
+
+    Directories are read in the order given, so the caller states the ordering
+    rather than it depending on a filename.
+    """
+    runs, per_pert = [], []
+    for d in sweep_dirs:
+        d = Path(d)
+        runs += [pd.read_parquet(p) for p in sorted(d.glob("runs_shard*.parquet"))]
+        per_pert += [pd.read_parquet(p) for p in sorted(d.glob("per_perturbation_shard*.parquet"))]
+    if not runs:
+        raise FileNotFoundError(f"no shards under {[str(d) for d in sweep_dirs]}")
+    r = pd.concat(runs, ignore_index=True)
+    p = pd.concat(per_pert, ignore_index=True)
+    for frame in (r, p):
+        if "target_source" not in frame.columns:
+            frame["target_source"] = "run1_all_controls"
+        frame["target_source"] = frame["target_source"].fillna("run1_all_controls")
+    r = r.drop_duplicates(subset=RUN_KEYS, keep="last").reset_index(drop=True)
+    p = p.drop_duplicates(subset=RUN_KEYS + ["perturbation"], keep="last").reset_index(drop=True)
+    return r, p
 
 
 def contrasts(
@@ -91,7 +108,7 @@ def contrasts(
     hide the fact that the arms rise and fall together across perturbations.
     """
     rows = []
-    keys = ["cell_line", "scope", "split", "translator"]
+    keys = ["cell_line", "scope", "split", "translator", "target_source"]
     for key, block in per_pert.groupby(keys, dropna=False):
         ref = block[block.arm == reference]
         if ref.empty:
@@ -160,11 +177,23 @@ def headline(runs: pd.DataFrame, con: pd.DataFrame, nulls: pd.DataFrame | None =
     }
     if nulls is not None and not nulls.empty:
         band = nulls[(nulls.scope == "full") & (nulls.split == "grouped")]
+        out["null_band_all_cells"] = nulls.to_dict("records")
         out["null_band"] = band.to_dict("records")
-    primary = runs[(runs.scope == "full") & (runs.split == "grouped") & (runs.translator == "mlp")]
+    primary = runs[
+        (runs.scope == "full")
+        & (runs.split == "grouped")
+        & (runs.translator == "mlp")
+        & (runs.target_source == "run1_all_controls")
+    ]
     for line, block in primary.groupby("cell_line"):
         ranked = block.sort_values(VERDICT_COL, ascending=False)
-        cell = {"cell_line": line, "scope": "full", "split": "grouped", "translator": "mlp"}
+        cell = {
+            "cell_line": line,
+            "scope": "full",
+            "split": "grouped",
+            "translator": "mlp",
+            "target_source": "run1_all_controls",
+        }
         null_prereg = null_ceiling(runs, cell, PREREG_COL)
         null_verdict = null_ceiling(runs, cell, VERDICT_COL)
         c = con[
@@ -218,6 +247,28 @@ def headline(runs: pd.DataFrame, con: pd.DataFrame, nulls: pd.DataFrame | None =
     return out
 
 
+def control_cell_overlap(runs: pd.DataFrame) -> pd.DataFrame:
+    """The same arms scored against targets built on different control cells.
+
+    ``ctrl0`` shares no control cell with the co-expression features, ``ctrl1``
+    shares all of them, and ``ctrlall`` is the estimator run 1 used. If sharing
+    control cells with the target inflated the statistical baseline, the
+    baseline's advantage would shrink from ctrl1 to ctrl0 while the model arms,
+    which touch no control cell, would not move.
+    """
+    d = runs[runs.target_source != "run1_all_controls"]
+    if d.empty:
+        return pd.DataFrame()
+    keep = [
+        "cell_line", "scope", "split", "translator", "target_source", "arm", "family",
+        VERDICT_COL, VERDICT_COL + "_lo", VERDICT_COL + "_hi", PREREG_COL,
+        "residual__weighted__ceiling", "centered__weighted__ceiling",
+        "discrimination_ours_residual_mean",
+    ]
+    wide = d[[c for c in keep if c in d.columns]].copy()
+    return wide.sort_values(["cell_line", "arm", "translator", "target_source"])
+
+
 def grid_table(runs: pd.DataFrame) -> pd.DataFrame:
     """One row per (run, grid cell): the eight numbers, side by side."""
     rows = []
@@ -231,6 +282,7 @@ def grid_table(runs: pd.DataFrame) -> pd.DataFrame:
                             "cell_line": r.cell_line,
                             "scope": r.scope,
                             "split": r.split,
+                            "target_source": r.target_source,
                             "arm": r.arm,
                             "family": r.family,
                             "translator": r.translator,
@@ -253,7 +305,7 @@ def ordering_agreement(grid: pd.DataFrame) -> pd.DataFrame:
     under every other cell, per (cell line, scope, split, translator).
     """
     rows = []
-    keys = ["cell_line", "scope", "split", "translator"]
+    keys = ["cell_line", "scope", "split", "translator", "target_source"]
     for key, block in grid.groupby(keys, dropna=False):
         base = block[block.is_primary].set_index("arm")["value"]
         for (t, w, c), sub in block.groupby(["target", "weighting", "correction"]):
@@ -276,14 +328,18 @@ def ordering_agreement(grid: pd.DataFrame) -> pd.DataFrame:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--sweep", default=None)
+    ap.add_argument("--sweep", default=None, help="comma-separated shard directories, in order")
     ap.add_argument("--transfer-sweep", default=None)
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
-    sweep_dir = Path(args.sweep) if args.sweep else paths.results_dir() / "sweep"
+    sweep_dirs = (
+        [Path(x) for x in args.sweep.split(",") if x]
+        if args.sweep
+        else [paths.results_dir() / "sweep"]
+    )
     out = paths.ensure(Path(args.out) if args.out else paths.results_dir() / "summary")
 
-    runs, per_pert = load_sweep(sweep_dir)
+    runs, per_pert = load_sweep(*sweep_dirs)
     con = pd.concat(
         [contrasts(per_pert, metric=m) for m in ("residual_weighted", "centered_weighted")],
         ignore_index=True,
@@ -294,9 +350,13 @@ def main(argv: list[str] | None = None) -> int:
     grid = grid_table(runs)
     agree = ordering_agreement(grid)
     head = headline(runs, con, nulls)
+    overlap = control_cell_overlap(runs)
+    if not overlap.empty:
+        overlap.to_parquet(out / "control_cell_overlap.parquet", index=False)
+        head["control_cell_overlap"] = overlap.to_dict("records")
 
     if args.transfer_sweep:
-        t_runs, t_pert = load_sweep(Path(args.transfer_sweep))
+        t_runs, t_pert = load_sweep(*[Path(x) for x in args.transfer_sweep.split(",") if x])
         t_runs.to_parquet(out / "transfer_runs.parquet", index=False)
         t_pert.to_parquet(out / "transfer_per_perturbation.parquet", index=False)
         t_con = contrasts(t_pert)

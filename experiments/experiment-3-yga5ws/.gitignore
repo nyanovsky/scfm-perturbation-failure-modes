@@ -30,3 +30,5 @@ _work/
 # Copies of job outputs pulled down for a quick look; the durable copy is in
 # the artifact store, not here.
 scratch/**/*.parquet
+scratch/**/*.json
+scratch/dl/

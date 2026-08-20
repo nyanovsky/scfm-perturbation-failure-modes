@@ -482,18 +482,26 @@ def _transfer_scoring(q: dict, eff_dst: np.ndarray, half0: np.ndarray, half1: np
     }
 
 
-def transfer_rows(bundle: LineBundle, scope: str) -> np.ndarray:
+def transfer_rows(
+    bundle: LineBundle, scope: str, exclude_targets: set[str] | None = None
+) -> np.ndarray:
     """Perturbations of one line that a transfer run can use.
 
     ``full`` is every in-scope perturbation whose own gene is a shared read-out
     column; ``common`` narrows that to the perturbations every model covers,
     which is the only scope where AIDO.Cell — whose block is a 250-gene subset —
-    can be compared against the other three on the same rows.
+    can be compared against the other three on the same rows; ``unseen`` keeps
+    only destination perturbations whose gene was never perturbed in the
+    training line.
     """
     rows = np.flatnonzero(bundle.self_col_np >= 0)
     if scope == "common":
         keep = set(bundle.scope_rows("common", C.PRIMARY_ANCHOR).tolist())
         rows = np.array([r for r in rows if int(r) in keep], dtype=np.int64)
+    if exclude_targets:
+        rows = np.array(
+            [r for r in rows if str(bundle.pert_target[r]) not in exclude_targets], dtype=np.int64
+        )
     return rows
 
 
@@ -515,8 +523,15 @@ def run_transfer(
         [g for g in src.readout_gene_id if g in set(dst.readout_gene_id.tolist())], dtype=object
     )
     sv, dv = src.restrict_columns(shared), dst.restrict_columns(shared)
-    rows_src = transfer_rows(sv, scope)
-    rows_dst = transfer_rows(dv, scope)
+    # ``unseen`` is the same training set as ``full``; what changes is that a
+    # destination perturbation is scored only if its gene was never perturbed in
+    # the training line. Without it, a fixed random code per gene scores as well
+    # as a model embedding, because the two lines' responses to the SAME
+    # knockdown are correlated and gene identity is enough to exploit that.
+    base_scope = "full" if scope == "unseen" else scope
+    rows_src = transfer_rows(sv, base_scope)
+    seen = set(str(t) for t in sv.pert_target[rows_src]) if scope == "unseen" else None
+    rows_dst = transfer_rows(dv, base_scope, seen)
     if rows_src.size < 50 or rows_dst.size < 50:
         return [], []
     device = str(sv.effect.device)
