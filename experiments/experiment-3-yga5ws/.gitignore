@@ -27,3 +27,6 @@ __pycache__/
 results/handoff/urls/
 scratch/make_url_manifest.py
 _work/
+# Copies of job outputs pulled down for a quick look; the durable copy is in
+# the artifact store, not here.
+scratch/**/*.parquet

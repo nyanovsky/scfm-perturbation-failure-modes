@@ -8,7 +8,7 @@ after seeing which one flatters a conclusion.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 SEED = 42
 
@@ -114,7 +114,7 @@ class MLPConfig:
 MLP = MLPConfig()
 #: ridge run beside the MLP as a capacity control; alpha by GCV on the training
 #: fold from this fixed grid
-RIDGE_ALPHAS = tuple(float(10.0**k) for k in (-2, -1, 0, 1, 2, 3, 4, 5))
+RIDGE_ALPHAS = tuple(float(10.0**k) for k in range(-2, 8))
 
 # --------------------------------------------------------------------------- #
 # scoring
@@ -146,6 +146,9 @@ class ArmSpec:
     model: str | None = None
     anchor: str | None = None
     note: str = ""
+    #: per-gene width of the ``randgene`` null, so it can be matched to the
+    #: embedding arm it is the null for (feature dim is twice this)
+    rand_dim: int = 256
 
 
 #: feature blocks an arm can concatenate:
