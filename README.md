@@ -84,13 +84,22 @@ knockdown, but it sits in the static gene-identity embedding rather than in the 
 reaction to a perturbation. Querying the model — the mechanism the source paper proposes — adds
 nothing beyond the null band on this task.
 
-**Open: whether "foundation model" is the right word for the winning arms.** scPRINT's and
-TranscriptFormer's gene tables are ESM2-derived, so their advantage may belong to a protein
-language model rather than to single-cell pretraining. scGPT's table is learned from expression
-data and is the only such arm above the noise band. A raw ESM2 arm through the identical translator
-and a per-model audit of whether each gene table was updated during pretraining are in progress in
-run 3; until they land, read the headline as being about the models' gene embeddings, not about
-single-cell pretraining.
+**Open, and not started: whether "foundation model" is the right word for the winning arms.**
+scPRINT's and TranscriptFormer's gene tables are ESM2-derived — scPRINT's own adapter calls its
+gene encoder frozen and ESM-derived, and TranscriptFormer's is an ESM2-derived table shipped in the
+checkpoint's vocabulary directory — so their advantage may belong to a protein language model
+rather than to single-cell pretraining. scGPT's table is learned from expression data and is the
+only such arm above the noise band; AIDO.Cell's is also learned and scores at zero.
+
+Settling this needs two things, neither of which exists yet: a raw ESM2 arm, built from protein
+sequences with no single-cell model in the path and pushed through the identical translator,
+splits and metric, and a per-model audit of whether each gene table was updated during pretraining
+or held fixed. Until both land, read the headline as being about the models' gene embeddings, not
+about single-cell pretraining, and report scGPT separately from the ESM-derived arms wherever the
+text says "foundation model embeddings".
+
+One practical note for that work: this compute fabric cannot reach huggingface.co, which answers
+401 even for a public file, while Meta's own release host serves the original ESM2 checkpoints.
 
 ## Rebuilding, in general
 
