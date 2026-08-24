@@ -63,16 +63,26 @@ def fold_assignment(cell_line: str, bundle_root: Path) -> dict:
     }
 
 
-def training_split(folds: dict, seed: int) -> dict:
+def training_split(folds: dict, seed: int, heldout_folds=None) -> dict:
     """Split the fine-tuning perturbations into train and validation.
 
     Whole response groups move together, and no group that contributes a scored
     perturbation can appear in either, so early stopping never sees a held-out
     outcome.
+
+    ``heldout_folds`` overrides which of run 3's folds are withheld from
+    fine-tuning. The default is the pre-registered pair; the other pairs exist
+    so the same arm can be re-fitted with a different pair withheld and every
+    perturbation in the screen scored by a model that never saw it.
     """
     rng = np.random.default_rng(seed)
     fold, groups = folds["fold"], folds["groups"]
-    trainable = ~folds["model_heldout"]
+    if heldout_folds is None:
+        heldout = folds["model_heldout"]
+    else:
+        heldout = np.isin(fold, np.asarray(heldout_folds, dtype=np.int64))
+    folds = {**folds, "model_heldout": heldout}
+    trainable = ~heldout
     # A response group is held out whole by run 3's grouped split, so no group
     # may straddle the fine-tuning boundary. If one did, a near-identical
     # perturbation would sit in training while its partner was scored, and the

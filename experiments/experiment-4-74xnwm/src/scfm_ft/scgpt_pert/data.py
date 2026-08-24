@@ -106,13 +106,26 @@ def load_line(
 class BatchMaker:
     """Batches of (input control cell, perturbation flag, target cell)."""
 
-    def __init__(self, cells: LineCells, max_seq_len: int, batch_size: int, seed: int):
+    def __init__(
+        self,
+        cells: LineCells,
+        max_seq_len: int,
+        batch_size: int,
+        seed: int,
+        force_perturbed: bool = True,
+    ):
         self.cells = cells
         self.max_seq_len = int(max_seq_len)
         self.batch_size = int(batch_size)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
         self.n_genes = cells.n_genes
         self.subsampled = self.max_seq_len < self.n_genes
+        #: upstream draws the batch's gene positions uniformly and lets a row
+        #: lose its own perturbed gene, which leaves that row with no flag at
+        #: all. Keeping it is the one deliberate departure from the recipe and
+        #: it can only help the fine-tuned model, so it is the default here and
+        #: ``False`` reproduces upstream exactly.
+        self.force_perturbed = bool(force_perturbed)
         self.counters = {
             "batches": 0,
             "rows": 0,
@@ -133,6 +146,8 @@ class BatchMaker:
         self.counters["rows_that_would_lose_the_perturbed_gene"] += int(
             (~torch.isin(forced, drawn)).sum()
         )
+        if not self.force_perturbed:
+            return drawn
         if missing.numel():
             self.counters["batches_that_would_lose_the_perturbed_gene"] += 1
             # replace the tail rather than growing the sequence, so the recipe's

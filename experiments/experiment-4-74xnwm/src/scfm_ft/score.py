@@ -293,6 +293,8 @@ def score_direct(
     out_dir: Path,
     arm_name: str,
     device: str = "cuda",
+    eval_folds=None,
+    baseline: str = "unflagged_model_output",
 ) -> dict:
     """Score the model's own prediction, with no translator in the path.
 
@@ -310,7 +312,7 @@ def score_direct(
     bundle = LineBundle(cell_line, root=Path(bundle_dir), device=device)
     rows, info, ref = _fold_context(bundle, device)
     fold, groups = info["fold"], info["groups"]
-    eval_folds = np.asarray(C.MODEL_HELDOUT_FOLDS)
+    eval_folds = np.asarray(C.MODEL_HELDOUT_FOLDS if eval_folds is None else eval_folds)
     ceilings = restricted_ceilings(bundle, ref, rows, eval_folds)
     pred = np.asarray(delta, dtype=np.float32)[rows]
     _, per_pert, _, _ = runner.score_run(pred, ref, fold, C3.N_FOLDS)
@@ -322,12 +324,16 @@ def score_direct(
     )
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(restricted).assign(arm="direct_prediction", translator="none").to_parquet(
-        out / f"direct_{cell_line}__{arm_name}.parquet"
+    stem = f"{cell_line}__{arm_name}" if baseline == "unflagged_model_output" else (
+        f"{cell_line}__{arm_name}__{baseline}"
     )
-    per_pert.to_parquet(out / f"direct_per_pert_{cell_line}__{arm_name}.parquet")
+    pd.DataFrame(restricted).assign(
+        arm="direct_prediction", translator="none", baseline=baseline
+    ).to_parquet(out / f"direct_{stem}.parquet")
+    per_pert.to_parquet(out / f"direct_per_pert_{stem}.parquet")
     head = [r for r in restricted if r["target"] == "residual" and r["weighting"] == "weighted"]
     return {
+        "baseline": baseline,
         "note": "no translator: the model's own predicted response against the measured one",
         "meaningful_cells": ["residual", "centered"],
         "residual_weighted": head[0] if head else None,
@@ -342,6 +348,7 @@ def score_bundle(
     out_dir: Path,
     with_coexp_shuffle: bool,
     device: str = "cuda",
+    eval_folds=None,
 ) -> dict:
     """Run every arm, then read the grid on the evaluation folds."""
     C3 = run3("config")
@@ -352,7 +359,7 @@ def score_bundle(
     bundle = LineBundle(cell_line, root=Path(bundle_dir), device=device)
     rows, fold_info, ref = _fold_context(bundle, device)
     fold, groups = fold_info["fold"], fold_info["groups"]
-    eval_folds = np.asarray(C.MODEL_HELDOUT_FOLDS)
+    eval_folds = np.asarray(C.MODEL_HELDOUT_FOLDS if eval_folds is None else eval_folds)
     ceilings = restricted_ceilings(bundle, ref, rows, eval_folds)
 
     names = arm_names(arm_name, with_coexp_shuffle)

@@ -187,15 +187,40 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--work", default="_work")
     ap.add_argument("--coexp-shuffle", action="store_true")
     ap.add_argument("--skip-scoring", action="store_true")
+    ap.add_argument(
+        "--heldout-folds",
+        default=None,
+        help="comma-separated folds withheld from fine-tuning and scored "
+        "(default: the pre-registered pair)",
+    )
+    ap.add_argument(
+        "--upstream-sampling",
+        action="store_true",
+        help="draw the batch's gene positions exactly as upstream does, letting a row "
+        "lose its own perturbed gene and carry no perturbation flag",
+    )
+    ap.add_argument(
+        "--tag",
+        default="",
+        help="suffix distinguishing this run's outputs from the arm's main run",
+    )
     a = ap.parse_args(argv)
 
     line, arm = a.cell_line, C.ARMS_BY_NAME[a.arm]
     device = "cuda"
+    heldout = (
+        tuple(int(x) for x in a.heldout_folds.split(",") if x != "")
+        if a.heldout_folds
+        else tuple(C.MODEL_HELDOUT_FOLDS)
+    )
+    force_perturbed = not a.upstream_sampling
+    run_name = f"{arm.name}__{a.tag}" if a.tag else arm.name
     bundle_root = Path(a.bundle) if a.bundle else paths.bundle_root()
     cells_root = Path(a.cells) if a.cells else paths.cells_root()
-    out_dir = paths.ensure(Path(a.out) if a.out else paths.arm_dir(arm.name, line))
+    out_dir = paths.ensure(Path(a.out) if a.out else paths.arm_dir(run_name, line))
     work = paths.ensure(Path(a.work))
-    print(f"=== {line} / {arm.name} ===", flush=True)
+    print(f"=== {line} / {run_name} (heldout folds {heldout}, "
+          f"perturbed gene forced into the sequence: {force_perturbed}) ===", flush=True)
     print(f"bundle {bundle_root}\ncells  {cells_root}\nout    {out_dir}", flush=True)
 
     readout = pd.read_parquet(paths.readout_table(line))
@@ -211,7 +236,7 @@ def main(argv: list[str] | None = None) -> int:
         "groups": idx["groups"].astype(np.int64),
         "model_heldout": idx["model_heldout"].astype(bool),
     }
-    split = training_split(folds, C.SEED)
+    split = training_split(folds, C.SEED, heldout)
     print(
         f"split: {split['n_train']} train / {split['n_val']} val / {split['n_scored']} scored "
         f"perturbations ({split['n_train_groups']}/{split['n_val_groups']}/"
@@ -233,12 +258,18 @@ def main(argv: list[str] | None = None) -> int:
         table, table_report = substituted_table(arm, esm2, targets["readout_gene_id"])
     print(f"gene table: {json.dumps(table_report)}", flush=True)
 
+    try:
+        loss_check = trainmod.check_loss_matches_upstream()
+    except Exception as exc:  # the check is evidence, not a dependency
+        loss_check = {"error": f"{type(exc).__name__}: {exc}"}
+    print(f"loss against scgpt/loss.py: {json.dumps(loss_check)}", flush=True)
+
     scgpt_positions = readout["scgpt_position"].to_numpy(dtype=np.int64)
     model, build_report = modelmod.build_arm_model(arm, cache, table, scgpt_positions, device)
     print(json.dumps({k: v for k, v in build_report.items() if k != "substitutions"}, indent=2), flush=True)
 
     blocks = {}
-    blocks["init"] = extract_stage(model, "init", arm.name, readout, targets, device)
+    blocks["init"] = extract_stage(model, "init", run_name, readout, targets, device)
     print(f"init features in {blocks['init']['diagnostics']['seconds']}s", flush=True)
     np.savez_compressed(
         out_dir / "gene_table_init.npz",
@@ -248,7 +279,9 @@ def main(argv: list[str] | None = None) -> int:
         gene_name=targets["readout_gene_name"],
     )
 
-    history = trainmod.finetune(model, cells, targets["effect"], out_dir)
+    history = trainmod.finetune(
+        model, cells, targets["effect"], out_dir, force_perturbed=force_perturbed
+    )
     print(
         f"training done in {history['total_seconds']}s; selected epoch {history['best_epoch']} "
         f"at validation loss {history['best_val_loss']:.4f}; response agreement at that epoch "
@@ -256,7 +289,7 @@ def main(argv: list[str] | None = None) -> int:
         flush=True,
     )
 
-    blocks["final"] = extract_stage(model, "final", arm.name, readout, targets, device)
+    blocks["final"] = extract_stage(model, "final", run_name, readout, targets, device)
     print(f"final features in {blocks['final']['diagnostics']['seconds']}s", flush=True)
 
     # ---- durable model artifacts ---------------------------------------- #
@@ -292,6 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     train_config = {
         "cell_line": line,
         "arm": arm.name,
+        "run_name": run_name,
         "arm_spec": {
             "table": arm.table,
             "trainable_table": arm.trainable_table,
@@ -308,8 +342,16 @@ def main(argv: list[str] | None = None) -> int:
             f"{C.RECIPE.max_seq_len}-gene sequence; upstream samples uniformly and can drop them"
         ),
         "gene_subsampling_counters": history["gene_subsampling"],
+        "force_perturbed_gene_in_sequence": force_perturbed,
+        "sampling": (
+            "upstream: the batch's gene positions are drawn uniformly and a row can lose "
+            "its own perturbed gene"
+            if not force_perturbed
+            else "the batch's own perturbed genes are kept inside the sampled sequence"
+        ),
         "split": {k: v for k, v in split.items() if not isinstance(v, np.ndarray)},
-        "model_heldout_folds": list(C.MODEL_HELDOUT_FOLDS),
+        "model_heldout_folds": list(heldout),
+        "preregistered_heldout_folds": list(C.MODEL_HELDOUT_FOLDS),
         "cells": cells.meta,
         "n_train_cells": history["n_train_cells"],
         "seed": C.SEED,
@@ -326,6 +368,7 @@ def main(argv: list[str] | None = None) -> int:
                     "files": ckpt_meta,
                 },
                 "substitutions": build_report["substitutions"],
+                "loss_against_upstream": loss_check,
                 "environment": {
                     "python": platform.python_version(),
                     "torch": torch.__version__,
@@ -388,13 +431,26 @@ def main(argv: list[str] | None = None) -> int:
     print(json.dumps(installed, indent=2), flush=True)
 
     summary = score.score_bundle(
-        bdir, line, arm.name, paths.scores_dir(), a.coexp_shuffle, device=device
+        bdir, line, run_name, paths.scores_dir(), a.coexp_shuffle, device=device,
+        eval_folds=heldout,
     )
     summary["installed_blocks"] = installed
+    summary["heldout_folds"] = list(heldout)
+    summary["force_perturbed_gene_in_sequence"] = force_perturbed
+    # both baselines for the model's own prediction: the difference between the
+    # flagged and the unflagged forward pass, and the published evaluation's
+    # comparison against the measured control profile. The unflagged query is
+    # never trained, so it is reported but not relied on.
     summary["direct_prediction"] = score.score_direct(
-        bdir, line, direct, paths.scores_dir(), arm.name, device=device
+        bdir, line, direct, paths.scores_dir(), run_name, device=device, eval_folds=heldout,
+        baseline="unflagged_model_output",
     )
-    (paths.scores_dir() / f"summary_{line}__{arm.name}.json").write_text(
+    summary["direct_prediction_control_mean"] = score.score_direct(
+        bdir, line, flagged - cells.x_ctrl.mean(dim=0).double().cpu().numpy()[None, :],
+        paths.scores_dir(), run_name, device=device, eval_folds=heldout,
+        baseline="measured_control_mean",
+    )
+    (paths.scores_dir() / f"summary_{line}__{run_name}.json").write_text(
         json.dumps(summary, indent=2, default=str)
     )
     print(json.dumps({k: v for k, v in summary.items() if k != "bundle_inventory"}, indent=2, default=str), flush=True)

@@ -4,7 +4,8 @@ Every number the report states comes from one of the parquet files this writes,
 and every one of those is a restriction of what run 3's scoring rule produced
 inside the job that trained the model.
 
-    PYTHONPATH=src apy -m scfm_ft.analysis --scores scratch/dl/scores --out results/summary
+    PYTHONPATH=src apy -m scfm_ft.analysis --scores scratch/dl/scores \
+        --checkpoints scratch/dl/checkpoints --out results/summary
 """
 
 from __future__ import annotations
@@ -54,7 +55,76 @@ def arm_of(name: str) -> tuple[str, str, str]:
     return "reference", "", name
 
 
-def build(scores: Path, out: Path) -> dict:
+#: where each training run's durable directory lives, for the summary to cite
+ARTIFACT_PREFIX = (
+    "artifact://fundacion-instituto-leloir-553557/experiments/"
+    "exp_01m0trpxqyf0g8pq29k774xnwm/checkpoints"
+)
+
+
+def training_tables(ckpt_root: Path | None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """What each fine-tuning run did, read from the run's own directory.
+
+    One row per epoch in the first table, one row per training run in the
+    second, each carrying the artifact reference of the directory the weights,
+    the configuration and the resolved gene table were written to.
+    """
+    if ckpt_root is None or not Path(ckpt_root).exists():
+        return pd.DataFrame(), pd.DataFrame()
+    epochs, runs = [], []
+    for d in sorted(Path(ckpt_root).iterdir()):
+        hist_file, cfg_file = d / "loss_history.json", d / "train_config.json"
+        if not hist_file.exists():
+            continue
+        line, _, arm = d.name.partition("__")
+        hist = json.loads(hist_file.read_text())
+        cfg = json.loads(cfg_file.read_text()) if cfg_file.exists() else {}
+        for rec in hist["history"]:
+            row = {
+                "cell_line": line,
+                "arm": arm,
+                "epoch": int(rec["epoch"]),
+                "train_loss": float(rec["train_loss"]),
+                "val_loss": float(rec.get("val_loss", np.nan)),
+                "lr": float(rec["lr"]),
+                "seconds": float(rec["seconds"]),
+            }
+            for k, v in (rec.get("val_delta_pearson") or {}).items():
+                row[f"delta_{k}"] = float(v)
+            epochs.append(row)
+        sub = cfg.get("gene_subsampling_counters", {})
+        runs.append(
+            {
+                "cell_line": line,
+                "arm": arm,
+                "selected_epoch": int(hist.get("best_epoch", 0)),
+                "epochs_run": len(hist["history"]),
+                "best_val_loss": float(hist.get("best_val_loss", np.nan)),
+                "selection_rule": hist.get("selection_rule", ""),
+                "total_seconds": float(hist.get("total_seconds", np.nan)),
+                "n_train_cells": cfg.get("n_train_cells"),
+                "n_train_perturbations": (cfg.get("split") or {}).get("n_train"),
+                "n_val_perturbations": (cfg.get("split") or {}).get("n_val"),
+                "n_scored_perturbations": (cfg.get("split") or {}).get("n_scored"),
+                "table": (cfg.get("table_report") or {}).get("table"),
+                "trainable_table": (cfg.get("arm_spec") or {}).get("trainable_table"),
+                "projected": (cfg.get("arm_spec") or {}).get("projected"),
+                "rows_losing_perturbed_gene": (
+                    sub["rows_that_would_lose_the_perturbed_gene"] / sub["rows"]
+                    if sub.get("rows")
+                    else None
+                ),
+                "artifact": f"{ARTIFACT_PREFIX}/{d.name}/",
+                **{
+                    f"selected_delta_{k}": float(v)
+                    for k, v in (hist.get("best_val_delta_pearson") or {}).items()
+                },
+            }
+        )
+    return pd.DataFrame(epochs), pd.DataFrame(runs)
+
+
+def build(scores: Path, out: Path, checkpoints: Path | None = None) -> dict:
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     restricted = _read_all(scores, "restricted")
@@ -104,6 +174,8 @@ def build(scores: Path, out: Path) -> dict:
         (restricted.target == DIAGNOSTIC[0]) & (restricted.weighting == DIAGNOSTIC[1])
     ].copy()
 
+    epochs, training = training_tables(checkpoints)
+
     for name, frame in (
         ("restricted", restricted),
         ("contrasts", contrasts),
@@ -111,11 +183,13 @@ def build(scores: Path, out: Path) -> dict:
         ("direct", direct),
         ("null_band", band),
         ("reference_agreement", agreement),
+        ("training_epochs", epochs),
+        ("training_runs", training),
     ):
         if not frame.empty:
             frame.to_parquet(out / f"{name}.parquet")
 
-    head = headline(verdict, diagnostic, contrasts, band, direct)
+    head = headline(verdict, diagnostic, contrasts, band, direct, training)
     (out / "headline.json").write_text(json.dumps(head, indent=2, default=str))
     return head
 
@@ -147,6 +221,7 @@ def headline(
     contrasts: pd.DataFrame,
     band: pd.DataFrame,
     direct: pd.DataFrame,
+    training: pd.DataFrame | None = None,
 ) -> dict:
     """The numbers the page states, each read from the table it comes from."""
     out: dict = {
@@ -191,6 +266,22 @@ def headline(
                                 **r,
                                 "fold_centred": dd["score"] if dd else None,
                             }
+            if training is not None and not training.empty:
+                t = training[(training.cell_line == line) & (training.arm == a.name)]
+                if not t.empty:
+                    r = t.iloc[0]
+                    per_arm["training"] = {
+                        "selected_epoch": int(r["selected_epoch"]),
+                        "epochs_run": int(r["epochs_run"]),
+                        "best_val_loss": float(r["best_val_loss"]),
+                        "n_train_cells": r["n_train_cells"],
+                        "artifact": str(r["artifact"]),
+                        "response_agreement_at_selected_epoch": {
+                            k[len("selected_delta_") :]: float(r[k])
+                            for k in t.columns
+                            if k.startswith("selected_delta_") and np.isfinite(r[k])
+                        },
+                    }
             if not direct.empty:
                 dr = direct[
                     (direct.cell_line == line)
@@ -228,9 +319,12 @@ def headline(
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--scores", required=True)
+    ap.add_argument("--checkpoints", default=None)
     ap.add_argument("--out", default="results/summary")
     a = ap.parse_args(argv)
-    head = build(Path(a.scores), Path(a.out))
+    head = build(
+        Path(a.scores), Path(a.out), Path(a.checkpoints) if a.checkpoints else None
+    )
     print(json.dumps(head, indent=2, default=str)[:4000], flush=True)
     return 0
 

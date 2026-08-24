@@ -48,6 +48,13 @@ def _load_by_path(fullname: str, path: Path):
 _SCGPT_ROOT: Path | None = None
 
 
+def import_module_by_path(fullname: str, relative: str):
+    """One installed scGPT module, loaded from its file without the package init."""
+    if fullname in sys.modules:
+        return sys.modules[fullname]
+    return _load_by_path(fullname, scgpt_root() / relative)
+
+
 def scgpt_root() -> Path:
     """The installed package directory, resolved once.
 

@@ -32,6 +32,30 @@ def masked_mse_loss(pred: torch.Tensor, target: torch.Tensor, mask: torch.Tensor
     return loss / m.sum()
 
 
+def check_loss_matches_upstream(seed: int = 0, n: int = 4, g: int = 64) -> dict:
+    """Compare the restated loss against scGPT's own, on random tensors.
+
+    The installed ``scgpt/loss.py`` is loaded by file path, the same route the
+    model class takes, so this compares against the published code rather than
+    against a reading of it.
+    """
+    from .model import import_module_by_path
+
+    upstream = import_module_by_path("scgpt.loss", "loss.py")
+    gen = torch.Generator().manual_seed(seed)
+    pred = torch.randn(n, g, generator=gen)
+    target = torch.randn(n, g, generator=gen)
+    mask = torch.rand(n, g, generator=gen) > 0.3
+    mine = float(masked_mse_loss(pred, target, mask))
+    theirs = float(upstream.masked_mse_loss(pred, target, mask))
+    return {
+        "upstream_file": str(getattr(upstream, "__file__", "")),
+        "restated": mine,
+        "upstream": theirs,
+        "identical": mine == theirs,
+    }
+
+
 @torch.no_grad()
 def predict_profiles(
     model,
@@ -162,7 +186,9 @@ def validation_score(
 
 
 @torch.no_grad()
-def validation_loss(model, cells: LineCells, rows: torch.Tensor, seed: int) -> dict:
+def validation_loss(
+    model, cells: LineCells, rows: torch.Tensor, seed: int, force_perturbed: bool = True
+) -> dict:
     """The tutorial's selection quantity: masked MSE on held-out cells.
 
     Re-seeded on every call, so the same control inputs and the same sampled
@@ -170,7 +196,7 @@ def validation_loss(model, cells: LineCells, rows: torch.Tensor, seed: int) -> d
     """
     model.eval()
     R = C.RECIPE
-    maker = BatchMaker(cells, R.max_seq_len, R.batch_size, seed)
+    maker = BatchMaker(cells, R.max_seq_len, R.batch_size, seed, force_perturbed)
     total, n = 0.0, 0
     for batch in maker.epoch(rows):
         out = model(
@@ -190,6 +216,7 @@ def finetune(
     out_dir: Path,
     n_val_control: int = 32,
     log_every: int = 50,
+    force_perturbed: bool = True,
 ) -> dict:
     """Run the recipe. Returns the history; leaves the best weights in ``model``."""
     R = C.RECIPE
@@ -200,7 +227,7 @@ def finetune(
         raise RuntimeError("no training cells: check the ingest output and the split")
     if val_rows.numel() == 0:
         raise RuntimeError("no validation cells: check the split")
-    maker = BatchMaker(cells, R.max_seq_len, R.batch_size, C.SEED)
+    maker = BatchMaker(cells, R.max_seq_len, R.batch_size, C.SEED, force_perturbed)
 
     opt = torch.optim.Adam(model.parameters(), lr=R.lr)
     sched = torch.optim.lr_scheduler.StepLR(opt, R.schedule_interval, gamma=R.schedule_gamma)
@@ -251,7 +278,7 @@ def finetune(
                 )
         sched.step()
         train_loss = float(np.mean(losses))
-        vloss = validation_loss(model, cells, val_rows, C.SEED + 7)
+        vloss = validation_loss(model, cells, val_rows, C.SEED + 7, force_perturbed)
         delta = validation_score(model, cells, effect, val_perts, n_val_control, amp=False)
         rec = {
             "epoch": epoch,
@@ -302,6 +329,7 @@ def finetune(
         "best_state": best["state"],
         "n_train_cells": int(train_rows.numel()),
         "n_val_perturbations": int(val_perts.size),
+        "force_perturbed_gene_in_sequence": bool(force_perturbed),
         "total_seconds": round(time.time() - t_start, 1),
         "gene_subsampling": dict(maker.counters),
         "forward_pass_sample": {k: v for k, v in sample.items() if k != "rows"},
