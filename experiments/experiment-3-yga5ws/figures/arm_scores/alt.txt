@@ -1,1 +1,1 @@
-Sorted dot plot of the fold-centred held-out correlation for every arm, one panel per cell line, with bootstrap intervals and the largest shuffled-label draw marked.
+Sorted dot plot of every arm's held-out correlation with group-resampled intervals, four panels: each cell line under the pre-registered rule and under the post-hoc fold-centred version, with the largest shuffled-label draw marked in each.

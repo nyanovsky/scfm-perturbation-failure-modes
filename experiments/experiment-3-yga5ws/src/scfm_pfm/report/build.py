@@ -40,7 +40,7 @@ S_UNIPROT = f"{SRC}/src/scfm_pfm/protein/uniprot.py"
 S_ESM = f"{SRC}/src/scfm_pfm/protein/esm_embed.py"
 S_IDENTITY = f"{SRC}/src/scfm_pfm/protein/identity.py"
 
-VERDICT = figmod.VERDICT
+DISCRIM = figmod.DISCRIM
 PREREG = figmod.PREREG
 MODELS = ("scgpt", "scprint", "transcriptformer", "aido_cell")
 MODEL_LABEL = {
@@ -150,7 +150,7 @@ class Results:
         return int(self.identity.get("lines", {}).get(line, {}).get("widths", {}).get(name, 0))
 
     def transfer_score(self, direction: str, scope: str, arm: str,
-                       mode: str = "dest_reference", col: str = VERDICT) -> float:
+                       mode: str = "dest_reference", col: str = DISCRIM) -> float:
         if self.transfer.empty:
             return float("nan")
         d = self.transfer[
@@ -165,7 +165,7 @@ class Results:
         d = d[d.arm == arm]
         return float(d[col].iloc[0]) if not d.empty else float("nan")
 
-    def sens_score(self, model: str, anchor: str, col: str = VERDICT) -> float:
+    def sens_score(self, model: str, anchor: str, col: str = DISCRIM) -> float:
         if self.sens.empty:
             return float("nan")
         arm = f"{model}_resp" if anchor == "mean_control" else f"{model}_resp@{anchor}"
@@ -181,12 +181,12 @@ class Results:
             & (self.runs.target_source == "run1_all_controls")
         ]
 
-    def score(self, line: str, arm: str, col: str = VERDICT) -> float:
+    def score(self, line: str, arm: str, col: str = DISCRIM) -> float:
         d = self.primary(line)
         d = d[d.arm == arm]
         return float(d[col].iloc[0]) if not d.empty else float("nan")
 
-    def interval(self, line: str, arm: str, col: str = VERDICT) -> tuple[float, float, float]:
+    def interval(self, line: str, arm: str, col: str = DISCRIM) -> tuple[float, float, float]:
         d = self.primary(line)
         d = d[d.arm == arm]
         if d.empty:
@@ -195,13 +195,13 @@ class Results:
             float(d[col].iloc[0]), float(d[col + "_lo"].iloc[0]), float(d[col + "_hi"].iloc[0])
         )
 
-    def ceiling(self, line: str, col: str = VERDICT) -> float:
+    def ceiling(self, line: str, col: str = DISCRIM) -> float:
         """The split-half reproducibility ceiling the score of ``col`` divides by."""
         d = self.primary(line)
         name = col.replace("__disattenuated", "__ceiling")
         return float(d[name].iloc[0]) if not d.empty else float("nan")
 
-    def null_ceiling(self, line: str, col: str = VERDICT) -> float:
+    def null_ceiling(self, line: str, col: str = DISCRIM) -> float:
         d = self.runs[
             (self.runs.cell_line == line) & (self.runs.scope == "full")
             & (self.runs.split == "grouped") & (self.runs.translator == "mlp")
@@ -209,14 +209,34 @@ class Results:
         ]
         return float(np.nanmax(d[col].to_numpy(dtype=float))) if not d.empty else float("nan")
 
-    def best(self, line: str, prefixes: tuple[str, ...], exclude: str = "") -> pd.Series:
-        """Highest-scoring arm among a set of prefixes, on the verdict cell."""
+    def best(self, line: str, prefixes: tuple[str, ...], exclude: str = "",
+             col: str = PREREG) -> pd.Series:
+        """Highest-scoring arm among a set of prefixes, on ``col``."""
         d = self.primary(line)
         d = d[d.arm.str.startswith(prefixes)]
         d = d[~d.arm.str.contains(figmod.SHUFFLE_TAG, regex=False)]
         if exclude:
             d = d[~d.arm.str.contains(exclude, regex=False)]
-        return d.sort_values(VERDICT, ascending=False).iloc[0]
+        return d.sort_values(col, ascending=False).iloc[0]
+
+    def vs_coexp(self, line: str, arm: str, col: str = PREREG) -> dict:
+        """The paired difference against co-expression on ``col``'s target."""
+        metric = "residual_weighted" if col == PREREG else "centered_weighted"
+        d = self.con[
+            (self.con.cell_line == line) & (self.con.scope == "full")
+            & (self.con.split == "grouped") & (self.con.translator == "mlp")
+            & (self.con.target_source == "run1_all_controls")
+            & (self.con.metric == metric) & (self.con.arm == arm)
+        ]
+        if d.empty:
+            return {}
+        row = d.iloc[0]
+        return {
+            "difference": float(row.median_difference), "lo": float(row.lo),
+            "hi": float(row.hi), "n_paired": int(row.n_paired),
+            "n_groups": int(row.n_groups_paired),
+            "mrd": float(row.min_resolvable_difference_achieved),
+        }
 
     def model_arms(self, line: str) -> pd.DataFrame:
         """The twelve arms built on a foundation model, controls excluded."""
@@ -255,52 +275,63 @@ def ci(v: float, lo: float, hi: float) -> str:
 def opening(r: Results) -> str:
     h = r.best("hepg2", FULL_SCOPE_MODELS, exclude="hybrid")
     j = r.best("jurkat", FULL_SCOPE_MODELS, exclude="hybrid")
-    hc = r.interval("hepg2", "coexp")
-    jc = r.interval("jurkat", "coexp")
+    hc = r.interval("hepg2", "coexp", PREREG)
+    jc = r.interval("jurkat", "coexp", PREREG)
+    hd = r.vs_coexp("hepg2", h.arm)
+    jd = r.vs_coexp("jurkat", j.arm)
     tf_h = r.score("hepg2", "transcriptformer_resp", PREREG)
     co_h = r.score("hepg2", "coexp", PREREG)
-    esm_h, esm_j = r.score("hepg2", "esm2_3b_emb"), r.score("jurkat", "esm2_3b_emb")
+    esm_h = r.interval("hepg2", "esm2_3b_emb", PREREG)
+    esm_j = r.interval("jurkat", "esm2_3b_emb", PREREG)
+    ep_h = _paired(r, "hepg2", "esm2_3b_emb", "coexp", PREREG_KEY) or {}
+    ep_j = _paired(r, "jurkat", "esm2_3b_emb", "coexp", PREREG_KEY) or {}
     protein = (
-        "<p>The feature doing that work is the model's static gene-identity table, and for "
-        "three of the four models that table is not something the model learned from cells. "
-        "TranscriptFormer ships a frozen ESM2 protein embedding and never updates it; scPRINT "
-        "started from a protein-derived table; only scGPT and AIDO.Cell learned theirs from "
-        "expression alone. Building a gene table directly from protein sequence with two "
-        "public ESM2 checkpoints, and running it through the identical translator, folds and "
-        f"scoring, reaches {P.num(esm_h)} in HepG2 and {P.num(esm_j)} in Jurkat. Paired on the "
-        "same held-out perturbations it ties the best single-cell arm in HepG2, and in "
-        "Jurkat it beats TranscriptFormer's and scGPT's embedding arms and ties scPRINT's. "
-        "So beating co-expression here is not evidence that a model learned something about "
-        "cells. It is "
-        "evidence that a general representation of gene identity helps, and protein sequence "
-        "supplies one without seeing a single cell.</p>"
+        "<p>The feature doing that work is the model's static gene-identity table, and two of "
+        "the four tables were not learned from cells. TranscriptFormer ships a frozen ESM2 "
+        "protein embedding and never updates it; scPRINT started from a protein-derived table "
+        "and trained it; scGPT and AIDO.Cell learned theirs from expression alone. So we built "
+        "a gene table directly from protein sequence with two public ESM2 checkpoints and ran "
+        "it through the identical translator, folds and scoring. It reaches "
+        f"{ci(*esm_h)} in HepG2 and {ci(*esm_j)} in Jurkat, beating co-expression on the same "
+        f"held-out perturbations by {ci(ep_h.get('median_difference', float('nan')), ep_h.get('lo', float('nan')), ep_h.get('hi', float('nan')))} "
+        f"and {ci(ep_j.get('median_difference', float('nan')), ep_j.get('lo', float('nan')), ep_j.get('hi', float('nan')))}. "
+        "Paired against the single-cell models' own tables it is a tie in seven of the eight "
+        "comparisons and ahead of scGPT in Jurkat. Protein sequence alone therefore supplies a "
+        "gene table that does this job as well as the single-cell models' tables do. That says "
+        "where the signal can come from; it does not say where scGPT's comes from, since "
+        "scGPT's table carries no protein-space structure and still scores as well.</p>"
     ) if r.head.get("protein") else ""
     body = (
         "<p>A gene-pair feature taken from a single-cell foundation model predicts the "
         "perturbation-specific part of a CRISPRi knockdown response better than statistical "
         "co-expression computed from the same control cells. On held-out perturbations in "
-        f"HepG2 the best model feature reaches {ci(h[VERDICT], h[VERDICT + '_lo'], h[VERDICT + '_hi'])} "
-        f"(fold-centred correlation, {label(h.arm)}) against {ci(*hc)} for co-expression, and in "
-        f"Jurkat {ci(j[VERDICT], j[VERDICT + '_lo'], j[VERDICT + '_hi'])} ({label(j.arm)}) against "
-        f"{ci(*jc)}. The second pre-registered scoring axis, perturbation discrimination, turns "
-        "out to depend on which release of the metric computes it, so it neither confirms nor "
-        "contradicts that ranking; the verdict rests on the correlation score alone.</p>"
+        f"HepG2 the best model feature reaches {ci(h[PREREG], h[PREREG + '_lo'], h[PREREG + '_hi'])} "
+        f"({label(h.arm)}) against {ci(*hc)} for co-expression, and in Jurkat "
+        f"{ci(j[PREREG], j[PREREG + '_lo'], j[PREREG + '_hi'])} ({label(j.arm)}) against "
+        f"{ci(*jc)}. Paired on the same held-out perturbations the difference is "
+        f"{ci(hd['difference'], hd['lo'], hd['hi'])} and {ci(jd['difference'], jd['lo'], jd['hi'])}. "
+        "This is the pre-registered scoring rule, and every interval on this page resamples "
+        "whole response groups rather than individual perturbations, because correlated "
+        "perturbations are held out together and are not independent draws.</p>"
         + protein +
         "<p>What carries that signal is the model's static gene embedding, not its simulated "
         "reaction to a perturbation. Adding the response features to the embedding changes the "
         "score by less than the design can resolve, and on their own the response features are "
         "weak everywhere. How weak depends on the score: on the fold-centred one they stay "
         "inside the shuffled-label band in HepG2 and clear it slightly for two of three models "
-        "in Jurkat, while on the pre-registered score TranscriptFormer's response features beat "
-        f"co-expression in HepG2 ({P.num(tf_h)} against {P.num(co_h)}). Both readings are "
-        "reported throughout, because the choice between them is one this run made after seeing "
-        "a control fail.</p>"
-        "<p>Two limits change how far this reads. The score used to rank is the fold-centred "
-        "one, chosen after the pre-registered score failed its own shuffled-label control, so it "
-        "is post hoc and answers the narrower question of telling one held-out perturbation "
-        "apart from another. And the absolute numbers are small: the score is already divided by "
-        "the reproducibility limit, so 0.11 means the arm recovers about a tenth of the "
-        "reproducible perturbation-specific signal on a correlation scale.</p>"
+        "in Jurkat, while on the pre-registered score TranscriptFormer's response features "
+        f"score above co-expression in HepG2 ({P.num(tf_h)} against {P.num(co_h)}), by less "
+        "than the paired comparison separates. Both readings are reported throughout.</p>"
+        "<p>Three limits change how far this reads. The pre-registered score rewards an arm "
+        "for the part of a held-out group's response that its members share, which a prediction "
+        "that barely varies with the perturbation can also get; a fold-centred version that "
+        "strips that shared part is reported beside it everywhere, but it removes the held-out "
+        "fold's own mean and so is a diagnostic rather than a prediction a model could make in "
+        "advance. The absolute numbers are small: the score is already divided by the "
+        "reproducibility limit, so 0.27 means the arm recovers about a quarter of the "
+        "reproducible perturbation-specific signal on a correlation scale. And the second "
+        "pre-registered axis, perturbation discrimination, depends on which release of the "
+        "metric computes it, so it neither confirms nor contradicts the ranking.</p>"
     )
     return P.section("", body, sources=[S_ANALYSIS, S_RUNNER])
 
@@ -363,8 +394,9 @@ def setup(r: Results) -> str:
             "Score",
             "per-perturbation weighted Pearson correlation between predicted and measured "
             "response across read-out genes, divided by the square root of the reproducibility "
-            "ceiling, then the median over held-out perturbations with a 2,000-resample "
-            "bootstrap interval",
+            "ceiling, then the median over held-out perturbations. Intervals are 2,000 "
+            "resamples of the response groups, not of individual perturbations, so they carry "
+            "the same dependence the grouped split is built around",
         ),
     ]
     return P.section(
@@ -386,13 +418,13 @@ def _null_by_translator(r: Results, col: str) -> dict:
 
 def metric_section(r: Results, chart: str) -> str:
     np_ = _null_by_translator(r, PREREG)
-    nc = _null_by_translator(r, VERDICT)
+    nc = _null_by_translator(r, DISCRIM)
     hco = r.score("hepg2", "coexp", PREREG)
     jco = r.score("jurkat", "coexp", PREREG)
     tf_h = r.score("hepg2", "transcriptformer_resp", PREREG)
     agree = pd.read_parquet(r.dir / "ordering_agreement.parquet")
     agree = agree[(agree.scope == "full") & (agree.split == "grouped")
-                  & (agree.translator == "mlp") & (agree.cell == VERDICT)
+                  & (agree.translator == "mlp") & (agree.cell == DISCRIM)
                   & (agree.target_source == "run1_all_controls")]
     agr = {row.cell_line: float(row.spearman_vs_primary) for row in agree.itertuples()}
     con = r.con[(r.con.scope == "full") & (r.con.split == "grouped")
@@ -403,38 +435,42 @@ def metric_section(r: Results, chart: str) -> str:
     lo, hi = float(con.lo.iloc[0]), float(con.hi.iloc[0])
     mrd = float(con.min_resolvable_difference_achieved.iloc[0])
     body = (
-        "<p>The pre-registered score is the reliability-weighted correlation between the "
-        "predicted and the measured residual response, corrected for the reproducibility "
-        "ceiling. Its shuffled-label control does not sit at zero. Permuting the perturbation "
-        "labels inside the training fold and refitting reaches "
-        f"{P.num(np_[('hepg2', 'ridge')])} in HepG2 and {P.num(np_[('jurkat', 'ridge')])} in "
-        "Jurkat with the ridge translator, which is as large as the co-expression arm's own "
-        f"pre-registered score ({P.num(hco)} and {P.num(jco)}). With the network translator the "
-        f"draws reach {P.num(np_[('hepg2', 'mlp')])} and {P.num(np_[('jurkat', 'mlp')])}. The "
-        "reason is structural: the perturbations inside one held-out fold share a per-gene "
-        "response, so a prediction that barely varies with the perturbation still correlates "
-        "with the measurement.</p>"
+        "<p>The verdict is read from the rule fixed before the run: the reliability-weighted "
+        "correlation between the predicted and the measured residual response, corrected for "
+        "the reproducibility ceiling. Residual here means against the mean effect of the "
+        "TRAINING folds, so nothing about a held-out perturbation enters its own score.</p>"
+        "<p>That rule has a known soft spot, and it is worth stating plainly because it shapes "
+        "how the numbers should be read. Perturbations inside one held-out group share a "
+        "per-gene response, so a prediction that barely varies with the perturbation still "
+        "correlates with the measurement. Permuting the perturbation labels inside the training "
+        f"fold and refitting reaches {P.num(np_[('hepg2', 'ridge')])} in HepG2 and "
+        f"{P.num(np_[('jurkat', 'ridge')])} in Jurkat with the ridge translator, as large as "
+        f"the co-expression arm's own pre-registered score ({P.num(hco)} and {P.num(jco)}); "
+        f"with the network translator the draws reach {P.num(np_[('hepg2', 'mlp')])} and "
+        f"{P.num(np_[('jurkat', 'mlp')])}. Those are the ceilings a score has to clear, and the "
+        "embedding arms sit five to ten times above them.</p>"
         "<p>Removing each read-out gene's mean over the held-out fold from both the prediction "
-        "and the measurement takes that shared component out. On this fold-centred score the "
+        "and the measurement takes the shared component out. On that fold-centred score the "
         f"same ridge draws fall to {P.num(nc[('hepg2', 'ridge')])} and "
         f"{P.num(nc[('jurkat', 'ridge')])}. Every arm is reported on both scores throughout. "
-        "The fold-centred one is used to rank because it is the one whose controls sit at zero. "
-        "That choice was made after seeing the control fail, so it is post hoc, and it asks a "
-        "narrower question: not whether an arm predicts the response, but whether it tells one "
-        "held-out perturbation apart from another.</p>"
-        f"<p>The switch is not free. The two scores rank the arms similarly but not identically "
-        f"(rank correlation {P.num(agr['hepg2'])} in HepG2 and {P.num(agr['jurkat'])} in Jurkat "
-        "over every arm), and what moves between them is exactly the set of arms this run has "
-        "to be careful about. The embedding arms are far ahead on both. Among the weak arms the "
-        "order changes: on the pre-registered score TranscriptFormer's response features reach "
-        f"{P.num(tf_h)} in HepG2 against co-expression's {P.num(hco)}, a paired difference of "
-        f"{ci(dif, lo, hi)} on the same held-out perturbations, which is larger than the "
-        f"{P.num(mrd)} this design can resolve; on the fold-centred score the same pair is a "
-        "tie. A reader who prefers the pre-registered score should read the response-feature "
-        "result as one model beating co-expression in one cell line, not as a null.</p>"
+        "The fold-centred one is a diagnostic, not a second verdict: it subtracts a mean of the "
+        "held-out outcomes, which no model could compute in advance, and it was written after "
+        "seeing the shuffled draws, so it is post hoc. What it answers is narrower than the "
+        "pre-registered question: not whether an arm predicts the response, but whether it "
+        "tells one held-out perturbation apart from another.</p>"
+        f"<p>The two scores rank the arms similarly but not identically (rank correlation "
+        f"{P.num(agr['hepg2'])} in HepG2 and {P.num(agr['jurkat'])} in Jurkat over every arm), "
+        "and what moves between them is the set of weak arms. The embedding arms are far ahead "
+        "on both. Among the weak arms the order changes: on the pre-registered score "
+        f"TranscriptFormer's response features reach {P.num(tf_h)} in HepG2 against "
+        f"co-expression's {P.num(hco)}, but the paired difference on the same held-out "
+        f"perturbations is {ci(dif, lo, hi)}, inside the {P.num(mrd)} this design resolves once "
+        "the response groups are resampled; on the fold-centred score the same pair is a tie as "
+        "well. Where the two scores disagree, this page says so rather than picking the "
+        "flattering one.</p>"
     )
     return P.section(
-        "The pre-registered score does not sit at zero under a shuffled-label control",
+        "Two scores: the pre-registered rule, and a fold-centred diagnostic beside it",
         body + chart,
         sources=[S_METRICS, S_ANALYSIS, S_FIGS],
     )
@@ -450,60 +486,61 @@ def headline_table(r: Results) -> str:
     for arm in arms:
         cells = [label(arm)]
         for line in ("hepg2", "jurkat"):
-            v, lo, hi = r.interval(line, arm)
-            p = r.score(line, arm, PREREG)
-            cells += [ci(v, lo, hi) if v == v else "n/a", P.num(p)]
+            pv, plo, phi = r.interval(line, arm, PREREG)
+            dv, dlo, dhi = r.interval(line, arm)
+            cells += [
+                ci(pv, plo, phi) if pv == pv else "n/a",
+                ci(dv, dlo, dhi) if dv == dv else "n/a",
+            ]
         rows.append(cells)
     return P.table(
-        ["Arm", "HepG2 fold-centred", "HepG2 pre-registered",
-         "Jurkat fold-centred", "Jurkat pre-registered"],
+        ["Arm", "HepG2 pre-registered", "HepG2 fold-centred",
+         "Jurkat pre-registered", "Jurkat fold-centred"],
         rows,
         sources=[S_ANALYSIS],
+        caption=("Held-out score on the pre-registered rule, which the verdict is read from, "
+                 "and on the fold-centred diagnostic beside it. Intervals are 2,000 resamples "
+                 "of the response groups."),
     )
 
 
 def verdict_section(r: Results, chart: str, chart2: str) -> str:
     hb = r.best("hepg2", FULL_SCOPE_MODELS, exclude="hybrid")
     jb = r.best("jurkat", FULL_SCOPE_MODELS, exclude="hybrid")
-    hc = r.interval("hepg2", "coexp")
-    jc = r.interval("jurkat", "coexp")
-    hnull, jnull = r.null_ceiling("hepg2"), r.null_ceiling("jurkat")
-    con = r.con[(r.con.scope == "full") & (r.con.split == "grouped")
-                & (r.con.translator == "mlp") & (r.con.metric == "centered_weighted")
-                & (r.con.target_source == "run1_all_controls")]
-    hd = con[(con.cell_line == "hepg2") & (con.arm == hb.arm)]
-    jd = con[(con.cell_line == "jurkat") & (con.arm == jb.arm)]
-    mrd = {
-        "hepg2": float(hd.min_resolvable_difference_achieved.iloc[0]),
-        "jurkat": float(jd.min_resolvable_difference_achieved.iloc[0]),
-    }
-    counts = {}
+    hc = r.interval("hepg2", "coexp", PREREG)
+    jc = r.interval("jurkat", "coexp", PREREG)
+    hnull, jnull = r.null_ceiling("hepg2", PREREG), r.null_ceiling("jurkat", PREREG)
+    hd, jd = r.vs_coexp("hepg2", hb.arm), r.vs_coexp("jurkat", jb.arm)
+    counts, emb_counts = {}, {}
     for line in ("hepg2", "jurkat"):
         m = r.model_arms(line)
         m = m[m.arm.str.startswith(FULL_SCOPE_MODELS)]
-        counts[line] = (int((m[VERDICT] > r.null_ceiling(line)).sum()), int(m.shape[0]))
+        counts[line] = (int((m[PREREG] > r.null_ceiling(line, PREREG)).sum()), int(m.shape[0]))
+        emb = [a for a in m.arm if a.endswith("_emb")]
+        ahead = [a for a in emb if (r.vs_coexp(line, a) or {"lo": 0})["lo"] > 0]
+        emb_counts[line] = (len(ahead), len(emb))
     body = (
         f"<p>{counts['hepg2'][0]} of the {counts['hepg2'][1]} foundation-model arms clear the "
         f"shuffled-label null in HepG2 and {counts['jurkat'][0]} of "
-        f"{counts['jurkat'][1]} in Jurkat. The ones that fail are response-only arms: all three "
-        "in HepG2, and scGPT's alone in Jurkat, where scPRINT's and TranscriptFormer's response "
-        "features clear the lower null there. "
-        f"Co-expression does not clear it in HepG2, where it scores {ci(*hc)} "
-        f"against a null ceiling of {P.num(hnull)}, and barely clears it in Jurkat "
-        f"({ci(*jc)} against {P.num(jnull)}). The paired difference on the same held-out "
-        f"perturbations is {ci(float(hd.median_difference.iloc[0]), float(hd.lo.iloc[0]), float(hd.hi.iloc[0]))} "
-        f"for {label(hb.arm)} in HepG2 and "
-        f"{ci(float(jd.median_difference.iloc[0]), float(jd.lo.iloc[0]), float(jd.hi.iloc[0]))} "
-        f"for {label(jb.arm)} in Jurkat, against a smallest difference this design can resolve "
-        f"of {P.num(mrd['hepg2'])} and {P.num(mrd['jurkat'])} respectively. The paired "
-        "difference is taken on the per-perturbation correlations before the ceiling "
-        "correction, so it is smaller than the gap between the two corrected scores above.</p>"
+        f"{counts['jurkat'][1]} in Jurkat; the one that fails is scGPT's response-only arm, in "
+        "both lines. "
+        f"Co-expression barely clears it: {ci(*hc)} in HepG2 against a null ceiling of "
+        f"{P.num(hnull)}, and {ci(*jc)} in Jurkat against {P.num(jnull)}. Every one of the "
+        f"embedding arms beats it on the same held-out perturbations, paired: "
+        f"{emb_counts['hepg2'][0]} of {emb_counts['hepg2'][1]} in HepG2 and "
+        f"{emb_counts['jurkat'][0]} of {emb_counts['jurkat'][1]} in Jurkat have a paired "
+        f"interval clear of zero. The largest is {ci(hd['difference'], hd['lo'], hd['hi'])} for "
+        f"{label(hb.arm)} in HepG2 and {ci(jd['difference'], jd['lo'], jd['hi'])} for "
+        f"{label(jb.arm)} in Jurkat, against a smallest difference this design resolves of "
+        f"{P.num(hd['mrd'])} and {P.num(jd['mrd'])}. The paired difference is taken on the "
+        "per-perturbation correlations before the ceiling correction, so it is smaller than the "
+        "gap between the two corrected scores above.</p>"
         "<p>Ridge regression on the same features scores near zero for almost every arm, so "
         "whatever the network finds is not linear in the concatenated pair feature.</p>"
         + (
             "<p>Throughout this section 'foundation-model arm' means an arm built on one of the "
             "four single-cell models, which is how they are packaged, not a claim about where "
-            "the feature came from. Three of the four gene tables trace back to a protein "
+            "the feature came from. Two of the four gene tables trace back to a protein "
             "language model rather than to single-cell data; a later section reads that out of "
             "the checkpoints and runs a raw protein table through the same pipeline.</p>"
             if r.head.get("protein") else ""
@@ -573,14 +610,14 @@ def where_signal(r: Results) -> str:
         f"read. Their largest fold-centred score anywhere is {P.num(resp_max)}. In HepG2 "
         f"{'none of the three models clears' if not h_clear else 'only ' + ', '.join(h_clear) + ' clears'} "
         f"the shuffled-label ceiling of {P.num(hnull)}. In Jurkat "
-        f"{', '.join(j_clear) if j_clear else 'no model'} clears the lower ceiling there "
+        f"{_join(j_clear) if j_clear else 'no model'} clear the lower ceiling there "
         f"({P.num(jnull)}), the largest reaching {P.num(j_top)}, above the null and still "
         "between a third and a fifth of the embedding arms in the same cell line. On the "
         f"pre-registered score {len(prereg_beats)} of the six model-and-line combinations put "
-        "the response features ahead of co-expression, TranscriptFormer in HepG2 by more than "
-        "the resolvable difference. The claim these numbers support is that response features "
-        "add nothing to the embedding and do not overturn co-expression as a class, not that "
-        "they carry no signal at all.</p>"
+        "the response features numerically ahead of co-expression, none of them by more than "
+        "the paired difference resolves. The claim these numbers support is that response "
+        "features add nothing to the embedding and do not overturn co-expression as a class, "
+        "not that they carry no signal at all.</p>"
     )
     return P.section("The signal is in the gene embedding, not the response features",
                      body + tab, sources=[S_ANALYSIS, S_ARMS])
@@ -643,10 +680,14 @@ def _ptransfer(r: Results, direction: str, scope: str,
     return {row["arm"]: row for row in block}
 
 
-def _paired(r: Results, line: str, arm: str, reference: str) -> dict | None:
-    for row in r.head.get("protein", {}).get("lines", {}).get(line, {}).get(
-        "paired_differences", []
-    ):
+#: the two keys the protein block stores paired differences under
+PREREG_KEY = "paired_differences_preregistered"
+DISCRIM_KEY = "paired_differences"
+
+
+def _paired(r: Results, line: str, arm: str, reference: str,
+            key: str = PREREG_KEY) -> dict | None:
+    for row in r.head.get("protein", {}).get("lines", {}).get(line, {}).get(key, []):
         if row["arm"] == arm and row["reference"] == reference:
             return row
     return None
@@ -709,24 +750,27 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
     for line in ("hepg2", "jurkat"):
         for arm in ("esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb",
                     "scgpt_emb", "coexp"):
-            v, lo, hi = r.interval(line, arm)
+            pv, plo, phi = r.interval(line, arm, PREREG)
+            dv, dlo, dhi = r.interval(line, arm)
             is_esm = arm.startswith("esm2")
             rows.append([
                 LINE[line], label(arm), f"{int(r.runs[(r.runs.arm == arm)].feature_dim.iloc[0])}",
-                ci(v, lo, hi),
+                ci(pv, plo, phi), ci(dv, dlo, dhi),
                 _beats(_paired(r, line, arm, "transcriptformer_emb") if is_esm else None),
                 _beats(_paired(r, line, arm, "scprint_emb") if is_esm else None),
                 _beats(_paired(r, line, arm, "scgpt_emb") if is_esm else None),
             ])
     table = P.table(
-        ["Cell line", "Arm", "Feature width", "Held-out score",
+        ["Cell line", "Arm", "Feature width", "Pre-registered score", "Fold-centred score",
          "vs TranscriptFormer", "vs scPRINT", "vs scGPT"],
         rows, sources=[S_ANALYSIS, S_RUNNER],
-        caption=("Fold-centred, reliability-weighted, ceiling-corrected correlation on "
-                 "held-out perturbations, full scope, grouped split, MLP translator. The last "
-                 "three columns read the paired per-perturbation difference between the "
-                 "protein arm and that model's embedding arm on the same perturbations: "
-                 "'ahead' and 'behind' mean the interval on that difference excludes zero."),
+        caption=("Reliability-weighted, ceiling-corrected correlation on held-out "
+                 "perturbations, full scope, grouped split, MLP translator, on the "
+                 "pre-registered rule and on the fold-centred diagnostic. The last three "
+                 "columns read the paired per-perturbation difference on the pre-registered "
+                 "rule between the protein arm and that model's embedding arm on the same "
+                 "perturbations: 'ahead' and 'behind' mean the group-resampled interval on that "
+                 "difference excludes zero."),
     )
 
     tf_verdicts = {line: _beats(_paired(r, line, "esm2_3b_emb", "transcriptformer_emb"))
@@ -735,6 +779,18 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
                    for line in ("hepg2", "jurkat")}
     sg_verdicts = {line: _beats(_paired(r, line, "esm2_3b_emb", "scgpt_emb"))
                    for line in ("hepg2", "jurkat")}
+    disc_verdicts = {
+        name: {line: _beats(_paired(r, line, "esm2_3b_emb", f"{name}_emb", DISCRIM_KEY))
+               for line in ("hepg2", "jurkat")}
+        for name in ("transcriptformer", "scprint", "scgpt")
+    }
+    disagree = [
+        f"{MODEL_LABEL[name]} in {LINE[line]}"
+        for name, v in disc_verdicts.items()
+        for line in ("hepg2", "jurkat")
+        if v[line] != {"transcriptformer": tf_verdicts, "scprint": sp_verdicts,
+                       "scgpt": sg_verdicts}[name][line]
+    ]
 
     VERB = {"ahead": "beats", "behind": "falls short of", "a tie": "ties",
             "not measured": "was not compared with"}
@@ -755,18 +811,19 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
         f"{P.num(r.score('jurkat', 'null_randgene_d5120'))} at 5,120)"
     )
 
-    def rnd(line: str, arm: str) -> float:
+    def rnd(line: str, arm: str, col: str = PREREG) -> float:
         d = r.scope_arms(line, "full", "random")
         d = d[d.arm == arm]
-        return float(d[VERDICT].iloc[0]) if not d.empty else float("nan")
+        return float(d[col].iloc[0]) if not d.empty else float("nan")
 
     random_split = (
         "<p>Under the random split, where correlated perturbations can fall on both sides of "
-        "the fold, every arm gains and the two groups stay together: ESM2-3B goes from "
-        f"{P.num(r.score('hepg2', 'esm2_3b_emb'))} to {P.num(rnd('hepg2', 'esm2_3b_emb'))} in "
-        f"HepG2 and {P.num(r.score('jurkat', 'esm2_3b_emb'))} to "
-        f"{P.num(rnd('jurkat', 'esm2_3b_emb'))} in Jurkat, beside "
-        f"{P.num(rnd('hepg2', 'transcriptformer_emb'))} and "
+        "the fold, the protein arm and the model arms move together. On the pre-registered "
+        f"rule ESM2-3B goes from {P.num(r.score('hepg2', 'esm2_3b_emb', PREREG))} to "
+        f"{P.num(rnd('hepg2', 'esm2_3b_emb'))} in HepG2, where every embedding arm roughly "
+        f"doubles, and from {P.num(r.score('jurkat', 'esm2_3b_emb', PREREG))} to "
+        f"{P.num(rnd('jurkat', 'esm2_3b_emb'))} in Jurkat, where the scores barely move. Beside "
+        f"it sit {P.num(rnd('hepg2', 'transcriptformer_emb'))} and "
         f"{P.num(rnd('jurkat', 'transcriptformer_emb'))} for TranscriptFormer and "
         f"{P.num(rnd('hepg2', 'scgpt_emb'))} and {P.num(rnd('jurkat', 'scgpt_emb'))} for "
         f"scGPT, against {P.num(rnd('hepg2', 'null_randgene_d2560'))} and "
@@ -777,11 +834,9 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
         "correlated neighbours.</p>"
     )
 
-    MODES = ("dest_reference", "dest_all", "source_only")
     UNSEEN_ARMS = ("esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb",
                    "scgpt_emb", "coexp", "null_randgene_d2560", "null_randgene_d5120")
-    PROTEIN_TABLE_ARMS = ("esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb")
-    trows, clears = [], {}
+    trows = []
     for direction in ("hepg2->jurkat", "jurkat->hepg2"):
         block = _ptransfer(r, direction, "transfer_unseen")
         if not block:
@@ -790,59 +845,60 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
             row = block.get(arm)
             if row is None:
                 continue
-            n_clear = sum(
-                1 for m in MODES
-                if _ptransfer(r, direction, "transfer_unseen", m).get(arm, {}).get("lo", 0) > 0
-            )
-            clears[(direction, arm)] = n_clear
             trows.append([
                 direction.replace("->", " to ").replace("hepg2", "HepG2").replace(
                     "jurkat", "Jurkat"),
                 label(arm), f"{row['n_perturbations']}",
+                ci(row["preregistered"], row["preregistered_lo"], row["preregistered_hi"]),
                 ci(row["score"], row["lo"], row["hi"]),
-                f"{n_clear} of 3",
             ])
     transfer = ""
-    if trows:
-        prot_clear = sum(v for (_, a), v in clears.items() if a in PROTEIN_TABLE_ARMS)
-        prot_cells = 3 * sum(1 for (_, a) in clears if a in PROTEIN_TABLE_ARMS)
-        sg_clear = sum(v for (_, a), v in clears.items() if a == "scgpt_emb")
-        other_clear = sum(
-            v for (_, a), v in clears.items()
-            if a in ("coexp", "null_randgene_d2560", "null_randgene_d5120")
-        )
+    clear = r.head.get("protein_transfer", {}).get("unseen_gene_clearance", {})
+    if trows and clear:
+        ref = clear.get("dest_reference", {})
+        others = {m: clear[m] for m in ("dest_all", "source_only") if m in clear}
+        other_txt = _join([
+            f"{m.replace('_', ' ')} ({v['n_perturbations_scored']} perturbations, "
+            f"{v['protein_derived']} protein-derived, {v['scgpt']} scGPT, "
+            f"{v['coexpression_and_nulls']} co-expression or null)"
+            for m, v in others.items()
+        ])
         transfer = (
             "<p>The sharpest version of the split is the cross-line evaluation restricted to "
             "genes that were never perturbed in the training screen. A gene table only helps "
-            "there if it places a gene it has no training signal for somewhere sensible. "
-            "Counting over the two directions and the three ways of referencing the "
-            f"destination line's response, the four protein-derived tables clear zero in "
-            f"{prot_clear} of their {prot_cells} cells. scGPT's, the one table learned from "
-            f"expression alone, clears it in {sg_clear} of 6, and so do co-expression and the "
-            f"two width-matched random-vector nulls ({other_clear} of 18 between them). With 78 "
-            "to 177 held-out perturbations the intervals are wide, so this separates the two "
-            "groups rather than ranking the arms inside either one.</p>"
+            "there if it places a gene it has no training signal for somewhere sensible. The "
+            "destination line's response has to be measured against something, and the only "
+            "choice that keeps the evaluation non-transductive builds that reference out of "
+            "half the destination's perturbations, leaving the other "
+            f"{ref.get('n_perturbations_scored', '')} to be scored. On those rows the four "
+            f"protein-derived tables clear zero in {ref.get('protein_derived', '')} cells (two "
+            "directions by four tables), scGPT's, the one table learned from expression alone, "
+            f"in {ref.get('scgpt', '')}, and co-expression together with the two width-matched "
+            f"random-vector nulls in {ref.get('coexpression_and_nulls', '')}.</p>"
+            "<p>The other two reference choices score twice as many rows, so their counts are "
+            f"not comparable to those and are given separately: {other_txt}. The direction of "
+            "the separation is the same in all three, but in the source-only mode two of the "
+            "six co-expression-or-null cells also clear zero, so the mode is not a free "
+            "choice.</p>"
             + P.table(
-                ["Direction", "Arm", "Held-out perturbations", "Held-out score",
-                 "Reference choices where the interval excludes zero"],
+                ["Direction", "Arm", "Held-out perturbations", "Pre-registered score",
+                 "Fold-centred score"],
                 trows, sources=[S_ANALYSIS, S_RUNNER],
                 caption=("Cross-line transfer over perturbations whose gene never appears in "
-                         "the training screen, fold-centred score, MLP translator. The score "
-                         "column uses the held-out reference cells, as everywhere else on this "
-                         "page; the last column counts how many of the three reference choices "
-                         "put the interval clear of zero. All rows come from the protein arm's "
-                         "own job, which reproduced every arm it re-ran from the main sweep "
-                         "exactly."),
+                         "the training screen, MLP translator, using the held-out reference "
+                         "cells as everywhere else on this page. All rows come from the protein "
+                         "arm's own job, which reproduced every arm it re-ran from the main "
+                         "sweep exactly."),
             )
         )
 
     body = (
         "<p>Every arm above that beat co-expression fed the translator a model's static "
-        "gene-identity table. Three of those four tables did not come from single-cell data "
+        "gene-identity table. Two of those four tables did not come from single-cell data "
         "alone, so what the phrase 'foundation-model embedding' covers has to be split apart. "
         "Reading the four released checkpoints settles where each table came from.</p>"
         + prov +
-        "<p>The three cases are different in kind. TranscriptFormer's arm is a protein language "
+        "<p>The cases are different in kind. TranscriptFormer's arm is a protein language "
         "model's embedding passed through unchanged: the table in its weights is the ESM2 file "
         "shipped in the same release, to the byte. scPRINT started from a protein-derived table "
         "and trained it for 400,000 steps. scGPT and AIDO.Cell learned theirs from expression "
@@ -866,7 +922,11 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
         f"{phrase(sp_verdicts, 'scPRINT')}, and {phrase(sg_verdicts, 'scGPT')}. It clears its "
         f"own width-matched random-vector null in both lines {nulls}, and its own shuffled-label "
         f"draws reach at most {P.num(draws['hepg2'])} in HepG2 and {P.num(draws['jurkat'])} in "
-        f"Jurkat.</p>"
+        f"Jurkat. "
+        + ("The fold-centred diagnostic reads the same way on every one of these six "
+           "comparisons.</p>" if not disagree else
+           "On the fold-centred diagnostic the reading differs for "
+           + _join(disagree) + ".</p>")
         + random_split + chart +
         "<p>The tables themselves say the same thing from the other direction. Comparing the "
         "rank ordering of gene-gene similarity between each pair of tables, TranscriptFormer's "
@@ -920,9 +980,8 @@ def discrimination_section(r: Results, chart: str) -> str:
         f"<p>Under the version the jobs resolved, the embedding arms clear chance in both lines "
         f"({P.num(best_h)} in HepG2, {P.num(best_j)} in Jurkat), co-expression does not "
         f"({P.num(r.disc('hepg2', 'coexp'))} and {P.num(r.disc('jurkat', 'coexp'))}), and "
-        "neither do the response-only arms. That ordering is the same one the fold-centred "
-        "correlation gives, and the opposite of the pre-registered residual one. It would be "
-        "independent support for reading the fold-centred score, except that the ordering is "
+        "neither do the response-only arms. That ordering is the one both correlation scores "
+        "give, so it would be independent support for the result, except that the ordering is "
         "not stable across releases of the metric.</p>"
         + _disc_version_note(r)
     )
@@ -1087,28 +1146,39 @@ def sensitivity_section(r: Results, chart: str) -> str:
 
 
 def controls_section(r: Results, split_chart: str, overlap_chart: str) -> str:
-    npm_h, npm_j = r.score("hepg2", "node_pairmlp"), r.score("jurkat", "node_pairmlp")
-    npm_hr = r.runs[(r.runs.cell_line == "hepg2") & (r.runs.scope == "full")
-                    & (r.runs.split == "random") & (r.runs.translator == "mlp")
-                    & (r.runs.arm == "node_pairmlp")][VERDICT]
-    npm_hr = float(npm_hr.iloc[0]) if not npm_hr.empty else float("nan")
+    npm_h = r.score("hepg2", "node_pairmlp", PREREG)
+    npm_j = r.score("jurkat", "node_pairmlp", PREREG)
+
+    def rnd_col(arm: str, col: str) -> float:
+        d = r.runs[(r.runs.cell_line == "hepg2") & (r.runs.scope == "full")
+                   & (r.runs.split == "random") & (r.runs.translator == "mlp")
+                   & (r.runs.arm == arm)][col]
+        return float(d.iloc[0]) if not d.empty else float("nan")
+
+    npm_hr = rnd_col("node_pairmlp", DISCRIM)
+    npm_hr_p = rnd_col("node_pairmlp", PREREG)
     hb = r.best("hepg2", FULL_SCOPE_MODELS, exclude="hybrid")
     body = (
         "<p>A pair feature can score without saying anything about the pair. Two controls bound "
         "that. The node-only control gives the network the same six summary statistics for each "
         "gene on its own (expression level, detection rate, co-expression degree) and no "
         "pairwise term. Fitted as a free network over both genes it reaches "
-        f"{P.num(npm_h)} in HepG2 and {P.num(npm_j)} in Jurkat, well below {label(hb.arm)} at "
-        f"{P.num(hb[VERDICT])} but above co-expression. Restricted to an additive form, one "
+        f"{P.num(npm_h)} in HepG2 and {P.num(npm_j)} in Jurkat on the pre-registered rule, well "
+        f"below {label(hb.arm)} at {P.num(hb[PREREG])} but above co-expression, a reminder that "
+        "part of what any arm scores here is what the two genes are like on their own. "
+        "Restricted to an additive form, one "
         "branch per gene summed, it is identically zero on the fold-centred score: after the "
         "fold's per-gene mean is removed, an additive prediction is the same vector for every "
         "perturbation. That is a property of the control and the score together, not a "
         "measurement, which is why the free version is the informative one.</p>"
         "<p>The gap between the two splits is the second bound. Under a random split, where "
         "correlated perturbations can fall on both sides, node statistics alone reach "
-        f"{P.num(npm_hr)} in HepG2, {P.num(npm_hr / npm_h)} times their grouped-split score. "
-        "Every arm gains, so "
-        "the grouped split is the one that answers the question.</p>"
+        f"{P.num(npm_hr_p)} in HepG2 on the pre-registered rule against {P.num(npm_h)} under "
+        "the grouped split, and on the fold-centred score the same control goes from "
+        f"{P.num(r.score('hepg2', 'node_pairmlp'))} to {P.num(npm_hr)}, "
+        f"{P.num(npm_hr / r.score('hepg2', 'node_pairmlp'))} times its grouped-split score. A "
+        "control with no pairwise term should not gain from where the fold boundary falls, and "
+        "that it does is what the grouped split is there to prevent.</p>"
     )
     return P.section("Controls: node statistics, split design, and shared control cells",
                      body + split_chart + overlap_text(r) + overlap_chart,
@@ -1124,7 +1194,7 @@ def overlap_text(r: Results) -> str:
         )
     d = r.overlap[r.overlap.translator == "mlp"]
     piv = d.pivot_table(index=["cell_line", "arm"], columns="variant",
-                        values=VERDICT).reset_index()
+                        values=DISCRIM).reset_index()
     if not {"ctrl0", "ctrl1"}.issubset(piv.columns):
         return ""
     piv = piv.assign(delta=piv["ctrl1"] - piv["ctrl0"])
@@ -1170,15 +1240,15 @@ def transfer_section(r: Results, chart: str) -> str:
             b = d[(d.cell_line == direction)
                   & d.arm.str.startswith(FULL_SCOPE_MODELS)
                   & ~d.arm.str.contains("hybrid", regex=False)]
-            b = b.sort_values(VERDICT, ascending=False).iloc[0]
+            b = b.sort_values(PREREG, ascending=False).iloc[0]
             gi = d[(d.cell_line == direction) & (d.arm == "null_randgene_d5120")]
             co = d[(d.cell_line == direction) & (d.arm == "coexp")]
             parts.append({
                 "scope": name, "direction": direction, "arm": b.arm,
-                "score": float(b[VERDICT]), "lo": float(b[VERDICT + "_lo"]),
-                "hi": float(b[VERDICT + "_hi"]),
-                "gene_null": float(gi[VERDICT].iloc[0]) if not gi.empty else float("nan"),
-                "coexp": float(co[VERDICT].iloc[0]) if not co.empty else float("nan"),
+                "score": float(b[PREREG]), "lo": float(b[PREREG + "_lo"]),
+                "hi": float(b[PREREG + "_hi"]),
+                "gene_null": float(gi[PREREG].iloc[0]) if not gi.empty else float("nan"),
+                "coexp": float(co[PREREG].iloc[0]) if not co.empty else float("nan"),
                 "n": int(b.n_perturbations),
             })
     rows = [
@@ -1211,9 +1281,9 @@ def transfer_section(r: Results, chart: str) -> str:
         "the intervals are wide.</p>"
         + (
             "<p>That surviving score is where the four gene tables come apart. The protein "
-            "section below reads the same unseen-gene evaluation arm by arm: the tables that "
-            "derive from protein sequence keep an interval clear of zero almost everywhere, "
-            "and scGPT's, the one learned from expression alone, does not in either "
+            "section below reads the same unseen-gene evaluation arm by arm: on the rows this "
+            "table reports, the tables that derive from protein sequence keep an interval clear "
+            "of zero and scGPT's, the one learned from expression alone, does not in either "
             "direction.</p>"
             if r.head.get("protein_transfer") else ""
         )
@@ -1226,7 +1296,7 @@ def transfer_section(r: Results, chart: str) -> str:
 def mode_agreement_note(r: Results) -> str:
     d = r.transfer[r.transfer.translator == "mlp"]
     piv = d.pivot_table(index=["cell_line", "scope", "arm"], columns="transfer_mode",
-                        values=VERDICT)
+                        values=PREREG)
     if "dest_reference" not in piv.columns:
         return ""
     shifts, ranks = [], []
@@ -1242,46 +1312,69 @@ def mode_agreement_note(r: Results) -> str:
     if not shifts:
         return ""
     return (
-        "<p>The destination line's response has to be measured against something. Using the "
-        "source line's mean, or all destination cells, instead of a held-out half of the "
-        f"destination cells moves an arm's score by up to {P.num(max(shifts))} but leaves the "
-        f"ordering intact (rank correlation {P.num(min(ranks))} or better within every "
-        "direction and scope). The reported numbers use the held-out reference cells, the only "
-        "one of the three that keeps the evaluation non-transductive.</p>"
+        "<p>The destination line's response has to be measured against something, and the choice "
+        "matters more than it looks. Using the source line's mean, or all destination cells, "
+        "instead of a held-out half of the destination cells moves an arm's pre-registered "
+        f"score by up to {P.num(max(shifts))}, and the ordering it induces agrees with the "
+        f"held-out-reference one only loosely (rank correlation as low as {P.num(min(ranks))} "
+        "within a direction and scope). The two alternatives also score twice as many "
+        "perturbations, because the held-out reference has to be built out of half of them. "
+        "Every number reported here uses the held-out reference cells, the only one of the "
+        "three that keeps the evaluation non-transductive, and counts from the three are never "
+        "pooled.</p>"
     )
 
 
 def scope_section(r: Results) -> str:
     rows = []
+    clears = {}
     for line in ("hepg2", "jurkat"):
         d = r.scope_arms(line, "common", "grouped")
-        nulls = d[d.arm.str.contains(figmod.SHUFFLE_TAG, regex=False)][VERDICT]
-        ceiling = float(np.nanmax(nulls.to_numpy())) if not nulls.empty else float("nan")
+        shuffled = d[d.arm.str.contains(figmod.SHUFFLE_TAG, regex=False)]
+        ceil = {c: float(np.nanmax(shuffled[c].to_numpy())) if not shuffled.empty else float("nan")
+                for c in (PREREG, DISCRIM)}
         for model in ("scgpt", "scprint", "transcriptformer", "aido_cell"):
-            sub = d[d.arm.str.startswith(model)]
+            sub = d[d.arm.str.startswith(model) & ~d.arm.str.contains(
+                figmod.SHUFFLE_TAG, regex=False)]
             if sub.empty:
                 continue
-            b = sub.sort_values(VERDICT, ascending=False).iloc[0]
+            b = sub.sort_values(PREREG, ascending=False).iloc[0]
+            bd = sub.sort_values(DISCRIM, ascending=False).iloc[0]
+            clears[(line, model)] = (float(b[PREREG]) > ceil[PREREG],
+                                     float(bd[DISCRIM]) > ceil[DISCRIM])
             rows.append([
-                LINE[line], MODEL_LABEL[model], label(b.arm), P.num(float(b[VERDICT])),
-                P.num(ceiling), "yes" if float(b[VERDICT]) > ceiling else "no",
+                LINE[line], MODEL_LABEL[model], label(b.arm),
+                P.num(float(b[PREREG])), P.num(ceil[PREREG]),
+                P.num(float(bd[DISCRIM])), P.num(ceil[DISCRIM]),
+                "yes" if clears[(line, model)][0] else "no",
+                "yes" if clears[(line, model)][1] else "no",
             ])
     tab = P.table(
-        ["Cell line", "Model", "Best arm", "Fold-centred score", "Shuffled-label ceiling",
-         "Clears the null"],
+        ["Cell line", "Model", "Best arm (pre-registered)", "Pre-registered score",
+         "Pre-registered null", "Fold-centred score", "Fold-centred null",
+         "Clears (pre-registered)", "Clears (fold-centred)"],
         rows, sources=[S_ANALYSIS],
+        caption=("Best arm per model on the 250 perturbations every model covers. The "
+                 "fold-centred column takes each model's best arm on that score, which is not "
+                 "always the same arm."),
     )
     n = int(r.scope_arms("hepg2", "common", "grouped").n_perturbations.iloc[0])
+    aido = clears.get(("hepg2", "aido_cell"), (False, False))
+    aido_j = clears.get(("jurkat", "aido_cell"), (False, False))
     body = (
         "<p>AIDO.Cell was harvested on a 250-gene subset in the previous run, so the only "
         "comparison that puts all four models on the same rows is that subset. On those "
-        f"{n} perturbations the other three models still clear the shuffled-label null and "
-        "AIDO.Cell does not, in either cell line. With a quarter of the perturbations the "
-        "intervals are wide, so this is a weaker statement than the full-scope result: "
-        "AIDO.Cell is not shown to be worse than the others, only not shown to work.</p>"
+        f"{n} perturbations the other three models clear the shuffled-label null on both "
+        "scores. AIDO.Cell is the one case where the two scores disagree: on the "
+        f"pre-registered rule its best arm sits {'above' if aido[0] else 'below'} the null in "
+        f"HepG2 and {'above' if aido_j[0] else 'below'} it in Jurkat, and on the fold-centred "
+        f"score {'above' if aido[1] else 'below'} and "
+        f"{'above' if aido_j[1] else 'below'} respectively. With a quarter of the perturbations "
+        "the intervals are wide either way, so the honest reading is that AIDO.Cell is not "
+        "separated from the null on this subset, not that it fails.</p>"
     )
-    return P.section("On the 250-gene subset where all four models overlap, AIDO.Cell stays in "
-                     "the null band", body + tab, sources=[S_ANALYSIS])
+    return P.section("On the 250-gene subset where all four models overlap, AIDO.Cell is the "
+                     "one case the two scores disagree about", body + tab, sources=[S_ANALYSIS])
 
 
 def robustness_section(r: Results, chart: str) -> str:
@@ -1311,19 +1404,31 @@ def robustness_section(r: Results, chart: str) -> str:
 
 def limitations(r: Results) -> str:
     hb = r.best("hepg2", FULL_SCOPE_MODELS, exclude="hybrid")
-    hceil = r.ceiling("hepg2")
+    hceil = r.ceiling("hepg2", PREREG)
+    n_h = int(r.primary("hepg2").n_groups_scored.dropna().iloc[0])
+    big_h = int(r.primary("hepg2").largest_group_scored.dropna().iloc[0])
+    n_j = int(r.primary("jurkat").n_groups_scored.dropna().iloc[0])
     body = (
         "<ul>"
-        "<li>The ranking metric is post hoc. The pre-registered cell of the grid is reported "
-        "for every arm, and it fails its own shuffled-label control, so the verdict is read "
-        "from the fold-centred cell instead. On the fold-centred score an arm is rewarded only "
-        "for telling held-out perturbations apart, not for predicting the shared part of the "
-        "response.</li>"
+        "<li>The pre-registered score rewards predicting what a held-out group shares. Its "
+        "shuffled-label draws sit above zero for that reason, and a prediction that barely "
+        "varies with the perturbation collects part of the score. The fold-centred version "
+        "reported beside it removes that component, but it does so with a mean of the held-out "
+        "outcomes, so it is a diagnostic rather than a second verdict, and it was written after "
+        "the shuffled draws were seen. Where the two disagree this page says so; neither is "
+        "presented as confirming the other.</li>"
         f"<li>The effect is small in absolute terms. Every score is already divided by the "
         f"square root of the reproducibility ceiling ({P.num(hceil)} in HepG2), so 1.0 would "
         f"mean predicting the response as well as the measurement repeats itself. "
-        f"{label(hb.arm)} reaches {P.num(float(hb[VERDICT]))} there, which leaves most of the "
+        f"{label(hb.arm)} reaches {P.num(float(hb[PREREG]))} there, which leaves most of the "
         "reproducible perturbation-specific signal unexplained by every arm tested.</li>"
+        f"<li>The independent unit is the response group, not the perturbation. HepG2's "
+        f"{int(r.primary('hepg2').n_perturbations.iloc[0])} in-scope perturbations fall into "
+        f"{n_h} groups of correlated responses, one holding {big_h} of them, and Jurkat's into "
+        f"{n_j}. Every interval on this page resamples those groups, which is wider than "
+        "resampling rows and is why some differences that would read as separated do not. The "
+        "count of effectively independent units is closer to the group count than to the "
+        "perturbation count.</li>"
         "<li>One translator, and four anchors in one cell line. Every arm went through the same "
         "network shape; a larger translator could change the absolute numbers, though it would "
         "have to change them unevenly across arms to change the ordering. The anchor was varied "
@@ -1394,10 +1499,15 @@ def beeline_section(r: Results, chart: str = "") -> str:
         f"{train['network']}/{train['dataset']} pair set ({train['n_pairs_kept']:,} pairs, "
         "balanced 1:1) and scored on the held-out cells with the paper's projector shape, "
         "optimizer, batch size and epoch count.</p>"
-        f"<p>It reproduces. Mean AUPRC over the three held-out cells is {P.num(s['mean_auprc'])} "
-        f"against {P.num(s['paper_mean_auprc'])} reported, a mean difference of "
-        f"{P.signed(s['mean_difference'], 4)} and at most {P.num(s['max_abs_difference'])} on "
-        "any one cell. Two controls say what that number is made of. Permuting which gene gets "
+        f"<p>It does not reproduce numerically. Mean AUPRC over the three held-out cells is "
+        f"{P.num(s['mean_auprc'])} against {P.num(s['paper_mean_auprc'])} reported, a mean "
+        f"difference of {P.signed(s['mean_difference'], 4)} and up to "
+        f"{P.num(s['max_abs_difference'])} on one cell, higher on two of the three cells and "
+        "lower on the third. No tolerance was pre-registered for this "
+        "side result and no seed-to-seed noise estimate was run, so the gap is unexplained and "
+        "the comparison with the source paper's number stays open. What follows treats the "
+        "re-implementation as a setting to run controls in, not as a reproduction of the "
+        "reported value. Two controls say what the number is made of. Permuting which gene gets "
         "which embedding, which keeps every gene's identity and destroys the biology in its "
         f"vector, still reaches {P.num(s['shuffled_embedding_mean_auprc'])}. And restricting to "
         "pairs whose two genes never appear in the training pair set, where identity cannot be "
@@ -1409,12 +1519,13 @@ def beeline_section(r: Results, chart: str = "") -> str:
         "network and absent on the cell-type-specific one.</p>"
         "<p>That is the same shape as this run's own cross-line transfer result, where a fixed "
         "random vector per gene nearly matches the models over shared genes and collapses over "
-        "unseen ones. The gradient-trajectory and virtual-value arms are not reproduced here: "
-        "they would need the feature extraction re-run against these datasets, which is a "
-        "separate harvest. So this run confirms the paper's setting and its embedding baseline, "
-        "and its disagreement is about what response features do on perturbation response.</p>"
+        "unseen ones. The gradient-trajectory and virtual-value arms are not re-run here: they "
+        "would need the feature extraction repeated against these datasets, which is a separate "
+        "harvest. So the finding that survives is about the controls, which the source paper "
+        "does not report: most of its embedding baseline is gene identity. The absolute "
+        "agreement with its published number is not established.</p>"
     )
-    return P.section("The source paper's embedding baseline reproduces, and rests on gene identity",
+    return P.section("The source paper's embedding baseline, re-implemented: mostly gene identity",
                      body + tab + chart, sources=[S_BEELINE])
 
 
@@ -1425,12 +1536,16 @@ def _beeline_limitation(r: Results) -> str:
             "task runs on different data with a different label, so this run tests its features "
             "on a task it was not evaluated on rather than contradicting its own numbers.</li>"
         )
+    s = r.beeline["summary"]
     return (
-        "<li>The source paper's benchmark is only partly reproduced here. Its projector and its "
-        "embedding baseline are re-run on its own BEELINE datasets; its virtual-value and "
-        "gradient-trajectory features are not, because those would need a fresh extraction "
-        "against those datasets rather than the two screens used here. A disagreement about "
-        "response features therefore rests on this task, not on their benchmark.</li>"
+        "<li>The source paper's benchmark is re-implemented, not reproduced. Its projector and "
+        "embedding baseline were re-run on its own BEELINE datasets and scored "
+        f"{P.num(s['mean_auprc'])} against {P.num(s['paper_mean_auprc'])} reported, up to "
+        f"{P.num(s['max_abs_difference'])} apart on one cell, with no pre-registered tolerance "
+        "and no noise estimate, so the discrepancy is unexplained. Its virtual-value and "
+        "gradient-trajectory features were not re-run at all, because those would need a fresh "
+        "extraction against those datasets. The controls run inside that setting stand on their "
+        "own; the comparison with the published number does not.</li>"
     )
 
 
@@ -1457,47 +1572,55 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "after the held-out fold's per-gene mean is removed. Green points are shuffled-label "
         "draws and random-vector controls.",
         "The controls are spread along the horizontal axis and collapse to zero on the "
-        "vertical one, which is why the fold-centred score is the one used to rank.",
+        "vertical one: the pre-registered score gives a shuffled-label arm credit for the part "
+        "of a held-out group's response its members share, and the fold-centred version "
+        "removes it.",
         sources=[S_METRICS, S_ANALYSIS, S_FIGS],
     )
     f_arms = P.figure(
         2, "Held-out score by arm, HepG2 and Jurkat",
         frag("arm_scores"),
-        "Fold-centred, reliability-weighted, ceiling-corrected correlation on held-out "
-        "perturbations under the grouped split, with 95% bootstrap intervals over 2,000 "
-        "resamples (524 perturbations in HepG2, 705 in Jurkat). The dotted line is the largest "
-        "shuffled-label draw in that cell line.",
-        "Every arm that carries a static gene-identity table sits above the null line, whether "
-        "that table was learned from expression (scGPT, AIDO.Cell) or came from a protein "
-        "model (TranscriptFormer, scPRINT). Co-expression, the random-vector controls and the "
-        "HepG2 response-only arms sit at or below it; two of the three Jurkat response-only "
-        "arms sit just above it.",
+        "Reliability-weighted, ceiling-corrected correlation on held-out perturbations under "
+        "the grouped split. The top row is the pre-registered rule the verdict is read from; "
+        "the bottom row is the fold-centred diagnostic. Intervals are 95% over 2,000 resamples "
+        "of the response groups (226 groups over 524 perturbations in HepG2, 452 over 705 in "
+        "Jurkat). The dotted line is the largest shuffled-label draw in that cell line and "
+        "score.",
+        "Every arm that carries a static gene-identity table sits above the null line on both "
+        "scores, whether that table was learned from expression (scGPT, AIDO.Cell), came from a "
+        "protein model (TranscriptFormer, scPRINT), or is a raw protein table with no "
+        "single-cell model in its path (the two ESM2 arms). Co-expression sits just above the "
+        "null on the pre-registered score and at it on the fold-centred one, and the "
+        "random-vector controls and response-only arms sit at or below it.",
         sources=[S_RUNNER, S_ANALYSIS, S_FIGS],
     )
     con = r.con[(r.con.scope == "full") & (r.con.split == "grouped")
-                & (r.con.translator == "mlp") & (r.con.metric == "centered_weighted")
+                & (r.con.translator == "mlp") & (r.con.metric == "residual_weighted")
                 & (r.con.target_source == "run1_all_controls")]
     emb = con[con.arm.str.endswith(("_emb", "_full")) & ~con.arm.str.contains("shuffled")]
     vs_finding = (
-        f"The embedding arms beat co-expression by {P.num(float(emb.median_difference.min()))} "
-        f"to {P.num(float(emb.median_difference.max()))} correlation points; the response-only "
+        "Every arm carrying a gene-identity table, the two raw ESM2 tables included, beats "
+        f"co-expression by {P.num(float(emb.median_difference.min()))} to "
+        f"{P.num(float(emb.median_difference.max()))} correlation points; the response-only "
         "arms and the controls are indistinguishable from it."
     )
     f_vs = P.figure(
         3, "Paired difference against co-expression on the same held-out perturbations",
         frag("vs_coexpression"),
-        "Median per-perturbation difference between each arm and the co-expression arm, scored "
-        "on the same perturbations, with 95% bootstrap intervals on the paired difference.",
+        "Median per-perturbation difference between each arm and the co-expression arm on the "
+        "pre-registered target, scored on the same perturbations, with 95% intervals from "
+        "resampling the response groups.",
         vs_finding,
         sources=[S_ANALYSIS, S_FIGS],
     )
     f_protein = P.figure(
         4, "The raw protein arm against the embedding arms it is a control for",
         frag("protein_arms"),
-        "Held-out fold-centred correlation, full scope, grouped split, MLP translator, with 95% "
-        "bootstrap intervals over 2,000 resamples (524 perturbations in HepG2, 705 in Jurkat). "
-        "The two ESM2 arms use gene tables built from protein sequence alone. The dotted line is "
-        "the largest shuffled-label draw in that cell line.",
+        "Held-out correlation, full scope, grouped split, MLP translator, on the pre-registered "
+        "rule (top row) and the fold-centred diagnostic (bottom row), with 95% intervals over "
+        "2,000 resamples of the response groups. The two ESM2 arms use gene tables built from "
+        "protein sequence alone. The dotted line is the largest shuffled-label draw in that "
+        "cell line and score.",
         protein_finding(r),
         sources=[S_RUNNER, S_ESM, S_FIGS],
     ) if "protein_arms" in made else ""
@@ -1537,23 +1660,24 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_SENS, S_FIGS],
     ) if "anchor_sensitivity" in made else ""
     f_beeline = P.figure(
-        8, "The source paper's BEELINE benchmark, reproduced with its controls",
+        8, "The source paper's BEELINE benchmark, re-implemented with controls it does not run",
         frag("beeline"),
         "AUPRC on each held-out benchmark cell for the paper's scGPT embedding baseline: what it "
-        "reports, what this reproduction gets, the same pipeline with gene embeddings permuted "
-        "between genes, and the score restricted to pairs whose genes never appear in training "
-        "with its own chance level beside it.",
-        "The reproduction lands near the reported values, and a control that keeps gene identity "
-        "but destroys the embedding's biology recovers most of the score.",
+        "reports, what this re-implementation gets, the same pipeline with gene embeddings "
+        "permuted between genes, and the score restricted to pairs whose genes never appear in "
+        "training with its own chance level beside it.",
+        "The re-implementation scores above the reported values on two cells and below on one, "
+        "so it does not reproduce them numerically. A control that keeps gene identity but "
+        "destroys the embedding's biology recovers most of its score.",
         sources=[S_BEELINE, S_FIGS],
     ) if "beeline" in made else ""
     f_split = P.figure(
         9, "Grouped split against random split, every arm",
         frag("split_gap"),
-        "Each point is one arm in one cell line, scored under both splits. The dotted line is "
-        "equality.",
-        "Every arm scores higher under the random split, and the node-statistics control gains "
-        "the most, which is what the grouped split is there to prevent.",
+        "Each point is one arm in one cell line, scored on the fold-centred diagnostic under "
+        "both splits. The dotted line is equality.",
+        "Every arm scores higher under the random split on this score, and the node-statistics "
+        "control gains the most, which is what the grouped split is there to prevent.",
         sources=[S_RUNNER, S_FIGS],
     )
     f_overlap = P.figure(

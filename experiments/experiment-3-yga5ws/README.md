@@ -7,21 +7,27 @@ response features against plain statistical co-expression computed from the same
 the control the UGRN paper never ran.
 
 **What it found.** The response features add nothing to the model's static gene embedding; the
-embedding is what beats co-expression. Reading the four released checkpoints then shows that three
-of the four gene-identity tables are protein-derived rather than learned from cells, and a table
-built directly from UniProt protein sequence with a public ESM2 checkpoint, run through the same
-translator and folds, ties the best single-cell arm in HepG2 (0.1074 against 0.1089) and, in
-Jurkat (0.1784), beats TranscriptFormer's and scGPT's embedding arms while tying scPRINT's.
-On genes never perturbed in the training
-screen, only the protein-derived tables keep a score clear of zero. `manifest.yaml` carries the
-numbers; the published report carries the argument.
+embedding is what beats co-expression, on the pre-registered scoring rule and with every interval
+resampling the response groups the split holds out together (0.2719 for scGPT's embedding in HepG2
+against 0.04879 for co-expression; paired +0.1846 [0.1501, 0.2408]). Reading the four released
+checkpoints then shows that two of the four gene-identity tables are protein-derived rather than
+learned from cells, and a table built directly from UniProt protein sequence with a public ESM2
+checkpoint, run through the same translator and folds, beats co-expression in both lines and ties
+the single-cell arms in seven of eight paired comparisons, beating scGPT's in Jurkat. On genes
+never perturbed in the training screen, only the protein-derived tables keep a score clear of
+zero. `manifest.yaml` carries the numbers; the published report carries the argument.
+
+The fold-centred version of the score, which removes the held-out fold's own per-gene mean, is
+reported beside the pre-registered one everywhere. It uses held-out outcomes and was written after
+seeing the shuffled-label draws, so it is a diagnostic and never a substitute for the verdict.
 
 ## Layout
 
 | path | what |
 |---|---|
 | `src/scfm_pfm/config.py` | the pre-registration: scoring rule, splits, translator, arms |
-| `src/scfm_pfm/metrics.py` | reliability weights, residual ceiling, weighted correlation, bootstrap, power |
+| `src/scfm_pfm/metrics.py` | reliability weights, residual ceiling, weighted correlation, the group (cluster) bootstrap every interval uses, power |
+| `src/scfm_pfm/groups.py` | recovers the response groups from the bundle's effect matrix, so any scored table can be re-bootstrapped over groups |
 | `src/scfm_pfm/fetch.py` | pulls run 1 / run 2 artifacts into a job from a signed-link manifest |
 | `src/scfm_pfm/ingest/` | the one bundle every later job reads: targets, co-expression, features |
 | `src/scfm_pfm/translate/` | arms, splits, the translator, the sweep runner |
@@ -109,6 +115,7 @@ scratch/dl/protein_shuffle/hepg2,scratch/dl/protein_shuffle/jurkat \
   --sensitivity-sweep scratch/dl/sensitivity \
   --protein-reference scratch/dl/protein_reference/hepg2,scratch/dl/protein_reference/jurkat \
   --protein-transfer-reference scratch/dl/protein_transfer_reference \
+  --bundle-root scratch/dl/bundle \
   --out results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.contract --summary results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.build \
@@ -137,8 +144,9 @@ The discrimination axis is computed with Arc Institute's `cell-eval`. The pre-re
 saved predictions under 0.5.18, 0.5.21 and 0.8.2 to show what that choice costs.
 
 `scratch/verify_claims.py` re-reads each entry of `claims_manifest.json` from the file and key it
-names and reports any disagreement. It resolves 95 of the 159 keys; the rest use prose locators
-that the script does not parse, and none of the values it could re-read disagreed.
+names and reports any disagreement. All 232 re-readable keys resolve and match; the remaining 11
+claims are differences between two rows that are themselves claimed, and their key states the
+formula instead of a locator.
 
 No external model provider is used anywhere in this run: every number comes from the four
 open single-cell foundation models' cached features and from code in this worktree.

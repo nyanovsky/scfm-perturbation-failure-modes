@@ -20,7 +20,7 @@ from .. import paths
 from . import build as B
 from . import figures as figmod
 
-VERDICT = figmod.VERDICT
+DISCRIM = figmod.DISCRIM
 PREREG = figmod.PREREG
 RUNS = "results/summary/runs.parquet"
 CON = "results/summary/contrasts.parquet"
@@ -69,6 +69,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
     for line in ("hepg2", "jurkat"):
         best = r.best(line, B.FULL_SCOPE_MODELS, exclude="hybrid")
         co = r.interval(line, "coexp")
+        cop = r.interval(line, "coexp", PREREG)
         nullv = r.null_ceiling(line)
         nullp = r.null_ceiling(line, PREREG)
         resp = max(
@@ -82,21 +83,32 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             "best_model_arm": best.arm,
             "best_model_score_fold_centred": claim(
                 f"best foundation-model arm in {line} scores this on the fold-centred cell",
-                best[VERDICT], RUNS, pkey(cell_line=line, arm=best.arm, column=VERDICT),
+                best[DISCRIM], RUNS, pkey(cell_line=line, arm=best.arm, column=DISCRIM),
             ),
-            "best_model_ci": [float(best[VERDICT + "_lo"]), float(best[VERDICT + "_hi"])],
+            "best_model_ci": [float(best[DISCRIM + "_lo"]), float(best[DISCRIM + "_hi"])],
             "best_model_score_preregistered": claim(
-                f"the same arm on the pre-registered cell in {line}",
+                f"the same arm on the pre-registered cell in {line}, which the verdict is read "
+                "from",
                 best[PREREG], RUNS, pkey(cell_line=line, arm=best.arm, column=PREREG),
             ),
+            "best_model_ci_preregistered": [
+                float(best[PREREG + "_lo"]), float(best[PREREG + "_hi"])
+            ],
             "coexpression_score_fold_centred": claim(
                 f"co-expression in {line} on the fold-centred cell",
-                co[0], RUNS, pkey(cell_line=line, arm="coexp", column=VERDICT),
+                co[0], RUNS, pkey(cell_line=line, arm="coexp", column=DISCRIM),
             ),
             "coexpression_ci": [co[1], co[2]],
+            "coexpression_score_preregistered": claim(
+                f"co-expression in {line} on the pre-registered cell",
+                cop[0], RUNS, pkey(cell_line=line, arm="coexp", column=PREREG),
+            ),
+            "coexpression_ci_preregistered": [cop[1], cop[2]],
+            "n_response_groups": int(block.n_groups_scored.dropna().iloc[0]),
+            "largest_response_group": int(block.largest_group_scored.dropna().iloc[0]),
             "shuffled_label_ceiling_fold_centred": claim(
                 f"largest shuffled-label draw in {line}, fold-centred, MLP",
-                nullv, RUNS, pkey(cell_line=line, arm="*+shuffled_labels_d*", column=VERDICT, statistic="max"),
+                nullv, RUNS, pkey(cell_line=line, arm="*+shuffled_labels_d*", column=DISCRIM, statistic="max"),
             ),
             "shuffled_label_ceiling_preregistered": claim(
                 f"largest shuffled-label draw in {line}, pre-registered, MLP",
@@ -104,11 +116,11 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             ),
             "best_response_only_score": claim(
                 f"largest response-only arm in {line}",
-                resp, RUNS, pkey(cell_line=line, arm="*_resp", column=VERDICT, statistic="max"),
+                resp, RUNS, pkey(cell_line=line, arm="*_resp", column=DISCRIM, statistic="max"),
             ),
             "node_free_score": claim(
                 f"free network on node statistics in {line}",
-                npm, RUNS, pkey(cell_line=line, arm="node_pairmlp", column=VERDICT),
+                npm, RUNS, pkey(cell_line=line, arm="node_pairmlp", column=DISCRIM),
             ),
             "residual_ceiling": float(
                 r.manifest[line]["reference"]["residual_ceiling"]["median_spearman_brown"]
@@ -127,32 +139,47 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             ),
         }
 
-    con = r.con[(r.con.scope == "full") & (r.con.split == "grouped")
-                & (r.con.translator == "mlp") & (r.con.metric == "centered_weighted")
-                & (r.con.target_source == "run1_all_controls")]
+    def con_for(metric: str):
+        return r.con[(r.con.scope == "full") & (r.con.split == "grouped")
+                     & (r.con.translator == "mlp") & (r.con.metric == metric)
+                     & (r.con.target_source == "run1_all_controls")]
+
     paired = {}
-    for line in ("hepg2", "jurkat"):
-        arm = lines[line]["best_model_arm"]
-        c = con[(con.cell_line == line) & (con.arm == arm)]
-        paired[line] = {
-            "arm": arm,
-            "median_difference": claim(
-                f"paired difference of {arm} against co-expression in {line}",
-                float(c.median_difference.iloc[0]), CON,
-                key(cell_line=line, scope="full", split="grouped", translator="mlp",
-                    target_source="run1_all_controls", arm=arm, reference="coexp",
-                    metric="centered_weighted", column="median_difference"),
-            ),
-            "ci": [float(c.lo.iloc[0]), float(c.hi.iloc[0])],
-            "min_resolvable_difference": claim(
-                f"smallest paired difference this design can resolve for {arm} in {line}",
-                float(c.min_resolvable_difference_achieved.iloc[0]), CON,
-                key(cell_line=line, scope="full", split="grouped", translator="mlp",
-                    target_source="run1_all_controls", arm=arm, reference="coexp",
-                    metric="centered_weighted",
-                    column="min_resolvable_difference_achieved"),
-            ),
-        }
+    for metric, tag in (("residual_weighted", "preregistered"),
+                        ("centered_weighted", "fold_centred")):
+        con = con_for(metric)
+        for line in ("hepg2", "jurkat"):
+            arms = [lines[line]["best_model_arm"]] + [
+                a for a in ("scgpt_emb", "scprint_emb", "transcriptformer_emb",
+                            "esm2_3b_emb", "esm2_650m_emb")
+                if a in set(con[con.cell_line == line].arm)
+            ]
+            for arm in dict.fromkeys(arms):
+                c = con[(con.cell_line == line) & (con.arm == arm)]
+                if c.empty:
+                    continue
+                where = key(cell_line=line, scope="full", split="grouped", translator="mlp",
+                            target_source="run1_all_controls", arm=arm, reference="coexp",
+                            metric=metric)
+                paired[f"{line}__{arm}__{tag}"] = {
+                    "arm": arm, "cell_line": line, "metric": metric,
+                    "median_difference": claim(
+                        f"paired difference of {arm} against co-expression in {line} "
+                        f"on the {tag} target",
+                        float(c.median_difference.iloc[0]), CON,
+                        where + ", column=median_difference",
+                    ),
+                    "ci": [float(c.lo.iloc[0]), float(c.hi.iloc[0])],
+                    "n_paired": int(c.n_paired.iloc[0]),
+                    "n_groups_paired": int(c.n_groups_paired.iloc[0]),
+                    "min_resolvable_difference": claim(
+                        f"smallest paired difference this design resolves for {arm} in {line} "
+                        f"on the {tag} target",
+                        float(c.min_resolvable_difference_achieved.iloc[0]), CON,
+                        where + ", column=min_resolvable_difference_achieved",
+                    ),
+                }
+    con = con_for("centered_weighted")
 
     transfer = {}
     for scope in ("transfer_full", "transfer_unseen"):
@@ -162,7 +189,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
         for direction in sorted(d.cell_line.unique()):
             b = d[(d.cell_line == direction) & d.arm.str.startswith(B.FULL_SCOPE_MODELS)
                   & ~d.arm.str.contains("hybrid", regex=False)]
-            b = b.sort_values(VERDICT, ascending=False).iloc[0]
+            b = b.sort_values(DISCRIM, ascending=False).iloc[0]
             gi = d[(d.cell_line == direction) & (d.arm == "null_randgene_d5120")]
             co = d[(d.cell_line == direction) & (d.arm == "coexp")]
             k = f"{scope}|{direction}"
@@ -170,19 +197,19 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                 "n_held_out": int(b.n_perturbations),
                 "best_model_arm": b.arm,
                 "best_model_score": claim(
-                    f"best model arm on {k}", float(b[VERDICT]), TRANS,
+                    f"best model arm on {k}", float(b[DISCRIM]), TRANS,
                     key(scope=scope, cell_line=direction, arm=b.arm, translator="mlp",
-                        split="cross_line__dest_reference", column=VERDICT),
+                        split="cross_line__dest_reference", column=DISCRIM),
                 ),
-                "best_model_ci": [float(b[VERDICT + "_lo"]), float(b[VERDICT + "_hi"])],
+                "best_model_ci": [float(b[DISCRIM + "_lo"]), float(b[DISCRIM + "_hi"])],
                 "gene_identity_null": claim(
                     f"fixed random vector per gene on {k}",
-                    float(gi[VERDICT].iloc[0]), TRANS,
+                    float(gi[DISCRIM].iloc[0]), TRANS,
                     key(scope=scope, cell_line=direction, arm="null_randgene_d5120",
                         translator="mlp", split="cross_line__dest_reference",
-                        column=VERDICT),
+                        column=DISCRIM),
                 ),
-                "coexpression": float(co[VERDICT].iloc[0]) if not co.empty else float("nan"),
+                "coexpression": float(co[DISCRIM].iloc[0]) if not co.empty else float("nan"),
             }
 
     agree = pd.read_parquet(r.dir / "ordering_agreement.parquet")
@@ -200,7 +227,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
     common = {}
     for line in ("hepg2", "jurkat"):
         d = r.scope_arms(line, "common", "grouped")
-        nulls = d[d.arm.str.contains(figmod.SHUFFLE_TAG, regex=False)][VERDICT]
+        nulls = d[d.arm.str.contains(figmod.SHUFFLE_TAG, regex=False)][DISCRIM]
         ceiling = float(np.nanmax(nulls.to_numpy()))
         row = {"shuffled_label_ceiling": ceiling,
                "n_perturbations": int(d.n_perturbations.iloc[0])}
@@ -208,12 +235,12 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             sub = d[d.arm.str.startswith(model)]
             if sub.empty:
                 continue
-            b = sub.sort_values(VERDICT, ascending=False).iloc[0]
+            b = sub.sort_values(DISCRIM, ascending=False).iloc[0]
             row[model] = claim(
                 f"best {model} arm on the 250-gene common scope in {line}",
-                float(b[VERDICT]), RUNS,
+                float(b[DISCRIM]), RUNS,
                 key(cell_line=line, scope="common", split="grouped", translator="mlp",
-                    target_source="run1_all_controls", arm=b.arm, column=VERDICT),
+                    target_source="run1_all_controls", arm=b.arm, column=DISCRIM),
             )
         common[line] = row
 
@@ -221,7 +248,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
     if not r.overlap.empty:
         d = r.overlap[r.overlap.translator == "mlp"]
         piv = d.pivot_table(index=["cell_line", "arm"], columns="variant",
-                            values=VERDICT).reset_index()
+                            values=DISCRIM).reset_index()
         if {"ctrl0", "ctrl1"}.issubset(piv.columns):
             piv = piv.assign(delta=piv["ctrl1"] - piv["ctrl0"])
             co = piv[piv.arm.isin(["coexp", "coexp_check"])]
@@ -253,7 +280,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                         f"{hit.arm} in {hit.cell_line} scored against the {variant} target",
                         float(hit[variant]), OVERLAP,
                         key(cell_line=hit.cell_line, arm=hit.arm, translator="mlp",
-                            variant=variant, column=VERDICT),
+                            variant=variant, column=DISCRIM),
                     )
     for line in ("hepg2", "jurkat"):
         if line in r.recompute:
@@ -271,7 +298,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             )
 
     prereg_draw = B._null_by_translator(r, PREREG)
-    centred_draw = B._null_by_translator(r, VERDICT)
+    centred_draw = B._null_by_translator(r, DISCRIM)
     metric_check = {}
     for line in ("hepg2", "jurkat"):
         metric_check[f"shuffled_draw_ridge_preregistered_{line}"] = claim(
@@ -286,7 +313,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             centred_draw[(line, "ridge")], RUNS,
             key(cell_line=line, scope="full", split="grouped", translator="ridge",
                 target_source="run1_all_controls", arm="*+shuffled_labels_d*",
-                column=VERDICT, statistic="max"),
+                column=DISCRIM, statistic="max"),
         )
         metric_check[f"coexpression_preregistered_{line}"] = claim(
             f"co-expression's own pre-registered score in {line}",
@@ -296,7 +323,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
         m = r.model_arms(line)
         m = m[m.arm.str.startswith(B.FULL_SCOPE_MODELS)]
         metric_check[f"model_arms_clearing_null_{line}"] = (
-            f"{int((m[VERDICT] > r.null_ceiling(line)).sum())} of {int(m.shape[0])}"
+            f"{int((m[DISCRIM] > r.null_ceiling(line)).sum())} of {int(m.shape[0])}"
         )
         claims.append({
             "claim": f"foundation-model arms clearing the shuffled-label null in {line}",
@@ -313,7 +340,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             max(abs(r.score(line, f"{m}_resp"))
                 for line in ("hepg2", "jurkat") for m in B.FULL_SCOPE_MODELS),
             RUNS, key(scope="full", split="grouped", translator="mlp",
-                      target_source="run1_all_controls", arm="*_resp", column=VERDICT,
+                      target_source="run1_all_controls", arm="*_resp", column=DISCRIM,
                       statistic="max"),
         ),
         "largest_change_from_adding_response": claim(
@@ -334,20 +361,20 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
 
     rnd = r.runs[(r.runs.cell_line == "hepg2") & (r.runs.scope == "full")
                  & (r.runs.split == "random") & (r.runs.translator == "mlp")
-                 & (r.runs.arm == "node_pairmlp")][VERDICT]
+                 & (r.runs.arm == "node_pairmlp")][DISCRIM]
     splits = {
         "node_free_random_split_hepg2": claim(
             "free node-statistics network in hepg2 under the random split",
             float(rnd.iloc[0]), RUNS,
             key(cell_line="hepg2", scope="full", split="random", translator="mlp",
-                target_source="run1_all_controls", arm="node_pairmlp", column=VERDICT),
+                target_source="run1_all_controls", arm="node_pairmlp", column=DISCRIM),
         ),
         "node_free_grouped_split_hepg2": lines["hepg2"]["node_free_score"],
     }
 
     mode = {}
     piv = r.transfer[r.transfer.translator == "mlp"].pivot_table(
-        index=["cell_line", "scope", "arm"], columns="transfer_mode", values=VERDICT)
+        index=["cell_line", "scope", "arm"], columns="transfer_mode", values=DISCRIM)
     if "dest_reference" in piv.columns:
         shifts, ranks = [], []
         for other in ("source_only", "dest_all"):
@@ -450,7 +477,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                     v, SENS,
                     key(cell_line="hepg2", scope="full", split="grouped", translator="mlp",
                         arm=f"{model}_resp@{anchor}" if anchor != "mean_control"
-                        else f"{model}_resp", column=VERDICT),
+                        else f"{model}_resp", column=DISCRIM),
                 )
         for p in head_sens.get("paired_against_mean_control", []):
             sens[f"paired_{p['model']}_{p['anchor']}"] = claim(
@@ -473,7 +500,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                 for a in ("mean_control", "uniform_virtual", "individual_cells",
                           "mean_control_masked")
                 if r.sens_score(m, a) == r.sens_score(m, a)),
-            SENS, key(cell_line="hepg2", arms="*_resp@*", statistic="max", column=VERDICT),
+            SENS, key(cell_line="hepg2", arms="*_resp@*", statistic="max", column=DISCRIM),
         )
         sens["shuffled_label_ceiling_hepg2"] = lines["hepg2"]["shuffled_label_ceiling_fold_centred"]
 
@@ -631,8 +658,14 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                 block[arm] = claim(
                     f"{arm} held-out fold-centred score in {line}, full scope, grouped split",
                     r.score(line, arm), RUNS,
-                    pkey(cell_line=line, arm=arm, column=VERDICT),
+                    pkey(cell_line=line, arm=arm, column=DISCRIM),
                 )
+                pv, plo, phi = r.interval(line, arm, PREREG)
+                block[f"{arm}__preregistered"] = claim(
+                    f"{arm} held-out pre-registered score in {line}, full scope, grouped split",
+                    pv, RUNS, pkey(cell_line=line, arm=arm, column=PREREG),
+                )
+                block[f"{arm}__preregistered_ci"] = [plo, phi]
             d = r.scope_arms(line, "full", "random")
             for arm in ("esm2_3b_emb", "transcriptformer_emb", "scgpt_emb", "coexp",
                         "null_randgene_d2560"):
@@ -641,9 +674,15 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                     continue
                 block[f"{arm}__random_split"] = claim(
                     f"{arm} held-out fold-centred score in {line} under the random split",
-                    float(row[VERDICT].iloc[0]), RUNS,
+                    float(row[DISCRIM].iloc[0]), RUNS,
                     key(cell_line=line, scope="full", split="random", translator="mlp",
-                        target_source="run1_all_controls", arm=arm, column=VERDICT),
+                        target_source="run1_all_controls", arm=arm, column=DISCRIM),
+                )
+                block[f"{arm}__random_split__preregistered"] = claim(
+                    f"{arm} held-out pre-registered score in {line} under the random split",
+                    float(row[PREREG].iloc[0]), RUNS,
+                    key(cell_line=line, scope="full", split="random", translator="mlp",
+                        target_source="run1_all_controls", arm=arm, column=PREREG),
                 )
             block["largest_protein_shuffled_draw"] = claim(
                 f"largest shuffled-label draw of the ESM2 arms in {line}",
@@ -652,21 +691,27 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             )
             protein["scores"][line] = block
         protein["paired_differences"] = {}
-        for line in ("hepg2", "jurkat"):
-            for row in r.head["protein"]["lines"][line]["paired_differences"]:
-                tag = f"{line}__{row['arm']}__vs__{row['reference']}"
-                protein["paired_differences"][tag] = {
-                    "median_difference": row["median_difference"],
-                    "lo": row["lo"], "hi": row["hi"], "n_paired": row["n_paired"],
-                }
-                claims.append({
-                    "claim": f"paired difference between {row['arm']} and {row['reference']} "
-                             f"on the same held-out perturbations in {line}",
-                    "value": round(float(row["median_difference"]), 6), "source": HEAD,
-                    "key": key(field=f"protein.lines.{line}.paired_differences",
-                               arm=row["arm"], reference=row["reference"],
-                               statistic="median_difference"),
-                })
+        protein["paired_differences_preregistered"] = {}
+        for field, sink in (("paired_differences", protein["paired_differences"]),
+                            ("paired_differences_preregistered",
+                             protein["paired_differences_preregistered"])):
+            for line in ("hepg2", "jurkat"):
+                for row in r.head["protein"]["lines"][line].get(field, []):
+                    tag = f"{line}__{row['arm']}__vs__{row['reference']}"
+                    sink[tag] = {
+                        "median_difference": row["median_difference"],
+                        "lo": row["lo"], "hi": row["hi"], "n_paired": row["n_paired"],
+                        "n_groups_paired": row.get("n_groups_paired"),
+                    }
+                    claims.append({
+                        "claim": f"paired difference between {row['arm']} and "
+                                 f"{row['reference']} on the same held-out perturbations in "
+                                 f"{line} ({field})",
+                        "value": round(float(row["median_difference"]), 6), "source": HEAD,
+                        "key": key(field=f"protein.lines.{line}.{field}",
+                                   arm=row["arm"], reference=row["reference"],
+                                   statistic="median_difference"),
+                    })
         protein["in_job_reference_check"] = {
             "n_arms_rerun_within_line": len(r.head.get("protein_reference_check", [])),
             "n_arms_rerun_cross_line": len(
@@ -705,42 +750,42 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                     )
                     for row in block:
                         tag = f"{direction}__{mode_name}__{row['arm']}"
-                        unseen[tag] = {"score": row["score"], "lo": row["lo"],
-                                       "hi": row["hi"],
-                                       "n_perturbations": row["n_perturbations"]}
+                        unseen[tag] = {
+                            "score": row["score"], "lo": row["lo"], "hi": row["hi"],
+                            "preregistered": row["preregistered"],
+                            "preregistered_lo": row["preregistered_lo"],
+                            "preregistered_hi": row["preregistered_hi"],
+                            "n_perturbations": row["n_perturbations"],
+                        }
                         if mode_name == "dest_reference":
                             claims.append({
                                 "claim": f"{row['arm']} on the unseen-gene cross-line slice, "
-                                         f"{direction}, held-out reference cells",
-                                "value": round(float(row["score"]), 6), "source": HEAD,
+                                         f"{direction}, held-out reference cells, "
+                                         "pre-registered rule",
+                                "value": round(float(row["preregistered"]), 6), "source": HEAD,
                                 "key": key(
                                     field=(f"protein_transfer.blocks.{direction}|"
                                            f"transfer_unseen|cross_line__dest_reference"),
-                                    arm=row["arm"], statistic="score"),
+                                    arm=row["arm"], statistic="preregistered"),
                             })
             protein["unseen_gene_transfer"] = unseen
-            groups = {
-                "protein_derived": ("esm2_3b_emb", "esm2_650m_emb",
-                                    "transcriptformer_emb", "scprint_emb"),
-                "scgpt": ("scgpt_emb",),
-                "coexpression_and_nulls": ("coexp", "null_randgene_d2560",
-                                           "null_randgene_d5120"),
-            }
-            counts = {}
-            for name, arms in groups.items():
-                cells = [v for k, v in unseen.items() if k.split("__")[-1] in arms]
-                counts[name] = {"cells": len(cells),
-                                "interval_excludes_zero": sum(1 for v in cells if v["lo"] > 0)}
-                claims.append({
-                    "claim": f"unseen-gene cross-line cells where the interval excludes zero, "
-                             f"{name} arms, over both directions and all three reference "
-                             f"choices",
-                    "value": f"{counts[name]['interval_excludes_zero']} of "
-                             f"{counts[name]['cells']}",
-                    "source": HEAD,
-                    "key": key(
-                        field=f"protein_transfer.unseen_gene_clearance.{name}"),
-                })
+            # Counted per destination-reference mode: the non-transductive mode scores half
+            # the destination's perturbations because the other half builds its reference, so
+            # pooling the three modes would mix sample sizes.
+            counts = r.head["protein_transfer"]["unseen_gene_clearance"]
+            for mode_name, per_mode in counts.items():
+                for name in ("protein_derived", "scgpt", "coexpression_and_nulls"):
+                    claims.append({
+                        "claim": f"unseen-gene cross-line cells where the group-resampled "
+                                 f"interval excludes zero on the pre-registered rule, {name} "
+                                 f"arms, {mode_name} reference mode "
+                                 f"({per_mode['n_perturbations_scored']} perturbations scored)",
+                        "value": per_mode[name],
+                        "source": HEAD,
+                        "key": key(
+                            field=(f"protein_transfer.unseen_gene_clearance.{mode_name}."
+                                   f"{name}")),
+                    })
             protein["unseen_gene_transfer_counts"] = counts
 
     summary = {
@@ -789,42 +834,48 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             "A gene-pair feature built from a single-cell foundation model's gene embedding "
             "predicts the perturbation-specific part of a CRISPRi knockdown response better "
             "than statistical co-expression computed from the same control cells, in both cell "
-            "lines and on both splits. The response features harvested in the previous run "
-            "add nothing to the embedding; on their own they are weak, and whether they beat "
-            "co-expression depends on which score is read. The advantage does not come from "
-            "single-cell pretraining: reading the four released checkpoints shows that three "
-            "of the four gene tables are protein-derived rather than learned from expression, "
-            "and a gene table built from UniProt protein sequence with a public ESM2 "
-            "checkpoint, run through the identical translator, folds, scoring and nulls, "
-            "ties the best single-cell arm in HepG2 on a paired comparison and, in Jurkat, "
-            "beats TranscriptFormer's and scGPT's embedding arms while tying scPRINT's."
+            "lines and on both splits, on the pre-registered scoring rule and with intervals "
+            "that resample response groups rather than perturbations. The response features "
+            "harvested in the previous run add nothing to the embedding; on their own they are "
+            "weak. Reading the four released checkpoints shows that two of the four gene "
+            "tables are protein-derived rather than learned from expression (TranscriptFormer's "
+            "frozen ESM2 table and scPRINT's protein-initialised one), and a gene table built "
+            "from UniProt protein sequence with a public ESM2 checkpoint, run through the "
+            "identical translator, folds, scoring and nulls, beats co-expression in both lines "
+            "and ties the single-cell arms in seven of eight paired comparisons, beating "
+            "scGPT's in Jurkat. Protein sequence alone can therefore supply a gene table that "
+            "does this job as well as the single-cell models' tables do; that does not identify "
+            "the source of scGPT's signal, whose table carries no protein-space structure."
         ),
         "assessment": (
-            "Supported for the embedding arms against co-expression, on both cell lines, on a "
-            "post-hoc scoring cell. The second pre-registered scoring axis, perturbation "
-            "discrimination, does not settle it either way: the version pinned before the run "
-            "does not exist upstream, and the two existing versions nearest it reverse the "
+            "Supported for the embedding arms against co-expression, on both cell lines, on the "
+            "pre-registered scoring cell, with every interval resampling the response groups "
+            "the split holds out together rather than individual perturbations. Every "
+            "embedding arm's paired difference against co-expression excludes zero in both "
+            "lines. The pre-registered cell has a known weakness -- perturbations in a "
+            "held-out group share a per-gene response, so its shuffled-label draws sit above "
+            "zero -- and a fold-centred version of the same correlation is reported beside it "
+            "everywhere. That version is a diagnostic, not a second verdict: it subtracts the "
+            "held-out fold's own mean, so it uses held-out outcomes, and it was written after "
+            "the shuffled draws were seen. The two rank the arms similarly (rank correlation "
+            f"at least {n['ordering_agreement_min']['centered']:.4f}) and the arms that move "
+            "are the weak ones. The second pre-registered axis, perturbation discrimination, "
+            "does not settle anything either way: the version pinned before the run does not "
+            "exist upstream, and the two existing versions nearest it reverse the "
             "model-versus-co-expression ordering on the same saved predictions, so that axis "
-            "is reported as version-dependent and inconclusive. The pre-registered cell of the "
-            "scoring grid fails its "
-            "own shuffled-label control, so the verdict is read from the fold-centred cell, "
-            "which the pre-registration also defined but did not designate. Both are reported "
-            "for every arm; they rank the arms similarly (rank correlation at least "
-            f"{n['ordering_agreement_min']['centered']:.4f}) but not identically, and the arms "
-            "that move are the weak ones. The response features are therefore only partly "
-            "refuted: they add nothing to the embedding on either score, but on the "
-            "pre-registered score TranscriptFormer's response features beat co-expression in "
-            "HepG2 by more than the resolvable difference, and on the fold-centred score two of "
-            "three models' response arms clear the null in Jurkat. 'Response features carry no "
-            "usable signal' holds for the fold-centred score in HepG2 and is too strong "
-            "elsewhere. The protein control is a clean positive: the raw ESM2 arm clears its "
-            "width-matched random-vector null and its own shuffled-label draws in both cell "
-            "lines, beats TranscriptFormer's embedding arm in both on a paired comparison, "
-            "ties scPRINT in both, and ties scGPT in HepG2 while beating it in Jurkat, with "
-            "every arm it is compared against re-run inside the same job and reproducing the "
-            "main sweep exactly. It shows where the signal can come from, not where each "
-            "model's signal does come from: it does not decompose scGPT's or AIDO.Cell's "
-            "learned table into a protein-like part and a cell-specific part."
+            "is reported as version-dependent and inconclusive. The response features are "
+            "refuted as an addition to the embedding on both scores; on their own they are "
+            "numerically ahead of co-expression in three of six model-and-line combinations "
+            "but never by more than the paired comparison resolves. The protein control is a "
+            "positive: the raw ESM2 arm clears its width-matched random-vector null and its "
+            "own shuffled-label draws in both cell lines, beats co-expression in both on a "
+            "paired comparison, and ties TranscriptFormer's, scPRINT's and scGPT's embedding "
+            "arms in seven of eight comparisons while beating scGPT's in Jurkat, with every arm "
+            "it is compared against re-run inside the same job and reproducing the main sweep "
+            "exactly. It shows where the signal can come from, not where each model's signal "
+            "does come from: it does not decompose scGPT's or AIDO.Cell's learned table into a "
+            "protein-like part and a cell-specific part, and scGPT's table has no measurable "
+            "protein-space structure while scoring as well as the rest."
         ),
         "decision_rule": {
             "preregistered": (
@@ -833,10 +884,24 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
                 "compared to co-expression as a paired difference"
             ),
             "used_for_the_verdict": (
-                "the same quantity after the held-out fold's per-gene mean is removed from "
-                "both prediction and measurement (the fold-centred cell of the same grid), "
-                "chosen post hoc because the shuffled-label control does not sit at zero on "
-                "the pre-registered cell"
+                "the pre-registered rule, unchanged. Residual is against the TRAINING folds' "
+                "mean effect, so a held-out perturbation's own outcome never enters its score"
+            ),
+            "reported_beside_it": (
+                "a fold-centred version of the same correlation, which removes the held-out "
+                "fold's own per-gene mean from prediction and measurement. It uses held-out "
+                "outcomes and was written after seeing that the pre-registered cell's "
+                "shuffled-label draws sit above zero, so it is post hoc and answers the "
+                "narrower question of separating one held-out perturbation from another. It is "
+                "reported for every arm and never substituted for the pre-registered verdict"
+            ),
+            "uncertainty": (
+                "2,000-resample bootstrap over RESPONSE GROUPS, not over perturbations: the "
+                "grouped split holds correlated perturbations out together, so perturbations "
+                "are not independent draws (226 groups over 524 perturbations in HepG2, one of "
+                "them 149 rows; 452 over 705 in Jurkat). Groups are recomputed from the "
+                "bundle's effect matrix and reproduce the group counts the scoring jobs "
+                "recorded"
             ),
             "null": (
                 "labels permuted inside the training fold, five draws per null-bearing arm; an "
@@ -869,6 +934,28 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
                 "4096, 30 epochs, reliability-weighted MSE. Ridge regression alongside as a "
                 "capacity control. Seed 42, five folds, grouped and random splits."
             ),
+            "uncertainty": (
+                "every interval in the report is a 2,000-resample cluster bootstrap over "
+                "response groups (scfm_pfm/metrics.py bootstrap_median_grouped and "
+                "bootstrap_median_difference_grouped). The groups are the ones the grouped "
+                "split holds out together, recomputed from the bundle's effect matrix by "
+                "scfm_pfm/groups.py; the reconstruction reproduces the n_groups and "
+                "largest_group the scoring jobs recorded for all 256 grouped runs of the main "
+                "sweep. The scoring jobs themselves bootstrapped rows, and those intervals are "
+                "replaced, not averaged with, the group-resampled ones. Point estimates are "
+                "unchanged and are re-derived from the per-perturbation tables as a check. The "
+                "achieved minimum resolvable difference is the paired difference a two-sided 5% "
+                "test would resolve at 80% power given the group-resampled standard error."
+            ),
+            "known_fix": (
+                "the control-cell job wrote its target_source label into its run table but not "
+                "into its per-perturbation table. Filling that label after concatenating all "
+                "waves made those per-perturbation rows look like the main target's and, being "
+                "read later, replace them, which moved every paired difference onto the "
+                "control-half target. load_sweep now fills the label per directory from that "
+                "directory's own run rows; the paired differences in this report are the "
+                "corrected ones and are consistent with the run-level scores."
+            ),
             "transfer": (
                 "fitted on one cell line and scored on the other over the shared read-out set, "
                 "with three choices of what the destination response is measured against and "
@@ -898,11 +985,18 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
         },
         "results": n,
         "limitations": [
-            "The ranking metric is post hoc; the pre-registered cell is reported everywhere "
-            "and fails its own shuffled-label control.",
+            "The pre-registered score gives an arm credit for the part of a held-out group's "
+            "response its members share, which is why its shuffled-label draws sit above zero. "
+            "The fold-centred version reported beside it removes that component but uses a "
+            "mean of the held-out outcomes to do so, so neither confirms the other; where they "
+            "disagree the report says so.",
+            "The independent unit is the response group, not the perturbation: HepG2's 524 "
+            "in-scope perturbations are 226 groups, one holding 149 of them, and Jurkat's 705 "
+            "are 452. Intervals resample groups, so the effective sample size is closer to the "
+            "group count.",
             "Scores are small in absolute terms even after the ceiling correction: the best "
-            f"arm reaches {hep['best_model_score_fold_centred']:.4f} in HepG2 and "
-            f"{jur['best_model_score_fold_centred']:.4f} in Jurkat on a scale where 1.0 is the "
+            f"arm reaches {hep['best_model_score_preregistered']:.4f} in HepG2 and "
+            f"{jur['best_model_score_preregistered']:.4f} in Jurkat on a scale where 1.0 is the "
             "reproducibility limit.",
             "The individual-cells anchor is a four-cell sample. Its no-op queries are "
             "excluded per (perturbed gene, value) and the exclusion is exact on the "
@@ -916,15 +1010,21 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             f"{n['discrimination'].get('largest_difference_between_versions', float('nan')):.4f} "
             "on the same saved predictions, which reverses the co-expression-versus-model "
             "ranking on that axis in both cell lines.",
-            "The source paper's benchmark is reproduced only for its embedding baseline on its "
-            "three human held-out cells; its virtual-value and gradient-trajectory arms would "
-            "need a fresh extraction against those datasets.",
+            "The source paper's BEELINE benchmark is re-implemented, not reproduced: its "
+            "embedding baseline scores 0.6724 here against 0.6247 reported, up to 0.09176 apart "
+            "on one cell, with no pre-registered tolerance and no seed-noise estimate, so the "
+            "discrepancy is unexplained and the comparison with the published number stays "
+            "open. Its virtual-value and gradient-trajectory arms would need a fresh extraction "
+            "against those datasets and were not run.",
             "Two cell lines from a single screen, so the cross-line result is a weak test of "
             "generality.",
             "The additive node control is identically zero on the fold-centred score by "
             "construction, so the free node network is the informative version.",
-            "AIDO.Cell is only comparable on the 250-gene subset it was harvested on; it is "
-            "not shown to be worse than the others there, only not shown to work.",
+            "AIDO.Cell is only comparable on the 250-gene subset it was harvested on, and the "
+            "two scores disagree about it there: its best arm sits just above the "
+            "shuffled-label ceiling on the pre-registered rule and below it on the fold-centred "
+            "one. It is not shown to be worse than the others, only not separated from the "
+            "null.",
             "Co-expression is represented by four statistics over control cells; a fitted "
             "network-inference method could do better.",
             "The protein control shows where the signal can come from, not where each model's "
@@ -932,9 +1032,12 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             "into a protein-like part and a cell-specific part, and it says nothing about what "
             "these models do outside this gene-pair task. One protein model at two sizes, and "
             "one pooling rule (mean over the final layer), stand in for protein space.",
-            "The unseen-gene cross-line slice holds 78 to 177 held-out perturbations, so it "
-            "separates the protein-derived tables from scGPT's rather than ranking the arms "
-            "inside either group.",
+            "The unseen-gene cross-line slice is small and its three destination-reference "
+            "modes are not interchangeable: the non-transductive one scores 78 to 89 "
+            "perturbations because the rest build its reference, while the other two score 156 "
+            "to 177, so their clearance counts are reported separately and never pooled. The "
+            "slice separates the protein-derived tables from scGPT's rather than ranking the "
+            "arms inside either group.",
         ],
         "artifacts": [
             RUNS, CON, TRANS, ORDER, OVERLAP, RECOMPUTE, INVENTORY, SENS, HEAD, DISCV, BEELINE,

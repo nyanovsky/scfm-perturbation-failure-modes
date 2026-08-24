@@ -69,13 +69,16 @@ uv sync
 PYTHONPATH=src uv run python -m scfm_pfm.report.build --summary results/summary --out OUT
 ```
 
-Headline: the static gene embedding beats co-expression in both lines — 0.1089 against 0.005176 in
-HepG2 (shuffled-label ceiling 0.02860) and 0.1726 against 0.03364 in Jurkat (ceiling 0.02040) — and
-the harvested response features add nothing on top of it. Three caveats travel with those numbers.
-The scoring cell is post hoc: the pre-registered cell fails its own shuffled-label control, so the
-verdict is read from the fold-centred cell the pre-registration also defined. The second
-pre-registered axis, perturbation discrimination, is version-dependent and inconclusive. Absolute
-scores stay under 0.18 on a scale where 1.0 is the measurement's reproducibility limit.
+Headline, on the pre-registered scoring rule: the static gene embedding beats co-expression in both
+lines — 0.2719 against 0.04879 in HepG2 (shuffled-label ceiling 0.02764) and 0.2371 against 0.04462
+in Jurkat (ceiling 0.02351) — and the harvested response features add nothing on top of it. Three
+caveats travel with those numbers. The pre-registered score gives an arm credit for the part of a
+held-out group's response its members share, so a fold-centred version that removes it is reported
+beside it everywhere; that version uses held-out outcomes and is a diagnostic, not a second
+verdict. Every interval resamples response groups, not perturbations, because correlated
+perturbations are held out together. And the second pre-registered axis, perturbation
+discrimination, is version-dependent and inconclusive. Absolute scores stay under 0.30 on a scale
+where 1.0 is the measurement's reproducibility limit.
 
 ## What the thread found, and what is still open
 
@@ -84,29 +87,30 @@ knockdown, but it sits in the static gene-identity embedding rather than in the 
 reaction to a perturbation. Querying the model — the mechanism the source paper proposes — adds
 nothing beyond the null band on this task.
 
-**Settled: "foundation model" is the wrong word for most of the winning arms.** Reading the four
-released checkpoints shows where each gene-identity table came from. TranscriptFormer's is an ESM2
-protein embedding passed through unchanged: its 23,823 gene rows are bitwise the ESM2 file shipped
-beside the weights, and the loader hard-codes `freeze=True`. scPRINT's was initialised from a
+**Settled: half the winning gene tables were not learned from cells.** Reading the four released
+checkpoints shows where each gene-identity table came from. TranscriptFormer's is an ESM2 protein
+embedding passed through unchanged: its 23,823 gene rows are bitwise the ESM2 file shipped beside
+the weights, and the loader hard-codes `freeze=True`. scPRINT's was initialised from a
 protein-derived table and then trained, which the checkpoint proves by carrying two Adam moment
 tensors of exactly the gene table's shape. scGPT's and AIDO.Cell's are learned from expression with
 no protein model anywhere in the path.
 
-Building the missing control settles the rest. Every read-out gene was mapped to its canonical
-reviewed human protein and embedded with two public ESM2 checkpoints, and that table was pushed
-through the identical translator, folds, weights, scoring and nulls. It scores 0.1074 in HepG2 and
-0.1784 in Jurkat, the highest-scoring arm of any kind there. Paired on the same held-out
-perturbations it ties the best single-cell arm in HepG2, beats TranscriptFormer's embedding arm
-in both lines and scGPT's in Jurkat, and ties scPRINT's in both. So beating co-expression on this task is not evidence of single-cell
-knowledge; it is evidence that a general representation of gene identity helps, and protein
-sequence supplies one without seeing a cell. The sharpest version is the cross-line evaluation on
-genes never perturbed in the training screen: the four protein-derived tables clear zero in 22 of
-their 24 cells there, scGPT's in none of its six.
+Building the missing control settles what protein sequence alone can do. Every read-out gene was
+mapped to its canonical reviewed human protein and embedded with two public ESM2 checkpoints, and
+that table was pushed through the identical translator, folds, weights, scoring and nulls. On the
+pre-registered rule it scores 0.2331 in HepG2 and 0.2642 in Jurkat, and paired on the same held-out
+perturbations it beats co-expression in both lines (+0.1525 and +0.1564) and ties the single-cell
+tables in seven of the eight comparisons, beating scGPT's in Jurkat. Protein sequence alone
+therefore supplies a gene table that does this job as well as the single-cell models' tables do.
+The sharpest version is the cross-line evaluation on genes never perturbed in the training screen,
+where the four protein-derived tables clear zero in 8 of 8 cells against scGPT's 0 of 2, on the
+78 to 89 destination perturbations the non-transductive reference leaves to score.
 
 What that does not settle: it shows where the signal can come from, not where each model's signal
-does come from. It does not decompose scGPT's or AIDO.Cell's learned table into a protein-like part
-and a cell-specific part, and one protein model at two sizes with one pooling rule stands in for
-protein space.
+does come from. scGPT's table carries no measurable protein-space structure and still scores as
+well, so this does not identify its source. It does not decompose scGPT's or AIDO.Cell's learned
+table into a protein-like part and a cell-specific part, and one protein model at two sizes with
+one pooling rule stands in for protein space.
 
 
 ## Rebuilding, in general
