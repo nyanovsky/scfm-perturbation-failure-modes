@@ -800,6 +800,7 @@ def build_all(summary_dir: Path, out_root: Path | None = None) -> list[dict]:
         vs_coexpression(summary_dir, out_root),
         discrimination(summary_dir, out_root),
         anchor_sensitivity(summary_dir, out_root),
+        concat_agreement(summary_dir, out_root),
         split_gap(summary_dir, out_root),
         protein_arms(summary_dir, out_root),
         table_similarity(summary_dir, out_root),
@@ -809,3 +810,87 @@ def build_all(summary_dir: Path, out_root: Path | None = None) -> list[dict]:
         transfer_mode_agreement(summary_dir, out_root),
     ]
     return [m for m in made if m]
+
+
+def concat_agreement(summary_dir: Path, out_root: Path) -> dict | None:
+    """Whether the two gene tables are right about the same held-out perturbations.
+
+    One point per held-out perturbation: the score the scGPT-table arm reached
+    on it against the score the raw-protein-table arm reached on the same one,
+    under the same folds. Two arms can reach the same average either by being
+    right about the same perturbations or about different ones, and only this
+    view separates those.
+    """
+    pp_path = summary_dir / "per_perturbation.parquet"
+    agree_path = summary_dir / "arm_agreement.parquet"
+    if not pp_path.exists() or not agree_path.exists():
+        return None
+    a, b = "scgpt_emb", "esm2_3b_emb"
+    pp = pd.read_parquet(pp_path)
+    d = pp[
+        (pp.scope == "full") & (pp.split == "grouped") & (pp.translator == "mlp")
+        & (pp.target_source == "run1_all_controls") & pp.arm.isin([a, b])
+    ]
+    if d.empty:
+        return None
+    agree = pd.read_parquet(agree_path)
+    lines = [ln for ln in ("hepg2", "jurkat") if (d.cell_line == ln).any()]
+    fig = make_subplots(
+        rows=1, cols=len(lines), subplot_titles=[_line_label(ln) for ln in lines],
+        horizontal_spacing=0.09,
+    )
+    records = []
+    for i, line in enumerate(lines, start=1):
+        piv = (
+            d[d.cell_line == line]
+            .pivot_table(index="perturbation", columns="arm", values="residual_weighted")
+            .dropna()
+        )
+        if piv.empty or a not in piv or b not in piv:
+            continue
+        lo = float(min(piv[a].min(), piv[b].min())) - 0.02
+        hi = float(max(piv[a].max(), piv[b].max())) + 0.02
+        fig.add_shape(type="line", x0=lo, y0=lo, x1=hi, y1=hi, row=1, col=i,
+                      line=dict(dash="dot", width=1, color=GUIDE))
+        fig.add_trace(
+            go.Scatter(
+                x=piv[a], y=piv[b], mode="markers", showlegend=False,
+                marker=dict(color=COLOR["scgpt"], size=5, opacity=0.5,
+                            line=dict(width=0)),
+                text=piv.index,
+                hovertemplate="%{text}<br>scGPT %{x:.3f}, ESM2-3B %{y:.3f}<extra></extra>",
+            ),
+            row=1, col=i,
+        )
+        row = agree[
+            (agree.cell_line == line) & (agree.split == "grouped")
+            & (agree.translator == "mlp") & (agree.arm_a == a) & (agree.arm_b == b)
+            & (agree.metric == "residual_weighted")
+        ]
+        if not row.empty:
+            r = row.iloc[0]
+            fig.add_annotation(
+                x=0.02, y=0.98,
+                xref=f"x{'' if i == 1 else i} domain",
+                yref=f"y{'' if i == 1 else i} domain",
+                xanchor="left", yanchor="top", showarrow=False,
+                text=f"Spearman {r.spearman:.3f}, n = {int(r.n_perturbations)}",
+            )
+            records.append({"cell_line": line, "spearman": float(r.spearman),
+                            "pearson": float(r.pearson),
+                            "n_perturbations": int(r.n_perturbations)})
+        fig.update_xaxes(title_text="scGPT table", row=1, col=i)
+        fig.update_yaxes(title_text="ESM2-3B table" if i == 1 else None, row=1, col=i)
+    apply_theme(fig, height=430)
+    save_figure_bundle(
+        fig, "concat_agreement",
+        data={"records": records, "metric": "residual_weighted",
+              "cell": "full scope, grouped split, MLP translator"},
+        alt=(
+            "One point per held-out perturbation, the scGPT-table arm's score against the "
+            "raw-protein-table arm's score on the same perturbation, per cell line, with "
+            "the rank correlation printed in each panel and a dotted equality diagonal."
+        ),
+        root=out_root,
+    )
+    return {"figure": "concat_agreement", "n_records": int(d.shape[0]), "fig": fig}

@@ -37,4 +37,6 @@ jobs/target_urls.json
 # shards themselves are the durable copy in the artifact store.
 results/summary/per_perturbation.parquet
 results/summary/transfer_per_perturbation.parquet
+results/summary/concat_per_perturbation.parquet
 scratch/*.txt
+scratch/*.log

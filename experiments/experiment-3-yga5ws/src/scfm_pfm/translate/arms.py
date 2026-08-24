@@ -57,6 +57,8 @@ class ArmFeatures:
                 d += self._resp_dim()
             elif part == "emb":
                 d += 2 * int(self.bundle.emb[self.model].shape[1])
+            elif part == "emb2":
+                d += 2 * int(self.bundle.emb[self.spec.second_model].shape[1])
             elif part == "coexp":
                 d += 4
             elif part == "node":
@@ -86,6 +88,10 @@ class ArmFeatures:
                         out.append(e[form][m, :, cols])
             elif part == "emb":
                 emb = b.emb[self.model]
+                out.append(emb[b.self_col[rows]])
+                out.append(emb[cols])
+            elif part == "emb2":
+                emb = b.emb[self.spec.second_model]
                 out.append(emb[b.self_col[rows]])
                 out.append(emb[cols])
             elif part == "coexp":
@@ -182,6 +188,7 @@ def resolve_arms(
                 note="static gene table only; this model has no response features here",
             )
         )
+    specs += _concat_arm(bundle, {s.name for s in specs})
     if include_sensitivity:
         for m in models:
             for other in C.SENSITIVITY_ANCHORS:
@@ -192,3 +199,32 @@ def resolve_arms(
                         )
                     )
     return specs
+
+
+def _concat_arm(bundle: LineBundle, taken: set[str]) -> list[C.ArmSpec]:
+    """The two-table arm and the random projection matched to its width.
+
+    ``anchor=None`` on purpose: the arm reads two static gene tables and no
+    response features, so it must not be filtered by whether the first model's
+    query block covers this scope.
+    """
+    first, second = C.CONCAT_TABLES
+    if first not in bundle.emb or second not in bundle.emb:
+        return []
+    width = int(bundle.emb[first].shape[1]) + int(bundle.emb[second].shape[1])
+    out = [
+        C.ArmSpec(
+            f"{first}_{second}_emb", "concat", ("emb", "emb2"),
+            model=first, anchor=None, second_model=second,
+            note="both gene tables concatenated, identical translator",
+        )
+    ]
+    null = f"null_randgene_d{2 * width}"
+    if null not in taken:
+        out.append(
+            C.ArmSpec(
+                null, "null", ("randgene",), rand_dim=width,
+                note="fixed random vector per gene, matched to the concatenated arm's width",
+            )
+        )
+    return out

@@ -160,6 +160,9 @@ class ArmSpec:
     model: str | None = None
     anchor: str | None = None
     note: str = ""
+    #: a second model's gene table, concatenated onto the first through the
+    #: ``emb2`` block. Only the two-table arm uses it.
+    second_model: str | None = None
     #: per-gene width of the ``randgene`` null, so it can be matched to the
     #: embedding arm it is the null for (feature dim is twice this)
     rand_dim: int = 256
@@ -174,10 +177,20 @@ class ArmSpec:
 #: feature blocks an arm can concatenate:
 #:   resp   — zero_out (1) + vvp (5) + gdt (5) for this model/anchor
 #:   emb    — this model's gene embedding for i and for j
+#:   emb2   — a second model's gene embedding for i and for j
 #:   coexp  — Pearson, Spearman, MI, partial correlation over control cells
 #:   node   — per-gene control-cell properties of i and of j, no pair term
 #:   randpair / randgene — matched-dimension random projections
-FEATURE_BLOCKS = ("resp", "emb", "coexp", "node", "randpair", "randgene")
+FEATURE_BLOCKS = ("resp", "emb", "emb2", "coexp", "node", "randpair", "randgene")
+
+#: the one two-table arm: scGPT's learned gene table concatenated with the raw
+#: ESM2-3B protein table. scGPT's table scores as well as the protein tables
+#: while carrying no measurable protein-space structure, so either the two are
+#: redundant routes to one quantity or they carry different information. The
+#: arm goes through the identical translator, folds, scoring and nulls, and its
+#: width-matched random projection is what separates a real gain from the extra
+#: dimensions.
+CONCAT_TABLES = ("scgpt", "esm2_3b")
 
 
 def primary_arms(models: tuple[str, ...] = MODELS) -> list[ArmSpec]:

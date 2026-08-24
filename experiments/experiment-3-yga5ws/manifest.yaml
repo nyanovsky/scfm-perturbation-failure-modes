@@ -44,6 +44,10 @@ outputs:
       - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_reference/hepg2/"
       - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_reference/jurkat/"
       - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_transfer_reference/"
+  two_table_arm:
+    sweep: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/concat_sweep/"
+    in_job_reference: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/concat_reference/"
+    smoke: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/concat_smoke/"
   beeline: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/beeline/beeline_reproduction.json"
   merged_tables: "results/summary/"
   report_contract:
@@ -87,6 +91,7 @@ results:
   protein_unseen_gene_transfer: "counted per destination-reference mode, because the non-transductive mode scores half the destination's perturbations (the other half builds its reference) while the other two score all of them. On the pre-registered rule, dest_reference (78-89 perturbations): protein-derived 8 of 8, scGPT 0 of 2, co-expression and nulls 0 of 6. dest_all (156-177): 7 of 8, 1 of 2, 0 of 6. source_only (156-177): 8 of 8, 2 of 2, 2 of 6"
   gene_table_similarity: "Spearman correlation of gene-gene cosine-similarity orderings over 1,500 genes (random-table floor |r| <= 0.002116, HepG2): ESM2-3B vs ESM2-650M 0.8506, TranscriptFormer vs ESM2-3B 0.3960, scGPT vs scPRINT 0.3037, scPRINT vs ESM2-650M 0.2727, scGPT vs ESM2-3B -0.01579, AIDO.Cell vs ESM2-3B -0.00052"
   control_cell_overlap: "plain co-expression arms move by at most 0.02397 between shared and disjoint control halves; embedding arms move by up to 0.01915"
+  two_table_arm: "scGPT's 512-wide table concatenated with the raw ESM2-3B 2,560-wide protein table for both genes (6,144 columns), identical translator, folds, weighting, ceiling correction and scoring, with a random-vector null cut to the same width. Reading fixed before scoring: redundant needs no gain over the better part AND per-perturbation Spearman >= 0.5; complementary needs a gain over both AND Spearman < 0.3; anything else is mixed. On the pre-registered rule, full scope, MLP: HepG2 grouped 0.2989 [0.2170, 0.4991] against scgpt_emb 0.2719 and esm2_3b_emb 0.2331, paired +0.02233 [-0.03421, 0.1305] against the better part on a comparison that resolves 0.1366; Jurkat grouped 0.2703 [0.2110, 0.3372] against esm2_3b_emb 0.2642, paired +0.004363 [-0.01211, 0.02494] resolving 0.02620. Same under the random split; the width-matched null is 0.008123 / 0.02071. Per-perturbation agreement of the two parts: Spearman 0.2503 (HepG2) and 0.2394 (Jurkat), against 0.6816 / 0.6727 for the two ESM2 sizes, 0.2708 / 0.2651 for scGPT vs TranscriptFormer and 0.2843 / 0.2295 for scGPT vs co-expression. Reading: mixed in all four cells - no gain from combining, and the agreement statistic never reaches the 0.5 that would call them one quantity for any unrelated pair in this run. On the fold-centred diagnostic 1 of the 4 comparisons against the better part clears what it resolves (Jurkat grouped, +0.02336 [0.001476, 0.03371] against 0.02324). The 6 arms this job re-ran reproduce the main sweep to 0.0"
 slurm_jobs: []
 on_demand_jobs:
   ingest: ["644361486469"]
@@ -99,3 +104,4 @@ on_demand_jobs:
     provenance: ["391747958086", "399122967338", "841371604291"]
     embed: ["553545671449 (failed at install; the two tables it wrote were kept)", "712311436389 (install, table similarity, smoke)"]
     sweep: ["134134095027 (hepg2)", "732924457758 (jurkat)", "854171615546 (transfer)"]
+  two_table_arm: ["692730180475 (smoke, sweep and in-job reference in one job)"]

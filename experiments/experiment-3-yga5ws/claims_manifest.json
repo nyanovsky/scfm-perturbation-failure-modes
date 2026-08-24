@@ -1948,6 +1948,468 @@
       "value": "2 of 6",
       "source": "results/summary/headline.json",
       "key": "field=protein_transfer.unseen_gene_clearance.source_only.coexpression_and_nulls"
+    },
+    {
+      "claim": "scgpt_esm2_3b_emb in hepg2, grouped split, pre-registered rule",
+      "value": 0.29886,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb in hepg2, grouped split, pre-registered rule",
+      "value": 0.271869,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb in hepg2, grouped split, pre-registered rule",
+      "value": 0.233111,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d6144 in hepg2, grouped split, pre-registered rule",
+      "value": 0.008123,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d6144, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d1024 in hepg2, grouped split, pre-registered rule",
+      "value": -0.001722,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d1024, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 in hepg2, grouped split, pre-registered rule",
+      "value": -0.024659,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d5120, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp in hepg2, grouped split, pre-registered rule",
+      "value": 0.048793,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, preregistered in hepg2, grouped split",
+      "value": 0.022335,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in hepg2, grouped split",
+      "value": 0.136595,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, fold_centred in hepg2, grouped split",
+      "value": 0.009885,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in hepg2, grouped split",
+      "value": 0.079791,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, preregistered in hepg2, grouped split",
+      "value": 0.054405,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in hepg2, grouped split",
+      "value": 0.054511,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, fold_centred in hepg2, grouped split",
+      "value": 0.011015,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in hepg2, grouped split",
+      "value": 0.044147,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in hepg2, grouped split",
+      "value": 0.250329,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.parts_spearman"
+    },
+    {
+      "claim": "Spearman correlation between the esm2_650m_emb and esm2_3b_emb arms' per-perturbation scores in hepg2, grouped split",
+      "value": 0.681623,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.agreement.esm2_650m_emb__esm2_3b_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and transcriptformer_emb arms' per-perturbation scores in hepg2, grouped split",
+      "value": 0.270791,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.agreement.scgpt_emb__transcriptformer_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and coexp arms' per-perturbation scores in hepg2, grouped split",
+      "value": 0.284282,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.agreement.scgpt_emb__coexp__residual_weighted.spearman"
+    },
+    {
+      "claim": "scgpt_esm2_3b_emb in hepg2, random split, pre-registered rule",
+      "value": 0.509875,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb in hepg2, random split, pre-registered rule",
+      "value": 0.349582,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb in hepg2, random split, pre-registered rule",
+      "value": 0.483416,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d6144 in hepg2, random split, pre-registered rule",
+      "value": 0.00927,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d6144, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d1024 in hepg2, random split, pre-registered rule",
+      "value": 0.011294,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d1024, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 in hepg2, random split, pre-registered rule",
+      "value": 0.042741,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d5120, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp in hepg2, random split, pre-registered rule",
+      "value": 0.052598,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, preregistered in hepg2, random split",
+      "value": 0.129261,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in hepg2, random split",
+      "value": 0.062228,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, fold_centred in hepg2, random split",
+      "value": 0.113176,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in hepg2, random split",
+      "value": 0.076806,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, preregistered in hepg2, random split",
+      "value": 0.021337,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in hepg2, random split",
+      "value": 0.046883,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, fold_centred in hepg2, random split",
+      "value": 0.007658,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in hepg2, random split",
+      "value": 0.040279,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in hepg2, random split",
+      "value": 0.35064,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.parts_spearman"
+    },
+    {
+      "claim": "Spearman correlation between the esm2_650m_emb and esm2_3b_emb arms' per-perturbation scores in hepg2, random split",
+      "value": 0.707066,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.agreement.esm2_650m_emb__esm2_3b_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and transcriptformer_emb arms' per-perturbation scores in hepg2, random split",
+      "value": 0.322281,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.agreement.scgpt_emb__transcriptformer_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and coexp arms' per-perturbation scores in hepg2, random split",
+      "value": 0.313396,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.agreement.scgpt_emb__coexp__residual_weighted.spearman"
+    },
+    {
+      "claim": "scgpt_esm2_3b_emb in jurkat, grouped split, pre-registered rule",
+      "value": 0.270302,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scgpt_esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb in jurkat, grouped split, pre-registered rule",
+      "value": 0.173276,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb in jurkat, grouped split, pre-registered rule",
+      "value": 0.264176,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d6144 in jurkat, grouped split, pre-registered rule",
+      "value": 0.020705,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d6144, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d1024 in jurkat, grouped split, pre-registered rule",
+      "value": 0.024551,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d1024, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 in jurkat, grouped split, pre-registered rule",
+      "value": 0.025441,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d5120, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp in jurkat, grouped split, pre-registered rule",
+      "value": 0.044622,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, preregistered in jurkat, grouped split",
+      "value": 0.069099,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in jurkat, grouped split",
+      "value": 0.039802,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, fold_centred in jurkat, grouped split",
+      "value": 0.067194,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in jurkat, grouped split",
+      "value": 0.037472,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, preregistered in jurkat, grouped split",
+      "value": 0.004363,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in jurkat, grouped split",
+      "value": 0.026196,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, fold_centred in jurkat, grouped split",
+      "value": 0.023363,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in jurkat, grouped split",
+      "value": 0.023235,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in jurkat, grouped split",
+      "value": 0.2394,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.parts_spearman"
+    },
+    {
+      "claim": "Spearman correlation between the esm2_650m_emb and esm2_3b_emb arms' per-perturbation scores in jurkat, grouped split",
+      "value": 0.672694,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.agreement.esm2_650m_emb__esm2_3b_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and transcriptformer_emb arms' per-perturbation scores in jurkat, grouped split",
+      "value": 0.26512,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.agreement.scgpt_emb__transcriptformer_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and coexp arms' per-perturbation scores in jurkat, grouped split",
+      "value": 0.229515,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.agreement.scgpt_emb__coexp__residual_weighted.spearman"
+    },
+    {
+      "claim": "scgpt_esm2_3b_emb in jurkat, random split, pre-registered rule",
+      "value": 0.294067,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scgpt_esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb in jurkat, random split, pre-registered rule",
+      "value": 0.186171,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb in jurkat, random split, pre-registered rule",
+      "value": 0.272434,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d6144 in jurkat, random split, pre-registered rule",
+      "value": -0.012657,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d6144, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d1024 in jurkat, random split, pre-registered rule",
+      "value": 0.00588,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d1024, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 in jurkat, random split, pre-registered rule",
+      "value": -0.012687,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d5120, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp in jurkat, random split, pre-registered rule",
+      "value": 0.049353,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, preregistered in jurkat, random split",
+      "value": 0.076242,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in jurkat, random split",
+      "value": 0.049795,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, fold_centred in jurkat, random split",
+      "value": 0.082346,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in jurkat, random split",
+      "value": 0.054802,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, preregistered in jurkat, random split",
+      "value": 0.015287,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in jurkat, random split",
+      "value": 0.033639,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, fold_centred in jurkat, random split",
+      "value": 0.012409,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in jurkat, random split",
+      "value": 0.038727,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in jurkat, random split",
+      "value": 0.284609,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.parts_spearman"
+    },
+    {
+      "claim": "Spearman correlation between the esm2_650m_emb and esm2_3b_emb arms' per-perturbation scores in jurkat, random split",
+      "value": 0.726671,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.agreement.esm2_650m_emb__esm2_3b_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and transcriptformer_emb arms' per-perturbation scores in jurkat, random split",
+      "value": 0.264493,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.agreement.scgpt_emb__transcriptformer_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and coexp arms' per-perturbation scores in jurkat, random split",
+      "value": 0.209885,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.agreement.scgpt_emb__coexp__residual_weighted.spearman"
+    },
+    {
+      "claim": "largest absolute difference between an arm the two-table job re-ran and the same arm in the main sweep",
+      "value": 0.0,
+      "source": "results/summary/headline.json",
+      "key": "field=concat_reference_check[*].difference, statistic=max_abs"
     }
   ]
 }

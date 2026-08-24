@@ -1,0 +1,1 @@
+One point per held-out perturbation, the scGPT-table arm's score against the raw-protein-table arm's score on the same perturbation, per cell line, with the rank correlation printed in each panel and a dotted equality diagonal.

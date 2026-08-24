@@ -23,6 +23,9 @@ from . import figures as figmod
 DISCRIM = figmod.DISCRIM
 PREREG = figmod.PREREG
 RUNS = "results/summary/runs.parquet"
+#: the two-table arm and its width-matched null are scored into their own table,
+#: so nothing computed over "all arms" in the main result is computed over them
+CONCAT_RUNS = "results/summary/concat_runs.parquet"
 CON = "results/summary/contrasts.parquet"
 TRANS = "results/summary/transfer_runs.parquet"
 ORDER = "results/summary/ordering_agreement.parquet"
@@ -778,9 +781,98 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                     })
             protein["unseen_gene_transfer_counts"] = counts
 
+    # the two-table arm: whether scGPT's table and the raw protein table are two
+    # routes to one quantity or carry different information
+    concat: dict = {}
+    if r.head.get("concat"):
+        h = r.head["concat"]
+        concat["arm"] = (
+            "scgpt_esm2_3b_emb: scGPT's 512-wide gene table concatenated with the 2,560-wide "
+            "raw ESM2-3B protein table, for both genes, through the identical translator, "
+            "folds, weighting, ceiling correction and scoring"
+        )
+        concat["rule_fixed_before_the_arm_was_scored"] = h["rule"]
+        concat["agreement_thresholds"] = h["agreement_thresholds"]
+        concat["reading"] = h["reading"]
+        concat["reading_read_from"] = h["reading_read_from"]
+        concat["scores"] = {}
+        concat["paired_against_parts"] = {}
+        concat["agreement"] = {}
+        concat["reading_by_cell"] = {}
+        concat["better_part_by_cell"] = {}
+        for cell, blk in h["lines"].items():
+            line, split = cell.split("|")
+            for row in blk["scores"]:
+                concat["scores"][f"{cell}__{row['arm']}"] = claim(
+                    f"{row['arm']} in {line}, {split} split, pre-registered rule",
+                    row["score"],
+                    CONCAT_RUNS if row["arm"] in B.CONCAT_TABLE_ARMS else RUNS,
+                    key(scope="full", split=split, translator="mlp",
+                        target_source="run1_all_controls", cell_line=line, arm=row["arm"],
+                        column=PREREG),
+                )
+            for tag, d in blk["paired_against_parts"].items():
+                concat["paired_against_parts"][f"{cell}__{tag}"] = {
+                    "difference": d["difference"], "lo": d["lo"], "hi": d["hi"],
+                    "n_paired": d["n_paired"], "n_groups_paired": d["n_groups_paired"],
+                    "min_resolvable_difference": d["min_resolvable_difference"],
+                }
+                claims.append({
+                    "claim": f"two-table arm minus {tag.replace('__', ', ')} in {line}, "
+                             f"{split} split",
+                    "value": round(float(d["difference"]), 6), "source": HEAD,
+                    "key": key(field=f"concat.lines.{cell}.paired_against_parts.{tag}.difference"),
+                })
+                # the assessment states the power limit as a number, so it is claimed too
+                claims.append({
+                    "claim": f"smallest difference the two-table comparison against "
+                             f"{tag.replace('__', ', ')} can resolve in {line}, "
+                             f"{split} split",
+                    "value": round(float(d["min_resolvable_difference"]), 6), "source": HEAD,
+                    "key": key(field=(f"concat.lines.{cell}.paired_against_parts.{tag}."
+                                      "min_resolvable_difference")),
+                })
+            concat["agreement"][cell] = claim(
+                "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table "
+                f"arm's per-perturbation scores in {line}, {split} split",
+                blk["parts_spearman"], HEAD,
+                key(field=f"concat.lines.{cell}.parts_spearman"),
+            )
+            for pair in ("esm2_650m_emb__esm2_3b_emb", "scgpt_emb__transcriptformer_emb",
+                         "scgpt_emb__coexp"):
+                got = blk["agreement"].get(f"{pair}__residual_weighted")
+                if got is None:
+                    continue
+                concat["agreement"][f"{cell}__{pair}"] = claim(
+                    f"Spearman correlation between the {pair.replace('__', ' and ')} arms' "
+                    f"per-perturbation scores in {line}, {split} split",
+                    got["spearman"], HEAD,
+                    key(field=(f"concat.lines.{cell}.agreement."
+                               f"{pair}__residual_weighted.spearman")),
+                )
+            concat["reading_by_cell"][cell] = blk["reading"]
+            concat["better_part_by_cell"][cell] = blk["better_part"]
+        checks = r.head.get("concat_reference_check", [])
+        if checks:
+            concat["in_job_reference_check"] = {
+                "n_arms_rerun": len(checks),
+                "largest_absolute_difference_from_the_main_sweep": max(
+                    abs(x["difference"]) for x in checks
+                ),
+            }
+            claims.append({
+                "claim": "largest absolute difference between an arm the two-table job "
+                         "re-ran and the same arm in the main sweep",
+                "value": concat["in_job_reference_check"][
+                    "largest_absolute_difference_from_the_main_sweep"],
+                "source": HEAD,
+                "key": key(field="concat_reference_check[*].difference", statistic="max_abs"),
+            })
+
     summary = {
         "lines": lines,
         "protein_control": protein,
+        "two_table_arm": concat,
         "paired_vs_coexpression": paired,
         "metric_check": metric_check,
         "feature_deltas": feature_deltas,
@@ -796,6 +888,111 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
         "beeline_arm_dropped": bee,
     }
     return summary, claims
+
+
+def _concat_assessment(n: dict) -> str:
+    """What the two-table arm adds to the assessment, in its own words.
+
+    The paired contrast is underpowered by design: in every cell the
+    difference against the better part is smaller than the smallest
+    difference that comparison can resolve, so it could not have detected a
+    gain of the size on offer. The agreement statistic, read against its own
+    calibration, is the half that carries information, and it points toward
+    two tables holding different information rather than two routes to one
+    quantity. Neither half closes the question.
+    """
+    concat = n.get("two_table_arm")
+    if not concat:
+        return ""
+    agree = concat.get("agreement", {})
+
+    def val(cell: str) -> float | None:
+        got = agree.get(cell)
+        return None if got is None else float(got)
+
+    paired = concat.get("paired_against_parts", {})
+    better = concat.get("better_part_by_cell", {})
+    cells = (("hepg2|grouped", "HepG2 grouped"), ("hepg2|random", "HepG2 random"),
+             ("jurkat|grouped", "Jurkat grouped"), ("jurkat|random", "Jurkat random"))
+    power, under, total = [], 0, 0
+    for cell, name in cells:
+        d = paired.get(f"{cell}__{better.get(cell, '')}__preregistered")
+        if not d:
+            continue
+        total += 1
+        under += int(abs(d["difference"]) < d["min_resolvable_difference"])
+        power.append(
+            f"{name} {B.P.sig(d['difference'], signed_=True)} against "
+            f"{B.P.sig(d['min_resolvable_difference'])}"
+        )
+    power_clause = (
+        " Its paired comparison was underpowered for the effect it was looking for: in "
+        f"{'all four cells' if under == total == 4 else f'{under} of the {total} cells'} "
+        "the two-table arm's "
+        "difference against the better of its two parts is smaller than the smallest "
+        f"difference that comparison can resolve ({'; '.join(power)}). That is a property of "
+        "the design, not of the models: a gain the size of the ones on offer could not have "
+        "been detected here, so nothing in this arm supports calling the two tables "
+        "equivalent or calling either one redundant."
+        if power else ""
+    )
+    # the agreement statistic is reported with the two references that calibrate it: the
+    # same protein model at two sizes above it, and scGPT against co-expression beside it
+    hg, jk = val("hepg2|grouped"), val("jurkat|grouped")
+    same_family = [val(f"{c}__esm2_650m_emb__esm2_3b_emb") for c in
+                   ("hepg2|grouped", "jurkat|grouped")]
+    vs_coexp = [val(f"{c}__scgpt_emb__coexp") for c in ("hepg2|grouped", "jurkat|grouped")]
+    thresholds = concat.get("agreement_thresholds", {})
+    weak = float(thresholds.get("weak_below", 0.3))
+    strong = float(thresholds.get("strong_at_or_above", 0.5))
+    if hg is not None and jk is not None and all(
+            v is not None for v in (*same_family, *vs_coexp)):
+        agreement_clause = (
+            " The half that does carry information is the agreement statistic, and it is "
+            "read against its own calibration. scGPT's table and the raw ESM2-3B table agree "
+            f"on which held-out perturbations they score well at Spearman {hg:.4f} in HepG2 "
+            f"and {jk:.4f} in Jurkat. Two sizes of the same protein model, which is what two "
+            "views of one underlying quantity look like in this setup, agree at "
+            f"{same_family[0]:.4f} and {same_family[1]:.4f}; scGPT against co-expression "
+            f"agrees at {vs_coexp[0]:.4f} and {vs_coexp[1]:.4f}. scGPT's table therefore "
+            "agrees with a protein model about as weakly as it agrees with co-expression and "
+            f"far below the same-family reference, below the {weak:g} the rule set for "
+            f"different information and well below the {strong:g} it set for the same "
+            "information."
+        )
+    else:
+        agreement_clause = ""
+    # only the comparison against the better part decides the reading, so only that
+    # one is checked on the diagnostic
+    centred = []
+    for cell, part in better.items():
+        d = paired.get(f"{cell}__{part}__fold_centred")
+        if d and d["lo"] > 0 and d["difference"] > d["min_resolvable_difference"]:
+            centred.append(
+                f"{cell.replace('|', ', ')} against {part} "
+                f"({d['difference']:+.4f}, {d['lo']:.4f} to {d['hi']:.4f}, against "
+                f"{d['min_resolvable_difference']:.4f} resolvable)"
+            )
+    centred_clause = (
+        " On the fold-centred diagnostic, " + "; ".join(centred)
+        + f" clears what it resolves, {len(centred)} of the {len(better)} comparisons "
+        "against the better part; that diagnostic is not the verdict and one cell does not "
+        "change the reading."
+        if centred else
+        " The fold-centred diagnostic reads the same way on every one of those comparisons."
+    )
+    return (
+        " The two-table arm is a supplementary test with its own reading, not a second "
+        "verdict on the run's question."
+        + power_clause
+        + agreement_clause
+        + " Taken together that is a discrepancy identified rather than resolved: the "
+        "agreement numbers point toward the two tables carrying different information rather "
+        "than being redundant routes to one quantity, and the concatenation test is too "
+        "underpowered to say whether that difference converts into a gain. It is reported as "
+        "an open question with its numbers attached, not as a null and not as a positive."
+        + centred_clause
+    )
 
 
 def _anchor_null_clause(n: dict) -> str:
@@ -866,6 +1063,7 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             "does come from: it does not decompose scGPT's or AIDO.Cell's learned table into a "
             "protein-like part and a cell-specific part, and scGPT's table has no measurable "
             "protein-space structure while scoring as well as the rest."
+            + _concat_assessment(n)
         ),
         "decision_rule": {
             "preregistered": (
@@ -1069,6 +1267,23 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             "jobs/run_protein_transfer.sh",
         ],
     }
+    if n.get("two_table_arm"):
+        doc["limitations"].append(
+            "The two-table test is one concatenation at one width, scored by the same "
+            "translator as everything else, and its paired comparison is underpowered: in "
+            "every cell the difference against the better part is smaller than the smallest "
+            "difference that comparison resolves, so a gain of the size on offer would not "
+            "have been detected. It asks whether that translator can use both gene tables "
+            "together better than it uses the better one alone; it does not rule out that a "
+            "different way of combining them, or a task with finer resolution than a "
+            "held-out per-perturbation correlation, would separate what the two tables carry."
+        )
+        doc["artifacts"].extend([
+            "results/summary/concat_runs.parquet",
+            "results/summary/arm_agreement.parquet",
+            "results/summary/concat_reference.parquet",
+            "jobs/run_concat.sh",
+        ])
     out_dir.mkdir(parents=True, exist_ok=True)
     a = out_dir / "report_summary.json"
     b = out_dir / "claims_manifest.json"

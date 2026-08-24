@@ -1,6 +1,6 @@
 {
   "headline": "A gene-pair feature built from a single-cell foundation model's gene embedding predicts the perturbation-specific part of a CRISPRi knockdown response better than statistical co-expression computed from the same control cells, in both cell lines and on both splits, on the pre-registered scoring rule and with intervals that resample response groups rather than perturbations. The response features harvested in the previous run add nothing to the embedding; on their own they are weak. Reading the four released checkpoints shows that two of the four gene tables are protein-derived rather than learned from expression (TranscriptFormer's frozen ESM2 table and scPRINT's protein-initialised one), and a gene table built from UniProt protein sequence with a public ESM2 checkpoint, run through the identical translator, folds, scoring and nulls, beats co-expression in both lines and ties the single-cell arms in seven of eight paired comparisons, beating scGPT's in Jurkat. Protein sequence alone can therefore supply a gene table that does this job as well as the single-cell models' tables do; that does not identify the source of scGPT's signal, whose table carries no protein-space structure.",
-  "assessment": "Supported for the embedding arms against co-expression, on both cell lines, on the pre-registered scoring cell, with every interval resampling the response groups the split holds out together rather than individual perturbations. Every embedding arm's paired difference against co-expression excludes zero in both lines. The pre-registered cell has a known weakness -- perturbations in a held-out group share a per-gene response, so its shuffled-label draws sit above zero -- and a fold-centred version of the same correlation is reported beside it everywhere. That version is a diagnostic, not a second verdict: it subtracts the held-out fold's own mean, so it uses held-out outcomes, and it was written after the shuffled draws were seen. The two rank the arms similarly (rank correlation at least 0.8247) and the arms that move are the weak ones. The second pre-registered axis, perturbation discrimination, does not settle anything either way: the version pinned before the run does not exist upstream, and the two existing versions nearest it reverse the model-versus-co-expression ordering on the same saved predictions, so that axis is reported as version-dependent and inconclusive. The response features are refuted as an addition to the embedding on both scores; on their own they are numerically ahead of co-expression in three of six model-and-line combinations but never by more than the paired comparison resolves. The protein control is a positive: the raw ESM2 arm clears its width-matched random-vector null and its own shuffled-label draws in both cell lines, beats co-expression in both on a paired comparison, and ties TranscriptFormer's, scPRINT's and scGPT's embedding arms in seven of eight comparisons while beating scGPT's in Jurkat, with every arm it is compared against re-run inside the same job and reproducing the main sweep exactly. It shows where the signal can come from, not where each model's signal does come from: it does not decompose scGPT's or AIDO.Cell's learned table into a protein-like part and a cell-specific part, and scGPT's table has no measurable protein-space structure while scoring as well as the rest.",
+  "assessment": "Supported for the embedding arms against co-expression, on both cell lines, on the pre-registered scoring cell, with every interval resampling the response groups the split holds out together rather than individual perturbations. Every embedding arm's paired difference against co-expression excludes zero in both lines. The pre-registered cell has a known weakness -- perturbations in a held-out group share a per-gene response, so its shuffled-label draws sit above zero -- and a fold-centred version of the same correlation is reported beside it everywhere. That version is a diagnostic, not a second verdict: it subtracts the held-out fold's own mean, so it uses held-out outcomes, and it was written after the shuffled draws were seen. The two rank the arms similarly (rank correlation at least 0.8247) and the arms that move are the weak ones. The second pre-registered axis, perturbation discrimination, does not settle anything either way: the version pinned before the run does not exist upstream, and the two existing versions nearest it reverse the model-versus-co-expression ordering on the same saved predictions, so that axis is reported as version-dependent and inconclusive. The response features are refuted as an addition to the embedding on both scores; on their own they are numerically ahead of co-expression in three of six model-and-line combinations but never by more than the paired comparison resolves. The protein control is a positive: the raw ESM2 arm clears its width-matched random-vector null and its own shuffled-label draws in both cell lines, beats co-expression in both on a paired comparison, and ties TranscriptFormer's, scPRINT's and scGPT's embedding arms in seven of eight comparisons while beating scGPT's in Jurkat, with every arm it is compared against re-run inside the same job and reproducing the main sweep exactly. It shows where the signal can come from, not where each model's signal does come from: it does not decompose scGPT's or AIDO.Cell's learned table into a protein-like part and a cell-specific part, and scGPT's table has no measurable protein-space structure while scoring as well as the rest. The two-table arm is a supplementary test with its own reading, not a second verdict on the run's question. Its paired comparison was underpowered for the effect it was looking for: in all four cells the two-table arm's difference against the better of its two parts is smaller than the smallest difference that comparison can resolve (HepG2 grouped +0.02233 against 0.1366; HepG2 random +0.02134 against 0.04688; Jurkat grouped +0.004363 against 0.02620; Jurkat random +0.01529 against 0.03364). That is a property of the design, not of the models: a gain the size of the ones on offer could not have been detected here, so nothing in this arm supports calling the two tables equivalent or calling either one redundant. The half that does carry information is the agreement statistic, and it is read against its own calibration. scGPT's table and the raw ESM2-3B table agree on which held-out perturbations they score well at Spearman 0.2503 in HepG2 and 0.2394 in Jurkat. Two sizes of the same protein model, which is what two views of one underlying quantity look like in this setup, agree at 0.6816 and 0.6727; scGPT against co-expression agrees at 0.2843 and 0.2295. scGPT's table therefore agrees with a protein model about as weakly as it agrees with co-expression and far below the same-family reference, below the 0.3 the rule set for different information and well below the 0.5 it set for the same information. Taken together that is a discrepancy identified rather than resolved: the agreement numbers point toward the two tables carrying different information rather than being redundant routes to one quantity, and the concatenation test is too underpowered to say whether that difference converts into a gain. It is reported as an open question with its numbers attached, not as a null and not as a positive. On the fold-centred diagnostic, jurkat, grouped against esm2_3b_emb (+0.0234, 0.0015 to 0.0337, against 0.0232 resolvable) clears what it resolves, 1 of the 4 comparisons against the better part; that diagnostic is not the verdict and one cell does not change the reading.",
   "decision_rule": {
     "preregistered": "residual target, reliability-weighted, ceiling-corrected per-perturbation Pearson correlation, median over held-out perturbations of a grouped split, compared to co-expression as a paired difference",
     "used_for_the_verdict": "the pre-registered rule, unchanged. Residual is against the TRAINING folds' mean effect, so a held-out perturbation's own outcome never enters its score",
@@ -938,6 +938,215 @@
         }
       }
     },
+    "two_table_arm": {
+      "arm": "scgpt_esm2_3b_emb: scGPT's 512-wide gene table concatenated with the 2,560-wide raw ESM2-3B protein table, for both genes, through the identical translator, folds, weighting, ceiling correction and scoring",
+      "rule_fixed_before_the_arm_was_scored": {
+        "redundant": "the two tables are proxies for one underlying quantity reached by different routes: the concatenation does not beat the better of its two parts by more than the paired comparison resolves, and the parts' per-perturbation scores are correlated at Spearman 0.5 or above",
+        "complementary": "the two tables carry different information, which is a separate finding: the concatenation beats both parts with an interval clear of zero, and the parts' per-perturbation scores are correlated below Spearman 0.3",
+        "mixed": "anything else, reported as mixed rather than resolved either way"
+      },
+      "agreement_thresholds": {
+        "strong_at_or_above": 0.5,
+        "weak_below": 0.3,
+        "statistic": "Spearman correlation of per-perturbation scores"
+      },
+      "reading": "mixed",
+      "reading_read_from": "the grouped split in both cell lines; mixed unless they agree",
+      "scores": {
+        "hepg2|grouped__scgpt_esm2_3b_emb": 0.2988601476827775,
+        "hepg2|grouped__scgpt_emb": 0.27186890674361275,
+        "hepg2|grouped__esm2_3b_emb": 0.23311142633518622,
+        "hepg2|grouped__null_randgene_d6144": 0.008122670192983114,
+        "hepg2|grouped__null_randgene_d1024": -0.0017221673002676319,
+        "hepg2|grouped__null_randgene_d5120": -0.024658697414011745,
+        "hepg2|grouped__coexp": 0.04879340318413257,
+        "hepg2|random__scgpt_esm2_3b_emb": 0.509875180630072,
+        "hepg2|random__scgpt_emb": 0.3495818921603326,
+        "hepg2|random__esm2_3b_emb": 0.4834156534661958,
+        "hepg2|random__null_randgene_d6144": 0.009269798206918655,
+        "hepg2|random__null_randgene_d1024": 0.011293909111133154,
+        "hepg2|random__null_randgene_d5120": 0.0427411322880055,
+        "hepg2|random__coexp": 0.05259822314997651,
+        "jurkat|grouped__scgpt_esm2_3b_emb": 0.27030196796220224,
+        "jurkat|grouped__scgpt_emb": 0.17327587924554624,
+        "jurkat|grouped__esm2_3b_emb": 0.2641756814272859,
+        "jurkat|grouped__null_randgene_d6144": 0.020705273498856532,
+        "jurkat|grouped__null_randgene_d1024": 0.024550959425715845,
+        "jurkat|grouped__null_randgene_d5120": 0.025441093143015455,
+        "jurkat|grouped__coexp": 0.044622162296810125,
+        "jurkat|random__scgpt_esm2_3b_emb": 0.294067488165445,
+        "jurkat|random__scgpt_emb": 0.18617132501592837,
+        "jurkat|random__esm2_3b_emb": 0.27243371401742084,
+        "jurkat|random__null_randgene_d6144": -0.012656550894218011,
+        "jurkat|random__null_randgene_d1024": 0.005879742907887522,
+        "jurkat|random__null_randgene_d5120": -0.012687315209625382,
+        "jurkat|random__coexp": 0.04935314232667417
+      },
+      "paired_against_parts": {
+        "hepg2|grouped__scgpt_emb__preregistered": {
+          "difference": 0.022334539102465967,
+          "lo": -0.03420803588408948,
+          "hi": 0.13046580011090267,
+          "n_paired": 524,
+          "n_groups_paired": 226,
+          "min_resolvable_difference": 0.13659464221121592
+        },
+        "hepg2|grouped__scgpt_emb__fold_centred": {
+          "difference": 0.009884811992692463,
+          "lo": -0.033943012873183555,
+          "hi": 0.07100931848440059,
+          "n_paired": 524,
+          "n_groups_paired": 226,
+          "min_resolvable_difference": 0.0797910601844574
+        },
+        "hepg2|grouped__esm2_3b_emb__preregistered": {
+          "difference": 0.0544053306472525,
+          "lo": 0.01776365472878384,
+          "hi": 0.09519352416391241,
+          "n_paired": 524,
+          "n_groups_paired": 226,
+          "min_resolvable_difference": 0.05451131718108635
+        },
+        "hepg2|grouped__esm2_3b_emb__fold_centred": {
+          "difference": 0.01101536560043656,
+          "lo": -0.01795341935363109,
+          "hi": 0.04342180469952722,
+          "n_paired": 524,
+          "n_groups_paired": 226,
+          "min_resolvable_difference": 0.04414730761696463
+        },
+        "hepg2|random__scgpt_emb__preregistered": {
+          "difference": 0.12926101338333457,
+          "lo": 0.08116108765688679,
+          "hi": 0.1675960816667578,
+          "n_paired": 524,
+          "n_groups_paired": 226,
+          "min_resolvable_difference": 0.06222795597667458
+        },
+        "hepg2|random__scgpt_emb__fold_centred": {
+          "difference": 0.1131763057879151,
+          "lo": 0.061543904948338654,
+          "hi": 0.17339631595955687,
+          "n_paired": 524,
+          "n_groups_paired": 226,
+          "min_resolvable_difference": 0.07680550535739332
+        },
+        "hepg2|random__esm2_3b_emb__preregistered": {
+          "difference": 0.0213370461576885,
+          "lo": -0.010502270704821876,
+          "hi": 0.05672587345431293,
+          "n_paired": 524,
+          "n_groups_paired": 226,
+          "min_resolvable_difference": 0.046882563015966765
+        },
+        "hepg2|random__esm2_3b_emb__fold_centred": {
+          "difference": 0.007658342583103439,
+          "lo": -0.02363594233549056,
+          "hi": 0.035588367185926874,
+          "n_paired": 524,
+          "n_groups_paired": 226,
+          "min_resolvable_difference": 0.040278761227232784
+        },
+        "jurkat|grouped__scgpt_emb__preregistered": {
+          "difference": 0.06909878558998853,
+          "lo": 0.04210272502162747,
+          "hi": 0.09647037584824378,
+          "n_paired": 705,
+          "n_groups_paired": 452,
+          "min_resolvable_difference": 0.03980180806500687
+        },
+        "jurkat|grouped__scgpt_emb__fold_centred": {
+          "difference": 0.06719431538481926,
+          "lo": 0.03929284342506417,
+          "hi": 0.09122731151194173,
+          "n_paired": 705,
+          "n_groups_paired": 452,
+          "min_resolvable_difference": 0.03747185249480742
+        },
+        "jurkat|grouped__esm2_3b_emb__preregistered": {
+          "difference": 0.004362939548921002,
+          "lo": -0.012111245483511527,
+          "hi": 0.024941826864431853,
+          "n_paired": 705,
+          "n_groups_paired": 452,
+          "min_resolvable_difference": 0.026195712690500673
+        },
+        "jurkat|grouped__esm2_3b_emb__fold_centred": {
+          "difference": 0.023363065502052832,
+          "lo": 0.001475969004993319,
+          "hi": 0.033712818988079186,
+          "n_paired": 705,
+          "n_groups_paired": 452,
+          "min_resolvable_difference": 0.023235475405204712
+        },
+        "jurkat|random__scgpt_emb__preregistered": {
+          "difference": 0.07624219457617837,
+          "lo": 0.04731545911917039,
+          "hi": 0.12063413837518876,
+          "n_paired": 705,
+          "n_groups_paired": 452,
+          "min_resolvable_difference": 0.04979529068095293
+        },
+        "jurkat|random__scgpt_emb__fold_centred": {
+          "difference": 0.08234617406819314,
+          "lo": 0.04444441601838459,
+          "hi": 0.11964536252494537,
+          "n_paired": 705,
+          "n_groups_paired": 452,
+          "min_resolvable_difference": 0.054801918519626215
+        },
+        "jurkat|random__esm2_3b_emb__preregistered": {
+          "difference": 0.01528697934999873,
+          "lo": -0.006777579858552372,
+          "hi": 0.04439153031626759,
+          "n_paired": 705,
+          "n_groups_paired": 452,
+          "min_resolvable_difference": 0.03363930520835932
+        },
+        "jurkat|random__esm2_3b_emb__fold_centred": {
+          "difference": 0.012408718852690848,
+          "lo": -0.00960501617899914,
+          "hi": 0.04416956416722161,
+          "n_paired": 705,
+          "n_groups_paired": 452,
+          "min_resolvable_difference": 0.03872696596018228
+        }
+      },
+      "agreement": {
+        "hepg2|grouped": 0.25032888440358547,
+        "hepg2|grouped__esm2_650m_emb__esm2_3b_emb": 0.6816234666622183,
+        "hepg2|grouped__scgpt_emb__transcriptformer_emb": 0.2707907362731994,
+        "hepg2|grouped__scgpt_emb__coexp": 0.2842818985343761,
+        "hepg2|random": 0.3506395240944888,
+        "hepg2|random__esm2_650m_emb__esm2_3b_emb": 0.7070658123275874,
+        "hepg2|random__scgpt_emb__transcriptformer_emb": 0.32228060993638324,
+        "hepg2|random__scgpt_emb__coexp": 0.3133962897552289,
+        "jurkat|grouped": 0.23940019506742435,
+        "jurkat|grouped__esm2_650m_emb__esm2_3b_emb": 0.672694122223988,
+        "jurkat|grouped__scgpt_emb__transcriptformer_emb": 0.26511971167281284,
+        "jurkat|grouped__scgpt_emb__coexp": 0.2295148040284711,
+        "jurkat|random": 0.2846093651541636,
+        "jurkat|random__esm2_650m_emb__esm2_3b_emb": 0.7266705387915683,
+        "jurkat|random__scgpt_emb__transcriptformer_emb": 0.26449317401000544,
+        "jurkat|random__scgpt_emb__coexp": 0.20988521980701474
+      },
+      "reading_by_cell": {
+        "hepg2|grouped": "mixed",
+        "hepg2|random": "mixed",
+        "jurkat|grouped": "mixed",
+        "jurkat|random": "mixed"
+      },
+      "better_part_by_cell": {
+        "hepg2|grouped": "scgpt_emb",
+        "hepg2|random": "esm2_3b_emb",
+        "jurkat|grouped": "esm2_3b_emb",
+        "jurkat|random": "esm2_3b_emb"
+      },
+      "in_job_reference_check": {
+        "n_arms_rerun": 6,
+        "largest_absolute_difference_from_the_main_sweep": 0.0
+      }
+    },
     "paired_vs_coexpression": {
       "hepg2__scgpt_emb__preregistered": {
         "arm": "scgpt_emb",
@@ -1579,7 +1788,8 @@
     "AIDO.Cell is only comparable on the 250-gene subset it was harvested on, and the two scores disagree about it there: its best arm sits just above the shuffled-label ceiling on the pre-registered rule and below it on the fold-centred one. It is not shown to be worse than the others, only not separated from the null.",
     "Co-expression is represented by four statistics over control cells; a fitted network-inference method could do better.",
     "The protein control shows where the signal can come from, not where each model's signal does come from. It does not decompose scGPT's or AIDO.Cell's learned table into a protein-like part and a cell-specific part, and it says nothing about what these models do outside this gene-pair task. One protein model at two sizes, and one pooling rule (mean over the final layer), stand in for protein space.",
-    "The unseen-gene cross-line slice is small and its three destination-reference modes are not interchangeable: the non-transductive one scores 78 to 89 perturbations because the rest build its reference, while the other two score 156 to 177, so their clearance counts are reported separately and never pooled. The slice separates the protein-derived tables from scGPT's rather than ranking the arms inside either group."
+    "The unseen-gene cross-line slice is small and its three destination-reference modes are not interchangeable: the non-transductive one scores 78 to 89 perturbations because the rest build its reference, while the other two score 156 to 177, so their clearance counts are reported separately and never pooled. The slice separates the protein-derived tables from scGPT's rather than ranking the arms inside either group.",
+    "The two-table test is one concatenation at one width, scored by the same translator as everything else, and its paired comparison is underpowered: in every cell the difference against the better part is smaller than the smallest difference that comparison resolves, so a gain of the size on offer would not have been detected. It asks whether that translator can use both gene tables together better than it uses the better one alone; it does not rule out that a different way of combining them, or a task with finer resolution than a held-out per-perturbation correlation, would separate what the two tables carry."
   ],
   "artifacts": [
     "results/summary/runs.parquet",
@@ -1632,6 +1842,10 @@
     "jobs/run_provenance.sh",
     "jobs/run_protein_embed.sh",
     "jobs/run_protein_line.sh",
-    "jobs/run_protein_transfer.sh"
+    "jobs/run_protein_transfer.sh",
+    "results/summary/concat_runs.parquet",
+    "results/summary/arm_agreement.parquet",
+    "results/summary/concat_reference.parquet",
+    "jobs/run_concat.sh"
   ]
 }
