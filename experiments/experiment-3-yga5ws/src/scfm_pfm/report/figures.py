@@ -527,7 +527,15 @@ TABLE_LABEL = {
 
 
 def table_similarity(summary_dir: Path, out_root: Path) -> dict | None:
-    """How much of the raw protein table survives in each model's gene table."""
+    """How much of the raw protein table survives in each model's gene table.
+
+    Read with representational similarity: the Spearman correlation between two
+    tables' gene-gene cosine similarities. Linear CKA is kept in the data file
+    but not plotted, because its floor moves with width -- two independent
+    random tables at 1,280 and 2,560 dimensions score 0.3934 on it, which is
+    the same as a real pair -- while the rank-similarity floor is at zero for
+    every width.
+    """
     path = summary_dir / "table_similarity.json"
     if not path.exists():
         return None
@@ -548,27 +556,33 @@ def table_similarity(summary_dir: Path, out_root: Path) -> dict | None:
         pairs = record["lines"][line]["pairs"]
         widths = record["lines"][line]["widths"]
 
-        def value(a: str, b: str, pairs=pairs) -> float:
+        def value(a: str, b: str, stat: str, pairs=pairs) -> float:
             if a == b:
                 return 1.0
             key = f"{a}|{b}" if f"{a}|{b}" in pairs else f"{b}|{a}"
-            return float(pairs[key]["cka"]) if key in pairs else float("nan")
+            return float(pairs[key][stat]) if key in pairs else float("nan")
 
-        z = [[value(a, b) for b in names] for a in names]
-        floors = {
-            n: value(n, f"random_d{widths.get(n)}") for n in names
-            if f"random_d{widths.get(n)}" in {p.split("|")[1] for p in pairs}
-            or f"random_d{widths.get(n)}" in {p.split("|")[0] for p in pairs}
-        }
-        payload.append({"cell_line": line, "names": names, "cka": z,
-                        "widths": widths, "random_floor": floors,
-                        "n_genes_compared": record["lines"][line]["n_genes_compared"]})
+        z = [[value(a, b, "rsa_spearman") for b in names] for a in names]
+        cka = [[value(a, b, "cka") for b in names] for a in names]
+        rand = [p for p in pairs if "random_d" in p]
+        floor = max(abs(float(pairs[p]["rsa_spearman"])) for p in rand) if rand else float("nan")
+        cka_floor = max(
+            float(pairs[p]["cka"]) for p in rand
+            if p.split("|")[0].startswith("random") and p.split("|")[1].startswith("random")
+        ) if rand else float("nan")
+        payload.append({"cell_line": line, "names": names, "rsa_spearman": z, "cka": cka,
+                        "widths": widths, "random_table_floor_rsa": floor,
+                        "random_pair_ceiling_cka": cka_floor,
+                        "n_genes_compared": record["lines"][line]["n_genes_compared"],
+                        "n_genes_rsa": record["lines"][line]["n_genes_rsa"]})
         fig.add_trace(
             go.Heatmap(
                 z=z, x=[TABLE_LABEL[n] for n in names], y=[TABLE_LABEL[n] for n in names],
-                zmin=0, zmax=1, colorscale=SEQUENTIAL, showscale=(k == len(lines) - 1),
-                colorbar=dict(title="CKA"),
-                hovertemplate="%{y} vs %{x}: %{z:.3f}<extra></extra>",
+                zmin=0, zmax=0.9, colorscale=SEQUENTIAL, showscale=(k == len(lines) - 1),
+                colorbar=dict(title="Rank<br>similarity"),
+                text=[[f"{v:.2f}" for v in row] for row in z],
+                texttemplate="%{text}",
+                hovertemplate="%{y} vs %{x}: %{z:.4f}<extra></extra>",
             ),
             row=1, col=k + 1,
         )
@@ -577,10 +591,15 @@ def table_similarity(summary_dir: Path, out_root: Path) -> dict | None:
     apply_theme(fig, height=460)
     save_figure_bundle(
         fig, "table_similarity",
-        data={"panels": payload, "metric": "linear CKA over the read-out genes"},
+        data={"panels": payload,
+              "metric": ("Spearman correlation between the two tables' gene-gene cosine "
+                         "similarities, over a fixed 1,500-gene subset"),
+              "secondary_metric": "linear CKA over every read-out gene, not plotted"},
         alt=(
-            "Two heatmaps, one per cell line, of linear CKA between every pair of gene "
-            "tables: the two raw ESM2 tables and the four single-cell models'."
+            "Two heatmaps, one per cell line, of the rank similarity between every pair of "
+            "gene tables: the two raw ESM2 tables and the four single-cell models'. The two "
+            "ESM2 sizes agree strongly, TranscriptFormer and scPRINT keep a clear protein "
+            "signature, and scGPT and AIDO.Cell sit at the random-table floor."
         ),
         root=out_root,
     )

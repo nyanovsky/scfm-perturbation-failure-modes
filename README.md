@@ -84,22 +84,30 @@ knockdown, but it sits in the static gene-identity embedding rather than in the 
 reaction to a perturbation. Querying the model — the mechanism the source paper proposes — adds
 nothing beyond the null band on this task.
 
-**Open, and not started: whether "foundation model" is the right word for the winning arms.**
-scPRINT's and TranscriptFormer's gene tables are ESM2-derived — scPRINT's own adapter calls its
-gene encoder frozen and ESM-derived, and TranscriptFormer's is an ESM2-derived table shipped in the
-checkpoint's vocabulary directory — so their advantage may belong to a protein language model
-rather than to single-cell pretraining. scGPT's table is learned from expression data and is the
-only such arm above the noise band; AIDO.Cell's is also learned and scores at zero.
+**Settled: "foundation model" is the wrong word for most of the winning arms.** Reading the four
+released checkpoints shows where each gene-identity table came from. TranscriptFormer's is an ESM2
+protein embedding passed through unchanged: its 23,823 gene rows are bitwise the ESM2 file shipped
+beside the weights, and the loader hard-codes `freeze=True`. scPRINT's was initialised from a
+protein-derived table and then trained, which the checkpoint proves by carrying two Adam moment
+tensors of exactly the gene table's shape. scGPT's and AIDO.Cell's are learned from expression with
+no protein model anywhere in the path.
 
-Settling this needs two things, neither of which exists yet: a raw ESM2 arm, built from protein
-sequences with no single-cell model in the path and pushed through the identical translator,
-splits and metric, and a per-model audit of whether each gene table was updated during pretraining
-or held fixed. Until both land, read the headline as being about the models' gene embeddings, not
-about single-cell pretraining, and report scGPT separately from the ESM-derived arms wherever the
-text says "foundation model embeddings".
+Building the missing control settles the rest. Every read-out gene was mapped to its canonical
+reviewed human protein and embedded with two public ESM2 checkpoints, and that table was pushed
+through the identical translator, folds, weights, scoring and nulls. It scores 0.1074 in HepG2 and
+0.1784 in Jurkat, level with the best single-cell arm in the first and ahead of every one of them
+in the second, and paired on the same held-out perturbations it beats TranscriptFormer in both
+lines and scGPT in Jurkat. So beating co-expression on this task is not evidence of single-cell
+knowledge; it is evidence that a general representation of gene identity helps, and protein
+sequence supplies one without seeing a cell. The sharpest version is the cross-line evaluation on
+genes never perturbed in the training screen: the four protein-derived tables clear zero in 22 of
+their 24 cells there, scGPT's in none of its six.
 
-One practical note for that work: this compute fabric cannot reach huggingface.co, which answers
-401 even for a public file, while Meta's own release host serves the original ESM2 checkpoints.
+What that does not settle: it shows where the signal can come from, not where each model's signal
+does come from. It does not decompose scGPT's or AIDO.Cell's learned table into a protein-like part
+and a cell-specific part, and one protein model at two sizes with one pooling rule stands in for
+protein space.
+
 
 ## Rebuilding, in general
 

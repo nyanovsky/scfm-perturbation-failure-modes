@@ -1,0 +1,1 @@
+Sorted dot plot of the held-out fold-centred correlation for the raw ESM2 arms, the four model embedding arms, co-expression and the two width-matched random controls, one panel per cell line.

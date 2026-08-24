@@ -1,6 +1,6 @@
 {
-  "headline": "A gene-pair feature built from a single-cell foundation model's gene embedding predicts the perturbation-specific part of a CRISPRi knockdown response better than statistical co-expression computed from the same control cells, in both cell lines and on both splits. The response features harvested in the previous run add nothing to the embedding; on their own they are weak, and whether they beat co-expression depends on which score is read.",
-  "assessment": "Supported for the embedding arms against co-expression, on both cell lines, on a post-hoc scoring cell. The second pre-registered scoring axis, perturbation discrimination, does not settle it either way: the version pinned before the run does not exist upstream, and the two existing versions nearest it reverse the model-versus-co-expression ordering on the same saved predictions, so that axis is reported as version-dependent and inconclusive. The pre-registered cell of the scoring grid fails its own shuffled-label control, so the verdict is read from the fold-centred cell, which the pre-registration also defined but did not designate. Both are reported for every arm; they rank the arms similarly (rank correlation at least 0.8247) but not identically, and the arms that move are the weak ones. The response features are therefore only partly refuted: they add nothing to the embedding on either score, but on the pre-registered score TranscriptFormer's response features beat co-expression in HepG2 by more than the resolvable difference, and on the fold-centred score two of three models' response arms clear the null in Jurkat. 'Response features carry no usable signal' holds for the fold-centred score in HepG2 and is too strong elsewhere.",
+  "headline": "A gene-pair feature built from a single-cell foundation model's gene embedding predicts the perturbation-specific part of a CRISPRi knockdown response better than statistical co-expression computed from the same control cells, in both cell lines and on both splits. The response features harvested in the previous run add nothing to the embedding; on their own they are weak, and whether they beat co-expression depends on which score is read. The advantage does not come from single-cell pretraining: reading the four released checkpoints shows that three of the four gene tables are protein-derived rather than learned from expression, and a gene table built from UniProt protein sequence with a public ESM2 checkpoint, run through the identical translator, folds, scoring and nulls, matches the best single-cell arm in HepG2 and beats every one of them in Jurkat.",
+  "assessment": "Supported for the embedding arms against co-expression, on both cell lines, on a post-hoc scoring cell. The second pre-registered scoring axis, perturbation discrimination, does not settle it either way: the version pinned before the run does not exist upstream, and the two existing versions nearest it reverse the model-versus-co-expression ordering on the same saved predictions, so that axis is reported as version-dependent and inconclusive. The pre-registered cell of the scoring grid fails its own shuffled-label control, so the verdict is read from the fold-centred cell, which the pre-registration also defined but did not designate. Both are reported for every arm; they rank the arms similarly (rank correlation at least 0.8247) but not identically, and the arms that move are the weak ones. The response features are therefore only partly refuted: they add nothing to the embedding on either score, but on the pre-registered score TranscriptFormer's response features beat co-expression in HepG2 by more than the resolvable difference, and on the fold-centred score two of three models' response arms clear the null in Jurkat. 'Response features carry no usable signal' holds for the fold-centred score in HepG2 and is too strong elsewhere. The protein control is a clean positive: the raw ESM2 arm clears its width-matched random-vector null and its own shuffled-label draws in both cell lines, beats TranscriptFormer's embedding arm in both on a paired comparison, ties scPRINT in both, and ties scGPT in HepG2 while beating it in Jurkat, with every arm it is compared against re-run inside the same job and reproducing the main sweep exactly. It shows where the signal can come from, not where each model's signal does come from: it does not decompose scGPT's or AIDO.Cell's learned table into a protein-like part and a cell-specific part.",
   "decision_rule": {
     "preregistered": "residual target, reliability-weighted, ceiling-corrected per-perturbation Pearson correlation, median over held-out perturbations of a grouped split, compared to co-expression as a paired difference",
     "used_for_the_verdict": "the same quantity after the held-out fold's per-gene mean is removed from both prediction and measurement (the fold-centred cell of the same grid), chosen post hoc because the shuffled-label control does not sit at zero on the pre-registered cell",
@@ -12,7 +12,8 @@
     "arms": "four models (scGPT, AIDO.Cell, scPRINT, TranscriptFormer) x four feature sets (gene embedding, run 2 response summary, both, either plus co-expression); statistical co-expression (Pearson, Spearman, mutual information, partial correlation) from one half of the non-targeting control cells; node-only controls (additive and free); random vector per gene and per pair; shuffled-label draws",
     "translator": "one fixed network for every arm: 128 and 64 ReLU units, Adam 1e-3, batch 4096, 30 epochs, reliability-weighted MSE. Ridge regression alongside as a capacity control. Seed 42, five folds, grouped and random splits.",
     "transfer": "fitted on one cell line and scored on the other over the shared read-out set, with three choices of what the destination response is measured against and an unseen-gene scope that drops any destination perturbation whose gene was perturbed in the training line",
-    "control_cell_overlap": "the effect target was recomputed from the raw count matrices three times, against the control half the co-expression features use, the other half, and all control cells, and the key arms rescored against each"
+    "control_cell_overlap": "the effect target was recomputed from the raw count matrices three times, against the control half the co-expression features use, the other half, and all control cells, and the key arms rescored against each",
+    "protein_control": "stage 1 reads the four released checkpoints (state-dict shapes, optimizer moment tensors, recorded hyper-parameters, and the shipped ESM2 file for TranscriptFormer) to determine where each gene-identity table came from. Stage 2 maps every read-out gene to its canonical reviewed human UniProt entry, embeds the sequence with facebook/esm2_t33_650M_UR50D and facebook/esm2_t36_3B_UR50D as the mean over final-layer residue states (proteins past the 1,022-residue context are chunked and averaged), installs the table as an ordinary embedding arm, and runs it through the identical translator, folds, weights, scoring, nulls and transfer design. The same jobs re-ran co-expression and the three model embedding arms as an in-job reference. Gene tables are additionally compared to each other by the Spearman correlation of their gene-gene cosine similarities, whose random-table floor is at zero for any width"
   },
   "results": {
     "lines": {
@@ -32,7 +33,7 @@
           0.016917808922339926
         ],
         "shuffled_label_ceiling_fold_centred": 0.028601970174156315,
-        "shuffled_label_ceiling_preregistered": 0.026616425215650726,
+        "shuffled_label_ceiling_preregistered": 0.027644179180561366,
         "best_response_only_score": 0.01212184944463636,
         "node_free_score": 0.036564355768129296,
         "residual_ceiling": 0.654599714269554,
@@ -61,6 +62,475 @@
         "residual_ceiling": 0.5013870706269954,
         "residual_ceiling_weighted": 0.5071819396306456,
         "fold_centred_ceiling_weighted": 0.4437062127878906
+      }
+    },
+    "protein_control": {
+      "gene_table_provenance": {
+        "transcriptformer": "a frozen ESM2 protein embedding, bitwise the file shipped beside the weights, never updated in pretraining",
+        "scprint": "ESM-initialised and then trained for 400,000 steps",
+        "scgpt": "learned from expression, no protein model in the path",
+        "aido_cell": "learned from expression, no protein model in the path"
+      },
+      "gene_to_protein": {
+        "n_genes": 3755,
+        "by_ensembl_xref": 3740,
+        "by_symbol": 15,
+        "unmapped": 0,
+        "uniprot_release": "2026_02",
+        "reviewed_human_entries": 20431,
+        "multi_candidate_genes": 13,
+        "over_esm2_context": 437
+      },
+      "zero_rows_installed": 0,
+      "scores": {
+        "hepg2": {
+          "esm2_3b_emb": 0.10738655423271576,
+          "esm2_650m_emb": 0.078326551216008,
+          "transcriptformer_emb": 0.0847984206926103,
+          "scprint_emb": 0.08459949606608556,
+          "scgpt_emb": 0.10887821051526674,
+          "coexp": 0.00517619255164999,
+          "null_randgene_d2560": 0.0068051563391568,
+          "null_randgene_d5120": -0.014815905139365971,
+          "esm2_3b_emb__random_split": 0.4820257773850348,
+          "transcriptformer_emb__random_split": 0.46465232326045214,
+          "scgpt_emb__random_split": 0.3517528339462375,
+          "coexp__random_split": 0.046966669120455606,
+          "null_randgene_d2560__random_split": 0.02575149122318692,
+          "largest_protein_shuffled_draw": 0.009830709066096243
+        },
+        "jurkat": {
+          "esm2_3b_emb": 0.178378884550599,
+          "esm2_650m_emb": 0.15818285213531866,
+          "transcriptformer_emb": 0.17260292953650547,
+          "scprint_emb": 0.15874266972479487,
+          "scgpt_emb": 0.11257733813165048,
+          "coexp": 0.03363644111375723,
+          "null_randgene_d2560": 0.008337391375397489,
+          "null_randgene_d5120": -0.009526331997169254,
+          "esm2_3b_emb__random_split": 0.2768106045673171,
+          "transcriptformer_emb__random_split": 0.24733580558428256,
+          "scgpt_emb__random_split": 0.17812329329569623,
+          "coexp__random_split": 0.05348318310778289,
+          "null_randgene_d2560__random_split": -0.009484811140612894,
+          "largest_protein_shuffled_draw": 0.010470388871493994
+        }
+      },
+      "paired_differences": {
+        "hepg2__esm2_3b_emb__vs__coexp": {
+          "median_difference": 0.0666409693776659,
+          "lo": 0.04244007564734424,
+          "hi": 0.0969311249240466,
+          "n_paired": 524
+        },
+        "hepg2__esm2_650m_emb__vs__coexp": {
+          "median_difference": 0.04461586102267154,
+          "lo": 0.015511816242463929,
+          "hi": 0.08745576000296731,
+          "n_paired": 524
+        },
+        "hepg2__esm2_3b_emb__vs__transcriptformer_emb": {
+          "median_difference": 0.03662909098027109,
+          "lo": 0.010469336365349682,
+          "hi": 0.06715652419936786,
+          "n_paired": 524
+        },
+        "hepg2__esm2_650m_emb__vs__transcriptformer_emb": {
+          "median_difference": 0.01460398262527672,
+          "lo": -0.01406230695491263,
+          "hi": 0.05753397662060083,
+          "n_paired": 524
+        },
+        "hepg2__esm2_3b_emb__vs__scprint_emb": {
+          "median_difference": 0.01727072859982272,
+          "lo": -0.014037138220097774,
+          "hi": 0.05242065080761682,
+          "n_paired": 524
+        },
+        "hepg2__esm2_650m_emb__vs__scprint_emb": {
+          "median_difference": -0.0047543797551716505,
+          "lo": -0.04036921892675329,
+          "hi": 0.039292178288184626,
+          "n_paired": 524
+        },
+        "hepg2__esm2_3b_emb__vs__scgpt_emb": {
+          "median_difference": 0.028020243185660494,
+          "lo": -0.002501882682589427,
+          "hi": 0.06256320584701347,
+          "n_paired": 524
+        },
+        "hepg2__esm2_650m_emb__vs__scgpt_emb": {
+          "median_difference": 0.005995134830666125,
+          "lo": -0.028808977354350798,
+          "hi": 0.051744117860360025,
+          "n_paired": 524
+        },
+        "jurkat__esm2_3b_emb__vs__coexp": {
+          "median_difference": 0.10376112410839365,
+          "lo": 0.07801608482066473,
+          "hi": 0.13293137386988405,
+          "n_paired": 705
+        },
+        "jurkat__esm2_650m_emb__vs__coexp": {
+          "median_difference": 0.09030828915830663,
+          "lo": 0.0574123407629991,
+          "hi": 0.1165500706692869,
+          "n_paired": 705
+        },
+        "jurkat__esm2_3b_emb__vs__transcriptformer_emb": {
+          "median_difference": 0.029100512267750886,
+          "lo": 0.006679039847930335,
+          "hi": 0.053061110649316345,
+          "n_paired": 705
+        },
+        "jurkat__esm2_650m_emb__vs__transcriptformer_emb": {
+          "median_difference": 0.015647677317663866,
+          "lo": -0.014451640438660953,
+          "hi": 0.036429297440453166,
+          "n_paired": 705
+        },
+        "jurkat__esm2_3b_emb__vs__scprint_emb": {
+          "median_difference": 0.013079933308887376,
+          "lo": -0.009048098786587268,
+          "hi": 0.04135199898218104,
+          "n_paired": 705
+        },
+        "jurkat__esm2_650m_emb__vs__scprint_emb": {
+          "median_difference": -0.00037290164119964386,
+          "lo": -0.029359738758716867,
+          "hi": 0.02640879503400267,
+          "n_paired": 705
+        },
+        "jurkat__esm2_3b_emb__vs__scgpt_emb": {
+          "median_difference": 0.04740218972888935,
+          "lo": 0.020287350422915282,
+          "hi": 0.07843147050314905,
+          "n_paired": 705
+        },
+        "jurkat__esm2_650m_emb__vs__scgpt_emb": {
+          "median_difference": 0.03394935477880233,
+          "lo": -5.805779789810213e-05,
+          "hi": 0.06125766335078485,
+          "n_paired": 705
+        }
+      },
+      "in_job_reference_check": {
+        "n_arms_rerun_within_line": 8,
+        "n_arms_rerun_cross_line": 36,
+        "largest_absolute_difference_from_the_main_sweep": 0.0
+      },
+      "table_similarity_rsa": {
+        "esm2_3b|esm2_650m": 0.850557,
+        "esm2_3b|transcriptformer": 0.396024,
+        "esm2_650m|scprint": 0.272706,
+        "esm2_3b|scprint": 0.237232,
+        "scgpt|scprint": 0.303713,
+        "esm2_3b|scgpt": -0.015785,
+        "aido_cell|esm2_3b": -0.000522
+      },
+      "unseen_gene_transfer": {
+        "hepg2->jurkat__dest_reference__esm2_650m_emb": {
+          "score": 0.07527976163641821,
+          "lo": 0.020140936640972676,
+          "hi": 0.1223036836964543,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__transcriptformer_emb": {
+          "score": 0.07168902044554358,
+          "lo": 0.047972542388821045,
+          "hi": 0.13378811133783342,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__esm2_3b_emb": {
+          "score": 0.06257325366572143,
+          "lo": -0.016726500387096693,
+          "hi": 0.11703738700052627,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__scprint_emb": {
+          "score": 0.02844289908100535,
+          "lo": -0.022887730116099757,
+          "hi": 0.09581845416285745,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__scgpt_emb": {
+          "score": 0.02215881596569805,
+          "lo": -0.029960839560621337,
+          "hi": 0.07299507433192298,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__null_randgene_d5120": {
+          "score": 0.003235993381285271,
+          "lo": -0.041037301501133445,
+          "hi": 0.04866645684755263,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__null_randgene_d2560": {
+          "score": -0.006804612965232689,
+          "lo": -0.03961256807017445,
+          "hi": 0.058079023573649614,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__coexp": {
+          "score": -0.009072121542023437,
+          "lo": -0.044541693159582105,
+          "hi": 0.021541477098452794,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_all__transcriptformer_emb": {
+          "score": 0.07043475360218518,
+          "lo": 0.025184307280631455,
+          "hi": 0.11249147950130892,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__esm2_650m_emb": {
+          "score": 0.06504829167005258,
+          "lo": 0.03792566665612297,
+          "hi": 0.10826211337319865,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__scprint_emb": {
+          "score": 0.059568777139255104,
+          "lo": 0.019303613587839254,
+          "hi": 0.09469839477521122,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__esm2_3b_emb": {
+          "score": 0.057657774163035636,
+          "lo": 0.017556482173895337,
+          "hi": 0.10104334575537452,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__scgpt_emb": {
+          "score": 0.03406728511397768,
+          "lo": -0.005029551442190253,
+          "hi": 0.07448614133305163,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__coexp": {
+          "score": -0.005537009870411353,
+          "lo": -0.02611327578620634,
+          "hi": 0.034868488517348625,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__null_randgene_d2560": {
+          "score": -0.0068107919584469885,
+          "lo": -0.03994343533981369,
+          "hi": 0.04348753831275318,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__null_randgene_d5120": {
+          "score": -0.010526918270830658,
+          "lo": -0.04601484388712702,
+          "hi": 0.022072105057275276,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__esm2_650m_emb": {
+          "score": 0.07225176402772274,
+          "lo": 0.029003645698288155,
+          "hi": 0.09678170718449669,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__transcriptformer_emb": {
+          "score": 0.06953869928821238,
+          "lo": 0.015228429293194175,
+          "hi": 0.1073081433240967,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__scprint_emb": {
+          "score": 0.06067168071194066,
+          "lo": 0.0242352604535338,
+          "hi": 0.0985470642516394,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__esm2_3b_emb": {
+          "score": 0.05601949575423436,
+          "lo": 0.01980990090820749,
+          "hi": 0.10984041736368087,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__scgpt_emb": {
+          "score": 0.03417357687394495,
+          "lo": -0.017388168816368166,
+          "hi": 0.07471357743351208,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__null_randgene_d2560": {
+          "score": 0.003135564157517665,
+          "lo": -0.040867165478413556,
+          "hi": 0.04283340589261374,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__coexp": {
+          "score": -0.0045374501807241,
+          "lo": -0.019597357843198788,
+          "hi": 0.0307250259706702,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__null_randgene_d5120": {
+          "score": -0.01495697246244841,
+          "lo": -0.04171048460650125,
+          "hi": 0.021202321446996613,
+          "n_perturbations": 177
+        },
+        "jurkat->hepg2__dest_reference__transcriptformer_emb": {
+          "score": 0.09392448963999318,
+          "lo": 0.060810579297615464,
+          "hi": 0.14941236168159255,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__scprint_emb": {
+          "score": 0.08024742467943892,
+          "lo": 0.027605260022607776,
+          "hi": 0.15482532142251101,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__esm2_650m_emb": {
+          "score": 0.07322752947488428,
+          "lo": 0.03300909319019749,
+          "hi": 0.12652244671025353,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__esm2_3b_emb": {
+          "score": 0.07256165098749312,
+          "lo": 0.03425254078151309,
+          "hi": 0.1411602061092455,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__coexp": {
+          "score": -0.007117000292288443,
+          "lo": -0.049256165775070214,
+          "hi": 0.03431357652078811,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__scgpt_emb": {
+          "score": -0.014408461592569189,
+          "lo": -0.06082157065840872,
+          "hi": 0.022507349035783226,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__null_randgene_d5120": {
+          "score": -0.01506851170934811,
+          "lo": -0.047515303315048336,
+          "hi": 0.05629071986299077,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__null_randgene_d2560": {
+          "score": -0.04027551514721171,
+          "lo": -0.06745855236868822,
+          "hi": 0.003508650652138866,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_all__transcriptformer_emb": {
+          "score": 0.08815438888738676,
+          "lo": 0.06179564083428404,
+          "hi": 0.10720505342026088,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__esm2_3b_emb": {
+          "score": 0.0854378625355505,
+          "lo": 0.0348565821569026,
+          "hi": 0.12300122897148154,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__esm2_650m_emb": {
+          "score": 0.08483781890590948,
+          "lo": 0.03819565201053312,
+          "hi": 0.11122401736273828,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__scprint_emb": {
+          "score": 0.07458937663738809,
+          "lo": 0.0477057374951979,
+          "hi": 0.12019250521356421,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__scgpt_emb": {
+          "score": 0.0323431290433036,
+          "lo": -0.01800427015740643,
+          "hi": 0.08469911476718722,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__null_randgene_d5120": {
+          "score": 0.012271778126741312,
+          "lo": -0.03166054387056426,
+          "hi": 0.04184513111666686,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__coexp": {
+          "score": 0.006094785122021438,
+          "lo": -0.034002220932920185,
+          "hi": 0.04337824277267553,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__null_randgene_d2560": {
+          "score": -0.025194725645383557,
+          "lo": -0.05811143913483444,
+          "hi": 0.011870914644464702,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__transcriptformer_emb": {
+          "score": 0.0961346667312693,
+          "lo": 0.05119070699878017,
+          "hi": 0.11441119540967844,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__esm2_650m_emb": {
+          "score": 0.08863706964288678,
+          "lo": 0.025872213935515392,
+          "hi": 0.10980742708967524,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__esm2_3b_emb": {
+          "score": 0.07802790038987772,
+          "lo": 0.04430312083434072,
+          "hi": 0.11678030076007927,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__scprint_emb": {
+          "score": 0.07773464438736802,
+          "lo": 0.03776281562960019,
+          "hi": 0.11960444782316995,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__scgpt_emb": {
+          "score": 0.043092301359794936,
+          "lo": -0.016882776144237457,
+          "hi": 0.08984773673489868,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__null_randgene_d5120": {
+          "score": 0.016913833409664618,
+          "lo": -0.03340061018590461,
+          "hi": 0.045080692650938586,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__coexp": {
+          "score": 0.0068941562903525695,
+          "lo": -0.02743206833391337,
+          "hi": 0.03500998540089025,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__null_randgene_d2560": {
+          "score": -0.024742324973587197,
+          "lo": -0.0521497246346841,
+          "hi": 0.010635622000328047,
+          "n_perturbations": 156
+        }
+      },
+      "unseen_gene_transfer_counts": {
+        "protein_derived": {
+          "cells": 24,
+          "interval_excludes_zero": 22
+        },
+        "scgpt": {
+          "cells": 6,
+          "interval_excludes_zero": 0
+        },
+        "coexpression_and_nulls": {
+          "cells": 18,
+          "interval_excludes_zero": 0
+        }
       }
     },
     "paired_vs_coexpression": {
@@ -150,7 +620,7 @@
     },
     "transfer_reference_mode": {
       "largest_shift_from_reference_choice": 0.07527144403163899,
-      "lowest_rank_correlation_across_modes": 0.7752682100508189
+      "lowest_rank_correlation_across_modes": 0.8215384615384616
     },
     "ordering_agreement_min": {
       "centered": 0.8246941045606229,
@@ -176,8 +646,6 @@
       }
     },
     "control_cell_overlap": {
-      "largest_shift_coexpression_arms": 0.02397178537696014,
-      "largest_shift_embedding_arms": 0.0191519276253313,
       "per_arm": [
         {
           "cell_line": "hepg2",
@@ -292,6 +760,14 @@
           "delta": -0.0176092908833807
         }
       ],
+      "largest_shift_coexpression_arms": 0.02397178537696014,
+      "largest_shift_coexpression_arms_arm": "jurkat/coexp_check",
+      "largest_shift_coexpression_arms_ctrl0": 0.020720226605978234,
+      "largest_shift_coexpression_arms_ctrl1": 0.04469201198293837,
+      "largest_shift_embedding_arms": 0.0191519276253313,
+      "largest_shift_embedding_arms_arm": "jurkat/scgpt_emb",
+      "largest_shift_embedding_arms_ctrl0": 0.097917416582175,
+      "largest_shift_embedding_arms_ctrl1": 0.1170693442075063,
       "recomputed_target_agreement_hepg2": 0.7712414639996538,
       "recomputed_reliability_weight_hepg2": 0.27689638221410134,
       "recomputed_target_agreement_jurkat": 0.716054297215079,
@@ -436,7 +912,9 @@
     "Two cell lines from a single screen, so the cross-line result is a weak test of generality.",
     "The additive node control is identically zero on the fold-centred score by construction, so the free node network is the informative version.",
     "AIDO.Cell is only comparable on the 250-gene subset it was harvested on; it is not shown to be worse than the others there, only not shown to work.",
-    "Co-expression is represented by four statistics over control cells; a fitted network-inference method could do better."
+    "Co-expression is represented by four statistics over control cells; a fitted network-inference method could do better.",
+    "The protein control shows where the signal can come from, not where each model's signal does come from. It does not decompose scGPT's or AIDO.Cell's learned table into a protein-like part and a cell-specific part, and it says nothing about what these models do outside this gene-pair task. One protein model at two sizes, and one pooling rule (mean over the final layer), stand in for protein space.",
+    "The unseen-gene cross-line slice holds 78 to 177 held-out perturbations, so it separates the protein-derived tables from scGPT's rather than ranking the arms inside either group."
   ],
   "artifacts": [
     "results/summary/runs.parquet",
@@ -469,6 +947,26 @@
     "src/scfm_pfm/analysis.py",
     "src/scfm_pfm/ingest/recompute_effects.py",
     "src/scfm_pfm/report/figures.py",
-    "src/scfm_pfm/report/build.py"
+    "src/scfm_pfm/report/build.py",
+    "results/provenance/audit.json",
+    "results/provenance/audit_tables.json",
+    "results/protein/gene_to_protein_report.json",
+    "results/protein/esm_embed_report.json",
+    "results/protein/install_report.json",
+    "results/protein/identity.json",
+    "results/protein/gene_to_protein.parquet",
+    "results/summary/protein_reference.parquet",
+    "results/summary/protein_transfer_reference.parquet",
+    "results/summary/ordering_agreement_with_protein.parquet",
+    "src/scfm_pfm/protein/audit.py",
+    "src/scfm_pfm/protein/audit_tables.py",
+    "src/scfm_pfm/protein/uniprot.py",
+    "src/scfm_pfm/protein/esm_embed.py",
+    "src/scfm_pfm/protein/install_arm.py",
+    "src/scfm_pfm/protein/identity.py",
+    "jobs/run_provenance.sh",
+    "jobs/run_protein_embed.sh",
+    "jobs/run_protein_line.sh",
+    "jobs/run_protein_transfer.sh"
   ]
 }

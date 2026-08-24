@@ -449,7 +449,27 @@ def protein_transfer_summary(transfer: pd.DataFrame, reference: pd.DataFrame) ->
     pieces.append(rest.assign(source="main_sweep"))
     d = pd.concat(pieces, ignore_index=True)
     d = d[(d.translator == "mlp") & d.arm.isin(PROTEIN_TRANSFER_ARMS)]
-    out: dict = {"metric": VERDICT_COL, "blocks": {}}
+    groups = {
+        "protein_derived": ("esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb",
+                            "scprint_emb"),
+        "scgpt": ("scgpt_emb",),
+        "coexpression_and_nulls": ("coexp", "null_randgene_d2560", "null_randgene_d5120"),
+    }
+    unseen = d[d.scope == "transfer_unseen"]
+    clearance = {
+        name: "{} of {}".format(
+            int((unseen[unseen.arm.isin(arms)][VERDICT_COL + "_lo"] > 0).sum()),
+            int(unseen.arm.isin(arms).sum()),
+        )
+        for name, arms in groups.items()
+    }
+    out: dict = {"metric": VERDICT_COL, "blocks": {},
+                 "unseen_gene_clearance": clearance,
+                 "unseen_gene_clearance_note": (
+                     "how many (direction x destination-reference choice x arm) cells of the "
+                     "unseen-gene cross-line evaluation have a bootstrap interval clear of "
+                     "zero, per group of arms"
+                 )}
     for (line, scope, split), block in d.groupby(["cell_line", "scope", "split"]):
         out["blocks"][f"{line}|{scope}|{split}"] = [
             {

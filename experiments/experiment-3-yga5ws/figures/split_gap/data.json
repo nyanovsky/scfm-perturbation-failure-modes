@@ -51,6 +51,20 @@
     },
     {
       "cell_line": "hepg2",
+      "arm": "esm2_3b_emb",
+      "entity": "esm2",
+      "grouped": 0.10738655423271576,
+      "random": 0.4820257773850348
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_650m_emb",
+      "entity": "esm2",
+      "grouped": 0.078326551216008,
+      "random": 0.43993385277980385
+    },
+    {
+      "cell_line": "hepg2",
       "arm": "node",
       "entity": "node",
       "grouped": 0.0021702616203332047,
@@ -76,6 +90,13 @@
       "entity": "null",
       "grouped": 0.012313377486208275,
       "random": 0.02781605773433018
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d2560",
+      "entity": "null",
+      "grouped": 0.0068051563391568,
+      "random": 0.02575149122318692
     },
     {
       "cell_line": "hepg2",
@@ -268,6 +289,20 @@
     },
     {
       "cell_line": "jurkat",
+      "arm": "esm2_3b_emb",
+      "entity": "esm2",
+      "grouped": 0.178378884550599,
+      "random": 0.2768106045673171
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_650m_emb",
+      "entity": "esm2",
+      "grouped": 0.15818285213531866,
+      "random": 0.23859263268246844
+    },
+    {
+      "cell_line": "jurkat",
       "arm": "node_pairmlp",
       "entity": "node",
       "grouped": 0.018928220530529012,
@@ -279,6 +314,13 @@
       "entity": "null",
       "grouped": 0.008511022013566866,
       "random": -0.00292291382752594
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d2560",
+      "entity": "null",
+      "grouped": 0.008337391375397489,
+      "random": -0.009484811140612894
     },
     {
       "cell_line": "jurkat",

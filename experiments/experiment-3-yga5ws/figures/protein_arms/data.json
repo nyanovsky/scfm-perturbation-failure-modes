@@ -1,0 +1,203 @@
+{
+  "records": [
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "family": "null",
+      "feature_dim": 5120,
+      "n_perturbations": 705,
+      "centered__weighted__disattenuated": -0.009526331997169254,
+      "centered__weighted__disattenuated_lo": -0.029874901278179003,
+      "centered__weighted__disattenuated_hi": 0.0059881057816376605,
+      "residual__weighted__disattenuated": 0.025441093143015455
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp",
+      "entity": "coexp",
+      "family": "statistical",
+      "feature_dim": 4,
+      "n_perturbations": 524,
+      "centered__weighted__disattenuated": 0.00517619255164999,
+      "centered__weighted__disattenuated_lo": -0.006354608820104509,
+      "centered__weighted__disattenuated_hi": 0.016917808922339926,
+      "residual__weighted__disattenuated": 0.04879340318413257
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "family": "scfm",
+      "feature_dim": 1024,
+      "n_perturbations": 524,
+      "centered__weighted__disattenuated": 0.10887821051526674,
+      "centered__weighted__disattenuated_lo": 0.0790922144775752,
+      "centered__weighted__disattenuated_hi": 0.1417428348371028,
+      "residual__weighted__disattenuated": 0.27186890674361275
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "family": "scfm",
+      "feature_dim": 512,
+      "n_perturbations": 524,
+      "centered__weighted__disattenuated": 0.08459949606608556,
+      "centered__weighted__disattenuated_lo": 0.04630512846563676,
+      "centered__weighted__disattenuated_hi": 0.11713951627170303,
+      "residual__weighted__disattenuated": 0.23945296144747263
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "family": "scfm",
+      "feature_dim": 5120,
+      "n_perturbations": 524,
+      "centered__weighted__disattenuated": 0.0847984206926103,
+      "centered__weighted__disattenuated_lo": 0.048998184971208926,
+      "centered__weighted__disattenuated_hi": 0.10976316089750869,
+      "residual__weighted__disattenuated": 0.21144337936424742
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp",
+      "entity": "coexp",
+      "family": "statistical",
+      "feature_dim": 4,
+      "n_perturbations": 705,
+      "centered__weighted__disattenuated": 0.03363644111375723,
+      "centered__weighted__disattenuated_lo": 0.01679300819737662,
+      "centered__weighted__disattenuated_hi": 0.049287191592748865,
+      "residual__weighted__disattenuated": 0.044622162296810125
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_emb",
+      "entity": "scgpt",
+      "family": "scfm",
+      "feature_dim": 1024,
+      "n_perturbations": 705,
+      "centered__weighted__disattenuated": 0.11257733813165048,
+      "centered__weighted__disattenuated_lo": 0.08836978765918109,
+      "centered__weighted__disattenuated_hi": 0.13579669871152883,
+      "residual__weighted__disattenuated": 0.17327587924554624
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scprint_emb",
+      "entity": "scprint",
+      "family": "scfm",
+      "feature_dim": 512,
+      "n_perturbations": 705,
+      "centered__weighted__disattenuated": 0.15874266972479487,
+      "centered__weighted__disattenuated_lo": 0.12407291383458043,
+      "centered__weighted__disattenuated_hi": 0.18788934501609045,
+      "residual__weighted__disattenuated": 0.2307567853836837
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "transcriptformer_emb",
+      "entity": "transcriptformer",
+      "family": "scfm",
+      "feature_dim": 5120,
+      "n_perturbations": 705,
+      "centered__weighted__disattenuated": 0.17260292953650547,
+      "centered__weighted__disattenuated_lo": 0.13934274496444046,
+      "centered__weighted__disattenuated_hi": 0.20539077506138154,
+      "residual__weighted__disattenuated": 0.23135329957684056
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d5120",
+      "entity": "null",
+      "family": "null",
+      "feature_dim": 5120,
+      "n_perturbations": 524,
+      "centered__weighted__disattenuated": -0.014815905139365971,
+      "centered__weighted__disattenuated_lo": -0.03555722606634811,
+      "centered__weighted__disattenuated_hi": 0.013384465009271741,
+      "residual__weighted__disattenuated": -0.024658697414011745
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d2560",
+      "entity": "null",
+      "family": "null",
+      "feature_dim": 2560,
+      "n_perturbations": 524,
+      "centered__weighted__disattenuated": 0.0068051563391568,
+      "centered__weighted__disattenuated_lo": -0.028224875006817685,
+      "centered__weighted__disattenuated_hi": 0.02896727005321646,
+      "residual__weighted__disattenuated": 0.030191407020425415
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb",
+      "entity": "esm2",
+      "family": "protein",
+      "feature_dim": 5120,
+      "n_perturbations": 524,
+      "centered__weighted__disattenuated": 0.10738655423271576,
+      "centered__weighted__disattenuated_lo": 0.07756382965792867,
+      "centered__weighted__disattenuated_hi": 0.1466785132744193,
+      "residual__weighted__disattenuated": 0.23311142633518622
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_650m_emb",
+      "entity": "esm2",
+      "family": "protein",
+      "feature_dim": 2560,
+      "n_perturbations": 524,
+      "centered__weighted__disattenuated": 0.078326551216008,
+      "centered__weighted__disattenuated_lo": 0.04230108552624035,
+      "centered__weighted__disattenuated_hi": 0.13477071300791377,
+      "residual__weighted__disattenuated": 0.2015369281361112
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d2560",
+      "entity": "null",
+      "family": "null",
+      "feature_dim": 2560,
+      "n_perturbations": 705,
+      "centered__weighted__disattenuated": 0.008337391375397489,
+      "centered__weighted__disattenuated_lo": -0.00839076294532766,
+      "centered__weighted__disattenuated_hi": 0.03732753467402737,
+      "residual__weighted__disattenuated": 0.01731275100031504
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb",
+      "entity": "esm2",
+      "family": "protein",
+      "feature_dim": 5120,
+      "n_perturbations": 705,
+      "centered__weighted__disattenuated": 0.178378884550599,
+      "centered__weighted__disattenuated_lo": 0.15091415561091864,
+      "centered__weighted__disattenuated_hi": 0.21299451227598035,
+      "residual__weighted__disattenuated": 0.2641756814272859
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_650m_emb",
+      "entity": "esm2",
+      "family": "protein",
+      "feature_dim": 2560,
+      "n_perturbations": 705,
+      "centered__weighted__disattenuated": 0.15818285213531866,
+      "centered__weighted__disattenuated_lo": 0.1183910017126994,
+      "centered__weighted__disattenuated_hi": 0.18547396335190042,
+      "residual__weighted__disattenuated": 0.22822119259044
+    }
+  ],
+  "metric": "centered__weighted__disattenuated",
+  "preregistered_metric": "residual__weighted__disattenuated",
+  "translator": "mlp",
+  "null_ceiling": {
+    "hepg2": 0.028601970174156315,
+    "jurkat": 0.020402085523727964
+  }
+}

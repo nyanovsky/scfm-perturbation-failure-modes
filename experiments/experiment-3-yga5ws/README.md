@@ -3,8 +3,17 @@
 One fixed translator maps a **gene-pair feature** to the **residual** (perturbation-specific)
 log2 fold change of a read-out gene under CRISPRi knockdown of a perturbed gene. Only the input
 feature varies across arms. The arms that matter are the four single-cell foundation models'
-response features against plain statistical co-expression computed from the same control cells —
+response features against plain statistical co-expression computed from the same control cells,
 the control the UGRN paper never ran.
+
+**What it found.** The response features add nothing to the model's static gene embedding; the
+embedding is what beats co-expression. Reading the four released checkpoints then shows that three
+of the four gene-identity tables are protein-derived rather than learned from cells, and a table
+built directly from UniProt protein sequence with a public ESM2 checkpoint, run through the same
+translator and folds, matches the best single-cell arm in HepG2 (0.1074 against 0.1089) and beats
+every one of them in Jurkat (0.1784 against 0.1726). On genes never perturbed in the training
+screen, only the protein-derived tables keep a score clear of zero. `manifest.yaml` carries the
+numbers; the published report carries the argument.
 
 ## Layout
 

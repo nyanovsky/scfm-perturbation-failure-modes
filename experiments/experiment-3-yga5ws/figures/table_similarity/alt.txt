@@ -1,0 +1,1 @@
+Two heatmaps, one per cell line, of the rank similarity between every pair of gene tables: the two raw ESM2 tables and the four single-cell models'. The two ESM2 sizes agree strongly, TranscriptFormer and scPRINT keep a clear protein signature, and scGPT and AIDO.Cell sit at the random-table floor.

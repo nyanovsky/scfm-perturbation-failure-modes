@@ -31,6 +31,19 @@ outputs:
       - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/alt_target_ctrl1/"
       - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/alt_target_ctrlall/"
   sensitivity: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/sensitivity/"
+  protein_control:
+    provenance: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/provenance/"
+    tables: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein/"
+    sweep:
+      - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_sweep/hepg2/"
+      - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_sweep/jurkat/"
+      - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_shuffle/hepg2/"
+      - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_shuffle/jurkat/"
+      - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_transfer/"
+    in_job_reference:
+      - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_reference/hepg2/"
+      - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_reference/jurkat/"
+      - "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein_transfer_reference/"
   beeline: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/beeline/beeline_reproduction.json"
   merged_tables: "results/summary/"
   report_contract:
@@ -66,6 +79,10 @@ results:
   transfer_shared_genes: "best arm 0.2896 against a gene-identity null of 0.2517"
   transfer_unseen_genes: "best arm 0.09392 against a gene-identity null of 0.003236 or below; 89 and 78 held-out perturbations"
   common_scope_250: "scGPT, scPRINT and TranscriptFormer clear the null in both lines; AIDO.Cell does not (-0.00055 HepG2, 0.01810 Jurkat against 0.02399 / 0.02646)"
+  gene_table_provenance: "read from the four released checkpoints. TranscriptFormer: 23,830 x 2,560 table whose 23,823 gene rows are bitwise the ESM2 file shipped beside the weights (max abs diff 0.0; the 7 special-token rows differ by 2.98e-08 because they are regenerated from RandomState(42)), loader hard-codes freeze=True. scPRINT: 44,756 x 256, freeze_embeddings false and two Adam moment tensors of exactly that shape in the optimizer state, so it was trained. scGPT: 60,697 x 512 plain nn.Embedding, learned from scratch. AIDO.Cell: 19,266 x 640 position embedding over the fixed gene order, learned from scratch"
+  protein_arm: "gene tables built from UniProt sequence (release 2026_02, 20,431 reviewed human entries; 3,740 of 3,755 genes by Ensembl xref, 15 by symbol, 0 unmapped; 437 proteins chunked past the 1,022-residue context) and embedded with facebook/esm2_t33_650M_UR50D and facebook/esm2_t36_3B_UR50D. Through the identical translator, folds and scoring: esm2_3b_emb 0.1074 [0.07756, 0.1467] in HepG2 and 0.1784 [0.1509, 0.2130] in Jurkat, against a width-matched random-vector null of 0.006805 / 0.008337 and shuffled-label draws reaching at most 0.009831 / 0.01047. Paired, it beats TranscriptFormer in both lines (+0.03656 [0.01053, 0.06718]; +0.02907 [0.00673, 0.05310]), ties scPRINT in both, ties scGPT in HepG2 (+0.02805 [-0.00251, 0.06256]) and beats it in Jurkat (+0.04740 [0.02034, 0.07837]). All 8 within-line and 36 cross-line arms the protein jobs re-ran reproduce the main sweep to 0.0"
+  protein_unseen_gene_transfer: "over the two directions and three destination-reference choices, the four protein-derived tables clear zero in 22 of 24 cells; scGPT in 0 of 6, co-expression and the two random-vector nulls in 0 of 18"
+  gene_table_similarity: "Spearman correlation of gene-gene cosine-similarity orderings over 1,500 genes (random-table floor |r| <= 0.002116, HepG2): ESM2-3B vs ESM2-650M 0.8506, TranscriptFormer vs ESM2-3B 0.3960, scGPT vs scPRINT 0.3037, scPRINT vs ESM2-650M 0.2727, scGPT vs ESM2-3B -0.01579, AIDO.Cell vs ESM2-3B -0.00052"
   control_cell_overlap: "plain co-expression arms move by at most 0.02397 between shared and disjoint control halves; embedding arms move by up to 0.01915"
 slurm_jobs: []
 on_demand_jobs:
@@ -75,3 +92,7 @@ on_demand_jobs:
   sensitivity: ["310778967349", "344694057936 (per-query no-op correction; supersedes 310778967349 for the individual-cells arms)"]
   beeline: ["795184437273", "428360524347"]
   control_cell_overlap: ["917782461666", "720458530319", "396121807697", "334831674029"]
+  protein_control:
+    provenance: ["391747958086", "399122967338", "841371604291"]
+    embed: ["553545671449 (failed at install; the two tables it wrote were kept)", "712311436389 (install, table similarity, smoke)"]
+    sweep: ["134134095027 (hepg2)", "732924457758 (jurkat)", "854171615546 (transfer)"]

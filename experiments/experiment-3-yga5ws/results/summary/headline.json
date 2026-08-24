@@ -10292,6 +10292,12 @@
           "n_perturbations": 156
         }
       ]
-    }
+    },
+    "unseen_gene_clearance": {
+      "protein_derived": "22 of 24",
+      "scgpt": "0 of 6",
+      "coexpression_and_nulls": "0 of 18"
+    },
+    "unseen_gene_clearance_note": "how many (direction x destination-reference choice x arm) cells of the unseen-gene cross-line evaluation have a bootstrap interval clear of zero, per group of arms"
   }
 }

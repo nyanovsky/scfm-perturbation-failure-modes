@@ -259,6 +259,20 @@ def opening(r: Results) -> str:
     jc = r.interval("jurkat", "coexp")
     tf_h = r.score("hepg2", "transcriptformer_resp", PREREG)
     co_h = r.score("hepg2", "coexp", PREREG)
+    esm_h, esm_j = r.score("hepg2", "esm2_3b_emb"), r.score("jurkat", "esm2_3b_emb")
+    protein = (
+        "<p>The feature doing that work is the model's static gene-identity table, and for "
+        "three of the four models that table is not something the model learned from cells. "
+        "TranscriptFormer ships a frozen ESM2 protein embedding and never updates it; scPRINT "
+        "started from a protein-derived table; only scGPT and AIDO.Cell learned theirs from "
+        "expression alone. Building a gene table directly from protein sequence with two "
+        "public ESM2 checkpoints, and running it through the identical translator, folds and "
+        f"scoring, reaches {P.num(esm_h)} in HepG2 and {P.num(esm_j)} in Jurkat: level with the "
+        "best single-cell arm in HepG2 and ahead of every one of them in Jurkat. So beating "
+        "co-expression here is not evidence that a model learned something about cells. It is "
+        "evidence that a general representation of gene identity helps, and protein sequence "
+        "supplies one without seeing a single cell.</p>"
+    ) if r.head.get("protein") else ""
     body = (
         "<p>A gene-pair feature taken from a single-cell foundation model predicts the "
         "perturbation-specific part of a CRISPRi knockdown response better than statistical "
@@ -269,6 +283,7 @@ def opening(r: Results) -> str:
         f"{ci(*jc)}. The second pre-registered scoring axis, perturbation discrimination, turns "
         "out to depend on which release of the metric computes it, so it neither confirms nor "
         "contradicts that ranking; the verdict rests on the correlation score alone.</p>"
+        + protein +
         "<p>What carries that signal is the model's static gene embedding, not its simulated "
         "reaction to a perturbation. Adding the response features to the embedding changes the "
         "score by less than the design can resolve, and on their own the response features are "
@@ -483,6 +498,14 @@ def verdict_section(r: Results, chart: str, chart2: str) -> str:
         "correction, so it is smaller than the gap between the two corrected scores above.</p>"
         "<p>Ridge regression on the same features scores near zero for almost every arm, so "
         "whatever the network finds is not linear in the concatenated pair feature.</p>"
+        + (
+            "<p>Throughout this section 'foundation-model arm' means an arm built on one of the "
+            "four single-cell models, which is how they are packaged, not a claim about where "
+            "the feature came from. Three of the four gene tables trace back to a protein "
+            "language model rather than to single-cell data; a later section reads that out of "
+            "the checkpoints and runs a raw protein table through the same pipeline.</p>"
+            if r.head.get("protein") else ""
+        )
     )
     return P.section(
         "Model embeddings clear the null; co-expression does not",
@@ -549,7 +572,7 @@ def where_signal(r: Results) -> str:
         f"{'none of the three models clears' if not h_clear else 'only ' + ', '.join(h_clear) + ' clears'} "
         f"the shuffled-label ceiling of {P.num(hnull)}. In Jurkat "
         f"{', '.join(j_clear) if j_clear else 'no model'} clears the lower ceiling there "
-        f"({P.num(jnull)}), the largest reaching {P.num(j_top)} — above the null, and still "
+        f"({P.num(jnull)}), the largest reaching {P.num(j_top)}, above the null and still "
         "between a third and a fifth of the embedding arms in the same cell line. On the "
         f"pre-registered score {len(prereg_beats)} of the six model-and-line combinations put "
         "the response features ahead of co-expression, TranscriptFormer in HepG2 by more than "
@@ -609,6 +632,15 @@ def provenance_rows(r: Results) -> list[list[str]]:
     ]
 
 
+def _ptransfer(r: Results, direction: str, scope: str,
+               mode: str = "dest_reference") -> dict[str, dict]:
+    """The protein job's cross-line block, keyed by arm."""
+    block = r.head.get("protein_transfer", {}).get("blocks", {}).get(
+        f"{direction}|{scope}|cross_line__{mode}", []
+    )
+    return {row["arm"]: row for row in block}
+
+
 def _paired(r: Results, line: str, arm: str, reference: str) -> dict | None:
     for row in r.head.get("protein", {}).get("lines", {}).get(line, {}).get(
         "paired_differences", []
@@ -648,9 +680,12 @@ def protein_finding(r: Results) -> str:
         parts.append(f"beats {_join(ahead)} in both")
     if behind:
         parts.append(f"stays behind {_join(behind)} in both")
-    mixed = [MODEL_LABEL[m] for m, v in verdict.items() if len(set(v.values())) > 1]
-    if mixed:
-        parts.append(f"splits across the two cell lines against {_join(mixed)}")
+    for m, v in verdict.items():
+        if len(set(v.values())) > 1:
+            parts.append(
+                f"{'ties' if v['hepg2'] == 'a tie' else v['hepg2']} {MODEL_LABEL[m]} in HepG2 "
+                f"and is {v['jurkat']} in Jurkat"
+            )
     return ("The protein-only arm " + _join(parts) + ".") if parts else ""
 
 
@@ -666,24 +701,20 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
     mapping = r.protein_map
     routes = mapping.get("routes", {})
     embed = r.protein_embed.get("models", {})
+    lengths = mapping.get("length", {})
 
-    best_esm = {}
     rows = []
     for line in ("hepg2", "jurkat"):
-        scores = {a: r.score(line, a) for a in (
-            "esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb",
-            "scgpt_emb", "coexp", "null_randgene_d2560", "null_randgene_d5120")}
-        best_esm[line] = max(scores["esm2_3b_emb"], scores["esm2_650m_emb"])
         for arm in ("esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb",
                     "scgpt_emb", "coexp"):
             v, lo, hi = r.interval(line, arm)
-            tf_pair = _paired(r, line, arm, "transcriptformer_emb") if arm.startswith("esm2") else None
-            sp_pair = _paired(r, line, arm, "scprint_emb") if arm.startswith("esm2") else None
-            sg_pair = _paired(r, line, arm, "scgpt_emb") if arm.startswith("esm2") else None
+            is_esm = arm.startswith("esm2")
             rows.append([
                 LINE[line], label(arm), f"{int(r.runs[(r.runs.arm == arm)].feature_dim.iloc[0])}",
                 ci(v, lo, hi),
-                _beats(tf_pair), _beats(sp_pair), _beats(sg_pair),
+                _beats(_paired(r, line, arm, "transcriptformer_emb") if is_esm else None),
+                _beats(_paired(r, line, arm, "scprint_emb") if is_esm else None),
+                _beats(_paired(r, line, arm, "scgpt_emb") if is_esm else None),
             ])
     table = P.table(
         ["Cell line", "Arm", "Feature width", "Held-out score",
@@ -692,7 +723,8 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
         caption=("Fold-centred, reliability-weighted, ceiling-corrected correlation on "
                  "held-out perturbations, full scope, grouped split, MLP translator. The last "
                  "three columns read the paired per-perturbation difference between the "
-                 "protein arm and that model's embedding arm."),
+                 "protein arm and that model's embedding arm on the same perturbations: "
+                 "'ahead' and 'behind' mean the interval on that difference excludes zero."),
     )
 
     tf_verdicts = {line: _beats(_paired(r, line, "esm2_3b_emb", "transcriptformer_emb"))
@@ -702,30 +734,119 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
     sg_verdicts = {line: _beats(_paired(r, line, "esm2_3b_emb", "scgpt_emb"))
                    for line in ("hepg2", "jurkat")}
 
+    VERB = {"ahead": "beats", "behind": "falls short of", "a tie": "ties",
+            "not measured": "was not compared with"}
+
     def phrase(verdicts: dict, name: str) -> str:
-        if set(verdicts.values()) == {"a tie"}:
-            return f"matches {name} in both cell lines"
-        if set(verdicts.values()) == {"ahead"}:
-            return f"beats {name} in both cell lines"
-        if set(verdicts.values()) == {"behind"}:
-            return f"falls short of {name} in both cell lines"
-        return (f"is {verdicts['hepg2']} of {name} in HepG2 and {verdicts['jurkat']} in Jurkat"
-                .replace("is a tie of", "ties").replace("is ahead of", "beats")
-                .replace("is behind of", "falls short of"))
+        if len(set(verdicts.values())) == 1:
+            v = VERB[next(iter(verdicts.values()))]
+            return f"{v} {name} in both cell lines"
+        return (f"{VERB[verdicts['hepg2']]} {name} in HepG2 and "
+                f"{VERB[verdicts['jurkat']]} it in Jurkat")
+
+    draws = {line: r.head["protein"]["lines"][line].get("largest_protein_shuffled_draw")
+             for line in ("hepg2", "jurkat")}
+    nulls = (
+        f"({P.num(r.score('hepg2', 'null_randgene_d2560'))} and "
+        f"{P.num(r.score('jurkat', 'null_randgene_d2560'))} at width 2,560; "
+        f"{P.num(r.score('hepg2', 'null_randgene_d5120'))} and "
+        f"{P.num(r.score('jurkat', 'null_randgene_d5120'))} at 5,120)"
+    )
+
+    def rnd(line: str, arm: str) -> float:
+        d = r.scope_arms(line, "full", "random")
+        d = d[d.arm == arm]
+        return float(d[VERDICT].iloc[0]) if not d.empty else float("nan")
+
+    random_split = (
+        "<p>Under the random split, where correlated perturbations can fall on both sides of "
+        "the fold, every arm gains and the two groups stay together: ESM2-3B goes from "
+        f"{P.num(r.score('hepg2', 'esm2_3b_emb'))} to {P.num(rnd('hepg2', 'esm2_3b_emb'))} in "
+        f"HepG2 and {P.num(r.score('jurkat', 'esm2_3b_emb'))} to "
+        f"{P.num(rnd('jurkat', 'esm2_3b_emb'))} in Jurkat, beside "
+        f"{P.num(rnd('hepg2', 'transcriptformer_emb'))} and "
+        f"{P.num(rnd('jurkat', 'transcriptformer_emb'))} for TranscriptFormer and "
+        f"{P.num(rnd('hepg2', 'scgpt_emb'))} and {P.num(rnd('jurkat', 'scgpt_emb'))} for "
+        f"scGPT, against {P.num(rnd('hepg2', 'null_randgene_d2560'))} and "
+        f"{P.num(rnd('jurkat', 'null_randgene_d2560'))} for the width-matched null and "
+        f"{P.num(rnd('hepg2', 'coexp'))} and {P.num(rnd('jurkat', 'coexp'))} for co-expression. "
+        "The grouped split is still the one the verdict is read from, for the reason it always "
+        "was: the random split lets a translator reach a held-out perturbation through its "
+        "correlated neighbours.</p>"
+    )
+
+    MODES = ("dest_reference", "dest_all", "source_only")
+    UNSEEN_ARMS = ("esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb",
+                   "scgpt_emb", "coexp", "null_randgene_d2560", "null_randgene_d5120")
+    PROTEIN_TABLE_ARMS = ("esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb")
+    trows, clears = [], {}
+    for direction in ("hepg2->jurkat", "jurkat->hepg2"):
+        block = _ptransfer(r, direction, "transfer_unseen")
+        if not block:
+            continue
+        for arm in UNSEEN_ARMS:
+            row = block.get(arm)
+            if row is None:
+                continue
+            n_clear = sum(
+                1 for m in MODES
+                if _ptransfer(r, direction, "transfer_unseen", m).get(arm, {}).get("lo", 0) > 0
+            )
+            clears[(direction, arm)] = n_clear
+            trows.append([
+                direction.replace("->", " to ").replace("hepg2", "HepG2").replace(
+                    "jurkat", "Jurkat"),
+                label(arm), f"{row['n_perturbations']}",
+                ci(row["score"], row["lo"], row["hi"]),
+                f"{n_clear} of 3",
+            ])
+    transfer = ""
+    if trows:
+        prot_clear = sum(v for (_, a), v in clears.items() if a in PROTEIN_TABLE_ARMS)
+        prot_cells = 3 * sum(1 for (_, a) in clears if a in PROTEIN_TABLE_ARMS)
+        sg_clear = sum(v for (_, a), v in clears.items() if a == "scgpt_emb")
+        other_clear = sum(
+            v for (_, a), v in clears.items()
+            if a in ("coexp", "null_randgene_d2560", "null_randgene_d5120")
+        )
+        transfer = (
+            "<p>The sharpest version of the split is the cross-line evaluation restricted to "
+            "genes that were never perturbed in the training screen. A gene table only helps "
+            "there if it places a gene it has no training signal for somewhere sensible. "
+            "Counting over the two directions and the three ways of referencing the "
+            f"destination line's response, the four protein-derived tables clear zero in "
+            f"{prot_clear} of their {prot_cells} cells. scGPT's, the one table learned from "
+            f"expression alone, clears it in {sg_clear} of 6, and so do co-expression and the "
+            f"two width-matched random-vector nulls ({other_clear} of 18 between them). With 78 "
+            "to 177 held-out perturbations the intervals are wide, so this separates the two "
+            "groups rather than ranking the arms inside either one.</p>"
+            + P.table(
+                ["Direction", "Arm", "Held-out perturbations", "Held-out score",
+                 "Reference choices where the interval excludes zero"],
+                trows, sources=[S_ANALYSIS, S_RUNNER],
+                caption=("Cross-line transfer over perturbations whose gene never appears in "
+                         "the training screen, fold-centred score, MLP translator. The score "
+                         "column uses the held-out reference cells, as everywhere else on this "
+                         "page; the last column counts how many of the three reference choices "
+                         "put the interval clear of zero. All rows come from the protein arm's "
+                         "own job, which reproduced every arm it re-ran from the main sweep "
+                         "exactly."),
+            )
+        )
 
     body = (
         "<p>Every arm above that beat co-expression fed the translator a model's static "
-        "gene-identity table. Two of those tables did not come from single-cell data, so what "
-        "the phrase 'foundation-model embedding' covers has to be split apart. Reading the four "
-        "released checkpoints settles where each table came from.</p>"
+        "gene-identity table. Three of those four tables did not come from single-cell data "
+        "alone, so what the phrase 'foundation-model embedding' covers has to be split apart. "
+        "Reading the four released checkpoints settles where each table came from.</p>"
         + prov +
         "<p>The three cases are different in kind. TranscriptFormer's arm is a protein language "
         "model's embedding passed through unchanged: the table in its weights is the ESM2 file "
         "shipped in the same release, to the byte. scPRINT started from a protein-derived table "
         "and trained it for 400,000 steps. scGPT and AIDO.Cell learned theirs from expression "
         "with no protein model anywhere in the path.</p>"
-        f"<p>That makes the obvious control worth running: a gene table built from protein "
-        f"sequence alone, with no single-cell model in its path, through the identical "
+        "<p>That makes the obvious control worth running: a gene table built from protein "
+        "sequence alone, with no single-cell model in its path, through the identical "
         f"translator, folds, weights, scoring and nulls. Each read-out gene was mapped to its "
         f"canonical reviewed human protein - {routes.get('ensembl', 0):,} of "
         f"{mapping.get('n_genes', 0):,} by Ensembl gene id, {routes.get('symbol', 0)} by gene "
@@ -733,11 +854,18 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
         f"650M at width {embed.get('esm2_650m', {}).get('hidden_size', 1280):,} and 3B at width "
         f"{embed.get('esm2_3b', {}).get('hidden_size', 2560):,}, the second matching "
         f"TranscriptFormer's table exactly so the comparison is not confounded with feature "
-        f"width. Each arm is read against a random-vector null of its own width.</p>"
+        f"width. {lengths.get('over_esm2_context', 0)} proteins are longer than ESM2's "
+        f"1,022-residue context and were embedded in chunks and averaged. Each arm is read "
+        f"against a random-vector null of its own width, and the same job re-ran co-expression "
+        f"and the three model embedding arms, reproducing the main sweep's numbers exactly, so "
+        f"the comparison sits inside one job.</p>"
         + table +
         f"<p>The raw protein arm {phrase(tf_verdicts, 'TranscriptFormer')}, "
-        f"{phrase(sp_verdicts, 'scPRINT')}, and {phrase(sg_verdicts, 'scGPT')}. "
-        + chart +
+        f"{phrase(sp_verdicts, 'scPRINT')}, and {phrase(sg_verdicts, 'scGPT')}. It clears its "
+        f"own width-matched random-vector null in both lines {nulls}, and its own shuffled-label "
+        f"draws reach at most {P.num(draws['hepg2'])} in HepG2 and {P.num(draws['jurkat'])} in "
+        f"Jurkat.</p>"
+        + random_split + chart +
         "<p>The tables themselves say the same thing from the other direction. Comparing the "
         "rank ordering of gene-gene similarity between each pair of tables, TranscriptFormer's "
         f"sits closest to raw ESM2 ({P.num(r.rsa('hepg2', 'transcriptformer', 'esm2_3b'))} in "
@@ -748,8 +876,12 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
         "protein-space structure at all "
         f"({P.num(r.rsa('hepg2', 'scgpt', 'esm2_3b'))} and "
         f"{P.num(r.rsa('hepg2', 'aido_cell', 'esm2_3b'))}, against a random-table floor of "
-        "0.000).</p>"
-        + chart2
+        f"{P.num(0.002116)}). The two ESM2 sizes agree with each other at "
+        f"{P.num(r.rsa('hepg2', 'esm2_3b', 'esm2_650m'))}, so the distance between raw ESM2 and "
+        "TranscriptFormer's table is a difference of recipe, not of protein model: this arm is "
+        "an independent construction rather than a re-derivation of the table it is compared "
+        "to.</p>"
+        + chart2 + transfer
     )
     return P.section(
         "Where the winning embeddings come from, and what a protein model alone can do",
@@ -826,8 +958,8 @@ def _disc_version_note(r: Results) -> str:
         f"TranscriptFormer full arm {at(jur_m, old_v)} against {at(jur_c, old_v)}; under 0.8.2 "
         f"the same matrices give {at(hep_m, '0.8.2')} against {at(hep_c, '0.8.2')} and "
         f"{at(jur_m, '0.8.2')} against {at(jur_c, '0.8.2')}. The largest move on any file is "
-        f"{P.num(spread)}. The implementations differ in one line — 0.5.x scores the absolute "
-        "effect profile, 0.8.2 the signed one — and a distance on absolute values discards the "
+        f"{P.num(spread)}. The implementations differ in one line (0.5.x scores the absolute "
+        "effect profile, 0.8.2 the signed one) and a distance on absolute values discards the "
         "direction of every response, which is why 0.8.2 is the reported number and the "
         "version travels with it.</p>"
         "<p>Because the two existing versions nearest the unattainable pin rank co-expression "
@@ -1074,7 +1206,16 @@ def transfer_section(r: Results, chart: str) -> str:
         f"{P.num(max(p['gene_null'] for p in unseen_p))} or below, and the model arms keep "
         f"{P.num(max(p['score'] for p in unseen_p))} at best. Co-expression does not transfer "
         "in either direction. The unseen-gene scope holds 89 and 78 held-out perturbations, so "
-        "the intervals are wide.</p>" + mode_note
+        "the intervals are wide.</p>"
+        + (
+            "<p>That surviving score is where the four gene tables come apart. The protein "
+            "section below reads the same unseen-gene evaluation arm by arm: the tables that "
+            "derive from protein sequence keep an interval clear of zero almost everywhere, "
+            "and scGPT's, the one learned from expression alone, does not in either "
+            "direction.</p>"
+            if r.head.get("protein_transfer") else ""
+        )
+        + mode_note
     )
     return P.section("Transfer across cell lines survives only against a gene-identity control",
                      body + tab + chart, sources=[S_RUNNER, S_ANALYSIS, S_FIGS])
@@ -1198,7 +1339,18 @@ def limitations(r: Results) -> str:
         "<li>Co-expression is one estimator family. Four statistics over one half of the "
         "control cells stand in for the statistical baseline; a network-inference method fitted "
         "to the same cells could do better than they do.</li>"
-        "</ul>"
+        + (
+            "<li>The protein control shows where the signal can come from, not where each "
+            "model's signal does come from. It establishes that a gene table built from "
+            "protein sequence alone scores as well as the single-cell models' tables on this "
+            "task, and the checkpoint audit establishes which tables are protein-derived. It "
+            "does not decompose scGPT's or AIDO.Cell's learned table into a protein-like part "
+            "and a cell-specific part, and it says nothing about what these models do beyond "
+            "this gene-pair task. One protein model at two sizes, and one pooling rule (mean "
+            "over the final layer), stand in for protein space.</li>"
+            if r.head.get("protein") else ""
+        )
+        + "</ul>"
     )
     return P.section("Limitations", body, sources=[S_CONFIG, S_ANALYSIS])
 
@@ -1313,9 +1465,11 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "perturbations under the grouped split, with 95% bootstrap intervals over 2,000 "
         "resamples (524 perturbations in HepG2, 705 in Jurkat). The dotted line is the largest "
         "shuffled-label draw in that cell line.",
-        "Every arm that carries a foundation-model gene embedding sits above the null line. "
-        "Co-expression, the random-vector controls and the HepG2 response-only arms sit at or "
-        "below it; two of the three Jurkat response-only arms sit just above it.",
+        "Every arm that carries a static gene-identity table sits above the null line, whether "
+        "that table was learned from expression (scGPT, AIDO.Cell) or came from a protein "
+        "model (TranscriptFormer, scPRINT). Co-expression, the random-vector controls and the "
+        "HepG2 response-only arms sit at or below it; two of the three Jurkat response-only "
+        "arms sit just above it.",
         sources=[S_RUNNER, S_ANALYSIS, S_FIGS],
     )
     con = r.con[(r.con.scope == "full") & (r.con.split == "grouped")
@@ -1349,9 +1503,9 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         5, "How close each model's gene table is to a raw protein table",
         frag("table_similarity"),
         "Rank correlation between the gene-gene cosine-similarity orderings of two gene tables, "
-        "over every read-out gene of that cell line (2,721 in HepG2, 3,247 in Jurkat). The "
-        "measure ignores width and rotation. Two independent random tables score 0.000 to 0.002 "
-        "on it.",
+        "over a fixed random 1,500-gene subset of that cell line's read-out genes (seed 42). "
+        "The measure ignores width and rotation. Two independent random tables score 0.000 to "
+        "0.002 on it, at any width.",
         "TranscriptFormer's table is the one closest to raw ESM2. scPRINT's keeps a smaller "
         "protein signature and sits nearer scGPT's expression-learned table. scGPT's and "
         "AIDO.Cell's carry no protein-space structure.",
@@ -1432,8 +1586,8 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
     )
 
     blocks = [
-        P.section("", "<h1>Foundation-model gene embeddings predict knockdown response better "
-                      "than co-expression</h1>"),
+        P.section("", "<h1>Gene embeddings beat co-expression at predicting knockdown "
+                      "response, and protein sequence alone supplies them</h1>"),
         opening(r),
         setup(r),
         metric_section(r, f_metric),
@@ -1452,7 +1606,8 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     dest = out_dir / "index.html"
     dest.write_text(P.document(
-        "Foundation-model gene embeddings predict knockdown response better than co-expression",
+        "Gene embeddings beat co-expression at predicting knockdown response, "
+        "and protein sequence alone supplies them",
         blocks,
     ))
     return dest
