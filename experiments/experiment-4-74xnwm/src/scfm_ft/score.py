@@ -362,6 +362,10 @@ def score_bundle(
         for b in names["shuffle_bases"]
         for d in range(C3.N_SHUFFLE_DRAWS)
     )
+    # run 3 already builds a shuffled null for the arms in its own list, so
+    # asking for those again would score the same arm twice and give the
+    # aggregation two rows per perturbation
+    extra = tuple(b for b in names["shuffle_bases"] if b not in tuple(C3.SHUFFLE_NULL_ARMS))
 
     def always(_key) -> bool:
         return True
@@ -375,12 +379,19 @@ def score_bundle(
         bundle, C.SCOPE, C.SPLIT, always, Path(out_dir), 0, 1,
         translators=("mlp",), with_cell_eval=False, shuffle_null=True,
         only_arms=shuffled, save_predictions=False,
-        extra_shuffle_arms=tuple(names["shuffle_bases"]),
+        extra_shuffle_arms=extra,
     )
     records += rec2
     tables += tab2
     per_pert = pd.concat(tables, ignore_index=True)
     per_pert["fold"] = per_pert["fold"].astype(np.int64)
+    n_rows = int(rows.size)
+    counts = per_pert.groupby(["arm", "translator"], sort=True).size()
+    bad = counts[counts != n_rows]
+    if len(bad):
+        raise RuntimeError(
+            f"an arm was scored more than once: {bad.to_dict()} against {n_rows} perturbations"
+        )
 
     restricted, contrasts = [], []
     for (arm, translator), grp in per_pert.groupby(["arm", "translator"], sort=True):

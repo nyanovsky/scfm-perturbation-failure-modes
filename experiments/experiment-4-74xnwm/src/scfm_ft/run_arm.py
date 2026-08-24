@@ -250,8 +250,9 @@ def main(argv: list[str] | None = None) -> int:
 
     history = trainmod.finetune(model, cells, targets["effect"], out_dir)
     print(
-        f"training done in {history['total_seconds']}s; best epoch {history['best_epoch']} "
-        f"at val pearson {history['best_val_pearson']:.4f}",
+        f"training done in {history['total_seconds']}s; selected epoch {history['best_epoch']} "
+        f"at validation loss {history['best_val_loss']:.4f}; response agreement at that epoch "
+        f"{json.dumps(history['best_val_delta_pearson'])}",
         flush=True,
     )
 
@@ -279,7 +280,9 @@ def main(argv: list[str] | None = None) -> int:
             {
                 "history": history["history"],
                 "best_epoch": history["best_epoch"],
-                "best_val_pearson": history["best_val_pearson"],
+                "best_val_loss": history["best_val_loss"],
+                "selection_rule": history["selection_rule"],
+                "best_val_delta_pearson": history["best_val_delta_pearson"],
                 "total_seconds": history["total_seconds"],
                 "gene_subsampling": history["gene_subsampling"],
             },
@@ -346,10 +349,14 @@ def main(argv: list[str] | None = None) -> int:
 
     # ---- the model's own prediction, with no translator ------------------ #
     all_rows = np.arange(targets["pert_target"].size)
-    direct = trainmod.predict_delta(model, cells, all_rows, 32, amp=False)
+    flagged, unflagged = trainmod.predict_profiles(model, cells, all_rows, 32, amp=False)
+    direct = flagged - unflagged[None, :]
     np.savez_compressed(
         out_dir / "direct_prediction.npz",
         delta=direct.astype(np.float32),
+        flagged=flagged.astype(np.float32),
+        unflagged=unflagged.astype(np.float32),
+        control_mean_log1p=cells.x_ctrl.mean(dim=0).float().cpu().numpy(),
         pert_target=targets["pert_target"],
         gene_id=targets["readout_gene_id"],
         fold=folds["fold"],

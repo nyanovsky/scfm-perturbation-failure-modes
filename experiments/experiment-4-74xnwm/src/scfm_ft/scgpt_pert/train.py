@@ -1,10 +1,13 @@
 """scGPT's perturbation fine-tuning loop, as published.
 
-Optimizer, schedule, loss, gradient clipping, mixed precision, epoch count and
-early stopping are the tutorial's. The validation quantity is the one the
-tutorial selects on -- agreement between the predicted and measured
-perturbation response -- computed here against the same effect matrix run 3
-scores, over validation perturbations drawn from the fine-tuning folds only.
+Optimizer, schedule, loss, gradient clipping, mixed precision, epoch count,
+early stopping and the checkpoint selection rule are the tutorial's: it selects
+the epoch with the lowest masked-MSE on held-out validation cells. The
+agreement between the predicted and the measured perturbation response is
+recorded every epoch as well, in the four forms below, but it is a diagnostic
+here and not the selection rule -- two of those forms depend on a query the
+fine-tuning objective never trains (the model with no perturbation flag), and
+selecting on one of them picks a near-untrained epoch.
 """
 
 from __future__ import annotations
@@ -30,7 +33,7 @@ def masked_mse_loss(pred: torch.Tensor, target: torch.Tensor, mask: torch.Tensor
 
 
 @torch.no_grad()
-def predict_delta(
+def predict_profiles(
     model,
     cells: LineCells,
     pert_rows: np.ndarray,
@@ -38,17 +41,17 @@ def predict_delta(
     amp: bool = False,
     batch_cells: int = 8,
     seed: int = C.SEED,
-) -> np.ndarray:
-    """Predicted perturbation response for each perturbation, over all genes.
+) -> tuple[np.ndarray, np.ndarray]:
+    """What the model outputs for each perturbation, and for no perturbation.
 
-    The model's own query: the same control inputs are run with the
-    perturbation flag set and with no flag, and the difference is averaged over
-    the control cells. Returns (len(pert_rows), n_genes) on the log1p scale the
-    model predicts in.
+    The same control cells are pushed through with the perturbation flag set
+    and with no flag at all. Returns the flagged output averaged over those
+    control cells, one row per perturbation, and the unflagged output averaged
+    the same way, both on the log1p scale the model predicts in.
 
-    Full precision by default even though the training step uses autocast: this
-    is a difference between two nearly equal forward passes, and half precision
-    cannot represent it.
+    Full precision by default even though the training step uses autocast: the
+    quantities built from these are differences between two nearly equal
+    forward passes, and half precision cannot represent them.
     """
     model.eval()
     g = torch.Generator(device="cpu").manual_seed(seed)
@@ -70,7 +73,7 @@ def predict_delta(
                 src.expand(b, -1), v, zero.expand(b, -1), src_key_padding_mask=pad
             )["mlm_output"].double()
 
-    out = np.zeros((len(pert_rows), G), dtype=np.float64)
+    flagged = np.zeros((len(pert_rows), G), dtype=np.float64)
     for k, p in enumerate(pert_rows):
         col = int(cells.self_col[int(p)])
         flags = torch.zeros(1, G, dtype=torch.long, device=cells.device)
@@ -84,36 +87,100 @@ def predict_delta(
                 acc[s : s + b] = model(
                     src.expand(b, -1), v, flags.expand(b, -1), src_key_padding_mask=pad
                 )["mlm_output"].double()
-        out[k] = (acc - base).mean(dim=0).cpu().numpy()
-    return out
+        flagged[k] = acc.mean(dim=0).cpu().numpy()
+    return flagged, base.mean(dim=0).cpu().numpy()
 
 
-def validation_score(
-    model, cells: LineCells, effect: np.ndarray, rows: np.ndarray, n_control: int, amp: bool = False
-) -> dict:
-    """Mean per-perturbation Pearson between predicted and measured response.
+def predict_delta(
+    model,
+    cells: LineCells,
+    pert_rows: np.ndarray,
+    n_control: int,
+    amp: bool = False,
+    batch_cells: int = 8,
+    seed: int = C.SEED,
+) -> np.ndarray:
+    """The model's own perturbation query: flagged output minus unflagged."""
+    flagged, base = predict_profiles(model, cells, pert_rows, n_control, amp, batch_cells, seed)
+    return flagged - base[None, :]
 
-    The perturbed gene's own column is excluded, as it is in every scored
-    quantity in run 3: the knockdown of a gene on itself is the assay working,
-    not a prediction of the response.
+
+def _row_pearson(pred: np.ndarray, meas: np.ndarray, self_cols: np.ndarray) -> dict:
+    """Per-perturbation Pearson across genes, the perturbed gene's own column out.
+
+    That column is excluded here as it is in every scored quantity in run 3:
+    the knockdown of a gene on itself is the assay working, not a prediction of
+    the response.
     """
-    pred = predict_delta(model, cells, rows, n_control, amp)
-    self_cols = cells.self_col.cpu().numpy()
     rs = []
-    for k, p in enumerate(rows):
-        keep = np.ones(effect.shape[1], dtype=bool)
-        keep[int(self_cols[int(p)])] = False
-        a = pred[k][keep].astype(np.float64)
-        b = effect[int(p)][keep].astype(np.float64)
+    for k in range(pred.shape[0]):
+        keep = np.ones(pred.shape[1], dtype=bool)
+        keep[int(self_cols[k])] = False
+        a, b = pred[k][keep].astype(np.float64), meas[k][keep].astype(np.float64)
         if np.std(a) <= 0 or np.std(b) <= 0:
             continue
         rs.append(float(np.corrcoef(a, b)[0, 1]))
     arr = np.asarray(rs, dtype=np.float64)
     return {
-        "pearson": float(np.mean(arr)) if arr.size else float("nan"),
-        "pearson_median": float(np.median(arr)) if arr.size else float("nan"),
-        "n_perturbations": int(arr.size),
+        "mean": float(np.mean(arr)) if arr.size else float("nan"),
+        "median": float(np.median(arr)) if arr.size else float("nan"),
+        "n": int(arr.size),
     }
+
+
+def validation_score(
+    model, cells: LineCells, effect: np.ndarray, rows: np.ndarray, n_control: int, amp: bool = False
+) -> dict:
+    """Predicted against measured response on the validation perturbations.
+
+    Four numbers, because the choice of baseline is not innocent. The model is
+    only ever trained with a perturbation flag on, so its unflagged output is
+    an untrained query; the published evaluation instead reads the response
+    against the measured control mean. Both baselines are reported, each once
+    as it stands and once after removing the mean predicted and the mean
+    measured response over these perturbations, which is the part that is
+    specific to the perturbation rather than shared by all of them.
+    """
+    if rows.size == 0:
+        return {}
+    flagged, base = predict_profiles(model, cells, rows, n_control, amp)
+    ctrl_mean = cells.x_ctrl.mean(dim=0).double().cpu().numpy()
+    meas = effect[np.asarray(rows, dtype=np.int64)].astype(np.float64)
+    self_cols = cells.self_col.cpu().numpy()[np.asarray(rows, dtype=np.int64)]
+    out = {}
+    for name, pred in (
+        ("selfquery", flagged - base[None, :]),
+        ("ctrlmean", flagged - ctrl_mean[None, :]),
+    ):
+        out[name] = _row_pearson(pred, meas, self_cols)
+        out[f"{name}_centered"] = _row_pearson(
+            pred - pred.mean(axis=0, keepdims=True),
+            meas - meas.mean(axis=0, keepdims=True),
+            self_cols,
+        )
+    return out
+
+
+@torch.no_grad()
+def validation_loss(model, cells: LineCells, rows: torch.Tensor, seed: int) -> dict:
+    """The tutorial's selection quantity: masked MSE on held-out cells.
+
+    Re-seeded on every call, so the same control inputs and the same sampled
+    gene positions are used at every epoch and the epochs are comparable.
+    """
+    model.eval()
+    R = C.RECIPE
+    maker = BatchMaker(cells, R.max_seq_len, R.batch_size, seed)
+    total, n = 0.0, 0
+    for batch in maker.epoch(rows):
+        out = model(
+            batch["src"], batch["values"], batch["flags"], src_key_padding_mask=batch["pad"]
+        )["mlm_output"]
+        mask = torch.ones_like(batch["values"], dtype=torch.bool)
+        b = int(batch["values"].shape[0])
+        total += float(masked_mse_loss(out, batch["target"], mask)) * b
+        n += b
+    return {"loss": total / max(n, 1), "n_cells": n, "n_batches": maker.counters["batches"]}
 
 
 def finetune(
@@ -126,11 +193,13 @@ def finetune(
 ) -> dict:
     """Run the recipe. Returns the history; leaves the best weights in ``model``."""
     R = C.RECIPE
-    dev = cells.device
     train_rows = cells.cells_of(cells.is_train)
+    val_rows = cells.cells_of(cells.is_val)
     val_perts = np.flatnonzero(cells.is_val & cells.usable)
     if train_rows.numel() == 0:
         raise RuntimeError("no training cells: check the ingest output and the split")
+    if val_rows.numel() == 0:
+        raise RuntimeError("no validation cells: check the split")
     maker = BatchMaker(cells, R.max_seq_len, R.batch_size, C.SEED)
 
     opt = torch.optim.Adam(model.parameters(), lr=R.lr)
@@ -146,7 +215,7 @@ def finetune(
         print("  sample row:", json.dumps(row), flush=True)
 
     history: list[dict] = []
-    best = {"score": -np.inf, "epoch": 0, "state": None}
+    best = {"loss": np.inf, "epoch": 0, "state": None}
     patience = 0
     t_start = time.time()
     for epoch in range(1, R.epochs + 1):
@@ -182,7 +251,8 @@ def finetune(
                 )
         sched.step()
         train_loss = float(np.mean(losses))
-        val = validation_score(model, cells, effect, val_perts, n_val_control, amp=False)
+        vloss = validation_loss(model, cells, val_rows, C.SEED + 7)
+        delta = validation_score(model, cells, effect, val_perts, n_val_control, amp=False)
         rec = {
             "epoch": epoch,
             "train_loss": train_loss,
@@ -190,20 +260,23 @@ def finetune(
             "train_loss_last_100": float(np.mean(losses[-100:])),
             "n_batches": n_batches,
             "lr": float(sched.get_last_lr()[0]),
-            "val_pearson": val["pearson"],
-            "val_pearson_median": val["pearson_median"],
-            "val_n_perturbations": val["n_perturbations"],
+            "val_loss": vloss["loss"],
+            "val_cells": vloss["n_cells"],
+            "val_n_perturbations": int(val_perts.size),
+            "val_delta_pearson": {k: v["mean"] for k, v in delta.items()},
+            "val_delta_pearson_median": {k: v["median"] for k, v in delta.items()},
             "seconds": round(time.time() - t0, 1),
         }
         history.append(rec)
         print(
-            f"| epoch {epoch:2d} | loss {train_loss:.4f} | val pearson {val['pearson']:.4f} "
-            f"| {rec['seconds']:.0f}s |",
+            f"| epoch {epoch:2d} | train {train_loss:.4f} | val {vloss['loss']:.4f} | "
+            + " ".join(f"{k} {v['mean']:+.3f}" for k, v in delta.items())
+            + f" | {rec['seconds']:.0f}s |",
             flush=True,
         )
-        if val["pearson"] > best["score"]:
+        if vloss["loss"] < best["loss"]:
             best = {
-                "score": val["pearson"],
+                "loss": vloss["loss"],
                 "epoch": epoch,
                 "state": copy.deepcopy(model.state_dict()),
             }
@@ -220,7 +293,11 @@ def finetune(
     return {
         "history": history,
         "best_epoch": int(best["epoch"]),
-        "best_val_pearson": float(best["score"]),
+        "best_val_loss": float(best["loss"]),
+        "selection_rule": "lowest masked-MSE on held-out validation cells (the tutorial's rule)",
+        "best_val_delta_pearson": (
+            history[int(best["epoch"]) - 1]["val_delta_pearson"] if best["epoch"] else {}
+        ),
         "final_state": final_state,
         "best_state": best["state"],
         "n_train_cells": int(train_rows.numel()),

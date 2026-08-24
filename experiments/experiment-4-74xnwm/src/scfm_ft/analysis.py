@@ -1,0 +1,239 @@
+"""Merge the per-arm scoring shards into the tables the report reads.
+
+Every number the report states comes from one of the parquet files this writes,
+and every one of those is a restriction of what run 3's scoring rule produced
+inside the job that trained the model.
+
+    PYTHONPATH=src apy -m scfm_ft.analysis --scores scratch/dl/scores --out results/summary
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from . import config as C
+
+#: the pre-registered cell of run 3's correlation grid, and the fold-centred
+#: diagnostic reported beside it everywhere
+VERDICT = ("residual", "weighted")
+DIAGNOSTIC = ("centered", "weighted")
+
+
+def _read_all(root: Path, stem: str) -> pd.DataFrame:
+    files = sorted(Path(root).glob(f"{stem}_*.parquet"))
+    if not files:
+        return pd.DataFrame()
+    return pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+
+
+def arm_of(name: str) -> tuple[str, str, str]:
+    """Split a scored arm name into (stage, arm, query family).
+
+    ``ft_<arm>_resp``  the fine-tuned model, value-substitution query
+    ``ftq_<arm>_resp`` the fine-tuned model, its own perturbation query
+    ``pre_``/``preq_`` the same before any gradient step
+    anything else is a reference arm and keeps its own name.
+    """
+    for prefix, stage, family in (
+        ("ftq_", "final", "pert_flag"),
+        ("ft_", "final", "value_substitution"),
+        ("preq_", "init", "pert_flag"),
+        ("pre_", "init", "value_substitution"),
+    ):
+        if name.startswith(prefix):
+            rest = name[len(prefix) :]
+            for suffix in ("_resp", "_emb", "_full", "_hybrid"):
+                if rest.endswith(suffix):
+                    return stage, rest[: -len(suffix)], f"{family}{suffix}"
+            return stage, rest, family
+    return "reference", "", name
+
+
+def build(scores: Path, out: Path) -> dict:
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    restricted = _read_all(scores, "restricted")
+    contrasts = _read_all(scores, "contrasts")
+    runs = _read_all(scores, "runs")
+    direct = _read_all(scores, "direct")
+    if restricted.empty:
+        raise RuntimeError(f"no restricted_*.parquet under {scores}")
+
+    parts = restricted["arm"].map(arm_of)
+    restricted["stage"] = [p[0] for p in parts]
+    restricted["train_arm"] = [p[1] for p in parts]
+    restricted["family"] = [p[2] for p in parts]
+    restricted["is_shuffled"] = restricted["arm"].str.contains(r"\+shuffled_labels_d")
+    restricted["base_arm"] = restricted["arm"].str.replace(
+        r"\+shuffled_labels_d\d+", "", regex=True
+    )
+
+    # the fine-tuned arms are scored once per training job; the reference arms
+    # are re-run inside every job, so they appear once per arm. They must agree.
+    ref = restricted[
+        (restricted.stage == "reference")
+        & (~restricted.is_shuffled)
+        & (restricted.target == VERDICT[0])
+        & (restricted.weighting == VERDICT[1])
+    ]
+    agreement = (
+        ref.groupby(["cell_line", "arm", "translator"])["disattenuated"]
+        .agg(["min", "max", "count"])
+        .assign(spread=lambda d: d["max"] - d["min"])
+        .reset_index()
+    )
+
+    band = (
+        restricted[restricted.is_shuffled]
+        .groupby(["cell_line", "base_arm", "translator", "target", "weighting"])["disattenuated"]
+        .agg(["mean", "std", "min", "max", "count"])
+        .reset_index()
+        .rename(columns={"mean": "null_mean", "std": "null_sd", "min": "null_min", "max": "null_max",
+                         "count": "n_draws"})
+    )
+
+    verdict = restricted[
+        (restricted.target == VERDICT[0]) & (restricted.weighting == VERDICT[1])
+    ].copy()
+    diagnostic = restricted[
+        (restricted.target == DIAGNOSTIC[0]) & (restricted.weighting == DIAGNOSTIC[1])
+    ].copy()
+
+    for name, frame in (
+        ("restricted", restricted),
+        ("contrasts", contrasts),
+        ("runs", runs),
+        ("direct", direct),
+        ("null_band", band),
+        ("reference_agreement", agreement),
+    ):
+        if not frame.empty:
+            frame.to_parquet(out / f"{name}.parquet")
+
+    head = headline(verdict, diagnostic, contrasts, band, direct)
+    (out / "headline.json").write_text(json.dumps(head, indent=2, default=str))
+    return head
+
+
+def _pick(frame: pd.DataFrame, **kw) -> pd.DataFrame:
+    for k, v in kw.items():
+        frame = frame[frame[k] == v]
+    return frame
+
+
+def _row(frame: pd.DataFrame) -> dict | None:
+    if frame.empty:
+        return None
+    r = frame.iloc[0]
+    return {
+        "score": float(r["disattenuated"]),
+        "lo": float(r["disattenuated_lo"]),
+        "hi": float(r["disattenuated_hi"]),
+        "attenuated": float(r["attenuated"]),
+        "ceiling": float(r["ceiling"]),
+        "n": int(r["n_scored"]),
+        "n_groups": int(r["n_groups"]),
+    }
+
+
+def headline(
+    verdict: pd.DataFrame,
+    diagnostic: pd.DataFrame,
+    contrasts: pd.DataFrame,
+    band: pd.DataFrame,
+    direct: pd.DataFrame,
+) -> dict:
+    """The numbers the page states, each read from the table it comes from."""
+    out: dict = {
+        "metric": "residual target, reliability-weighted, ceiling-corrected per-perturbation "
+        "Pearson, median over the held-out perturbations of run 3's grouped split, restricted "
+        "to the folds the fine-tuned model never saw",
+        "diagnostic_metric": "the fold-centred version of the same correlation, reported beside "
+        "the verdict and never substituted for it",
+        "model_heldout_folds": list(C.MODEL_HELDOUT_FOLDS),
+        "cell_lines": {},
+    }
+    for line in C.CELL_LINES:
+        v = _pick(verdict, cell_line=line, translator="mlp")
+        d = _pick(diagnostic, cell_line=line, translator="mlp")
+        if v.empty:
+            continue
+        entry: dict = {"reference": {}, "arms": {}, "null_band": {}}
+        for arm in ("coexp", "node", "coexp_node", "scgpt_resp", "scgpt_emb", "scgpt_full",
+                    "null_randpair", "null_randgene_d1024"):
+            r = _row(_pick(v, arm=arm, is_shuffled=False))
+            if r:
+                entry["reference"][arm] = r
+        b = _pick(band, cell_line=line, translator="mlp", target=VERDICT[0], weighting=VERDICT[1])
+        for _, row in b.iterrows():
+            entry["null_band"][str(row["base_arm"])] = {
+                "mean": float(row["null_mean"]),
+                "sd": float(row["null_sd"]) if np.isfinite(row["null_sd"]) else None,
+                "min": float(row["null_min"]),
+                "max": float(row["null_max"]),
+                "n_draws": int(row["n_draws"]),
+            }
+        for a in C.ARMS:
+            per_arm: dict = {}
+            for stage, prefix in (("final", "ft"), ("init", "pre")):
+                for family, key in ((f"{prefix}_{a.name}", "value_substitution"),
+                                    (f"{prefix}q_{a.name}", "pert_flag")):
+                    for suffix in ("_resp", "_emb", "_full"):
+                        r = _row(_pick(v, arm=f"{family}{suffix}", is_shuffled=False))
+                        if r:
+                            dd = _row(_pick(d, arm=f"{family}{suffix}", is_shuffled=False))
+                            per_arm[f"{stage}__{key}{suffix}"] = {
+                                **r,
+                                "fold_centred": dd["score"] if dd else None,
+                            }
+            if not direct.empty:
+                dr = direct[
+                    (direct.cell_line == line)
+                    & (direct.target == VERDICT[0])
+                    & (direct.weighting == VERDICT[1])
+                    & (direct.arm_label == f"direct_prediction/{a.name}")
+                ]
+                if not dr.empty:
+                    per_arm["direct_prediction"] = _row(dr)
+            cs = contrasts[
+                (contrasts.cell_line == line)
+                & (contrasts.translator == "mlp")
+                & (contrasts.target == VERDICT[0])
+                & (contrasts.arm.str.contains(f"_{a.name}_", regex=False))
+            ] if not contrasts.empty else pd.DataFrame()
+            per_arm["paired_differences"] = [
+                {
+                    "arm": str(r["arm"]),
+                    "against": str(r["against"]),
+                    "difference": float(r["difference"]),
+                    "lo": float(r["lo"]),
+                    "hi": float(r["hi"]),
+                    "n_groups": int(r["n_groups"]),
+                    "min_resolvable_difference": float(
+                        r.get("min_resolvable_difference__rho_0.5", np.nan)
+                    ),
+                }
+                for _, r in cs.iterrows()
+            ]
+            entry["arms"][a.name] = per_arm
+        out["cell_lines"][line] = entry
+    return out
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--scores", required=True)
+    ap.add_argument("--out", default="results/summary")
+    a = ap.parse_args(argv)
+    head = build(Path(a.scores), Path(a.out))
+    print(json.dumps(head, indent=2, default=str)[:4000], flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

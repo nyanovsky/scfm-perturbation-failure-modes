@@ -113,7 +113,12 @@ class BatchMaker:
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
         self.n_genes = cells.n_genes
         self.subsampled = self.max_seq_len < self.n_genes
-        self.counters = {"batches": 0, "batches_that_would_lose_the_perturbed_gene": 0}
+        self.counters = {
+            "batches": 0,
+            "rows": 0,
+            "batches_that_would_lose_the_perturbed_gene": 0,
+            "rows_that_would_lose_the_perturbed_gene": 0,
+        }
 
     def _positions(self, forced: torch.Tensor) -> torch.Tensor:
         """The recipe's random position sample, with ``forced`` guaranteed in it."""
@@ -124,6 +129,10 @@ class BatchMaker:
         uniq_forced = torch.unique(forced)
         missing = uniq_forced[~torch.isin(uniq_forced, drawn)]
         self.counters["batches"] += 1
+        self.counters["rows"] += int(forced.numel())
+        self.counters["rows_that_would_lose_the_perturbed_gene"] += int(
+            (~torch.isin(forced, drawn)).sum()
+        )
         if missing.numel():
             self.counters["batches_that_would_lose_the_perturbed_gene"] += 1
             # replace the tail rather than growing the sequence, so the recipe's

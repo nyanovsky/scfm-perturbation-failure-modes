@@ -79,7 +79,10 @@ class Recipe:
     load_param_prefixes: tuple[str, ...] = ("encoder", "value_encoder", "transformer_encoder")
     loss: str = "masked_mse_loss(all positions)"
     optimizer: str = "Adam"
-    val_metric: str = "pearson over the validation perturbations' mean predicted delta"
+    #: the tutorial selects the epoch with the lowest masked MSE on held-out
+    #: validation cells; the agreement between predicted and measured response
+    #: is recorded every epoch as a diagnostic, not used to select
+    val_metric: str = "masked MSE on held-out validation cells (the tutorial's rule)"
 
 
 RECIPE = Recipe()
