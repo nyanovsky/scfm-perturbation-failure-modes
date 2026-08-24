@@ -1,0 +1,263 @@
+{
+ "cell": "full scope, MLP translator, pre-registered rule",
+ "thresholds": {
+  "strong_at_or_above": 0.5,
+  "weak_below": 0.3,
+  "statistic": "Spearman correlation of per-perturbation scores"
+ },
+ "reading": "mixed",
+ "scores": [
+  {
+   "cell_line": "hepg2",
+   "split": "grouped",
+   "arm": "scgpt_esm2_3b_emb",
+   "feature_dim": 6144,
+   "score": 0.29886,
+   "lo": 0.217004,
+   "hi": 0.499125,
+   "fold_centred": 0.12192
+  },
+  {
+   "cell_line": "hepg2",
+   "split": "grouped",
+   "arm": "scgpt_emb",
+   "feature_dim": 1024,
+   "score": 0.271869,
+   "lo": 0.23937,
+   "hi": 0.381382,
+   "fold_centred": 0.108878
+  },
+  {
+   "cell_line": "hepg2",
+   "split": "grouped",
+   "arm": "esm2_3b_emb",
+   "feature_dim": 5120,
+   "score": 0.233111,
+   "lo": 0.103492,
+   "hi": 0.435648,
+   "fold_centred": 0.107387
+  },
+  {
+   "cell_line": "hepg2",
+   "split": "grouped",
+   "arm": "null_randgene_d6144",
+   "feature_dim": 6144,
+   "score": 0.008123,
+   "lo": -0.017979,
+   "hi": 0.065046,
+   "fold_centred": -0.007808
+  },
+  {
+   "cell_line": "hepg2",
+   "split": "random",
+   "arm": "scgpt_esm2_3b_emb",
+   "feature_dim": 6144,
+   "score": 0.509875,
+   "lo": 0.410981,
+   "hi": 0.600716,
+   "fold_centred": 0.491481
+  },
+  {
+   "cell_line": "hepg2",
+   "split": "random",
+   "arm": "scgpt_emb",
+   "feature_dim": 1024,
+   "score": 0.349582,
+   "lo": 0.257921,
+   "hi": 0.461548,
+   "fold_centred": 0.351753
+  },
+  {
+   "cell_line": "hepg2",
+   "split": "random",
+   "arm": "esm2_3b_emb",
+   "feature_dim": 5120,
+   "score": 0.483416,
+   "lo": 0.412673,
+   "hi": 0.53697,
+   "fold_centred": 0.482026
+  },
+  {
+   "cell_line": "hepg2",
+   "split": "random",
+   "arm": "null_randgene_d6144",
+   "feature_dim": 6144,
+   "score": 0.00927,
+   "lo": -0.035842,
+   "hi": 0.079534,
+   "fold_centred": -0.022506
+  },
+  {
+   "cell_line": "jurkat",
+   "split": "grouped",
+   "arm": "scgpt_esm2_3b_emb",
+   "feature_dim": 6144,
+   "score": 0.270302,
+   "lo": 0.211024,
+   "hi": 0.337239,
+   "fold_centred": 0.213453
+  },
+  {
+   "cell_line": "jurkat",
+   "split": "grouped",
+   "arm": "scgpt_emb",
+   "feature_dim": 1024,
+   "score": 0.173276,
+   "lo": 0.130324,
+   "hi": 0.210383,
+   "fold_centred": 0.112577
+  },
+  {
+   "cell_line": "jurkat",
+   "split": "grouped",
+   "arm": "esm2_3b_emb",
+   "feature_dim": 5120,
+   "score": 0.264176,
+   "lo": 0.195912,
+   "hi": 0.326864,
+   "fold_centred": 0.178379
+  },
+  {
+   "cell_line": "jurkat",
+   "split": "grouped",
+   "arm": "null_randgene_d6144",
+   "feature_dim": 6144,
+   "score": 0.020705,
+   "lo": 0.001532,
+   "hi": 0.04805,
+   "fold_centred": -0.00261
+  },
+  {
+   "cell_line": "jurkat",
+   "split": "random",
+   "arm": "scgpt_esm2_3b_emb",
+   "feature_dim": 6144,
+   "score": 0.294067,
+   "lo": 0.214669,
+   "hi": 0.411094,
+   "fold_centred": 0.29432
+  },
+  {
+   "cell_line": "jurkat",
+   "split": "random",
+   "arm": "scgpt_emb",
+   "feature_dim": 1024,
+   "score": 0.186171,
+   "lo": 0.128399,
+   "hi": 0.253699,
+   "fold_centred": 0.178123
+  },
+  {
+   "cell_line": "jurkat",
+   "split": "random",
+   "arm": "esm2_3b_emb",
+   "feature_dim": 5120,
+   "score": 0.272434,
+   "lo": 0.210483,
+   "hi": 0.351807,
+   "fold_centred": 0.276811
+  },
+  {
+   "cell_line": "jurkat",
+   "split": "random",
+   "arm": "null_randgene_d6144",
+   "feature_dim": 6144,
+   "score": -0.012657,
+   "lo": -0.03837,
+   "hi": 0.012931,
+   "fold_centred": -0.033768
+  }
+ ],
+ "paired_vs_better_part": [
+  {
+   "cell_line": "hepg2",
+   "split": "grouped",
+   "vs": "scgpt_emb",
+   "difference": 0.022335,
+   "lo": -0.034208,
+   "hi": 0.130466,
+   "min_resolvable_difference": 0.136595,
+   "reading": "mixed"
+  },
+  {
+   "cell_line": "hepg2",
+   "split": "random",
+   "vs": "esm2_3b_emb",
+   "difference": 0.021337,
+   "lo": -0.010502,
+   "hi": 0.056726,
+   "min_resolvable_difference": 0.046883,
+   "reading": "mixed"
+  },
+  {
+   "cell_line": "jurkat",
+   "split": "grouped",
+   "vs": "esm2_3b_emb",
+   "difference": 0.004363,
+   "lo": -0.012111,
+   "hi": 0.024942,
+   "min_resolvable_difference": 0.026196,
+   "reading": "mixed"
+  },
+  {
+   "cell_line": "jurkat",
+   "split": "random",
+   "vs": "esm2_3b_emb",
+   "difference": 0.015287,
+   "lo": -0.006778,
+   "hi": 0.044392,
+   "min_resolvable_difference": 0.033639,
+   "reading": "mixed"
+  }
+ ],
+ "per_perturbation_agreement_grouped": [
+  {
+   "cell_line": "hepg2",
+   "pair": "scGPT table vs ESM2-3B table (the two parts)",
+   "spearman": 0.250329,
+   "n_perturbations": 524
+  },
+  {
+   "cell_line": "hepg2",
+   "pair": "ESM2-650M vs ESM2-3B (one model, two sizes)",
+   "spearman": 0.681623,
+   "n_perturbations": 524
+  },
+  {
+   "cell_line": "hepg2",
+   "pair": "scGPT vs TranscriptFormer",
+   "spearman": 0.270791,
+   "n_perturbations": 524
+  },
+  {
+   "cell_line": "hepg2",
+   "pair": "scGPT vs co-expression",
+   "spearman": 0.284282,
+   "n_perturbations": 524
+  },
+  {
+   "cell_line": "jurkat",
+   "pair": "scGPT table vs ESM2-3B table (the two parts)",
+   "spearman": 0.2394,
+   "n_perturbations": 705
+  },
+  {
+   "cell_line": "jurkat",
+   "pair": "ESM2-650M vs ESM2-3B (one model, two sizes)",
+   "spearman": 0.672694,
+   "n_perturbations": 705
+  },
+  {
+   "cell_line": "jurkat",
+   "pair": "scGPT vs TranscriptFormer",
+   "spearman": 0.26512,
+   "n_perturbations": 705
+  },
+  {
+   "cell_line": "jurkat",
+   "pair": "scGPT vs co-expression",
+   "spearman": 0.229515,
+   "n_perturbations": 705
+  }
+ ]
+}

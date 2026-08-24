@@ -23,6 +23,9 @@ from . import figures as figmod
 DISCRIM = figmod.DISCRIM
 PREREG = figmod.PREREG
 RUNS = "results/summary/runs.parquet"
+#: the two-table arm and its width-matched null are scored into their own table,
+#: so nothing computed over "all arms" in the main result is computed over them
+CONCAT_RUNS = "results/summary/concat_runs.parquet"
 CON = "results/summary/contrasts.parquet"
 TRANS = "results/summary/transfer_runs.parquet"
 ORDER = "results/summary/ordering_agreement.parquet"
@@ -796,12 +799,14 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
         concat["paired_against_parts"] = {}
         concat["agreement"] = {}
         concat["reading_by_cell"] = {}
+        concat["better_part_by_cell"] = {}
         for cell, blk in h["lines"].items():
             line, split = cell.split("|")
             for row in blk["scores"]:
                 concat["scores"][f"{cell}__{row['arm']}"] = claim(
                     f"{row['arm']} in {line}, {split} split, pre-registered rule",
-                    row["score"], RUNS,
+                    row["score"],
+                    CONCAT_RUNS if row["arm"] in B.CONCAT_TABLE_ARMS else RUNS,
                     key(scope="full", split=split, translator="mlp",
                         target_source="run1_all_controls", cell_line=line, arm=row["arm"],
                         column=PREREG),
@@ -837,6 +842,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                                f"{pair}__residual_weighted.spearman")),
                 )
             concat["reading_by_cell"][cell] = blk["reading"]
+            concat["better_part_by_cell"][cell] = blk["better_part"]
         checks = r.head.get("concat_reference_check", [])
         if checks:
             concat["in_job_reference_check"] = {
@@ -873,6 +879,74 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
         "beeline_arm_dropped": bee,
     }
     return summary, claims
+
+
+def _concat_assessment(n: dict) -> str:
+    """What the two-table arm adds to the assessment, in its own words.
+
+    A supplementary test with its own pre-registered reading, not a second
+    verdict on the run's question. It is stated here so the scope of the
+    'mixed' reading is explicit: the concatenation buys nothing, and the
+    agreement statistic is too weak in this run to say why.
+    """
+    concat = n.get("two_table_arm")
+    if not concat:
+        return ""
+    agree = concat.get("agreement", {})
+
+    def val(cell: str) -> float | None:
+        got = agree.get(cell)
+        return None if got is None else float(got)
+
+    hg, jk = val("hepg2|grouped"), val("jurkat|grouped")
+    # only the comparison against the better part decides the reading, so only that
+    # one is checked on the diagnostic
+    better = concat.get("better_part_by_cell", {})
+    centred = []
+    for cell, part in better.items():
+        d = concat.get("paired_against_parts", {}).get(f"{cell}__{part}__fold_centred")
+        if d and d["lo"] > 0 and d["difference"] > d["min_resolvable_difference"]:
+            centred.append(
+                f"{cell.replace('|', ', ')} against {part} "
+                f"({d['difference']:+.4f}, {d['lo']:.4f} to {d['hi']:.4f}, against "
+                f"{d['min_resolvable_difference']:.4f} resolvable)"
+            )
+    centred_clause = (
+        " On the fold-centred diagnostic, " + "; ".join(centred)
+        + f" clears what it resolves, {len(centred)} of the {len(better)} comparisons "
+        "against the better part."
+        if centred else
+        " The fold-centred diagnostic reads the same way on every one of those comparisons."
+    )
+    pairs = [
+        v for k in ("hepg2|grouped", "jurkat|grouped")
+        for suffix in ("scgpt_emb__transcriptformer_emb", "scgpt_emb__coexp")
+        if (v := val(f"{k}__{suffix}")) is not None
+    ]
+    thresholds = concat.get("agreement_thresholds", {})
+    weak = float(thresholds.get("weak_below", 0.3))
+    strong = float(thresholds.get("strong_at_or_above", 0.5))
+    numbers = (
+        f"Spearman {hg:.4f} in HepG2 and {jk:.4f} in Jurkat"
+        if hg is not None and jk is not None else "the agreement statistic"
+    )
+    context = (
+        f", about where every unrelated pair of arms in this run sits "
+        f"({', '.join(f'{v:.4f}' for v in pairs)})"
+        if pairs else ""
+    )
+    return (
+        " The two-table arm is a supplementary test with its own reading, not a second "
+        "verdict on the run's question. Concatenating scGPT's table with the raw ESM2-3B "
+        "table lands within what the paired comparison resolves of the better of the two "
+        "parts in all four cells, so neither table adds usable information to the other "
+        f"here. The reading is mixed rather than resolved: the two parts agree at {numbers}"
+        f"{context}, below the {weak:g} the rule set for different information and well "
+        f"below the {strong:g} it set for the same information, so the run does not "
+        "distinguish 'one quantity by two routes' from 'different information this task "
+        "cannot use'."
+        + centred_clause
+    )
 
 
 def _anchor_null_clause(n: dict) -> str:
@@ -943,6 +1017,7 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             "does come from: it does not decompose scGPT's or AIDO.Cell's learned table into a "
             "protein-like part and a cell-specific part, and scGPT's table has no measurable "
             "protein-space structure while scoring as well as the rest."
+            + _concat_assessment(n)
         ),
         "decision_rule": {
             "preregistered": (
@@ -1156,6 +1231,7 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             "the two tables carry."
         )
         doc["artifacts"].extend([
+            "results/summary/concat_runs.parquet",
             "results/summary/arm_agreement.parquet",
             "results/summary/concat_reference.parquet",
             "jobs/run_concat.sh",

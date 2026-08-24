@@ -15,7 +15,11 @@ learned from cells, and a table built directly from UniProt protein sequence wit
 checkpoint, run through the same translator and folds, beats co-expression in both lines and ties
 the single-cell arms in seven of eight paired comparisons, beating scGPT's in Jurkat. On genes
 never perturbed in the training screen, only the protein-derived tables keep a score clear of
-zero. `manifest.yaml` carries the numbers; the published report carries the argument.
+zero. Concatenating scGPT's table with the raw ESM2-3B table into one arm buys nothing over the
+better of the two parts in any cell, but the per-perturbation agreement between the parts (0.2503
+HepG2, 0.2394 Jurkat) sits where any two unrelated arms in this run sit, so that test is reported
+as mixed rather than as evidence that the two tables are one quantity. `manifest.yaml` carries the
+numbers; the published report carries the argument.
 
 The fold-centred version of the score, which removes the held-out fold's own per-gene mean, is
 reported beside the pre-registered one everywhere. It uses held-out outcomes and was written after
@@ -51,6 +55,10 @@ python -m scfm_pfm.protein.uniprot --out results/protein                  # CPU,
 python -m scfm_pfm.protein.esm_embed --genes results/protein --out results/protein  # GPU
 python -m scfm_pfm.protein.install_arm --tables results/protein --bundle <bundle>
 python -m scfm_pfm.translate.runner --bundle <bundle> --arms esm2_650m_emb,esm2_3b_emb,...
+
+# 3b. the two-table arm: the same installed ESM2-3B table, concatenated with scGPT's
+python -m scfm_pfm.translate.runner --bundle <bundle> \
+  --arms scgpt_esm2_3b_emb,null_randgene_d6144 --scopes full --splits grouped,random
 
 # 4. scoring, figures, report
 python -m scfm_pfm.report.build
@@ -89,6 +97,8 @@ Small reviewable copies live in this worktree.
 | protein tables | `protein/` (store): `esm2_650m.npz`, `esm2_3b.npz`, `gene_to_protein.parquet`, `identity.json`, and the three reports; `results/protein/` (worktree) keeps the small ones | ESM2 embeddings of each read-out gene's canonical human protein, the mapping that produced them, and how close every gene table is to them |
 | protein arms | `protein_sweep/<line>/`, `protein_shuffle/<line>/`, `protein_transfer/` (store) | the ESM2 arms and their width-matched null over the same grid as every other arm, their shuffled-label draws, and both transfer directions |
 | protein in-job reference | `protein_reference/<line>/`, `protein_transfer_reference/` (store) | main-sweep arms re-run inside the protein jobs; kept out of the merged tables so no scored row is overwritten |
+| two-table arm | `concat_sweep/`, `concat_smoke/` (store) | scGPT's table concatenated with the raw ESM2-3B table, 6,144 columns, over both lines and both splits, with its width-matched random-vector null |
+| two-table in-job reference | `concat_reference/` (store) | scGPT, ESM2-3B and co-expression re-run inside the same job; kept out of the merged tables for the same reason |
 | no-op query record | `results/handoff/no_op_queries_per_gene.csv`, `results/verification/no_op_correction.json` (worktree) | which (perturbed gene, value) queries were no-ops and in how many cells, derived from run 2's per-query records, plus the five checks behind the per-query exclusion |
 | BEELINE arm (dropped) | `beeline/beeline_reproduction.json` (store), `results/beeline_reproduction.json` (worktree) | the source paper's scGPT embedding baseline re-fitted on its own benchmark. Dropped from the evidence: it scored 0.6724 against 0.6247 reported, so the setting is not established and neither it nor the controls run inside it (a permuted-embedding control, an unseen-gene slice) support a claim in the report. Kept for audit only |
 | discrimination versions | `results/discrimination_versions.json`, `results/discrimination/` (worktree) | the same saved predictions rescored under cell-eval 0.5.18, 0.5.21 and 0.8.2 |
@@ -110,11 +120,12 @@ PYTHONPATH=src apy -m scfm_pfm.analysis \
 scratch/dl/sweep_node,scratch/dl/sweep_node_common,scratch/dl/alt_target_ctrl0,\
 scratch/dl/alt_target_ctrl1,scratch/dl/alt_target_ctrlall,\
 scratch/dl/protein_sweep/hepg2,scratch/dl/protein_sweep/jurkat,\
-scratch/dl/protein_shuffle/hepg2,scratch/dl/protein_shuffle/jurkat \
+scratch/dl/protein_shuffle/hepg2,scratch/dl/protein_shuffle/jurkat,scratch/dl/concat_sweep \
   --transfer-sweep scratch/dl/transfer2,scratch/dl/transfer_unseen,scratch/dl/protein_transfer \
   --sensitivity-sweep scratch/dl/sensitivity \
   --protein-reference scratch/dl/protein_reference/hepg2,scratch/dl/protein_reference/jurkat \
   --protein-transfer-reference scratch/dl/protein_transfer_reference \
+  --concat-reference scratch/dl/concat_reference \
   --bundle-root scratch/dl/bundle \
   --out results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.contract --summary results/summary
@@ -144,7 +155,7 @@ The discrimination axis is computed with Arc Institute's `cell-eval`. The pre-re
 saved predictions under 0.5.18, 0.5.21 and 0.8.2 to show what that choice costs.
 
 `scratch/verify_claims.py` re-reads each entry of `claims_manifest.json` from the file and key it
-names and reports any disagreement. All 232 re-readable keys resolve and match; the remaining 11
+names and reports any disagreement. All 373 re-readable keys resolve and match; the remaining 11
 claims are differences between two rows that are themselves claimed, and their key states the
 formula instead of a locator.
 

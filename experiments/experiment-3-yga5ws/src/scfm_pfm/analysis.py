@@ -470,14 +470,17 @@ def control_cell_overlap(runs: pd.DataFrame) -> pd.DataFrame:
     return wide.sort_values(["cell_line", "arm", "translator", "variant"])
 
 
-def protein_reference_check(reference: pd.DataFrame, primary: pd.DataFrame) -> list[dict]:
-    """Arms the protein job re-ran, against the same arms in the main sweep.
+def protein_reference_check(
+    reference: pd.DataFrame, primary: pd.DataFrame, job_key: str = "protein_job"
+) -> list[dict]:
+    """Arms a later job re-ran, against the same arms in the main sweep.
 
     The protein arms were scored in a job that mounted a rebuilt bundle. The
     same job re-ran four arms the main sweep already has, so any difference is
     the bundle and the job, not the feature. These rows are kept out of the
     merged table -- a merge would replace the scored primary rows with the
-    re-run ones.
+    re-run ones. The two-table job re-runs its own arms the same way, and names
+    its column with ``job_key``.
     """
     if reference.empty or primary.empty:
         return []
@@ -501,7 +504,7 @@ def protein_reference_check(reference: pd.DataFrame, primary: pd.DataFrame) -> l
             "split": r.split,
             "arm": r.arm,
             "translator": r.translator,
-            "protein_job": float(getattr(r, DISCRIMINATION_COL)),
+            job_key: float(getattr(r, DISCRIMINATION_COL)),
             "main_sweep": base[key],
             "difference": float(getattr(r, DISCRIMINATION_COL)) - base[key],
         })
@@ -1076,6 +1079,17 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     ap.add_argument(
+        "--concat-sweep",
+        default=None,
+        help=(
+            "shard directories for the two-table arm. Kept in their own table rather "
+            "than merged into runs.parquet: the two-table arm is a supplementary test "
+            "with its own reading, and merging it would change what every 'over all "
+            "arms' number in the main result is computed over -- the best arm, the "
+            "counts against the null, the ordering agreement between grid cells."
+        ),
+    )
+    ap.add_argument(
         "--concat-reference",
         default=None,
         help=(
@@ -1165,14 +1179,26 @@ def main(argv: list[str] | None = None) -> int:
     agree_arms = arm_agreement(per_pert)
     if not agree_arms.empty:
         agree_arms.to_parquet(out / "arm_agreement.parquet", index=False)
-    concat = concat_summary(runs, per_pert, agree_arms, group_table=gt)
+    concat_runs, concat_pert = runs, per_pert
+    if args.concat_sweep:
+        cs_runs, cs_pert = load_sweep(*[Path(x) for x in args.concat_sweep.split(",") if x])
+        cs_runs = regroup_run_intervals(cs_runs, cs_pert, gt)
+        cs_runs.to_parquet(out / "concat_runs.parquet", index=False)
+        cs_pert.to_parquet(out / "concat_per_perturbation.parquet", index=False)
+        # combined only for the two-table summary: the parts live in the main tables
+        # and the two-table arm and its width-matched null live in their own
+        concat_runs = pd.concat([runs, cs_runs], ignore_index=True)
+        concat_pert = pd.concat([per_pert, cs_pert], ignore_index=True)
+    concat = concat_summary(concat_runs, concat_pert, agree_arms, group_table=gt)
     if concat:
         head["concat"] = concat
     if args.concat_reference:
         c_runs, c_pert = load_sweep(*[Path(x) for x in args.concat_reference.split(",") if x])
         c_runs = regroup_run_intervals(c_runs, c_pert, gt)
         c_runs.to_parquet(out / "concat_reference.parquet", index=False)
-        head["concat_reference_check"] = protein_reference_check(c_runs, runs)
+        head["concat_reference_check"] = protein_reference_check(
+            c_runs, runs, job_key="concat_job"
+        )
 
     protein = protein_summary(runs, per_pert, nulls, group_table=gt)
     if protein:

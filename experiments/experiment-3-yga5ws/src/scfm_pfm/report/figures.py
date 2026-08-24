@@ -870,7 +870,9 @@ def concat_agreement(summary_dir: Path, out_root: Path) -> dict | None:
         if not row.empty:
             r = row.iloc[0]
             fig.add_annotation(
-                x=0.02, y=0.98, xref=f"x{i} domain", yref=f"y{i} domain",
+                x=0.02, y=0.98,
+                xref=f"x{'' if i == 1 else i} domain",
+                yref=f"y{'' if i == 1 else i} domain",
                 xanchor="left", yanchor="top", showarrow=False,
                 text=f"Spearman {r.spearman:.3f}, n = {int(r.n_perturbations)}",
             )

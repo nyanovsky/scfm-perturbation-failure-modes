@@ -963,6 +963,8 @@ CONCAT_HEADING = {
               "same information"),
 }
 CONCAT_ROW_ARMS = ("scgpt_esm2_3b_emb", "scgpt_emb", "esm2_3b_emb", "null_randgene_d6144")
+#: the arms scored only in the two-table job, which are kept out of runs.parquet
+CONCAT_TABLE_ARMS = ("scgpt_esm2_3b_emb", "null_randgene_d6144")
 
 
 def _concat_block(h: dict, line: str, split: str) -> dict | None:
@@ -1027,6 +1029,31 @@ def concat_section(r: Results, chart: str = "") -> str:
         if not block:
             continue
         agreement.append(f"{P.num(block['parts_spearman'])} in {line}")
+    # the reading turns on the comparison against the better part, so that is the one
+    # the diagnostic is checked on
+    centred, n_cells = [], 0
+    for line, split in (("hepg2", "grouped"), ("hepg2", "random"),
+                        ("jurkat", "grouped"), ("jurkat", "random")):
+        block = _concat_block(h, line, split)
+        if not block:
+            continue
+        n_cells += 1
+        d = block["paired_against_parts"].get(f"{block['better_part']}__fold_centred")
+        if d and d["lo"] > 0 and d["difference"] > d["min_resolvable_difference"]:
+            centred.append(
+                f"{LINE[line]} under the {split} split against {label(block['better_part'])} "
+                f"({P.signed(d['difference'], 4)}, {P.num(d['lo'])} to "
+                f"{P.num(d['hi'])}, against {P.num(d['min_resolvable_difference'])} "
+                "resolvable)"
+            )
+    centred_clause = (
+        f" The fold-centred diagnostic agrees on {n_cells - len(centred)} of the "
+        f"{n_cells} comparisons against the better part; in " + _join(centred)
+        + " it clears what it resolves, by a margin narrower than the interval is wide."
+        if centred else
+        f" The fold-centred diagnostic reads the same way on all {n_cells} comparisons "
+        "against the better part."
+    )
     ref_pairs = []
     for key, name in (
         ("esm2_650m_emb__esm2_3b_emb__residual_weighted", "the two ESM2 sizes"),
@@ -1070,19 +1097,32 @@ def concat_section(r: Results, chart: str = "") -> str:
         + f"<p>The concatenation is not an improvement: {_join(pieces)}. "
         "The same holds under the random split, and the two-table arm sits far above its own "
         "width-matched random projection, so the extra columns are not what is being "
-        "measured.</p>"
-        + f"<p>The two arms also succeed on the same perturbations: Spearman "
+        f"measured.{centred_clause}</p>"
+        + f"<p>The agreement half of the rule comes in weak rather than strong: Spearman "
         f"{_join(agreement)} between the scGPT-table arm's and the protein-table arm's "
-        "per-perturbation scores, on the same folds. For scale, "
-        f"{_join(ref_pairs)}.</p>"
+        f"per-perturbation scores, on the same folds, below the "
+        f"{P.num(thresholds.get('weak_below', 0.3))} the rule set for different "
+        "perturbations. Read alone that number would say the two tables are right about "
+        "different genes, but the comparison pairs say the statistic cannot carry that "
+        f"here: {_join(ref_pairs)}. Every pair of unrelated arms sits in the same band, and "
+        "only two sizes of one protein model - the same model twice - clears the strong "
+        "threshold. Per-perturbation scores at this sample size are noisy enough that the "
+        "paired comparison is the informative half of the reading and the correlation is "
+        "context for it.</p>"
         + chart
         + f"<p>Read against the rule, that is {reading}: {h['rule'][reading]}. "
-        f"By cell and split, {verdicts}. What this establishes is narrow and worth stating "
-        "exactly. It does not say scGPT's table is protein-derived; the checkpoint audit "
-        "already says it is not, and the similarity measure still finds no protein geometry "
-        "in it. It says that whatever scGPT's table supplies to this task is, as far as this "
-        "task can tell, the same information the protein table supplies, so the two cannot be "
-        "added up. A finer-grained or different task could still separate them.</p>"
+        f"By cell and split, {verdicts}. Both halves are worth stating exactly. What the run "
+        "does establish is that the concatenation buys nothing: in all four cells the "
+        "two-table arm lands within what the paired comparison resolves of the better of its "
+        "parts, so on this task neither table adds usable information to the other. What it "
+        "does not establish is why. The agreement statistic would have to reach "
+        f"{P.num(thresholds.get('strong_at_or_above', 0.5))} to call the two tables one "
+        "quantity reached by two routes, and it does not get there for any pair of unrelated "
+        "arms in this run, so 'the same information by different routes' and 'different "
+        "information this task cannot use' are both still open. It does not say scGPT's table "
+        "is protein-derived either; the checkpoint audit already says it is not, and the "
+        "similarity measure still finds no protein geometry in it. A finer-grained or "
+        "different task could still separate what the two tables carry.</p>"
     )
     return P.section(CONCAT_HEADING.get(reading, CONCAT_HEADING["mixed"]),
                      body, sources=[S_RUNNER, S_ANALYSIS])
@@ -1778,8 +1818,9 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "against the score the raw ESM2-3B-table arm reached on the same perturbation, full "
         "scope, grouped split, MLP translator, pre-registered rule. The dotted line is "
         "equality and the rank correlation is printed in each panel.",
-        "The two arms rise and fall together across perturbations rather than being right "
-        "about different ones, which is what the concatenated arm's lack of a gain implies.",
+        "The cloud is broad rather than tight around the diagonal: the two arms agree on "
+        "which perturbations are easy only weakly, at about the level any two unrelated arms "
+        "in this run agree, so the scatter does not settle what the concatenation left open.",
         sources=[S_RUNNER, S_FIGS],
     ) if "concat_agreement" in made else ""
     f_disc = P.figure(
