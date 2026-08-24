@@ -270,6 +270,104 @@ def control_cell_overlap(runs: pd.DataFrame) -> pd.DataFrame:
     return wide.sort_values(["cell_line", "arm", "translator", "variant"])
 
 
+def protein_reference_check(reference: pd.DataFrame, primary: pd.DataFrame) -> list[dict]:
+    """Arms the protein job re-ran, against the same arms in the main sweep.
+
+    The protein arms were scored in a job that mounted a rebuilt bundle. The
+    same job re-ran four arms the main sweep already has, so any difference is
+    the bundle and the job, not the feature. These rows are kept out of the
+    merged table -- a merge would replace the scored primary rows with the
+    re-run ones.
+    """
+    if reference.empty:
+        return []
+    base = {
+        (r.cell_line, r.scope, r.split, r.arm, r.translator): float(getattr(r, VERDICT_COL))
+        for r in primary[primary.target_source == "run1_all_controls"].itertuples()
+    }
+    rows = []
+    for r in reference.itertuples():
+        key = (r.cell_line, r.scope, r.split, r.arm, r.translator)
+        if key not in base:
+            continue
+        rows.append({
+            "cell_line": r.cell_line,
+            "scope": r.scope,
+            "split": r.split,
+            "arm": r.arm,
+            "translator": r.translator,
+            "protein_job": float(getattr(r, VERDICT_COL)),
+            "main_sweep": base[key],
+            "difference": float(getattr(r, VERDICT_COL)) - base[key],
+        })
+    return rows
+
+
+def protein_summary(runs: pd.DataFrame, con: pd.DataFrame, nulls: pd.DataFrame) -> dict:
+    """The protein arm read against the arms it is a control for.
+
+    One block per cell line on the cell the verdict is read from: the raw ESM2
+    arms, the model embedding arms they are the control for, co-expression, the
+    width-matched random-vector nulls, and the largest shuffled-label draw.
+    """
+    keep = (
+        (runs.scope == "full") & (runs.split == "grouped") & (runs.translator == "mlp")
+        & (runs.target_source == "run1_all_controls")
+    )
+    d = runs[keep]
+    if d.empty or not d.arm.str.startswith("esm2").any():
+        return {}
+    out: dict = {"cell": "full scope, grouped split, MLP translator", "metric": VERDICT_COL,
+                 "lines": {}}
+    for line, block in d.groupby("cell_line"):
+        want = block[
+            block.arm.str.startswith(("esm2", "scgpt_emb", "scprint_emb",
+                                      "transcriptformer_emb", "aido_cell_emb",
+                                      "coexp", "null_randgene"))
+            & ~block.arm.str.contains(SHUFFLE_TAG, regex=False)
+        ]
+        rows = [
+            {
+                "arm": r.arm,
+                "family": r.family,
+                "feature_dim": int(r.feature_dim),
+                "score": float(getattr(r, VERDICT_COL)),
+                "lo": float(getattr(r, VERDICT_COL + "_lo")),
+                "hi": float(getattr(r, VERDICT_COL + "_hi")),
+                "preregistered": float(getattr(r, PREREG_COL)),
+            }
+            for r in want.sort_values(VERDICT_COL, ascending=False).itertuples()
+        ]
+        shuffled = block[block.arm.str.contains(SHUFFLE_TAG, regex=False)]
+        paired = con[
+            (con.cell_line == line) & (con.scope == "full") & (con.split == "grouped")
+            & (con.translator == "mlp") & (con.metric == "centered_weighted")
+            & (con.target_source == "run1_all_controls")
+            & con.arm.str.startswith("esm2")
+        ]
+        out["lines"][line] = {
+            "arms": rows,
+            "largest_shuffled_draw": (
+                float(np.nanmax(shuffled[VERDICT_COL].to_numpy(dtype=float)))
+                if not shuffled.empty else float("nan")
+            ),
+            "protein_vs_coexpression": [
+                {
+                    "arm": r.arm,
+                    "median_difference": float(r.median_difference),
+                    "lo": float(r.lo),
+                    "hi": float(r.hi),
+                    "n_paired": int(r.n_paired),
+                }
+                for r in paired.itertuples()
+            ],
+        }
+    if not nulls.empty:
+        band = nulls[nulls.base_arm.str.startswith("esm2")]
+        out["protein_shuffled_label_band"] = band.to_dict("records")
+    return out
+
+
 def grid_table(runs: pd.DataFrame) -> pd.DataFrame:
     """One row per (run, grid cell): the eight numbers, side by side."""
     rows = []
@@ -444,6 +542,15 @@ def main(argv: list[str] | None = None) -> int:
             "the scored primary rows with the re-run ones."
         ),
     )
+    ap.add_argument(
+        "--protein-reference",
+        default=None,
+        help=(
+            "shard directories holding the arms the protein job re-ran as its own "
+            "reference. Kept out of runs.parquet for the same reason the sensitivity "
+            "job's re-runs are."
+        ),
+    )
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
     sweep_dirs = (
@@ -500,6 +607,14 @@ def main(argv: list[str] | None = None) -> int:
         s_runs, s_pert = load_sweep(*[Path(x) for x in args.sensitivity_sweep.split(",") if x])
         s_runs.to_parquet(out / "sensitivity.parquet", index=False)
         head["sensitivity"] = anchor_sensitivity(s_runs, runs, s_pert)
+
+    protein = protein_summary(runs, con, nulls)
+    if protein:
+        head["protein"] = protein
+    if args.protein_reference:
+        p_runs, _ = load_sweep(*[Path(x) for x in args.protein_reference.split(",") if x])
+        p_runs.to_parquet(out / "protein_reference.parquet", index=False)
+        head["protein_reference_check"] = protein_reference_check(p_runs, runs)
 
     runs.to_parquet(out / "runs.parquet", index=False)
     per_pert.to_parquet(out / "per_perturbation.parquet", index=False)

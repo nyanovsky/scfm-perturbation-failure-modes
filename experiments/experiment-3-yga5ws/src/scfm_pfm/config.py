@@ -220,8 +220,16 @@ def sensitivity_arms(models: tuple[str, ...] = MODELS) -> list[ArmSpec]:
 
 #: shuffled-perturbation-label null: the arm's own features, targets permuted
 #: across perturbed genes. Run on these arms only (it is a property of the
-#: pipeline, not of the feature).
+#: pipeline, not of the feature). The runner takes extra names on the command
+#: line for an arm added after this list was fixed, so that adding a control to
+#: a later job cannot rewrite what the main sweep ran.
 SHUFFLE_NULL_ARMS = ("coexp", "scgpt_full")
+
+#: models whose gene table comes from a protein language model with no
+#: single-cell model anywhere in its path. They enter the sweep exactly like a
+#: model embedding arm and are labelled ``protein`` so the report can keep them
+#: apart from the single-cell arms.
+PROTEIN_MODELS = ("esm2_650m", "esm2_3b")
 
 #: how many independent permutations to draw for each shuffled-label arm. One
 #: draw is a single sample from the null and says nothing about its spread.

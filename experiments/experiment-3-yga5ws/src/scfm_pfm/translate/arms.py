@@ -23,7 +23,9 @@ class ArmFeatures:
         self.suffix = coexpr_suffix
         self.model = spec.model
         self.anchor = spec.anchor
-        self.entry = bundle.features[(spec.model, spec.anchor)] if spec.model else None
+        # ``.get``: an arm may name a model that has a gene embedding and no
+        # response features at all -- the protein-model arm is exactly that.
+        self.entry = bundle.features.get((spec.model, spec.anchor)) if spec.model else None
         self.parts: list[str] = list(spec.blocks)
         self.dim = self._dim()
         # An additive arm needs to know where the perturbed gene's half of the
@@ -103,9 +105,19 @@ class ArmFeatures:
 
 
 def resolve_arms(
-    bundle: LineBundle, models: list[str], anchor: str, include_sensitivity: bool = False
+    bundle: LineBundle,
+    models: list[str],
+    anchor: str,
+    include_sensitivity: bool = False,
+    emb_only_models: tuple[str, ...] | list[str] = (),
 ) -> list[C.ArmSpec]:
-    """The arm list for one (cell line, scope), given which models cover it."""
+    """The arm list for one (cell line, scope), given which models cover it.
+
+    ``emb_only_models`` carry a static gene table and nothing else -- no query,
+    no response features. The protein-language-model control is one of these:
+    the same ``emb`` block every model embedding arm uses, filled with vectors
+    that never saw a cell.
+    """
     specs: list[C.ArmSpec] = [
         C.ArmSpec("mean_only", "baseline", (), note="predict the training mean effect"),
         C.ArmSpec("coexp", "statistical", ("coexp",)),
@@ -137,7 +149,8 @@ def resolve_arms(
         C.ArmSpec("coexp_node", "statistical", ("coexp", "node")),
         C.ArmSpec("null_randpair", "null", ("randpair",)),
     ]
-    for width in sorted({int(bundle.emb[m].shape[1]) for m in models if m in bundle.emb}):
+    embedding_models = list(models) + [m for m in emb_only_models if m not in models]
+    for width in sorted({int(bundle.emb[m].shape[1]) for m in embedding_models if m in bundle.emb}):
         specs.append(
             C.ArmSpec(
                 f"null_randgene_d{2 * width}",
@@ -156,6 +169,19 @@ def resolve_arms(
                 f"{m}_hybrid", "hybrid", ("coexp", "node", "resp", "emb"), model=m, anchor=anchor
             ),
         ]
+    for m in emb_only_models:
+        if m in models or m not in bundle.emb:
+            continue
+        specs.append(
+            C.ArmSpec(
+                f"{m}_emb",
+                "protein" if m in C.PROTEIN_MODELS else "scfm",
+                ("emb",),
+                model=m,
+                anchor=anchor,
+                note="static gene table only; this model has no response features here",
+            )
+        )
     if include_sensitivity:
         for m in models:
             for other in C.SENSITIVITY_ANCHORS:
