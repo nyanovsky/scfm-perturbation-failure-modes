@@ -121,3 +121,40 @@ def test_cka_and_rsa_see_through_a_rotation():
     assert linear_cka(x, x @ q) == pytest.approx(1.0, abs=1e-9)
     assert rsa(x, x @ q, idx) == pytest.approx(1.0, abs=1e-9)
     assert linear_cka(x, rng.standard_normal((200, 32))) < 0.4
+
+
+def _concat_spec() -> C.ArmSpec:
+    return C.ArmSpec(
+        "scgpt_esm2_3b_emb", "concat", ("emb", "emb2"),
+        model="scgpt", anchor=None, second_model="esm2_3b",
+    )
+
+
+def test_the_two_table_arm_resolves_with_a_null_matched_to_its_width():
+    """Wider than either part, so the matched random projection is required."""
+    b = _FakeBundle()
+    specs = armsmod.resolve_arms(b, ["scgpt"], C.PRIMARY_ANCHOR, False, ["esm2_3b"])
+    names = {s.name for s in specs}
+    assert "scgpt_esm2_3b_emb" in names
+    # 4 + 4 per gene, two genes: the null has to be 16 wide, not 8
+    assert "null_randgene_d16" in names
+    spec = next(s for s in specs if s.name == "scgpt_esm2_3b_emb")
+    assert (spec.family, spec.second_model) == ("concat", "esm2_3b")
+    # no anchor: the arm reads two static tables, so response-feature coverage
+    # must never decide whether it is scored
+    assert spec.anchor is None
+
+
+def test_the_two_table_arm_is_exactly_its_two_parts_side_by_side():
+    """Concatenation, not a re-encoding: each part keeps its own columns."""
+    b = _FakeBundle()
+    rows, cols = torch.tensor([1]), torch.tensor([3])
+    both = armsmod.ArmFeatures(_concat_spec(), b).batch(rows, cols)
+    parts = [
+        armsmod.ArmFeatures(
+            C.ArmSpec(f"{m}_emb", "scfm", ("emb",), model=m, anchor=None), b
+        ).batch(rows, cols)
+        for m in ("scgpt", "esm2_3b")
+    ]
+    assert armsmod.ArmFeatures(_concat_spec(), b).dim == 16
+    assert torch.equal(both, torch.cat(parts, dim=1))
