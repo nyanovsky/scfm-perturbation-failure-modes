@@ -95,9 +95,9 @@ no protein model anywhere in the path.
 Building the missing control settles the rest. Every read-out gene was mapped to its canonical
 reviewed human protein and embedded with two public ESM2 checkpoints, and that table was pushed
 through the identical translator, folds, weights, scoring and nulls. It scores 0.1074 in HepG2 and
-0.1784 in Jurkat, level with the best single-cell arm in the first and ahead of every one of them
-in the second, and paired on the same held-out perturbations it beats TranscriptFormer in both
-lines and scGPT in Jurkat. So beating co-expression on this task is not evidence of single-cell
+0.1784 in Jurkat, the highest-scoring arm of any kind there. Paired on the same held-out
+perturbations it ties the best single-cell arm in HepG2, beats TranscriptFormer's embedding arm
+in both lines and scGPT's in Jurkat, and ties scPRINT's in both. So beating co-expression on this task is not evidence of single-cell
 knowledge; it is evidence that a general representation of gene identity helps, and protein
 sequence supplies one without seeing a cell. The sharpest version is the cross-line evaluation on
 genes never perturbed in the training screen: the four protein-derived tables clear zero in 22 of

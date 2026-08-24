@@ -796,7 +796,8 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             "of the four gene tables are protein-derived rather than learned from expression, "
             "and a gene table built from UniProt protein sequence with a public ESM2 "
             "checkpoint, run through the identical translator, folds, scoring and nulls, "
-            "matches the best single-cell arm in HepG2 and beats every one of them in Jurkat."
+            "ties the best single-cell arm in HepG2 on a paired comparison and, in Jurkat, "
+            "beats TranscriptFormer's and scGPT's embedding arms while tying scPRINT's."
         ),
         "assessment": (
             "Supported for the embedding arms against co-expression, on both cell lines, on a "
