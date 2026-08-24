@@ -1,0 +1,9 @@
+experiment: 4
+eid: "exp_01m0trpxqyf0g8pq29k774xnwm"
+title: "Does fine-tuning for perturbation prediction install the regulatory signal?"
+date: "2026-08-24"
+status: in-progress
+data: {}
+outputs: {}
+results: {}
+slurm_jobs: []
