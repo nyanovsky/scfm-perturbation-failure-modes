@@ -34,6 +34,11 @@ S_FIGS = f"{SRC}/src/scfm_pfm/report/figures.py"
 S_DISC = f"{SRC}/src/scfm_pfm/discrimination.py"
 S_SENS = f"{SRC}/jobs/run_sensitivity.sh"
 S_BEELINE = f"{SRC}/src/scfm_pfm/beeline.py"
+S_AUDIT = f"{SRC}/src/scfm_pfm/protein/audit.py"
+S_AUDIT_TABLES = f"{SRC}/src/scfm_pfm/protein/audit_tables.py"
+S_UNIPROT = f"{SRC}/src/scfm_pfm/protein/uniprot.py"
+S_ESM = f"{SRC}/src/scfm_pfm/protein/esm_embed.py"
+S_IDENTITY = f"{SRC}/src/scfm_pfm/protein/identity.py"
 
 VERDICT = figmod.VERDICT
 PREREG = figmod.PREREG
@@ -72,7 +77,10 @@ ARM_LABEL = {
     "null_randgene_d512": "random vector per gene, 512 dims",
     "null_randgene_d1024": "random vector per gene, 1024 dims",
     "null_randgene_d1280": "random vector per gene, 1280 dims",
+    "null_randgene_d2560": "random vector per gene, 2560 dims",
     "null_randgene_d5120": "random vector per gene, 5120 dims",
+    "esm2_650m_emb": "ESM2-650M protein embedding",
+    "esm2_3b_emb": "ESM2-3B protein embedding",
     "mean_only": "mean effect only",
 }
 
@@ -115,6 +123,42 @@ class Results:
         self.disc_versions = json.loads(dv.read_text()) if dv.exists() else {}
         nc = summary_dir.parent / "verification" / "no_op_correction.json"
         self.no_op = json.loads(nc.read_text())["blocks"] if nc.exists() else []
+
+        def _load(*parts) -> dict:
+            path = summary_dir.parent.joinpath(*parts)
+            return json.loads(path.read_text()) if path.exists() else {}
+
+        self.protein_map = _load("protein", "gene_to_protein_report.json")
+        self.protein_embed = _load("protein", "esm_embed_report.json")
+        self.protein_install = _load("protein", "install_report.json")
+        self.identity = _load("protein", "identity.json")
+        self.audit = _load("provenance", "audit.json")
+        self.audit_tables = _load("provenance", "audit_tables.json")
+
+    def cka(self, line: str, a: str, b: str) -> float:
+        """Linear CKA between two gene tables over that line's read-out genes."""
+        pairs = self.identity.get("lines", {}).get(line, {}).get("pairs", {})
+        key = f"{a}|{b}" if f"{a}|{b}" in pairs else f"{b}|{a}"
+        return float(pairs[key]["cka"]) if key in pairs else float("nan")
+
+    def rsa(self, line: str, a: str, b: str) -> float:
+        pairs = self.identity.get("lines", {}).get(line, {}).get("pairs", {})
+        key = f"{a}|{b}" if f"{a}|{b}" in pairs else f"{b}|{a}"
+        return float(pairs[key]["rsa_spearman"]) if key in pairs else float("nan")
+
+    def table_width(self, line: str, name: str) -> int:
+        return int(self.identity.get("lines", {}).get(line, {}).get("widths", {}).get(name, 0))
+
+    def transfer_score(self, direction: str, scope: str, arm: str,
+                       mode: str = "dest_reference", col: str = VERDICT) -> float:
+        if self.transfer.empty:
+            return float("nan")
+        d = self.transfer[
+            (self.transfer.cell_line == direction) & (self.transfer.scope == scope)
+            & (self.transfer.split == f"cross_line__{mode}")
+            & (self.transfer.translator == "mlp") & (self.transfer.arm == arm)
+        ]
+        return float(d[col].iloc[0]) if not d.empty else float("nan")
 
     def disc(self, line: str, arm: str, col: str = "discrimination_cell_eval_mean") -> float:
         d = self.primary(line)

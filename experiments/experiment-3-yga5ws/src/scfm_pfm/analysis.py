@@ -303,12 +303,21 @@ def protein_reference_check(reference: pd.DataFrame, primary: pd.DataFrame) -> l
     return rows
 
 
-def protein_summary(runs: pd.DataFrame, con: pd.DataFrame, nulls: pd.DataFrame) -> dict:
+#: the arms the protein control is paired against, one paired bootstrap each
+PROTEIN_REFERENCES = ("coexp", "transcriptformer_emb", "scprint_emb", "scgpt_emb")
+
+
+def protein_summary(runs: pd.DataFrame, per_pert: pd.DataFrame, nulls: pd.DataFrame) -> dict:
     """The protein arm read against the arms it is a control for.
 
     One block per cell line on the cell the verdict is read from: the raw ESM2
     arms, the model embedding arms they are the control for, co-expression, the
     width-matched random-vector nulls, and the largest shuffled-label draw.
+
+    The comparison that answers the question is paired: every arm is scored on
+    the same held-out perturbations under the same folds, so the difference
+    between the protein arm and a model's embedding arm is read per perturbation
+    rather than between two independent intervals.
     """
     keep = (
         (runs.scope == "full") & (runs.split == "grouped") & (runs.translator == "mlp")
@@ -339,28 +348,36 @@ def protein_summary(runs: pd.DataFrame, con: pd.DataFrame, nulls: pd.DataFrame) 
             for r in want.sort_values(VERDICT_COL, ascending=False).itertuples()
         ]
         shuffled = block[block.arm.str.contains(SHUFFLE_TAG, regex=False)]
-        paired = con[
-            (con.cell_line == line) & (con.scope == "full") & (con.split == "grouped")
-            & (con.translator == "mlp") & (con.metric == "centered_weighted")
-            & (con.target_source == "run1_all_controls")
-            & con.arm.str.startswith("esm2")
+        pp = per_pert[
+            (per_pert.cell_line == line) & (per_pert.scope == "full")
+            & (per_pert.split == "grouped") & (per_pert.translator == "mlp")
+            & (per_pert.target_source == "run1_all_controls")
         ]
+        paired = []
+        for ref in PROTEIN_REFERENCES:
+            if ref not in set(pp.arm):
+                continue
+            c = contrasts(pp, reference=ref, metric="centered_weighted")
+            for r in c[c.arm.str.startswith("esm2")
+                       & ~c.arm.str.contains(SHUFFLE_TAG, regex=False)].itertuples():
+                paired.append({
+                    "arm": r.arm,
+                    "reference": ref,
+                    "median_difference": float(r.median_difference),
+                    "lo": float(r.lo),
+                    "hi": float(r.hi),
+                    "n_paired": int(r.n_paired),
+                    "min_resolvable_difference_achieved": float(
+                        r.min_resolvable_difference_achieved
+                    ),
+                })
         out["lines"][line] = {
             "arms": rows,
             "largest_shuffled_draw": (
                 float(np.nanmax(shuffled[VERDICT_COL].to_numpy(dtype=float)))
                 if not shuffled.empty else float("nan")
             ),
-            "protein_vs_coexpression": [
-                {
-                    "arm": r.arm,
-                    "median_difference": float(r.median_difference),
-                    "lo": float(r.lo),
-                    "hi": float(r.hi),
-                    "n_paired": int(r.n_paired),
-                }
-                for r in paired.itertuples()
-            ],
+            "paired_differences": paired,
         }
     if not nulls.empty:
         band = nulls[nulls.base_arm.str.startswith("esm2")]
@@ -608,7 +625,7 @@ def main(argv: list[str] | None = None) -> int:
         s_runs.to_parquet(out / "sensitivity.parquet", index=False)
         head["sensitivity"] = anchor_sensitivity(s_runs, runs, s_pert)
 
-    protein = protein_summary(runs, con, nulls)
+    protein = protein_summary(runs, per_pert, nulls)
     if protein:
         head["protein"] = protein
     if args.protein_reference:

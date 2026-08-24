@@ -19,12 +19,33 @@ from pathlib import Path
 import numpy as np
 
 
+def _load(path: Path) -> dict[str, np.ndarray]:
+    """Read every array, ``allow_pickle=False`` first.
+
+    ``pandas`` hands back ``dtype=object`` for a string column and ``np.savez``
+    stores that as a pickled array, which the safe loader refuses -- lazily, when
+    the key is read rather than when the file is opened, so the fallback has to
+    wrap the read. The tables are written with a unicode dtype now; this keeps a
+    table written before that readable instead of recomputing it on a GPU.
+    """
+    for allow in (False, True):
+        z = np.load(path, allow_pickle=allow)
+        try:
+            return {k: z[k] for k in z.files}
+        except ValueError:
+            if allow:
+                raise
+            print(f"[install] {path.name}: object-dtype column, reading with allow_pickle",
+                  flush=True)
+    raise RuntimeError(f"unreadable table {path}")  # pragma: no cover
+
+
 def install(table_path: Path, bundle: Path, lines: list[str], name: str,
             variant: str = "embedding") -> dict:
-    z = np.load(table_path, allow_pickle=False)
+    z = _load(table_path)
     emb = z[variant].astype(np.float32)
     gene_id = z["gene_id"].astype(str)
-    mapped = z["mapped"].astype(bool) if "mapped" in z.files else np.ones(len(gene_id), bool)
+    mapped = z["mapped"].astype(bool) if "mapped" in z else np.ones(len(gene_id), bool)
     pos = {g: i for i, g in enumerate(gene_id)}
     report = {"table": str(table_path), "variant": variant, "arm": name,
               "dim": int(emb.shape[1]), "lines": {}}

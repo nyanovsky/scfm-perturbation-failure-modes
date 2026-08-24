@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from silico_figures import add_reference_line, apply_theme, save_figure_bundle
+from silico_figures import SEQUENTIAL, add_reference_line, apply_theme, save_figure_bundle
 
 from .. import paths
 
@@ -41,6 +41,7 @@ ENTITY_LABEL = {
     "scprint": "scPRINT",
     "transcriptformer": "TranscriptFormer",
     "aido_cell": "AIDO.Cell",
+    "esm2": "ESM2, protein only",
     "coexp": "co-expression",
     "node": "node only",
     "mean_only": "mean effect",
@@ -62,6 +63,8 @@ def entity_of(arm: str) -> str:
     """Which compared thing an arm belongs to."""
     if SHUFFLE_TAG in arm or arm.startswith("null_"):
         return "null"
+    if arm.startswith("esm2"):
+        return "esm2"
     for model in ("scgpt", "scprint", "transcriptformer", "aido_cell"):
         if arm.startswith(model):
             return model
@@ -460,6 +463,130 @@ def split_gap(summary_dir: Path, out_root: Path) -> dict:
     return {"figure": "split_gap", "n_records": int(piv.shape[0]), "fig": fig}
 
 
+#: the arms the protein control is read against: the embedding arms whose tables
+#: may come from a protein model, the statistical baseline, and the two nulls
+#: matched to the protein arms' widths
+PROTEIN_PANEL_ARMS = (
+    "esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb", "scgpt_emb",
+    "aido_cell_emb", "coexp", "null_randgene_d5120", "null_randgene_d2560",
+)
+
+
+def protein_arms(summary_dir: Path, out_root: Path, translator: str = "mlp") -> dict | None:
+    """The raw protein arm beside the arms whose tables came from a protein model."""
+    runs = pd.read_parquet(summary_dir / "runs.parquet")
+    if not runs.arm.str.startswith("esm2").any():
+        return None
+    d = _with_entity(
+        runs[(runs.scope == "full") & (runs.split == "grouped")
+             & (runs.translator == translator)
+             & (runs.target_source == "run1_all_controls")
+             & runs.arm.isin(PROTEIN_PANEL_ARMS) & runs[VERDICT].notna()]
+    )
+    if d.empty:
+        return None
+    lines = sorted(d.cell_line.unique())
+    ref = {}
+    for line in lines:
+        block = runs[(runs.cell_line == line) & (runs.scope == "full")
+                     & (runs.split == "grouped") & (runs.translator == translator)]
+        ref[line] = [(_null_ceiling(block), "shuffled-label null")]
+    fig = _dot_grid(
+        d, VERDICT, VERDICT + "_lo", VERDICT + "_hi", "cell_line",
+        {x: _line_label(x) for x in lines},
+        "Fold-centred correlation (disattenuated)", ref, 460,
+    )
+    payload = d[[
+        "cell_line", "arm", "entity", "family", "feature_dim", "n_perturbations",
+        VERDICT, VERDICT + "_lo", VERDICT + "_hi", PREREG,
+    ]].to_dict("records")
+    save_figure_bundle(
+        fig, "protein_arms",
+        data={"records": payload, "metric": VERDICT, "preregistered_metric": PREREG,
+              "translator": translator,
+              "null_ceiling": {line: ref[line][0][0] for line in lines}},
+        alt=(
+            "Sorted dot plot of the held-out fold-centred correlation for the raw ESM2 arms, "
+            "the four model embedding arms, co-expression and the two width-matched random "
+            "controls, one panel per cell line."
+        ),
+        root=out_root,
+    )
+    return {"figure": "protein_arms", "n_records": len(payload), "fig": fig}
+
+
+#: how the similarity matrix orders and names its tables
+TABLE_LABEL = {
+    "esm2_3b": "ESM2-3B",
+    "esm2_650m": "ESM2-650M",
+    "transcriptformer": "TranscriptFormer",
+    "scprint": "scPRINT",
+    "scgpt": "scGPT",
+    "aido_cell": "AIDO.Cell",
+}
+
+
+def table_similarity(summary_dir: Path, out_root: Path) -> dict | None:
+    """How much of the raw protein table survives in each model's gene table."""
+    path = summary_dir / "table_similarity.json"
+    if not path.exists():
+        return None
+    record = json.loads(path.read_text())
+    lines = [x for x in ("hepg2", "jurkat") if x in record.get("lines", {})]
+    if not lines:
+        return None
+    names = [k for k in TABLE_LABEL if any(
+        k in {p.split("|")[0], p.split("|")[1]}
+        for p in record["lines"][lines[0]]["pairs"]
+    )]
+    fig = make_subplots(
+        rows=1, cols=len(lines), subplot_titles=[_line_label(x) for x in lines],
+        horizontal_spacing=0.16,
+    )
+    payload = []
+    for k, line in enumerate(lines):
+        pairs = record["lines"][line]["pairs"]
+        widths = record["lines"][line]["widths"]
+
+        def value(a: str, b: str, pairs=pairs) -> float:
+            if a == b:
+                return 1.0
+            key = f"{a}|{b}" if f"{a}|{b}" in pairs else f"{b}|{a}"
+            return float(pairs[key]["cka"]) if key in pairs else float("nan")
+
+        z = [[value(a, b) for b in names] for a in names]
+        floors = {
+            n: value(n, f"random_d{widths.get(n)}") for n in names
+            if f"random_d{widths.get(n)}" in {p.split("|")[1] for p in pairs}
+            or f"random_d{widths.get(n)}" in {p.split("|")[0] for p in pairs}
+        }
+        payload.append({"cell_line": line, "names": names, "cka": z,
+                        "widths": widths, "random_floor": floors,
+                        "n_genes_compared": record["lines"][line]["n_genes_compared"]})
+        fig.add_trace(
+            go.Heatmap(
+                z=z, x=[TABLE_LABEL[n] for n in names], y=[TABLE_LABEL[n] for n in names],
+                zmin=0, zmax=1, colorscale=SEQUENTIAL, showscale=(k == len(lines) - 1),
+                colorbar=dict(title="CKA"),
+                hovertemplate="%{y} vs %{x}: %{z:.3f}<extra></extra>",
+            ),
+            row=1, col=k + 1,
+        )
+        fig.update_xaxes(title_text="Gene table", row=1, col=k + 1)
+        fig.update_yaxes(title_text="Gene table", autorange="reversed", row=1, col=k + 1)
+    apply_theme(fig, height=460)
+    save_figure_bundle(
+        fig, "table_similarity",
+        data={"panels": payload, "metric": "linear CKA over the read-out genes"},
+        alt=(
+            "Two heatmaps, one per cell line, of linear CKA between every pair of gene "
+            "tables: the two raw ESM2 tables and the four single-cell models'."
+        ),
+        root=out_root,
+    )
+    return {"figure": "table_similarity", "n_records": len(payload), "fig": fig}
+
+
 def transfer_scores(summary_dir: Path, out_root: Path) -> dict | None:
     """Train on one screen, score on the other, against the gene-identity null."""
     path = summary_dir / "transfer_runs.parquet"
@@ -653,6 +780,8 @@ def build_all(summary_dir: Path, out_root: Path | None = None) -> list[dict]:
         anchor_sensitivity(summary_dir, out_root),
         beeline(summary_dir, out_root),
         split_gap(summary_dir, out_root),
+        protein_arms(summary_dir, out_root),
+        table_similarity(summary_dir, out_root),
         grid_cells(summary_dir, out_root),
         control_cell_overlap(summary_dir, out_root),
         transfer_scores(summary_dir, out_root),

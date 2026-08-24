@@ -155,14 +155,16 @@ def main(argv: list[str] | None = None) -> int:
             embedding=emb,
             embedding_truncated=trunc,
             mapped=mapped,
-            gene_id=table["gene_id"].astype(str).to_numpy(),
-            gene_name=table["gene_name"].astype(str).to_numpy(),
+            # a unicode dtype, not pandas' object dtype: np.savez pickles an
+            # object array and the safe loader then refuses to read it back
+            gene_id=np.asarray(table["gene_id"].astype(str).tolist(), dtype=np.str_),
+            gene_name=np.asarray(table["gene_name"].astype(str).tolist(), dtype=np.str_),
         )
         norms = np.linalg.norm(emb[mapped], axis=1)
         meta.update({
             "row_norm_mean": float(norms.mean()),
             "row_norm_sd": float(norms.std()),
-            "identical_rows": int(len(np.unique(emb[mapped], axis=0)) != int(mapped.sum())),
+            "duplicate_rows": int(int(mapped.sum()) - len(np.unique(emb[mapped], axis=0))),
             "max_abs_full_vs_truncated": float(np.abs(emb - trunc).max()),
             "genes_where_truncation_matters": int(
                 (np.abs(emb - trunc).max(axis=1) > 1e-6).sum()

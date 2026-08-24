@@ -7,5 +7,7 @@
   "scprint": "#B9605B",
   "transcriptformer": "#7495AB",
   "aido_cell": "#84713A",
-  "node": "#31362E"
+  "node": "#31362E",
+  "_note_esm2": "EDITORIAL_8 was exhausted by the eight entities above before the protein-model control existed. ESM2 is a ninth entity, so its colour is chosen rather than taken from the palette in order: a muted indigo that no editorial slot occupies. Its smallest deuteranope deltaE against the eight is 22.1 (co-expression), well above the package's threshold of 10 and above the existing worst pair, mean effect against scPRINT at 7.5.",
+  "esm2": "#5A5FA3"
 }
