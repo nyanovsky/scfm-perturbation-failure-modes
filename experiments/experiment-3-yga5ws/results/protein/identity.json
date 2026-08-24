@@ -1,0 +1,495 @@
+{
+  "written_by": "scfm_pfm.protein.identity",
+  "lines": {
+    "hepg2": {
+      "n_genes_total": 2721,
+      "n_genes_compared": 2721,
+      "n_genes_rsa": 1500,
+      "widths": {
+        "aido_cell": 640,
+        "esm2_3b": 2560,
+        "esm2_650m": 1280,
+        "random_d1280": 1280,
+        "random_d256": 256,
+        "random_d2560": 2560,
+        "random_d512": 512,
+        "random_d640": 640,
+        "scgpt": 512,
+        "scprint": 256,
+        "transcriptformer": 2560
+      },
+      "pairs": {
+        "aido_cell|esm2_3b": {
+          "cka": 0.018719,
+          "rsa_spearman": -0.000522
+        },
+        "aido_cell|esm2_650m": {
+          "cka": 0.016952,
+          "rsa_spearman": 0.000176
+        },
+        "aido_cell|random_d1280": {
+          "cka": 0.246779,
+          "rsa_spearman": 0.000231
+        },
+        "aido_cell|random_d256": {
+          "cka": 0.127829,
+          "rsa_spearman": 0.001941
+        },
+        "aido_cell|random_d2560": {
+          "cka": 0.303387,
+          "rsa_spearman": 0.000128
+        },
+        "aido_cell|random_d512": {
+          "cka": 0.174326,
+          "rsa_spearman": 0.001411
+        },
+        "aido_cell|random_d640": {
+          "cka": 0.190329,
+          "rsa_spearman": 0.001309
+        },
+        "aido_cell|scgpt": {
+          "cka": 0.114271,
+          "rsa_spearman": 0.014005
+        },
+        "aido_cell|scprint": {
+          "cka": 0.047655,
+          "rsa_spearman": 0.004034
+        },
+        "aido_cell|transcriptformer": {
+          "cka": 0.069744,
+          "rsa_spearman": -0.001548
+        },
+        "esm2_3b|esm2_650m": {
+          "cka": 0.860055,
+          "rsa_spearman": 0.850557
+        },
+        "esm2_3b|random_d1280": {
+          "cka": 0.022997,
+          "rsa_spearman": -0.000721
+        },
+        "esm2_3b|random_d256": {
+          "cka": 0.012562,
+          "rsa_spearman": 0.00113
+        },
+        "esm2_3b|random_d2560": {
+          "cka": 0.029215,
+          "rsa_spearman": -0.001815
+        },
+        "esm2_3b|random_d512": {
+          "cka": 0.016479,
+          "rsa_spearman": -0.001647
+        },
+        "esm2_3b|random_d640": {
+          "cka": 0.018394,
+          "rsa_spearman": -0.000607
+        },
+        "esm2_3b|scgpt": {
+          "cka": 0.046008,
+          "rsa_spearman": -0.015785
+        },
+        "esm2_3b|scprint": {
+          "cka": 0.171994,
+          "rsa_spearman": 0.237232
+        },
+        "esm2_3b|transcriptformer": {
+          "cka": 0.302856,
+          "rsa_spearman": 0.396024
+        },
+        "esm2_650m|random_d1280": {
+          "cka": 0.021063,
+          "rsa_spearman": -0.00046
+        },
+        "esm2_650m|random_d256": {
+          "cka": 0.011443,
+          "rsa_spearman": 0.000151
+        },
+        "esm2_650m|random_d2560": {
+          "cka": 0.026537,
+          "rsa_spearman": -0.002116
+        },
+        "esm2_650m|random_d512": {
+          "cka": 0.015289,
+          "rsa_spearman": -0.001544
+        },
+        "esm2_650m|random_d640": {
+          "cka": 0.016804,
+          "rsa_spearman": -9e-05
+        },
+        "esm2_650m|scgpt": {
+          "cka": 0.05167,
+          "rsa_spearman": 0.01523
+        },
+        "esm2_650m|scprint": {
+          "cka": 0.191219,
+          "rsa_spearman": 0.272706
+        },
+        "esm2_650m|transcriptformer": {
+          "cka": 0.329963,
+          "rsa_spearman": 0.327985
+        },
+        "random_d1280|random_d256": {
+          "cka": 0.165697,
+          "rsa_spearman": 0.000166
+        },
+        "random_d1280|random_d2560": {
+          "cka": 0.393429,
+          "rsa_spearman": -0.001835
+        },
+        "random_d1280|random_d512": {
+          "cka": 0.224196,
+          "rsa_spearman": -0.001592
+        },
+        "random_d1280|random_d640": {
+          "cka": 0.246683,
+          "rsa_spearman": -0.000369
+        },
+        "random_d1280|scgpt": {
+          "cka": 0.127807,
+          "rsa_spearman": 0.001133
+        },
+        "random_d1280|scprint": {
+          "cka": 0.053471,
+          "rsa_spearman": -0.000224
+        },
+        "random_d1280|transcriptformer": {
+          "cka": 0.086461,
+          "rsa_spearman": 0.000298
+        },
+        "random_d256|random_d2560": {
+          "cka": 0.204494,
+          "rsa_spearman": -0.000152
+        },
+        "random_d256|random_d512": {
+          "cka": 0.116841,
+          "rsa_spearman": -0.000212
+        },
+        "random_d256|random_d640": {
+          "cka": 0.128198,
+          "rsa_spearman": -0.000114
+        },
+        "random_d256|scgpt": {
+          "cka": 0.065234,
+          "rsa_spearman": -0.001319
+        },
+        "random_d256|scprint": {
+          "cka": 0.027453,
+          "rsa_spearman": -0.000358
+        },
+        "random_d256|transcriptformer": {
+          "cka": 0.044193,
+          "rsa_spearman": -0.000153
+        },
+        "random_d2560|random_d512": {
+          "cka": 0.277082,
+          "rsa_spearman": -0.00097
+        },
+        "random_d2560|random_d640": {
+          "cka": 0.30352,
+          "rsa_spearman": 8e-05
+        },
+        "random_d2560|scgpt": {
+          "cka": 0.156988,
+          "rsa_spearman": -0.000241
+        },
+        "random_d2560|scprint": {
+          "cka": 0.066001,
+          "rsa_spearman": -0.001166
+        },
+        "random_d2560|transcriptformer": {
+          "cka": 0.106568,
+          "rsa_spearman": -5.9e-05
+        },
+        "random_d512|random_d640": {
+          "cka": 0.173731,
+          "rsa_spearman": -4e-05
+        },
+        "random_d512|scgpt": {
+          "cka": 0.090104,
+          "rsa_spearman": -0.00138
+        },
+        "random_d512|scprint": {
+          "cka": 0.03671,
+          "rsa_spearman": -0.001736
+        },
+        "random_d512|transcriptformer": {
+          "cka": 0.062004,
+          "rsa_spearman": -0.001389
+        },
+        "random_d640|scgpt": {
+          "cka": 0.098369,
+          "rsa_spearman": 0.000649
+        },
+        "random_d640|scprint": {
+          "cka": 0.041297,
+          "rsa_spearman": 0.001254
+        },
+        "random_d640|transcriptformer": {
+          "cka": 0.067485,
+          "rsa_spearman": -0.002055
+        },
+        "scgpt|scprint": {
+          "cka": 0.331794,
+          "rsa_spearman": 0.303713
+        },
+        "scgpt|transcriptformer": {
+          "cka": 0.142657,
+          "rsa_spearman": -0.040342
+        },
+        "scprint|transcriptformer": {
+          "cka": 0.137762,
+          "rsa_spearman": 0.139022
+        }
+      }
+    },
+    "jurkat": {
+      "n_genes_total": 3247,
+      "n_genes_compared": 3247,
+      "n_genes_rsa": 1500,
+      "widths": {
+        "aido_cell": 640,
+        "esm2_3b": 2560,
+        "esm2_650m": 1280,
+        "random_d1280": 1280,
+        "random_d256": 256,
+        "random_d2560": 2560,
+        "random_d512": 512,
+        "random_d640": 640,
+        "scgpt": 512,
+        "scprint": 256,
+        "transcriptformer": 2560
+      },
+      "pairs": {
+        "aido_cell|esm2_3b": {
+          "cka": 0.016447,
+          "rsa_spearman": 0.0001
+        },
+        "aido_cell|esm2_650m": {
+          "cka": 0.014781,
+          "rsa_spearman": 0.000638
+        },
+        "aido_cell|random_d1280": {
+          "cka": 0.215817,
+          "rsa_spearman": 0.000551
+        },
+        "aido_cell|random_d256": {
+          "cka": 0.110092,
+          "rsa_spearman": 0.000727
+        },
+        "aido_cell|random_d2560": {
+          "cka": 0.268709,
+          "rsa_spearman": -0.001551
+        },
+        "aido_cell|random_d512": {
+          "cka": 0.150338,
+          "rsa_spearman": 0.000477
+        },
+        "aido_cell|random_d640": {
+          "cka": 0.164745,
+          "rsa_spearman": 0.001689
+        },
+        "aido_cell|scgpt": {
+          "cka": 0.097188,
+          "rsa_spearman": 0.014012
+        },
+        "aido_cell|scprint": {
+          "cka": 0.04091,
+          "rsa_spearman": 0.004239
+        },
+        "aido_cell|transcriptformer": {
+          "cka": 0.057832,
+          "rsa_spearman": -0.000466
+        },
+        "esm2_3b|esm2_650m": {
+          "cka": 0.863184,
+          "rsa_spearman": 0.855652
+        },
+        "esm2_3b|random_d1280": {
+          "cka": 0.020458,
+          "rsa_spearman": 0.000386
+        },
+        "esm2_3b|random_d256": {
+          "cka": 0.010933,
+          "rsa_spearman": 0.00051
+        },
+        "esm2_3b|random_d2560": {
+          "cka": 0.025048,
+          "rsa_spearman": 0.000359
+        },
+        "esm2_3b|random_d512": {
+          "cka": 0.013705,
+          "rsa_spearman": -0.000817
+        },
+        "esm2_3b|random_d640": {
+          "cka": 0.015255,
+          "rsa_spearman": -0.000673
+        },
+        "esm2_3b|scgpt": {
+          "cka": 0.048972,
+          "rsa_spearman": 0.001752
+        },
+        "esm2_3b|scprint": {
+          "cka": 0.157032,
+          "rsa_spearman": 0.243292
+        },
+        "esm2_3b|transcriptformer": {
+          "cka": 0.308724,
+          "rsa_spearman": 0.398229
+        },
+        "esm2_650m|random_d1280": {
+          "cka": 0.018552,
+          "rsa_spearman": 0.000333
+        },
+        "esm2_650m|random_d256": {
+          "cka": 0.009518,
+          "rsa_spearman": 0.000279
+        },
+        "esm2_650m|random_d2560": {
+          "cka": 0.022806,
+          "rsa_spearman": 5e-05
+        },
+        "esm2_650m|random_d512": {
+          "cka": 0.012577,
+          "rsa_spearman": -0.000793
+        },
+        "esm2_650m|random_d640": {
+          "cka": 0.013832,
+          "rsa_spearman": -0.0017
+        },
+        "esm2_650m|scgpt": {
+          "cka": 0.057393,
+          "rsa_spearman": 0.03015
+        },
+        "esm2_650m|scprint": {
+          "cka": 0.17395,
+          "rsa_spearman": 0.273335
+        },
+        "esm2_650m|transcriptformer": {
+          "cka": 0.339759,
+          "rsa_spearman": 0.330447
+        },
+        "random_d1280|random_d256": {
+          "cka": 0.144466,
+          "rsa_spearman": 0.001404
+        },
+        "random_d1280|random_d2560": {
+          "cka": 0.352854,
+          "rsa_spearman": -0.000426
+        },
+        "random_d1280|random_d512": {
+          "cka": 0.196225,
+          "rsa_spearman": 0.001152
+        },
+        "random_d1280|random_d640": {
+          "cka": 0.215407,
+          "rsa_spearman": -0.000611
+        },
+        "random_d1280|scgpt": {
+          "cka": 0.108629,
+          "rsa_spearman": 0.000961
+        },
+        "random_d1280|scprint": {
+          "cka": 0.044992,
+          "rsa_spearman": 0.001873
+        },
+        "random_d1280|transcriptformer": {
+          "cka": 0.073088,
+          "rsa_spearman": 0.000172
+        },
+        "random_d256|random_d2560": {
+          "cka": 0.180055,
+          "rsa_spearman": 0.000959
+        },
+        "random_d256|random_d512": {
+          "cka": 0.099732,
+          "rsa_spearman": 0.002059
+        },
+        "random_d256|random_d640": {
+          "cka": 0.109403,
+          "rsa_spearman": -0.000126
+        },
+        "random_d256|scgpt": {
+          "cka": 0.0551,
+          "rsa_spearman": -6e-05
+        },
+        "random_d256|scprint": {
+          "cka": 0.022558,
+          "rsa_spearman": 0.0001
+        },
+        "random_d256|transcriptformer": {
+          "cka": 0.037665,
+          "rsa_spearman": 0.000146
+        },
+        "random_d2560|random_d512": {
+          "cka": 0.245125,
+          "rsa_spearman": 0.000363
+        },
+        "random_d2560|random_d640": {
+          "cka": 0.269252,
+          "rsa_spearman": -0.002466
+        },
+        "random_d2560|scgpt": {
+          "cka": 0.135985,
+          "rsa_spearman": 0.000746
+        },
+        "random_d2560|scprint": {
+          "cka": 0.055633,
+          "rsa_spearman": -0.00028
+        },
+        "random_d2560|transcriptformer": {
+          "cka": 0.091737,
+          "rsa_spearman": 0.000907
+        },
+        "random_d512|random_d640": {
+          "cka": 0.150167,
+          "rsa_spearman": -0.00114
+        },
+        "random_d512|scgpt": {
+          "cka": 0.075366,
+          "rsa_spearman": -0.001683
+        },
+        "random_d512|scprint": {
+          "cka": 0.031241,
+          "rsa_spearman": -0.000349
+        },
+        "random_d512|transcriptformer": {
+          "cka": 0.050736,
+          "rsa_spearman": -0.00067
+        },
+        "random_d640|scgpt": {
+          "cka": 0.082275,
+          "rsa_spearman": -0.00175
+        },
+        "random_d640|scprint": {
+          "cka": 0.033536,
+          "rsa_spearman": -0.002413
+        },
+        "random_d640|transcriptformer": {
+          "cka": 0.056123,
+          "rsa_spearman": 0.001601
+        },
+        "scgpt|scprint": {
+          "cka": 0.335869,
+          "rsa_spearman": 0.310008
+        },
+        "scgpt|transcriptformer": {
+          "cka": 0.13505,
+          "rsa_spearman": -0.005973
+        },
+        "scprint|transcriptformer": {
+          "cka": 0.132518,
+          "rsa_spearman": 0.167795
+        }
+      }
+    }
+  },
+  "esm2_variants": {
+    "esm2_3b": {
+      "cka_full_vs_truncated": 0.989827,
+      "rows_differing": 437
+    },
+    "esm2_650m": {
+      "cka_full_vs_truncated": 0.989937,
+      "rows_differing": 437
+    }
+  }
+}

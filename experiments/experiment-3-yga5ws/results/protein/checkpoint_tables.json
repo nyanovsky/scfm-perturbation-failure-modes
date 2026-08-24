@@ -1,0 +1,488 @@
+{
+  "within_line": [
+    {
+      "cell_line": "hepg2",
+      "arm": "scgpt_emb",
+      "family": "scfm",
+      "feature_dim": 1024,
+      "score": 0.10887821051526674,
+      "lo": 0.0790922144775752,
+      "hi": 0.1417428348371028
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb",
+      "family": "protein",
+      "feature_dim": 5120,
+      "score": 0.10738655423271576,
+      "lo": 0.07756382965792867,
+      "hi": 0.1466785132744193
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "transcriptformer_emb",
+      "family": "scfm",
+      "feature_dim": 5120,
+      "score": 0.0847984206926103,
+      "lo": 0.048998184971208926,
+      "hi": 0.10976316089750869
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "scprint_emb",
+      "family": "scfm",
+      "feature_dim": 512,
+      "score": 0.08459949606608556,
+      "lo": 0.04630512846563676,
+      "hi": 0.11713951627170303
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_650m_emb",
+      "family": "protein",
+      "feature_dim": 2560,
+      "score": 0.078326551216008,
+      "lo": 0.04230108552624035,
+      "hi": 0.13477071300791377
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d2560",
+      "family": "null",
+      "feature_dim": 2560,
+      "score": 0.0068051563391568,
+      "lo": -0.028224875006817685,
+      "hi": 0.02896727005321646
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "coexp",
+      "family": "statistical",
+      "feature_dim": 4,
+      "score": 0.00517619255164999,
+      "lo": -0.006354608820104509,
+      "hi": 0.016917808922339926
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d5120",
+      "family": "null",
+      "feature_dim": 5120,
+      "score": -0.014815905139365971,
+      "lo": -0.03555722606634811,
+      "hi": 0.013384465009271741
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb",
+      "family": "protein",
+      "feature_dim": 5120,
+      "score": 0.178378884550599,
+      "lo": 0.15091415561091864,
+      "hi": 0.21299451227598035
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "transcriptformer_emb",
+      "family": "scfm",
+      "feature_dim": 5120,
+      "score": 0.17260292953650547,
+      "lo": 0.13934274496444046,
+      "hi": 0.20539077506138154
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scprint_emb",
+      "family": "scfm",
+      "feature_dim": 512,
+      "score": 0.15874266972479487,
+      "lo": 0.12407291383458043,
+      "hi": 0.18788934501609045
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_650m_emb",
+      "family": "protein",
+      "feature_dim": 2560,
+      "score": 0.15818285213531866,
+      "lo": 0.1183910017126994,
+      "hi": 0.18547396335190042
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "scgpt_emb",
+      "family": "scfm",
+      "feature_dim": 1024,
+      "score": 0.11257733813165048,
+      "lo": 0.08836978765918109,
+      "hi": 0.13579669871152883
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "coexp",
+      "family": "statistical",
+      "feature_dim": 4,
+      "score": 0.03363644111375723,
+      "lo": 0.01679300819737662,
+      "hi": 0.049287191592748865
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d2560",
+      "family": "null",
+      "feature_dim": 2560,
+      "score": 0.008337391375397489,
+      "lo": -0.00839076294532766,
+      "hi": 0.03732753467402737
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d5120",
+      "family": "null",
+      "feature_dim": 5120,
+      "score": -0.009526331997169254,
+      "lo": -0.029874901278179003,
+      "hi": 0.0059881057816376605
+    }
+  ],
+  "paired_differences": [
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb",
+      "reference": "coexp",
+      "median_difference": 0.0666409693776659,
+      "lo": 0.04244007564734424,
+      "hi": 0.0969311249240466,
+      "n_paired": 524,
+      "min_resolvable_difference_achieved": 0.03133457914692319
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_650m_emb",
+      "reference": "coexp",
+      "median_difference": 0.04461586102267154,
+      "lo": 0.015511816242463929,
+      "hi": 0.08745576000296731,
+      "n_paired": 524,
+      "min_resolvable_difference_achieved": 0.030876278574036763
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb",
+      "reference": "transcriptformer_emb",
+      "median_difference": 0.03662909098027109,
+      "lo": 0.010469336365349682,
+      "hi": 0.06715652419936786,
+      "n_paired": 524,
+      "min_resolvable_difference_achieved": 0.03534643653997487
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_650m_emb",
+      "reference": "transcriptformer_emb",
+      "median_difference": 0.01460398262527672,
+      "lo": -0.01406230695491263,
+      "hi": 0.05753397662060083,
+      "n_paired": 524,
+      "min_resolvable_difference_achieved": 0.036106672747003285
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb",
+      "reference": "scprint_emb",
+      "median_difference": 0.01727072859982272,
+      "lo": -0.014037138220097774,
+      "hi": 0.05242065080761682,
+      "n_paired": 524,
+      "min_resolvable_difference_achieved": 0.03548382128472409
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_650m_emb",
+      "reference": "scprint_emb",
+      "median_difference": -0.0047543797551716505,
+      "lo": -0.04036921892675329,
+      "hi": 0.039292178288184626,
+      "n_paired": 524,
+      "min_resolvable_difference_achieved": 0.036585240714806525
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb",
+      "reference": "scgpt_emb",
+      "median_difference": 0.028020243185660494,
+      "lo": -0.002501882682589427,
+      "hi": 0.06256320584701347,
+      "n_paired": 524,
+      "min_resolvable_difference_achieved": 0.03936904972350366
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_650m_emb",
+      "reference": "scgpt_emb",
+      "median_difference": 0.005995134830666125,
+      "lo": -0.028808977354350798,
+      "hi": 0.051744117860360025,
+      "n_paired": 524,
+      "min_resolvable_difference_achieved": 0.0392025891656727
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb",
+      "reference": "coexp",
+      "median_difference": 0.10376112410839365,
+      "lo": 0.07801608482066473,
+      "hi": 0.13293137386988405,
+      "n_paired": 705,
+      "min_resolvable_difference_achieved": 0.029123117540559667
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_650m_emb",
+      "reference": "coexp",
+      "median_difference": 0.09030828915830663,
+      "lo": 0.0574123407629991,
+      "hi": 0.1165500706692869,
+      "n_paired": 705,
+      "min_resolvable_difference_achieved": 0.027892700827024112
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb",
+      "reference": "transcriptformer_emb",
+      "median_difference": 0.029100512267750886,
+      "lo": 0.006679039847930335,
+      "hi": 0.053061110649316345,
+      "n_paired": 705,
+      "min_resolvable_difference_achieved": 0.023080110152650643
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_650m_emb",
+      "reference": "transcriptformer_emb",
+      "median_difference": 0.015647677317663866,
+      "lo": -0.014451640438660953,
+      "hi": 0.036429297440453166,
+      "n_paired": 705,
+      "min_resolvable_difference_achieved": 0.02410427762081752
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb",
+      "reference": "scprint_emb",
+      "median_difference": 0.013079933308887376,
+      "lo": -0.009048098786587268,
+      "hi": 0.04135199898218104,
+      "n_paired": 705,
+      "min_resolvable_difference_achieved": 0.022980595636618778
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_650m_emb",
+      "reference": "scprint_emb",
+      "median_difference": -0.00037290164119964386,
+      "lo": -0.029359738758716867,
+      "hi": 0.02640879503400267,
+      "n_paired": 705,
+      "min_resolvable_difference_achieved": 0.022622794203143247
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb",
+      "reference": "scgpt_emb",
+      "median_difference": 0.04740218972888935,
+      "lo": 0.020287350422915282,
+      "hi": 0.07843147050314905,
+      "n_paired": 705,
+      "min_resolvable_difference_achieved": 0.028256301781673977
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_650m_emb",
+      "reference": "scgpt_emb",
+      "median_difference": 0.03394935477880233,
+      "lo": -5.805779789810213e-05,
+      "hi": 0.06125766335078485,
+      "n_paired": 705,
+      "min_resolvable_difference_achieved": 0.028710135925311724
+    }
+  ],
+  "unseen_gene_transfer": [
+    {
+      "block": "hepg2->jurkat|transfer_unseen|cross_line__dest_all",
+      "arm": "transcriptformer_emb",
+      "family": "scfm",
+      "source": "protein_job",
+      "score": 0.07043475360218518,
+      "lo": 0.025184307280631455,
+      "hi": 0.11249147950130892,
+      "preregistered": 0.07935573828220231,
+      "n_perturbations": 177
+    },
+    {
+      "block": "hepg2->jurkat|transfer_unseen|cross_line__dest_all",
+      "arm": "esm2_650m_emb",
+      "family": "protein",
+      "source": "protein_job",
+      "score": 0.06504829167005258,
+      "lo": 0.03792566665612297,
+      "hi": 0.10826211337319865,
+      "preregistered": 0.07113815418618236,
+      "n_perturbations": 177
+    },
+    {
+      "block": "hepg2->jurkat|transfer_unseen|cross_line__dest_all",
+      "arm": "scprint_emb",
+      "family": "scfm",
+      "source": "main_sweep",
+      "score": 0.059568777139255104,
+      "lo": 0.019303613587839254,
+      "hi": 0.09469839477521122,
+      "preregistered": 0.09300855330584902,
+      "n_perturbations": 177
+    },
+    {
+      "block": "hepg2->jurkat|transfer_unseen|cross_line__dest_all",
+      "arm": "esm2_3b_emb",
+      "family": "protein",
+      "source": "protein_job",
+      "score": 0.057657774163035636,
+      "lo": 0.017556482173895337,
+      "hi": 0.10104334575537452,
+      "preregistered": 0.0719794191807179,
+      "n_perturbations": 177
+    },
+    {
+      "block": "hepg2->jurkat|transfer_unseen|cross_line__dest_all",
+      "arm": "scgpt_emb",
+      "family": "scfm",
+      "source": "protein_job",
+      "score": 0.03406728511397768,
+      "lo": -0.005029551442190253,
+      "hi": 0.07448614133305163,
+      "preregistered": 0.041761647700548556,
+      "n_perturbations": 177
+    },
+    {
+      "block": "hepg2->jurkat|transfer_unseen|cross_line__dest_all",
+      "arm": "coexp",
+      "family": "statistical",
+      "source": "protein_job",
+      "score": -0.005537009870411353,
+      "lo": -0.02611327578620634,
+      "hi": 0.034868488517348625,
+      "preregistered": 0.00839836772039858,
+      "n_perturbations": 177
+    },
+    {
+      "block": "hepg2->jurkat|transfer_unseen|cross_line__dest_all",
+      "arm": "null_randgene_d2560",
+      "family": "null",
+      "source": "protein_job",
+      "score": -0.0068107919584469885,
+      "lo": -0.03994343533981369,
+      "hi": 0.04348753831275318,
+      "preregistered": -0.007858741554091359,
+      "n_perturbations": 177
+    },
+    {
+      "block": "hepg2->jurkat|transfer_unseen|cross_line__dest_all",
+      "arm": "null_randgene_d5120",
+      "family": "null",
+      "source": "main_sweep",
+      "score": -0.010526918270830658,
+      "lo": -0.04601484388712702,
+      "hi": 0.022072105057275276,
+      "preregistered": -0.01767727268999355,
+      "n_perturbations": 177
+    },
+    {
+      "block": "jurkat->hepg2|transfer_unseen|cross_line__dest_all",
+      "arm": "transcriptformer_emb",
+      "family": "scfm",
+      "source": "protein_job",
+      "score": 0.08815438888738676,
+      "lo": 0.06179564083428404,
+      "hi": 0.10720505342026088,
+      "preregistered": 0.09389574868992447,
+      "n_perturbations": 156
+    },
+    {
+      "block": "jurkat->hepg2|transfer_unseen|cross_line__dest_all",
+      "arm": "esm2_3b_emb",
+      "family": "protein",
+      "source": "protein_job",
+      "score": 0.0854378625355505,
+      "lo": 0.0348565821569026,
+      "hi": 0.12300122897148154,
+      "preregistered": 0.08039661847310585,
+      "n_perturbations": 156
+    },
+    {
+      "block": "jurkat->hepg2|transfer_unseen|cross_line__dest_all",
+      "arm": "esm2_650m_emb",
+      "family": "protein",
+      "source": "protein_job",
+      "score": 0.08483781890590948,
+      "lo": 0.03819565201053312,
+      "hi": 0.11122401736273828,
+      "preregistered": 0.10194982786743212,
+      "n_perturbations": 156
+    },
+    {
+      "block": "jurkat->hepg2|transfer_unseen|cross_line__dest_all",
+      "arm": "scprint_emb",
+      "family": "scfm",
+      "source": "main_sweep",
+      "score": 0.07458937663738809,
+      "lo": 0.0477057374951979,
+      "hi": 0.12019250521356421,
+      "preregistered": 0.09676702363615605,
+      "n_perturbations": 156
+    },
+    {
+      "block": "jurkat->hepg2|transfer_unseen|cross_line__dest_all",
+      "arm": "scgpt_emb",
+      "family": "scfm",
+      "source": "protein_job",
+      "score": 0.0323431290433036,
+      "lo": -0.01800427015740643,
+      "hi": 0.08469911476718722,
+      "preregistered": 0.07178637467731995,
+      "n_perturbations": 156
+    },
+    {
+      "block": "jurkat->hepg2|transfer_unseen|cross_line__dest_all",
+      "arm": "null_randgene_d5120",
+      "family": "null",
+      "source": "main_sweep",
+      "score": 0.012271778126741312,
+      "lo": -0.03166054387056426,
+      "hi": 0.04184513111666686,
+      "preregistered": 0.02129282832821344,
+      "n_perturbations": 156
+    },
+    {
+      "block": "jurkat->hepg2|transfer_unseen|cross_line__dest_all",
+      "arm": "coexp",
+      "family": "statistical",
+      "source": "protein_job",
+      "score": 0.006094785122021438,
+      "lo": -0.034002220932920185,
+      "hi": 0.04337824277267553,
+      "preregistered": -0.014347928769071755,
+      "n_perturbations": 156
+    },
+    {
+      "block": "jurkat->hepg2|transfer_unseen|cross_line__dest_all",
+      "arm": "null_randgene_d2560",
+      "family": "null",
+      "source": "protein_job",
+      "score": -0.025194725645383557,
+      "lo": -0.05811143913483444,
+      "hi": 0.011870914644464702,
+      "preregistered": -0.022883780890846164,
+      "n_perturbations": 156
+    }
+  ]
+}

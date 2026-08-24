@@ -45,6 +45,20 @@ def base_arm(arm: str) -> str:
     return arm.split(SHUFFLE_TAG)[0]
 
 
+#: arms that exist only because of the protein control: the raw ESM2 tables and
+#: the random-vector null cut to ESM2-650M's width. They were scored in their
+#: own job, months after the sweep, so roll-ups that describe *the sweep* --
+#: the shuffled-label ceiling and the grid-cell ordering agreement -- are taken
+#: over the arms the sweep itself scored. The protein arms get their own
+#: versions of both, and every per-arm table holds all of them.
+PROTEIN_ONLY_ARMS = ("esm2_650m_emb", "esm2_3b_emb", "null_randgene_d2560")
+
+
+def is_protein_arm(arm: str) -> bool:
+    """True for an arm the protein control introduced, shuffled draws included."""
+    return base_arm(arm) in PROTEIN_ONLY_ARMS
+
+
 def null_band(runs: pd.DataFrame) -> pd.DataFrame:
     """The spread of the shuffled-label draws, which is what a score must clear.
 
@@ -156,7 +170,7 @@ def null_ceiling(runs: pd.DataFrame, cell: dict, col: str) -> float:
     d = runs
     for k, v in cell.items():
         d = d[d[k] == v]
-    d = d[d.arm.str.contains(SHUFFLE_TAG, regex=False)]
+    d = d[d.arm.str.contains(SHUFFLE_TAG, regex=False) & ~d.arm.map(is_protein_arm)]
     if d.empty:
         return float("nan")
     return float(np.nanmax(d[col].to_numpy(dtype=float)))
@@ -279,11 +293,16 @@ def protein_reference_check(reference: pd.DataFrame, primary: pd.DataFrame) -> l
     merged table -- a merge would replace the scored primary rows with the
     re-run ones.
     """
-    if reference.empty:
+    if reference.empty or primary.empty:
         return []
+    p = (
+        primary[primary.target_source == "run1_all_controls"]
+        if "target_source" in primary.columns
+        else primary
+    )
     base = {
         (r.cell_line, r.scope, r.split, r.arm, r.translator): float(getattr(r, VERDICT_COL))
-        for r in primary[primary.target_source == "run1_all_controls"].itertuples()
+        for r in p.itertuples()
     }
     rows = []
     for r in reference.itertuples():
@@ -347,7 +366,9 @@ def protein_summary(runs: pd.DataFrame, per_pert: pd.DataFrame, nulls: pd.DataFr
             }
             for r in want.sort_values(VERDICT_COL, ascending=False).itertuples()
         ]
-        shuffled = block[block.arm.str.contains(SHUFFLE_TAG, regex=False)]
+        shuffled = block[
+            block.arm.str.contains(SHUFFLE_TAG, regex=False) & block.arm.map(is_protein_arm)
+        ]
         pp = per_pert[
             (per_pert.cell_line == line) & (per_pert.scope == "full")
             & (per_pert.split == "grouped") & (per_pert.translator == "mlp")
@@ -373,15 +394,76 @@ def protein_summary(runs: pd.DataFrame, per_pert: pd.DataFrame, nulls: pd.DataFr
                 })
         out["lines"][line] = {
             "arms": rows,
-            "largest_shuffled_draw": (
+            "largest_protein_shuffled_draw": (
                 float(np.nanmax(shuffled[VERDICT_COL].to_numpy(dtype=float)))
                 if not shuffled.empty else float("nan")
             ),
+            "n_protein_shuffled_draws": int(len(shuffled)),
             "paired_differences": paired,
         }
     if not nulls.empty:
         band = nulls[nulls.base_arm.str.startswith("esm2")]
         out["protein_shuffled_label_band"] = band.to_dict("records")
+    return out
+
+
+#: arms carried into the cross-line protein table, in the order they are read
+PROTEIN_TRANSFER_ARMS = (
+    "esm2_3b_emb",
+    "esm2_650m_emb",
+    "transcriptformer_emb",
+    "scprint_emb",
+    "scgpt_emb",
+    "coexp",
+    "null_randgene_d2560",
+    "null_randgene_d5120",
+)
+
+
+def protein_transfer_summary(transfer: pd.DataFrame, reference: pd.DataFrame) -> dict:
+    """The cross-line table, with the protein arms alongside what they control for.
+
+    The protein arms were scored in their own job. Where that job also re-ran a
+    model embedding arm, its own number is used, so the comparison sits inside
+    one job; where it did not, the main transfer sweep's number is used. Every
+    row says which of the two it came from, and
+    ``protein_transfer_reference_check`` reports how far the re-runs sit from
+    the main sweep.
+    """
+    if transfer.empty or not transfer.arm.str.startswith("esm2").any():
+        return {}
+    keys = ["cell_line", "scope", "split", "arm"]
+    own = transfer[transfer.arm.str.startswith(("esm2", "null_randgene_d2560"))]
+    pieces = [own.assign(source="protein_job")]
+    covered = set(map(tuple, own[keys].to_numpy().tolist()))
+    if not reference.empty:
+        pieces.append(reference.assign(source="protein_job"))
+        covered |= set(map(tuple, reference[keys].to_numpy().tolist()))
+    rest = transfer[
+        transfer.arm.isin(PROTEIN_TRANSFER_ARMS)
+        & ~pd.Series(
+            [tuple(x) in covered for x in transfer[keys].to_numpy().tolist()],
+            index=transfer.index,
+        )
+    ]
+    pieces.append(rest.assign(source="main_sweep"))
+    d = pd.concat(pieces, ignore_index=True)
+    d = d[(d.translator == "mlp") & d.arm.isin(PROTEIN_TRANSFER_ARMS)]
+    out: dict = {"metric": VERDICT_COL, "blocks": {}}
+    for (line, scope, split), block in d.groupby(["cell_line", "scope", "split"]):
+        out["blocks"][f"{line}|{scope}|{split}"] = [
+            {
+                "arm": r.arm,
+                "family": r.family,
+                "source": r.source,
+                "score": float(getattr(r, VERDICT_COL)),
+                "lo": float(getattr(r, VERDICT_COL + "_lo")),
+                "hi": float(getattr(r, VERDICT_COL + "_hi")),
+                "preregistered": float(getattr(r, PREREG_COL)),
+                "n_perturbations": int(r.n_perturbations),
+            }
+            for r in block.sort_values(VERDICT_COL, ascending=False).itertuples()
+        ]
     return out
 
 
@@ -515,14 +597,18 @@ def anchor_sensitivity(
     }
 
 
-def ordering_agreement(grid: pd.DataFrame) -> pd.DataFrame:
+def ordering_agreement(grid: pd.DataFrame, with_protein: bool = False) -> pd.DataFrame:
     """Does the grid agree about which arm is ahead?
 
     Spearman correlation between the arm ordering under the primary cell and
-    under every other cell, per (cell line, scope, split, translator).
+    under every other cell, per (cell line, scope, split, translator). Read over
+    the sweep's own arms by default; ``with_protein`` adds the protein control's
+    arms, which changes the ranking because it changes the set being ranked.
     """
     rows = []
     keys = ["cell_line", "scope", "split", "translator", "target_source"]
+    if not with_protein:
+        grid = grid[~grid.arm.map(is_protein_arm)]
     for key, block in grid.groupby(keys, dropna=False):
         base = block[block.is_primary].set_index("arm")["value"]
         for (t, w, c), sub in block.groupby(["target", "weighting", "correction"]):
@@ -568,6 +654,14 @@ def main(argv: list[str] | None = None) -> int:
             "job's re-runs are."
         ),
     )
+    ap.add_argument(
+        "--protein-transfer-reference",
+        default=None,
+        help=(
+            "shard directories holding the cross-line arms the protein job re-ran as "
+            "its own reference, kept out of transfer_runs.parquet for the same reason."
+        ),
+    )
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
     sweep_dirs = (
@@ -587,14 +681,17 @@ def main(argv: list[str] | None = None) -> int:
         nulls.to_parquet(out / "null_band.parquet", index=False)
     grid = grid_table(runs)
     agree = ordering_agreement(grid)
+    agree_protein = ordering_agreement(grid, with_protein=True)
     head = headline(runs, con, nulls)
     overlap = control_cell_overlap(runs)
     if not overlap.empty:
         overlap.to_parquet(out / "control_cell_overlap.parquet", index=False)
         head["control_cell_overlap"] = overlap.to_dict("records")
 
+    transfer_runs = pd.DataFrame()
     if args.transfer_sweep:
         t_runs, t_pert = load_sweep(*[Path(x) for x in args.transfer_sweep.split(",") if x])
+        transfer_runs = t_runs
         t_runs.to_parquet(out / "transfer_runs.parquet", index=False)
         t_pert.to_parquet(out / "transfer_per_perturbation.parquet", index=False)
         t_con = pd.concat(
@@ -633,11 +730,25 @@ def main(argv: list[str] | None = None) -> int:
         p_runs.to_parquet(out / "protein_reference.parquet", index=False)
         head["protein_reference_check"] = protein_reference_check(p_runs, runs)
 
+    pt_runs = pd.DataFrame()
+    if args.protein_transfer_reference:
+        pt_runs, _ = load_sweep(
+            *[Path(x) for x in args.protein_transfer_reference.split(",") if x]
+        )
+        pt_runs.to_parquet(out / "protein_transfer_reference.parquet", index=False)
+        head["protein_transfer_reference_check"] = protein_reference_check(
+            pt_runs, transfer_runs
+        )
+    protein_transfer = protein_transfer_summary(transfer_runs, pt_runs)
+    if protein_transfer:
+        head["protein_transfer"] = protein_transfer
+
     runs.to_parquet(out / "runs.parquet", index=False)
     per_pert.to_parquet(out / "per_perturbation.parquet", index=False)
     con.to_parquet(out / "contrasts.parquet", index=False)
     grid.to_parquet(out / "grid.parquet", index=False)
     agree.to_parquet(out / "ordering_agreement.parquet", index=False)
+    agree_protein.to_parquet(out / "ordering_agreement_with_protein.parquet", index=False)
     (out / "headline.json").write_text(json.dumps(head, indent=2))
     print(json.dumps(head, indent=2)[:6000])
     return 0

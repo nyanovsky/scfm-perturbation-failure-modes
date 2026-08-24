@@ -15,6 +15,7 @@ the control the UGRN paper never ran.
 | `src/scfm_pfm/fetch.py` | pulls run 1 / run 2 artifacts into a job from a signed-link manifest |
 | `src/scfm_pfm/ingest/` | the one bundle every later job reads: targets, co-expression, features |
 | `src/scfm_pfm/translate/` | arms, splits, the translator, the sweep runner |
+| `src/scfm_pfm/protein/` | the protein-model control: checkpoint provenance audit, gene-to-protein mapping, ESM2 tables, table similarity |
 | `src/scfm_pfm/report/` | figures and the report |
 | `results/handoff/` | small tables that travel with the worktree into a job |
 
@@ -28,7 +29,14 @@ python -m scfm_pfm.ingest.build --urls results/handoff/urls/artifact_urls.json -
 # 2. the translator sweep (GPU job, mounts the ingest job's volume)
 python -m scfm_pfm.translate.runner --shard <k> --n-shards <n>
 
-# 3. scoring, figures, report
+# 3. the protein-model control (see `src/scfm_pfm/protein/`)
+python -m scfm_pfm.protein.audit --cache _ckpt --out results/provenance   # CPU
+python -m scfm_pfm.protein.uniprot --out results/protein                  # CPU, network
+python -m scfm_pfm.protein.esm_embed --genes results/protein --out results/protein  # GPU
+python -m scfm_pfm.protein.install_arm --tables results/protein --bundle <bundle>
+python -m scfm_pfm.translate.runner --bundle <bundle> --arms esm2_650m_emb,esm2_3b_emb,...
+
+# 4. scoring, figures, report
 python -m scfm_pfm.report.build
 ```
 
@@ -61,6 +69,10 @@ Small reviewable copies live in this worktree.
 | control-split targets | `ctrl_split_targets/` (store) | effect recomputed against each control half and against all control cells, plus `recompute_report.json` |
 | control-overlap scoring | `alt_target_ctrl0/`, `alt_target_ctrl1/`, `alt_target_ctrlall/` (store) | the key arms rescored against each of those targets |
 | anchor sensitivity | `sensitivity/` (store) | HepG2 response arms at the uniform-virtual, individual-cells and masked anchors, with each model's mean-control arm re-run as the in-job reference |
+| gene-table provenance | `provenance/audit.json`, `provenance/audit_tables.json` (store), same under `results/provenance/` (worktree) | per model, which tensor is the gene-identity table and whether pretraining updated it, read from the released checkpoints |
+| protein tables | `protein/` (store): `esm2_650m.npz`, `esm2_3b.npz`, `gene_to_protein.parquet`, `identity.json`, and the three reports; `results/protein/` (worktree) keeps the small ones | ESM2 embeddings of each read-out gene's canonical human protein, the mapping that produced them, and how close every gene table is to them |
+| protein arms | `protein_sweep/<line>/`, `protein_shuffle/<line>/`, `protein_transfer/` (store) | the ESM2 arms and their width-matched null over the same grid as every other arm, their shuffled-label draws, and both transfer directions |
+| protein in-job reference | `protein_reference/<line>/`, `protein_transfer_reference/` (store) | main-sweep arms re-run inside the protein jobs; kept out of the merged tables so no scored row is overwritten |
 | no-op query record | `results/handoff/no_op_queries_per_gene.csv`, `results/verification/no_op_correction.json` (worktree) | which (perturbed gene, value) queries were no-ops and in how many cells, derived from run 2's per-query records, plus the five checks behind the per-query exclusion |
 | BEELINE reproduction | `beeline/beeline_reproduction.json` (store), `results/beeline_reproduction.json` (worktree) | the source paper's scGPT embedding baseline re-fitted on its own benchmark, with a permuted-embedding control and an unseen-gene slice |
 | discrimination versions | `results/discrimination_versions.json`, `results/discrimination/` (worktree) | the same saved predictions rescored under cell-eval 0.5.18, 0.5.21 and 0.8.2 |
@@ -80,9 +92,13 @@ analysis command from the shards and are deliberately not committed.
 PYTHONPATH=src apy -m scfm_pfm.analysis \
   --sweep scratch/dl/leakcheck,scratch/dl/sweep,scratch/dl/sweep_common_random,\
 scratch/dl/sweep_node,scratch/dl/sweep_node_common,scratch/dl/alt_target_ctrl0,\
-scratch/dl/alt_target_ctrl1,scratch/dl/alt_target_ctrlall \
-  --transfer-sweep scratch/dl/transfer2,scratch/dl/transfer_unseen \
+scratch/dl/alt_target_ctrl1,scratch/dl/alt_target_ctrlall,\
+scratch/dl/protein_sweep/hepg2,scratch/dl/protein_sweep/jurkat,\
+scratch/dl/protein_shuffle/hepg2,scratch/dl/protein_shuffle/jurkat \
+  --transfer-sweep scratch/dl/transfer2,scratch/dl/transfer_unseen,scratch/dl/protein_transfer \
   --sensitivity-sweep scratch/dl/sensitivity \
+  --protein-reference scratch/dl/protein_reference/hepg2,scratch/dl/protein_reference/jurkat \
+  --protein-transfer-reference scratch/dl/protein_transfer_reference \
   --out results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.contract --summary results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.build \

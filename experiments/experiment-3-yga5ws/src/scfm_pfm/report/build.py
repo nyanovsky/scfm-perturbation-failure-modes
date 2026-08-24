@@ -561,6 +561,202 @@ def where_signal(r: Results) -> str:
                      body + tab, sources=[S_ANALYSIS, S_ARMS])
 
 
+#: what the audit found, per model, with the checkpoint fact it rests on. The
+#: numbers are pulled from the audit records rather than written here.
+PROVENANCE_ORDER = ("transcriptformer", "scprint", "scgpt", "aido_cell")
+
+
+def provenance_rows(r: Results) -> list[list[str]]:
+    models = r.audit.get("models", {})
+    tf = r.audit_tables.get("transcriptformer", {})
+    sp = r.audit_tables.get("scprint", {})
+    tf_cmp = tf.get("weights_vs_shipped_genes_only", {})
+    opt = models.get("scprint", {}).get("optimizer", {})
+
+    def shape(model: str) -> str:
+        s = models.get(model, {}).get("gene_table_shape") or []
+        return " x ".join(f"{int(x):,}" for x in s) if s else "n/a"
+
+    return [
+        [
+            "TranscriptFormer", models.get("transcriptformer", {}).get("weights_key")
+            or "gene_embeddings.embedding", shape("transcriptformer"),
+            "<strong>no</strong>",
+            f"its {tf.get('h5_n_genes', 0):,} gene rows are bitwise the ESM2 file shipped beside "
+            f"the weights (largest difference {P.num(tf_cmp.get('max_abs_diff', float('nan')))}), "
+            "and the loader hard-codes freeze=True",
+        ],
+        [
+            "scPRINT", "gene_encoder.embedding", shape("scprint"),
+            "yes, from a protein-derived start",
+            f"the checkpoint records freeze_embeddings: {str(sp.get('freeze_embeddings')).lower()} "
+            f"and its optimizer state holds "
+            f"{int(opt.get('n_state_tensors_with_gene_table_shape', 0))} Adam moment tensors of "
+            "exactly that shape, which only the gene table has",
+        ],
+        [
+            "scGPT", "encoder.embedding", shape("scgpt"),
+            "yes, learned from scratch",
+            "a plain embedding table over the gene vocabulary; nothing in the checkpoint reads a "
+            "protein sequence",
+        ],
+        [
+            "AIDO.Cell", "bert.position_embedding", shape("aido_cell"),
+            "yes, learned from scratch",
+            "gene identity is the position in the fixed 19,264-gene order, and no protein model "
+            "appears in the checkpoint or its modelling source",
+        ],
+    ]
+
+
+def _paired(r: Results, line: str, arm: str, reference: str) -> dict | None:
+    for row in r.head.get("protein", {}).get("lines", {}).get(line, {}).get(
+        "paired_differences", []
+    ):
+        if row["arm"] == arm and row["reference"] == reference:
+            return row
+    return None
+
+
+def _beats(row: dict | None) -> str:
+    """How a paired difference reads: ahead, behind, or a tie at this resolution."""
+    if row is None:
+        return "not measured"
+    if row["lo"] > 0:
+        return "ahead"
+    if row["hi"] < 0:
+        return "behind"
+    return "a tie"
+
+
+def protein_finding(r: Results) -> str:
+    """The one-line reading of the protein figure, from the paired differences."""
+    if not r.head.get("protein"):
+        return ""
+    verdict = {
+        model: {line: _beats(_paired(r, line, "esm2_3b_emb", f"{model}_emb"))
+                for line in ("hepg2", "jurkat")}
+        for model in ("transcriptformer", "scprint", "scgpt")
+    }
+    ties = [MODEL_LABEL[m] for m, v in verdict.items() if set(v.values()) == {"a tie"}]
+    ahead = [MODEL_LABEL[m] for m, v in verdict.items() if set(v.values()) == {"ahead"}]
+    behind = [MODEL_LABEL[m] for m, v in verdict.items() if set(v.values()) == {"behind"}]
+    parts = []
+    if ties:
+        parts.append(f"ties {_join(ties)} in both cell lines")
+    if ahead:
+        parts.append(f"beats {_join(ahead)} in both")
+    if behind:
+        parts.append(f"stays behind {_join(behind)} in both")
+    mixed = [MODEL_LABEL[m] for m, v in verdict.items() if len(set(v.values())) > 1]
+    if mixed:
+        parts.append(f"splits across the two cell lines against {_join(mixed)}")
+    return ("The protein-only arm " + _join(parts) + ".") if parts else ""
+
+
+def protein_section(r: Results, chart: str, chart2: str) -> str:
+    """Stage 1 and stage 2 of the protein-model control, in one place."""
+    if not r.audit or not r.runs.arm.str.startswith("esm2").any():
+        return ""
+    prov = P.table(
+        ["Model", "Gene-identity table", "Shape", "Updated during pretraining",
+         "What the checkpoint shows"],
+        provenance_rows(r), sources=[S_AUDIT, S_AUDIT_TABLES],
+    )
+    mapping = r.protein_map
+    routes = mapping.get("routes", {})
+    embed = r.protein_embed.get("models", {})
+
+    best_esm = {}
+    rows = []
+    for line in ("hepg2", "jurkat"):
+        scores = {a: r.score(line, a) for a in (
+            "esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb",
+            "scgpt_emb", "coexp", "null_randgene_d2560", "null_randgene_d5120")}
+        best_esm[line] = max(scores["esm2_3b_emb"], scores["esm2_650m_emb"])
+        for arm in ("esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb",
+                    "scgpt_emb", "coexp"):
+            v, lo, hi = r.interval(line, arm)
+            tf_pair = _paired(r, line, arm, "transcriptformer_emb") if arm.startswith("esm2") else None
+            sp_pair = _paired(r, line, arm, "scprint_emb") if arm.startswith("esm2") else None
+            sg_pair = _paired(r, line, arm, "scgpt_emb") if arm.startswith("esm2") else None
+            rows.append([
+                LINE[line], label(arm), f"{int(r.runs[(r.runs.arm == arm)].feature_dim.iloc[0])}",
+                ci(v, lo, hi),
+                _beats(tf_pair), _beats(sp_pair), _beats(sg_pair),
+            ])
+    table = P.table(
+        ["Cell line", "Arm", "Feature width", "Held-out score",
+         "vs TranscriptFormer", "vs scPRINT", "vs scGPT"],
+        rows, sources=[S_ANALYSIS, S_RUNNER],
+        caption=("Fold-centred, reliability-weighted, ceiling-corrected correlation on "
+                 "held-out perturbations, full scope, grouped split, MLP translator. The last "
+                 "three columns read the paired per-perturbation difference between the "
+                 "protein arm and that model's embedding arm."),
+    )
+
+    tf_verdicts = {line: _beats(_paired(r, line, "esm2_3b_emb", "transcriptformer_emb"))
+                   for line in ("hepg2", "jurkat")}
+    sp_verdicts = {line: _beats(_paired(r, line, "esm2_3b_emb", "scprint_emb"))
+                   for line in ("hepg2", "jurkat")}
+    sg_verdicts = {line: _beats(_paired(r, line, "esm2_3b_emb", "scgpt_emb"))
+                   for line in ("hepg2", "jurkat")}
+
+    def phrase(verdicts: dict, name: str) -> str:
+        if set(verdicts.values()) == {"a tie"}:
+            return f"matches {name} in both cell lines"
+        if set(verdicts.values()) == {"ahead"}:
+            return f"beats {name} in both cell lines"
+        if set(verdicts.values()) == {"behind"}:
+            return f"falls short of {name} in both cell lines"
+        return (f"is {verdicts['hepg2']} of {name} in HepG2 and {verdicts['jurkat']} in Jurkat"
+                .replace("is a tie of", "ties").replace("is ahead of", "beats")
+                .replace("is behind of", "falls short of"))
+
+    body = (
+        "<p>Every arm above that beat co-expression fed the translator a model's static "
+        "gene-identity table. Two of those tables did not come from single-cell data, so what "
+        "the phrase 'foundation-model embedding' covers has to be split apart. Reading the four "
+        "released checkpoints settles where each table came from.</p>"
+        + prov +
+        "<p>The three cases are different in kind. TranscriptFormer's arm is a protein language "
+        "model's embedding passed through unchanged: the table in its weights is the ESM2 file "
+        "shipped in the same release, to the byte. scPRINT started from a protein-derived table "
+        "and trained it for 400,000 steps. scGPT and AIDO.Cell learned theirs from expression "
+        "with no protein model anywhere in the path.</p>"
+        f"<p>That makes the obvious control worth running: a gene table built from protein "
+        f"sequence alone, with no single-cell model in its path, through the identical "
+        f"translator, folds, weights, scoring and nulls. Each read-out gene was mapped to its "
+        f"canonical reviewed human protein - {routes.get('ensembl', 0):,} of "
+        f"{mapping.get('n_genes', 0):,} by Ensembl gene id, {routes.get('symbol', 0)} by gene "
+        f"symbol, none unmapped - and the sequence embedded with two public ESM2 checkpoints: "
+        f"650M at width {embed.get('esm2_650m', {}).get('hidden_size', 1280):,} and 3B at width "
+        f"{embed.get('esm2_3b', {}).get('hidden_size', 2560):,}, the second matching "
+        f"TranscriptFormer's table exactly so the comparison is not confounded with feature "
+        f"width. Each arm is read against a random-vector null of its own width.</p>"
+        + table +
+        f"<p>The raw protein arm {phrase(tf_verdicts, 'TranscriptFormer')}, "
+        f"{phrase(sp_verdicts, 'scPRINT')}, and {phrase(sg_verdicts, 'scGPT')}. "
+        + chart +
+        "<p>The tables themselves say the same thing from the other direction. Comparing the "
+        "rank ordering of gene-gene similarity between each pair of tables, TranscriptFormer's "
+        f"sits closest to raw ESM2 ({P.num(r.rsa('hepg2', 'transcriptformer', 'esm2_3b'))} in "
+        f"HepG2), scPRINT's keeps a smaller but clear protein signature "
+        f"({P.num(r.rsa('hepg2', 'scprint', 'esm2_650m'))} against ESM2-650M) while agreeing "
+        f"more with scGPT's expression-learned table "
+        f"({P.num(r.rsa('hepg2', 'scgpt', 'scprint'))}), and scGPT's and AIDO.Cell's carry no "
+        "protein-space structure at all "
+        f"({P.num(r.rsa('hepg2', 'scgpt', 'esm2_3b'))} and "
+        f"{P.num(r.rsa('hepg2', 'aido_cell', 'esm2_3b'))}, against a random-table floor of "
+        "0.000).</p>"
+        + chart2
+    )
+    return P.section(
+        "Where the winning embeddings come from, and what a protein model alone can do",
+        body, sources=[S_AUDIT, S_UNIPROT, S_ESM, S_IDENTITY, S_ANALYSIS],
+    )
+
+
 def discrimination_section(r: Results, chart: str) -> str:
     """The second pre-registered scoring axis, and what its version pin cost."""
     rows = []
@@ -1139,8 +1335,30 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         vs_finding,
         sources=[S_ANALYSIS, S_FIGS],
     )
+    f_protein = P.figure(
+        4, "The raw protein arm against the embedding arms it is a control for",
+        frag("protein_arms"),
+        "Held-out fold-centred correlation, full scope, grouped split, MLP translator, with 95% "
+        "bootstrap intervals over 2,000 resamples (524 perturbations in HepG2, 705 in Jurkat). "
+        "The two ESM2 arms use gene tables built from protein sequence alone. The dotted line is "
+        "the largest shuffled-label draw in that cell line.",
+        protein_finding(r),
+        sources=[S_RUNNER, S_ESM, S_FIGS],
+    ) if "protein_arms" in made else ""
+    f_tables = P.figure(
+        5, "How close each model's gene table is to a raw protein table",
+        frag("table_similarity"),
+        "Rank correlation between the gene-gene cosine-similarity orderings of two gene tables, "
+        "over every read-out gene of that cell line (2,721 in HepG2, 3,247 in Jurkat). The "
+        "measure ignores width and rotation. Two independent random tables score 0.000 to 0.002 "
+        "on it.",
+        "TranscriptFormer's table is the one closest to raw ESM2. scPRINT's keeps a smaller "
+        "protein signature and sits nearer scGPT's expression-learned table. scGPT's and "
+        "AIDO.Cell's carry no protein-space structure.",
+        sources=[S_IDENTITY, S_FIGS],
+    ) if "table_similarity" in made else ""
     f_disc = P.figure(
-        4, "Perturbation discrimination by arm, HepG2 and Jurkat",
+        6, "Perturbation discrimination by arm, HepG2 and Jurkat",
         frag("discrimination"),
         "Mean normalized rank of the true match: for each held-out perturbation, how close its "
         "predicted effect profile is to its own measured profile compared with every other "
@@ -1153,7 +1371,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_DISC, S_FIGS],
     ) if "discrimination" in made else ""
     f_sens = P.figure(
-        5, "Response-only score by query anchor, HepG2",
+        7, "Response-only score by query anchor, HepG2",
         frag("anchor_sensitivity"),
         "The same response-only arm scored at each of the four queries the features were "
         "harvested at, under the grouped split with everything else held fixed. The dotted line "
@@ -1163,7 +1381,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_SENS, S_FIGS],
     ) if "anchor_sensitivity" in made else ""
     f_beeline = P.figure(
-        6, "The source paper's BEELINE benchmark, reproduced with its controls",
+        8, "The source paper's BEELINE benchmark, reproduced with its controls",
         frag("beeline"),
         "AUPRC on each held-out benchmark cell for the paper's scGPT embedding baseline: what it "
         "reports, what this reproduction gets, the same pipeline with gene embeddings permuted "
@@ -1174,7 +1392,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_BEELINE, S_FIGS],
     ) if "beeline" in made else ""
     f_split = P.figure(
-        7, "Grouped split against random split, every arm",
+        9, "Grouped split against random split, every arm",
         frag("split_gap"),
         "Each point is one arm in one cell line, scored under both splits. The dotted line is "
         "equality.",
@@ -1183,7 +1401,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RUNNER, S_FIGS],
     )
     f_overlap = P.figure(
-        8, "Effect of sharing control cells with the target",
+        10, "Effect of sharing control cells with the target",
         frag("control_cell_overlap"),
         "Each arm's score against a target built from the same control cells the co-expression "
         "features use, minus its score against a target built from the other half of the "
@@ -1193,7 +1411,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RECOMPUTE, S_ANALYSIS, S_FIGS],
     ) if "control_cell_overlap" in made else ""
     f_transfer = P.figure(
-        9, "Cross-cell-line transfer, over shared genes and over unseen genes",
+        11, "Cross-cell-line transfer, over shared genes and over unseen genes",
         frag("transfer"),
         "The translator is fitted on one screen and scored on the other. The top row scores "
         "every gene shared by the two screens; the bottom row scores only perturbations whose "
@@ -1204,7 +1422,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RUNNER, S_FIGS],
     ) if "transfer" in made else ""
     f_grid = P.figure(
-        10, "All twelve cells of the scoring grid",
+        12, "All twelve cells of the scoring grid",
         frag("grid_cells"),
         "Every arm scored under each combination of target (residual, fold-centred, raw), "
         "weighting, and ceiling correction, grouped split, MLP translator.",
@@ -1221,6 +1439,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         metric_section(r, f_metric),
         verdict_section(r, f_arms, f_vs),
         where_signal(r),
+        protein_section(r, f_protein, f_tables),
         discrimination_section(r, f_disc),
         sensitivity_section(r, f_sens),
         beeline_section(r, f_beeline),
