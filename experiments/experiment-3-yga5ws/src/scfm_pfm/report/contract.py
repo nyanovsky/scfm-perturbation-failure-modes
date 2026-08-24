@@ -778,9 +778,86 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                     })
             protein["unseen_gene_transfer_counts"] = counts
 
+    # the two-table arm: whether scGPT's table and the raw protein table are two
+    # routes to one quantity or carry different information
+    concat: dict = {}
+    if r.head.get("concat"):
+        h = r.head["concat"]
+        concat["arm"] = (
+            "scgpt_esm2_3b_emb: scGPT's 512-wide gene table concatenated with the 2,560-wide "
+            "raw ESM2-3B protein table, for both genes, through the identical translator, "
+            "folds, weighting, ceiling correction and scoring"
+        )
+        concat["rule_fixed_before_the_arm_was_scored"] = h["rule"]
+        concat["agreement_thresholds"] = h["agreement_thresholds"]
+        concat["reading"] = h["reading"]
+        concat["reading_read_from"] = h["reading_read_from"]
+        concat["scores"] = {}
+        concat["paired_against_parts"] = {}
+        concat["agreement"] = {}
+        concat["reading_by_cell"] = {}
+        for cell, blk in h["lines"].items():
+            line, split = cell.split("|")
+            for row in blk["scores"]:
+                concat["scores"][f"{cell}__{row['arm']}"] = claim(
+                    f"{row['arm']} in {line}, {split} split, pre-registered rule",
+                    row["score"], RUNS,
+                    key(scope="full", split=split, translator="mlp",
+                        target_source="run1_all_controls", cell_line=line, arm=row["arm"],
+                        column=PREREG),
+                )
+            for tag, d in blk["paired_against_parts"].items():
+                concat["paired_against_parts"][f"{cell}__{tag}"] = {
+                    "difference": d["difference"], "lo": d["lo"], "hi": d["hi"],
+                    "n_paired": d["n_paired"], "n_groups_paired": d["n_groups_paired"],
+                    "min_resolvable_difference": d["min_resolvable_difference"],
+                }
+                claims.append({
+                    "claim": f"two-table arm minus {tag.replace('__', ', ')} in {line}, "
+                             f"{split} split",
+                    "value": round(float(d["difference"]), 6), "source": HEAD,
+                    "key": key(field=f"concat.lines.{cell}.paired_against_parts.{tag}.difference"),
+                })
+            concat["agreement"][cell] = claim(
+                "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table "
+                f"arm's per-perturbation scores in {line}, {split} split",
+                blk["parts_spearman"], HEAD,
+                key(field=f"concat.lines.{cell}.parts_spearman"),
+            )
+            for pair in ("esm2_650m_emb__esm2_3b_emb", "scgpt_emb__transcriptformer_emb",
+                         "scgpt_emb__coexp"):
+                got = blk["agreement"].get(f"{pair}__residual_weighted")
+                if got is None:
+                    continue
+                concat["agreement"][f"{cell}__{pair}"] = claim(
+                    f"Spearman correlation between the {pair.replace('__', ' and ')} arms' "
+                    f"per-perturbation scores in {line}, {split} split",
+                    got["spearman"], HEAD,
+                    key(field=(f"concat.lines.{cell}.agreement."
+                               f"{pair}__residual_weighted.spearman")),
+                )
+            concat["reading_by_cell"][cell] = blk["reading"]
+        checks = r.head.get("concat_reference_check", [])
+        if checks:
+            concat["in_job_reference_check"] = {
+                "n_arms_rerun": len(checks),
+                "largest_absolute_difference_from_the_main_sweep": max(
+                    abs(x["difference"]) for x in checks
+                ),
+            }
+            claims.append({
+                "claim": "largest absolute difference between an arm the two-table job "
+                         "re-ran and the same arm in the main sweep",
+                "value": concat["in_job_reference_check"][
+                    "largest_absolute_difference_from_the_main_sweep"],
+                "source": HEAD,
+                "key": key(field="concat_reference_check[*].difference", statistic="max_abs"),
+            })
+
     summary = {
         "lines": lines,
         "protein_control": protein,
+        "two_table_arm": concat,
         "paired_vs_coexpression": paired,
         "metric_check": metric_check,
         "feature_deltas": feature_deltas,
@@ -1069,6 +1146,20 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             "jobs/run_protein_transfer.sh",
         ],
     }
+    if n.get("two_table_arm"):
+        doc["limitations"].append(
+            "The two-table test is one concatenation at one width, scored by the same "
+            "translator as everything else. It asks whether that translator can use both "
+            "gene tables together better than it uses the better one alone; it does not "
+            "rule out that a different way of combining them, or a task with finer "
+            "resolution than a held-out per-perturbation correlation, would separate what "
+            "the two tables carry."
+        )
+        doc["artifacts"].extend([
+            "results/summary/arm_agreement.parquet",
+            "results/summary/concat_reference.parquet",
+            "jobs/run_concat.sh",
+        ])
     out_dir.mkdir(parents=True, exist_ok=True)
     a = out_dir / "report_summary.json"
     b = out_dir / "claims_manifest.json"

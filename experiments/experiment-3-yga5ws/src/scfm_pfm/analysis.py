@@ -73,6 +73,50 @@ def is_protein_arm(arm: str) -> bool:
     return base_arm(arm) in PROTEIN_ONLY_ARMS
 
 
+#: the two-table arm, its two parts, and the random projection cut to its width
+CONCAT_ARM = "scgpt_esm2_3b_emb"
+CONCAT_PARTS = ("scgpt_emb", "esm2_3b_emb")
+CONCAT_NULL = "null_randgene_d6144"
+#: the nulls the two parts are read against, so the three arms in the comparison
+#: each appear beside a random projection of their own width
+CONCAT_PART_NULLS = ("null_randgene_d1024", "null_randgene_d5120")
+
+#: pairs of arms whose per-perturbation scores are correlated across held-out
+#: perturbations. The first is the question the two-table arm was added for; the
+#: rest are the scale it has to be read against -- two sizes of one protein
+#: model (one route, two tables), two model tables, and a model table against
+#: co-expression, which is a different route entirely.
+AGREEMENT_PAIRS = (
+    ("scgpt_emb", "esm2_3b_emb"),
+    ("esm2_650m_emb", "esm2_3b_emb"),
+    ("scgpt_emb", "transcriptformer_emb"),
+    ("scgpt_emb", "coexp"),
+)
+
+#: Fixed before the two-table arm was scored. Both are Spearman correlations
+#: between two arms' per-perturbation scores over the same held-out
+#: perturbations, so they say whether the two arms succeed and fail on the same
+#: perturbations rather than whether their averages agree.
+CONCAT_STRONG_AGREEMENT = 0.5
+CONCAT_WEAK_AGREEMENT = 0.3
+
+#: the reading, in the words it was fixed in
+CONCAT_RULE = {
+    "redundant": (
+        "the two tables are proxies for one underlying quantity reached by different "
+        "routes: the concatenation does not beat the better of its two parts by more "
+        "than the paired comparison resolves, and the parts' per-perturbation scores "
+        f"are correlated at Spearman {CONCAT_STRONG_AGREEMENT} or above"
+    ),
+    "complementary": (
+        "the two tables carry different information, which is a separate finding: the "
+        "concatenation beats both parts with an interval clear of zero, and the parts' "
+        f"per-perturbation scores are correlated below Spearman {CONCAT_WEAK_AGREEMENT}"
+    ),
+    "mixed": "anything else, reported as mixed rather than resolved either way",
+}
+
+
 def null_band(runs: pd.DataFrame) -> pd.DataFrame:
     """The spread of the shuffled-label draws, which is what a score must clear.
 
@@ -660,6 +704,178 @@ def protein_transfer_summary(transfer: pd.DataFrame, reference: pd.DataFrame) ->
     return out
 
 
+def _spearman(x: np.ndarray, y: np.ndarray) -> float:
+    """Rank correlation, so one perturbation with a huge score cannot set it."""
+    if x.size < 3:
+        return float("nan")
+    rx = pd.Series(x).rank().to_numpy()
+    ry = pd.Series(y).rank().to_numpy()
+    return float(np.corrcoef(rx, ry)[0, 1])
+
+
+def arm_agreement(
+    per_pert: pd.DataFrame,
+    pairs: tuple[tuple[str, str], ...] = AGREEMENT_PAIRS,
+    metric_cols: tuple[str, ...] = ("residual_weighted", "centered_weighted"),
+) -> pd.DataFrame:
+    """How far two arms rise and fall together across held-out perturbations.
+
+    Two arms can reach the same average score either by succeeding on the same
+    perturbations or by succeeding on different ones, and an average cannot tell
+    those apart. The correlation of the per-perturbation scores can. Spearman is
+    what the reading rule uses, because the question is whether the two arms
+    order the perturbations the same way, not whether the sizes of their scores
+    match.
+    """
+    d = per_pert[(per_pert.scope == "full") & (per_pert.target_source == "run1_all_controls")]
+    keys = ["cell_line", "split", "translator"]
+    rows = []
+    for key, block in d.groupby(keys, dropna=False):
+        by_arm = {a: sub.set_index("perturbation") for a, sub in block.groupby("arm")}
+        for a, b in pairs:
+            if a not in by_arm or b not in by_arm:
+                continue
+            shared = by_arm[a].index.intersection(by_arm[b].index)
+            if shared.size < 3:
+                continue
+            for col in metric_cols:
+                x = by_arm[a].loc[shared, col].to_numpy(dtype=float)
+                y = by_arm[b].loc[shared, col].to_numpy(dtype=float)
+                ok = np.isfinite(x) & np.isfinite(y)
+                rows.append({
+                    **dict(zip(keys, key)),
+                    "arm_a": a,
+                    "arm_b": b,
+                    "metric": col,
+                    "n_perturbations": int(ok.sum()),
+                    "pearson": float(np.corrcoef(x[ok], y[ok])[0, 1]) if ok.sum() > 2 else np.nan,
+                    "spearman": _spearman(x[ok], y[ok]),
+                })
+    return pd.DataFrame(rows)
+
+
+def concat_reading(beats_better_part: bool, parts_spearman: float) -> str:
+    """Apply the rule to one cell. Written before the arm was scored."""
+    strong = bool(np.isfinite(parts_spearman) and parts_spearman >= CONCAT_STRONG_AGREEMENT)
+    weak = bool(np.isfinite(parts_spearman) and parts_spearman < CONCAT_WEAK_AGREEMENT)
+    if not beats_better_part and strong:
+        return "redundant"
+    if beats_better_part and weak:
+        return "complementary"
+    return "mixed"
+
+
+def concat_summary(
+    runs: pd.DataFrame,
+    per_pert: pd.DataFrame,
+    agree: pd.DataFrame,
+    group_table: GroupTable | None = None,
+) -> dict:
+    """The two-table arm read against each of the two tables it is made of.
+
+    scGPT's table and the raw protein table reach the same score while the
+    protein-space similarity measure says scGPT's table carries no protein
+    structure. Either they are two routes to one quantity, in which case putting
+    them side by side buys nothing and they succeed on the same perturbations,
+    or they carry different information, in which case the concatenation beats
+    both and they succeed on different perturbations. The comparison against
+    each part is paired on the same held-out perturbations, and the arm has its
+    own width-matched random projection because it is wider than either part.
+    """
+    keep = (
+        (runs.scope == "full") & (runs.translator == "mlp")
+        & (runs.target_source == "run1_all_controls")
+    )
+    d = runs[keep]
+    if d.empty or CONCAT_ARM not in set(d.arm):
+        return {}
+    want = (CONCAT_ARM, *CONCAT_PARTS, CONCAT_NULL, *CONCAT_PART_NULLS, "coexp")
+    out: dict = {
+        "cell": "full scope, MLP translator",
+        "metric": PREREG_COL,
+        "diagnostic_metric": DISCRIMINATION_COL,
+        "rule": CONCAT_RULE,
+        "agreement_thresholds": {
+            "strong_at_or_above": CONCAT_STRONG_AGREEMENT,
+            "weak_below": CONCAT_WEAK_AGREEMENT,
+            "statistic": "Spearman correlation of per-perturbation scores",
+        },
+        "lines": {},
+    }
+    for (line, split), block in d.groupby(["cell_line", "split"]):
+        sel = block[block.arm.isin(want)]
+        scores = {
+            r.arm: {
+                "arm": r.arm,
+                "feature_dim": int(r.feature_dim),
+                "score": float(getattr(r, PREREG_COL)),
+                "lo": float(getattr(r, PREREG_COL + "_lo")),
+                "hi": float(getattr(r, PREREG_COL + "_hi")),
+                "fold_centred": float(getattr(r, DISCRIMINATION_COL)),
+                "fold_centred_lo": float(getattr(r, DISCRIMINATION_COL + "_lo")),
+                "fold_centred_hi": float(getattr(r, DISCRIMINATION_COL + "_hi")),
+                "n_perturbations": int(r.n_perturbations),
+            }
+            for r in sel.itertuples()
+        }
+        if CONCAT_ARM not in scores:
+            continue
+        pp = per_pert[
+            (per_pert.cell_line == line) & (per_pert.split == split)
+            & (per_pert.scope == "full") & (per_pert.translator == "mlp")
+            & (per_pert.target_source == "run1_all_controls")
+        ]
+        paired: dict = {}
+        for part in CONCAT_PARTS:
+            two = pp[pp.arm.isin([CONCAT_ARM, part])]
+            for col, tag in (("residual_weighted", "preregistered"),
+                             ("centered_weighted", "fold_centred")):
+                con = contrasts(two, reference=part, metric=col, group_table=group_table)
+                row = con[con.arm == CONCAT_ARM]
+                if row.empty:
+                    continue
+                r = row.iloc[0]
+                paired[f"{part}__{tag}"] = {
+                    "difference": float(r.median_difference),
+                    "lo": float(r.lo),
+                    "hi": float(r.hi),
+                    "n_paired": int(r.n_paired),
+                    "n_groups_paired": int(r.n_groups_paired),
+                    "min_resolvable_difference": float(r.min_resolvable_difference_achieved),
+                }
+        a = agree[
+            (agree.cell_line == line) & (agree.split == split) & (agree.translator == "mlp")
+        ] if not agree.empty else agree
+        agreement = {
+            f"{r.arm_a}__{r.arm_b}__{r.metric}": {
+                "spearman": float(r.spearman),
+                "pearson": float(r.pearson),
+                "n_perturbations": int(r.n_perturbations),
+            }
+            for r in a.itertuples()
+        } if not a.empty else {}
+        present = [p for p in CONCAT_PARTS if p in scores]
+        better = max(present, key=lambda p: scores[p]["score"]) if present else None
+        diff = paired.get(f"{better}__preregistered") if better else None
+        key = f"{CONCAT_PARTS[0]}__{CONCAT_PARTS[1]}__residual_weighted"
+        spearman = agreement.get(key, {}).get("spearman", float("nan"))
+        beats = bool(diff and diff["lo"] > 0)
+        reading = concat_reading(beats, spearman)
+        out["lines"][f"{line}|{split}"] = {
+            "scores": [scores[k] for k in want if k in scores],
+            "paired_against_parts": paired,
+            "better_part": better,
+            "agreement": agreement,
+            "parts_spearman": spearman,
+            "beats_better_part": beats,
+            "reading": reading,
+        }
+    grouped = [v["reading"] for k, v in out["lines"].items() if k.endswith("|grouped")]
+    out["reading"] = grouped[0] if grouped and len(set(grouped)) == 1 else "mixed"
+    out["reading_read_from"] = "the grouped split in both cell lines; mixed unless they agree"
+    return out
+
+
 def grid_table(runs: pd.DataFrame) -> pd.DataFrame:
     """One row per (run, grid cell): the eight numbers, side by side."""
     rows = []
@@ -860,6 +1076,14 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     ap.add_argument(
+        "--concat-reference",
+        default=None,
+        help=(
+            "shard directories holding the arms the two-table job re-ran as its own "
+            "reference, kept out of runs.parquet for the same reason."
+        ),
+    )
+    ap.add_argument(
         "--bundle-root",
         default=None,
         help=(
@@ -937,6 +1161,18 @@ def main(argv: list[str] | None = None) -> int:
         s_runs = regroup_run_intervals(s_runs, s_pert, gt)
         s_runs.to_parquet(out / "sensitivity.parquet", index=False)
         head["sensitivity"] = anchor_sensitivity(s_runs, runs, s_pert, group_table=gt)
+
+    agree_arms = arm_agreement(per_pert)
+    if not agree_arms.empty:
+        agree_arms.to_parquet(out / "arm_agreement.parquet", index=False)
+    concat = concat_summary(runs, per_pert, agree_arms, group_table=gt)
+    if concat:
+        head["concat"] = concat
+    if args.concat_reference:
+        c_runs, c_pert = load_sweep(*[Path(x) for x in args.concat_reference.split(",") if x])
+        c_runs = regroup_run_intervals(c_runs, c_pert, gt)
+        c_runs.to_parquet(out / "concat_reference.parquet", index=False)
+        head["concat_reference_check"] = protein_reference_check(c_runs, runs)
 
     protein = protein_summary(runs, per_pert, nulls, group_table=gt)
     if protein:

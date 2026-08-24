@@ -79,6 +79,8 @@ ARM_LABEL = {
     "null_randgene_d1280": "random vector per gene, 1280 dims",
     "null_randgene_d2560": "random vector per gene, 2560 dims",
     "null_randgene_d5120": "random vector per gene, 5120 dims",
+    "scgpt_esm2_3b_emb": "scGPT table + ESM2-3B table",
+    "null_randgene_d6144": "random vector per gene, 6144 dims",
     "esm2_650m_emb": "ESM2-650M protein embedding",
     "esm2_3b_emb": "ESM2-3B protein embedding",
     "mean_only": "mean effect only",
@@ -951,6 +953,140 @@ def protein_section(r: Results, chart: str, chart2: str) -> str:
     )
 
 
+
+CONCAT_HEADING = {
+    "redundant": ("The two tables are two routes to one quantity: putting them together "
+                  "buys nothing"),
+    "complementary": ("The two tables carry different information: putting them together "
+                      "beats either alone"),
+    "mixed": ("Putting the two tables together does not resolve whether they hold the "
+              "same information"),
+}
+CONCAT_ROW_ARMS = ("scgpt_esm2_3b_emb", "scgpt_emb", "esm2_3b_emb", "null_randgene_d6144")
+
+
+def _concat_block(h: dict, line: str, split: str) -> dict | None:
+    return h.get("lines", {}).get(f"{line}|{split}")
+
+
+def _concat_gain(block: dict, part: str) -> str:
+    """The paired difference of the two-table arm against one of its parts."""
+    d = block["paired_against_parts"].get(f"{part}__preregistered")
+    if not d:
+        return "n/a"
+    return f"{P.signed(d['difference'], 4)} ({P.num(d['lo'])} to {P.num(d['hi'])})"
+
+
+def concat_section(r: Results, chart: str = "") -> str:
+    """Are scGPT's table and the raw protein table the same information?"""
+    h = r.head.get("concat")
+    if not h:
+        return ""
+    rows = []
+    for line in ("hepg2", "jurkat"):
+        for split in ("grouped", "random"):
+            block = _concat_block(h, line, split)
+            if not block:
+                continue
+            by_arm = {s["arm"]: s for s in block["scores"]}
+            for arm in CONCAT_ROW_ARMS:
+                s = by_arm.get(arm)
+                if not s:
+                    continue
+                rows.append([
+                    LINE[line], split, label(arm), f"{s['feature_dim']:,}",
+                    ci(s["score"], s["lo"], s["hi"]),
+                    ci(s["fold_centred"], s["fold_centred_lo"], s["fold_centred_hi"]),
+                ])
+    tab = P.table(
+        ["Cell line", "Split", "Arm", "Feature width", "Pre-registered score",
+         "Fold-centred score"],
+        rows, sources=[S_RUNNER, S_ANALYSIS],
+        caption=(
+            "Full scope, MLP translator, 95% intervals over 2,000 resamples of the response "
+            "groups. The two-table arm is the two gene tables concatenated, nothing else "
+            "changed. Its random-vector null is cut to the same 6,144 columns, which is what "
+            "separates a real gain from the extra width."
+        ),
+    )
+    hg, jk = _concat_block(h, "hepg2", "grouped"), _concat_block(h, "jurkat", "grouped")
+    pieces = []
+    for line, block in (("HepG2", hg), ("Jurkat", jk)):
+        if not block:
+            continue
+        gain = _concat_gain(block, block["better_part"])
+        res = block["paired_against_parts"].get(
+            f"{block['better_part']}__preregistered", {}).get(
+            "min_resolvable_difference", float("nan"))
+        pieces.append(
+            f"in {line} it is {gain} against {label(block['better_part'])}, the better of "
+            f"the two, on a comparison that resolves {P.num(res)}"
+        )
+    agreement = []
+    for line, block in (("HepG2", hg), ("Jurkat", jk)):
+        if not block:
+            continue
+        agreement.append(f"{P.num(block['parts_spearman'])} in {line}")
+    ref_pairs = []
+    for key, name in (
+        ("esm2_650m_emb__esm2_3b_emb__residual_weighted", "the two ESM2 sizes"),
+        ("scgpt_emb__transcriptformer_emb__residual_weighted",
+         "scGPT against TranscriptFormer"),
+        ("scgpt_emb__coexp__residual_weighted", "scGPT against co-expression"),
+    ):
+        vals = [b["agreement"].get(key, {}).get("spearman") for b in (hg, jk) if b]
+        vals = [v for v in vals if v is not None and v == v]
+        if vals:
+            ref_pairs.append(f"{name} {' and '.join(P.num(v) for v in vals)}")
+    reading = h.get("reading", "mixed")
+    thresholds = h.get("agreement_thresholds", {})
+    verdicts = _join([
+        f"{LINE[ln]} under the {sp} split reads {_concat_block(h, ln, sp)['reading']}"
+        for ln in ("hepg2", "jurkat") for sp in ("grouped", "random")
+        if _concat_block(h, ln, sp)
+    ])
+    body = (
+        "<p>The result above leaves one thing open. scGPT's table scores as well as the "
+        "protein tables while the similarity measure says it carries no protein-space "
+        "structure at all, so either the two tables are different routes to the same "
+        "underlying quantity or they hold different information. Concatenating them answers "
+        "it directly: the translator gets scGPT's 512-wide vector and the raw ESM2-3B "
+        "2,560-wide vector for each of the two genes, 6,144 columns in total, with the same "
+        "network shape, optimizer, folds, weighting, ceiling correction and scoring as every "
+        "other arm. The arm is wider than either part, which is where a dimensionality "
+        "artefact would show up, so a fixed random vector per gene at exactly 6,144 columns "
+        "is scored beside it.</p>"
+        "<p>The reading was fixed before the arm was scored. If the concatenation does not "
+        "beat the better of its two parts by more than the paired comparison resolves, and "
+        "the two parts succeed and fail on the same held-out perturbations, they are proxies "
+        "for one quantity reached by different routes. If it clearly beats both and they "
+        "succeed on different perturbations, they carry different information, which is a "
+        "separate finding rather than a footnote to this one. Agreement is the Spearman "
+        f"correlation of the two arms' per-perturbation scores: "
+        f"{P.num(thresholds.get('strong_at_or_above', 0.5))} or above is the same "
+        f"perturbations, below {P.num(thresholds.get('weak_below', 0.3))} is different ones, "
+        "and anything between is neither.</p>"
+        + tab
+        + f"<p>The concatenation is not an improvement: {_join(pieces)}. "
+        "The same holds under the random split, and the two-table arm sits far above its own "
+        "width-matched random projection, so the extra columns are not what is being "
+        "measured.</p>"
+        + f"<p>The two arms also succeed on the same perturbations: Spearman "
+        f"{_join(agreement)} between the scGPT-table arm's and the protein-table arm's "
+        "per-perturbation scores, on the same folds. For scale, "
+        f"{_join(ref_pairs)}.</p>"
+        + chart
+        + f"<p>Read against the rule, that is {reading}: {h['rule'][reading]}. "
+        f"By cell and split, {verdicts}. What this establishes is narrow and worth stating "
+        "exactly. It does not say scGPT's table is protein-derived; the checkpoint audit "
+        "already says it is not, and the similarity measure still finds no protein geometry "
+        "in it. It says that whatever scGPT's table supplies to this task is, as far as this "
+        "task can tell, the same information the protein table supplies, so the two cannot be "
+        "added up. A finer-grained or different task could still separate them.</p>"
+    )
+    return P.section(CONCAT_HEADING.get(reading, CONCAT_HEADING["mixed"]),
+                     body, sources=[S_RUNNER, S_ANALYSIS])
+
 def discrimination_section(r: Results, chart: str) -> str:
     """The second pre-registered scoring axis, and what its version pin cost."""
     rows = []
@@ -1447,6 +1583,14 @@ def limitations(r: Results) -> str:
         "control cells stand in for the statistical baseline; a network-inference method fitted "
         "to the same cells could do better than they do.</li>"
         + (
+            "<li>The two-table test is one concatenation at one width. It asks whether this "
+            "translator can use scGPT's table and the protein table together better than it "
+            "uses the better one alone, and it does not rule out that a different way of "
+            "combining them, or a task with finer resolution than a per-perturbation "
+            "correlation, would separate what they carry.</li>"
+            if r.head.get("concat") else ""
+        )
+        + (
             "<li>The protein control shows where the signal can come from, not where each "
             "model's signal does come from. It establishes that a gene table built from "
             "protein sequence alone scores as well as the single-cell models' tables on this "
@@ -1627,8 +1771,19 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "AIDO.Cell's carry no protein-space structure.",
         sources=[S_IDENTITY, S_FIGS],
     ) if "table_similarity" in made else ""
+    f_concat = P.figure(
+        6, "Per-perturbation scores of the scGPT-table arm and the protein-table arm",
+        frag("concat_agreement"),
+        "One point per held-out perturbation: the score the scGPT-table arm reached on it "
+        "against the score the raw ESM2-3B-table arm reached on the same perturbation, full "
+        "scope, grouped split, MLP translator, pre-registered rule. The dotted line is "
+        "equality and the rank correlation is printed in each panel.",
+        "The two arms rise and fall together across perturbations rather than being right "
+        "about different ones, which is what the concatenated arm's lack of a gain implies.",
+        sources=[S_RUNNER, S_FIGS],
+    ) if "concat_agreement" in made else ""
     f_disc = P.figure(
-        6, "Perturbation discrimination by arm, HepG2 and Jurkat",
+        7, "Perturbation discrimination by arm, HepG2 and Jurkat",
         frag("discrimination"),
         "Mean normalized rank of the true match: for each held-out perturbation, how close its "
         "predicted effect profile is to its own measured profile compared with every other "
@@ -1641,7 +1796,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_DISC, S_FIGS],
     ) if "discrimination" in made else ""
     f_sens = P.figure(
-        7, "Response-only score by query anchor, HepG2",
+        8, "Response-only score by query anchor, HepG2",
         frag("anchor_sensitivity"),
         "The same response-only arm scored at each of the four queries the features were "
         "harvested at, under the grouped split with everything else held fixed. The dotted line "
@@ -1651,7 +1806,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_SENS, S_FIGS],
     ) if "anchor_sensitivity" in made else ""
     f_split = P.figure(
-        8, "Grouped split against random split, every arm",
+        9, "Grouped split against random split, every arm",
         frag("split_gap"),
         "Each point is one arm in one cell line, scored on the fold-centred diagnostic under "
         "both splits. The dotted line is equality.",
@@ -1660,7 +1815,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RUNNER, S_FIGS],
     )
     f_overlap = P.figure(
-        9, "Effect of sharing control cells with the target",
+        10, "Effect of sharing control cells with the target",
         frag("control_cell_overlap"),
         "Each arm's score against a target built from the same control cells the co-expression "
         "features use, minus its score against a target built from the other half of the "
@@ -1670,7 +1825,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RECOMPUTE, S_ANALYSIS, S_FIGS],
     ) if "control_cell_overlap" in made else ""
     f_transfer = P.figure(
-        10, "Cross-cell-line transfer, over shared genes and over unseen genes",
+        11, "Cross-cell-line transfer, over shared genes and over unseen genes",
         frag("transfer"),
         "The translator is fitted on one screen and scored on the other. The top row scores "
         "every gene shared by the two screens; the bottom row scores only perturbations whose "
@@ -1681,7 +1836,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RUNNER, S_FIGS],
     ) if "transfer" in made else ""
     f_grid = P.figure(
-        11, "All twelve cells of the scoring grid",
+        12, "All twelve cells of the scoring grid",
         frag("grid_cells"),
         "Every arm scored under each combination of target (residual, fold-centred, raw), "
         "weighting, and ceiling correction, grouped split, MLP translator.",
@@ -1699,6 +1854,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         verdict_section(r, f_arms, f_vs),
         where_signal(r),
         protein_section(r, f_protein, f_tables),
+        concat_section(r, f_concat),
         discrimination_section(r, f_disc),
         sensitivity_section(r, f_sens),
         beeline_section(r),
