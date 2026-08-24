@@ -15,10 +15,12 @@ learned from cells, and a table built directly from UniProt protein sequence wit
 checkpoint, run through the same translator and folds, beats co-expression in both lines and ties
 the single-cell arms in seven of eight paired comparisons, beating scGPT's in Jurkat. On genes
 never perturbed in the training screen, only the protein-derived tables keep a score clear of
-zero. Concatenating scGPT's table with the raw ESM2-3B table into one arm buys nothing over the
-better of the two parts in any cell, but the per-perturbation agreement between the parts (0.2503
-HepG2, 0.2394 Jurkat) sits where any two unrelated arms in this run sit, so that test is reported
-as mixed rather than as evidence that the two tables are one quantity. `manifest.yaml` carries the
+zero. Concatenating scGPT's table with the raw ESM2-3B table into one arm resolves no gain over
+the better of the two parts in any cell (HepG2, grouped split: +0.0223 [-0.0342, +0.1305] against
+0.1366 resolvable, so a narrower gain would not have been detected), and the per-perturbation
+agreement between the parts (0.2503 HepG2, 0.2394 Jurkat) sits about where the two unrelated
+reference pairs measured here sit, so that test is reported as mixed rather than as evidence that
+the two tables are one quantity. `manifest.yaml` carries the
 numbers; the published report carries the argument.
 
 The fold-centred version of the score, which removes the held-out fold's own per-gene mean, is

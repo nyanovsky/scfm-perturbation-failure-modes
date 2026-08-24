@@ -1067,6 +1067,17 @@ def concat_section(r: Results, chart: str = "") -> str:
             ref_pairs.append(f"{name} {' and '.join(P.num(v) for v in vals)}")
     reading = h.get("reading", "mixed")
     thresholds = h.get("agreement_thresholds", {})
+    # the primary comparison is imprecise, so its width is stated where the reading is drawn
+    primary = hg["paired_against_parts"].get(
+        f"{hg['better_part']}__preregistered", {}) if hg else {}
+    primary_clause = (
+        " That is a failure to resolve a gain rather than a demonstration that the two tables "
+        "hold the same information: in HepG2 under the grouped split the difference against "
+        f"{label(hg['better_part'])} is {_concat_gain(hg, hg['better_part'])} on a "
+        f"comparison that resolves {P.num(primary['min_resolvable_difference'])}, so a gain "
+        "narrower than that would not have been detected."
+        if primary else ""
+    )
     verdicts = _join([
         f"{LINE[ln]} under the {sp} split reads {_concat_block(h, ln, sp)['reading']}"
         for ln in ("hepg2", "jurkat") for sp in ("grouped", "random")
@@ -1104,7 +1115,7 @@ def concat_section(r: Results, chart: str = "") -> str:
         f"{P.num(thresholds.get('weak_below', 0.3))} the rule set for different "
         "perturbations. Read alone that number would say the two tables are right about "
         "different genes, but the comparison pairs say the statistic cannot carry that "
-        f"here: {_join(ref_pairs)}. Every pair of unrelated arms sits in the same band, and "
+        f"here: {_join(ref_pairs)}. Both unrelated reference pairs sit in the same band, and "
         "only two sizes of one protein model - the same model twice - clears the strong "
         "threshold. Per-perturbation scores at this sample size are noisy enough that the "
         "paired comparison is the informative half of the reading and the correlation is "
@@ -1112,13 +1123,13 @@ def concat_section(r: Results, chart: str = "") -> str:
         + chart
         + f"<p>Read against the rule, that is {reading}: {h['rule'][reading]}. "
         f"By cell and split, {verdicts}. Both halves are worth stating exactly. What the run "
-        "does establish is that the concatenation buys nothing: in all four cells the "
-        "two-table arm lands within what the paired comparison resolves of the better of its "
-        "parts, so on this task neither table adds usable information to the other. What it "
+        "does establish is that no gain over the better part is resolved: in all four cells "
+        "the two-table arm lands within what the paired comparison resolves of the better of "
+        f"its parts.{primary_clause} What it "
         "does not establish is why. The agreement statistic would have to reach "
         f"{P.num(thresholds.get('strong_at_or_above', 0.5))} to call the two tables one "
-        "quantity reached by two routes, and it does not get there for any pair of unrelated "
-        "arms in this run, so 'the same information by different routes' and 'different "
+        "quantity reached by two routes, and neither unrelated reference pair measured here "
+        "reaches it, so 'the same information by different routes' and 'different "
         "information this task cannot use' are both still open. It does not say scGPT's table "
         "is protein-derived either; the checkpoint audit already says it is not, and the "
         "similarity measure still finds no protein geometry in it. A finer-grained or "
@@ -1819,8 +1830,9 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "scope, grouped split, MLP translator, pre-registered rule. The dotted line is "
         "equality and the rank correlation is printed in each panel.",
         "The cloud is broad rather than tight around the diagonal: the two arms agree on "
-        "which perturbations are easy only weakly, at about the level any two unrelated arms "
-        "in this run agree, so the scatter does not settle what the concatenation left open.",
+        "which perturbations are easy only weakly, at about the level of the two unrelated "
+        "reference pairs measured here, so the scatter does not settle what the "
+        "concatenation left open.",
         sources=[S_RUNNER, S_FIGS],
     ) if "concat_agreement" in made else ""
     f_disc = P.figure(

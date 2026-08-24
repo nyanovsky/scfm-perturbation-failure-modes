@@ -886,8 +886,9 @@ def _concat_assessment(n: dict) -> str:
 
     A supplementary test with its own pre-registered reading, not a second
     verdict on the run's question. It is stated here so the scope of the
-    'mixed' reading is explicit: the concatenation buys nothing, and the
-    agreement statistic is too weak in this run to say why.
+    'mixed' reading is explicit: no gain over the better part is resolved,
+    which is a failure to resolve rather than a demonstration of equivalence,
+    and the agreement statistic is too weak in this run to say why.
     """
     concat = n.get("two_table_arm")
     if not concat:
@@ -918,11 +919,16 @@ def _concat_assessment(n: dict) -> str:
         if centred else
         " The fold-centred diagnostic reads the same way on every one of those comparisons."
     )
-    pairs = [
-        v for k in ("hepg2|grouped", "jurkat|grouped")
-        for suffix in ("scgpt_emb__transcriptformer_emb", "scgpt_emb__coexp")
-        if (v := val(f"{k}__{suffix}")) is not None
-    ]
+    # only two unrelated reference pairs were scored, so they are named rather than
+    # described as if they covered every unrelated pair in the run
+    by_cell = []
+    for cell, name in (("hepg2|grouped", "HepG2"), ("jurkat|grouped", "Jurkat")):
+        vals = [
+            v for suffix in ("scgpt_emb__transcriptformer_emb", "scgpt_emb__coexp")
+            if (v := val(f"{cell}__{suffix}")) is not None
+        ]
+        if len(vals) == 2:
+            by_cell.append(f"{vals[0]:.4f} and {vals[1]:.4f} in {name}")
     thresholds = concat.get("agreement_thresholds", {})
     weak = float(thresholds.get("weak_below", 0.3))
     strong = float(thresholds.get("strong_at_or_above", 0.5))
@@ -931,18 +937,32 @@ def _concat_assessment(n: dict) -> str:
         if hg is not None and jk is not None else "the agreement statistic"
     )
     context = (
-        f", about where every unrelated pair of arms in this run sits "
-        f"({', '.join(f'{v:.4f}' for v in pairs)})"
-        if pairs else ""
+        ", and about where the only two unrelated reference pairs this run measured sit "
+        "(scGPT against TranscriptFormer and scGPT against co-expression, "
+        f"{'; '.join(by_cell)})"
+        if by_cell else ""
+    )
+    primary = concat.get("paired_against_parts", {}).get(
+        f"hepg2|grouped__{better.get('hepg2|grouped', '')}__preregistered"
+    )
+    primary_clause = (
+        " That is a failure to resolve a gain, not a demonstration that the two tables hold "
+        "the same information: in the primary HepG2 grouped comparison the two-table arm "
+        f"minus {better.get('hepg2|grouped', '')} is {primary['difference']:+.4g} "
+        f"({primary['lo']:.4g} to {primary['hi']:.4g}), against "
+        f"{primary['min_resolvable_difference']:.4f} resolvable, so a gain smaller than that "
+        "width would not have been detected."
+        if primary else ""
     )
     return (
         " The two-table arm is a supplementary test with its own reading, not a second "
         "verdict on the run's question. Concatenating scGPT's table with the raw ESM2-3B "
         "table lands within what the paired comparison resolves of the better of the two "
-        "parts in all four cells, so neither table adds usable information to the other "
-        f"here. The reading is mixed rather than resolved: the two parts agree at {numbers}"
-        f"{context}, below the {weak:g} the rule set for different information and well "
-        f"below the {strong:g} it set for the same information, so the run does not "
+        "parts in all four cells, so the run resolves no gain over the better part."
+        f"{primary_clause}"
+        f" The reading is mixed rather than resolved: the two parts agree at {numbers}, "
+        f"below the {weak:g} the rule set for different information and well "
+        f"below the {strong:g} it set for the same information{context}, so the run does not "
         "distinguish 'one quantity by two routes' from 'different information this task "
         "cannot use'."
         + centred_clause
