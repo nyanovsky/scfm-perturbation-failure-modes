@@ -1462,8 +1462,8 @@ def limitations(r: Results) -> str:
     return P.section("Limitations", body, sources=[S_CONFIG, S_ANALYSIS])
 
 
-def beeline_section(r: Results, chart: str = "") -> str:
-    """The source paper's own benchmark, its embedding baseline re-run here."""
+def beeline_section(r: Results) -> str:
+    """A side arm that was run, failed to reproduce its source, and was dropped."""
     b = r.beeline
     if not b:
         return ""
@@ -1473,60 +1473,51 @@ def beeline_section(r: Results, chart: str = "") -> str:
             f"{row['n_pairs_kept']:,}",
             P.num(row["auprc"]),
             P.num(row["paper_baseline_emb_auprc"]),
-            P.num(row["auprc_shuffled_embedding"]),
-            f"{P.num(row['auprc_unseen_genes'])} ({P.num(row['positive_fraction_unseen'])})",
-            P.num(row["auprc_unseen_genes_shuffled_embedding"]),
         ]
         for row in b["rows"]
     ]
     tab = P.table(
-        ["Benchmark cell", "Pairs scored", "AUPRC here", "AUPRC reported",
-         "Gene identity only", "Unseen genes (chance)", "Unseen genes, identity only"],
+        ["Benchmark cell", "Pairs scored", "AUPRC here", "AUPRC reported"],
         rows, sources=[S_BEELINE],
         caption=(
-            "Chance is the positive fraction, 0.50 on the balanced sets and the value in "
-            "brackets on the unseen-gene slice."
+            "The comparison that decided the arm: the re-implementation scores above the "
+            "reported value on two cells and below it on one. Chance is 0.50 on these "
+            "balanced sets."
         ),
     )
     s = b["summary"]
     train = b["train_cell"]
     body = (
-        "<p>The response features this run tests come from a paper whose own evidence is a "
-        "different task: BEELINE network inference, where a projector maps a gene-pair feature "
-        "to a regulatory edge and is scored by AUPRC on held-out datasets. Disagreeing with its "
-        "conclusion is worth more after reproducing its setting, so its scGPT embedding baseline "
-        "was re-run on its own benchmark files: the projector is fitted on the "
-        f"{train['network']}/{train['dataset']} pair set ({train['n_pairs_kept']:,} pairs, "
-        "balanced 1:1) and scored on the held-out cells with the paper's projector shape, "
-        "optimizer, batch size and epoch count.</p>"
-        f"<p>It does not reproduce numerically. Mean AUPRC over the three held-out cells is "
+        "<p>One side arm was run and then dropped, and it is written up here so that the "
+        "decision is on the record. The response features this run tests come from a paper "
+        "whose own evidence is a different task: BEELINE network inference, where a projector "
+        "maps a gene-pair feature to a regulatory edge and is scored by AUPRC on held-out "
+        "datasets. Disagreeing with its conclusion is worth more after reproducing its setting, "
+        "so its scGPT embedding baseline was re-run on its own benchmark files: the projector "
+        f"fitted on the {train['network']}/{train['dataset']} pair set "
+        f"({train['n_pairs_kept']:,} pairs, balanced 1:1) and scored on the held-out cells with "
+        "the paper's projector shape, optimizer, batch size and epoch count.</p>"
+        f"<p>It did not reproduce. Mean AUPRC over the three held-out cells is "
         f"{P.num(s['mean_auprc'])} against {P.num(s['paper_mean_auprc'])} reported, a mean "
         f"difference of {P.signed(s['mean_difference'], 4)} and up to "
         f"{P.num(s['max_abs_difference'])} on one cell, higher on two of the three cells and "
-        "lower on the third. No tolerance was pre-registered for this "
-        "side result and no seed-to-seed noise estimate was run, so the gap is unexplained and "
-        "the comparison with the source paper's number stays open. What follows treats the "
-        "re-implementation as a setting to run controls in, not as a reproduction of the "
-        "reported value. Two controls say what the number is made of. Permuting which gene gets "
-        "which embedding, which keeps every gene's identity and destroys the biology in its "
-        f"vector, still reaches {P.num(s['shuffled_embedding_mean_auprc'])}. And restricting to "
-        "pairs whose two genes never appear in the training pair set, where identity cannot be "
-        f"memorised ({P.num(s['mean_fraction_pairs_unseen_genes'])} of held-out pairs), the real "
-        f"embedding reaches {P.num(s['mean_auprc_unseen_genes'])} against a chance level of "
-        "0.3987 to 0.5962 depending on the cell, and the identity control falls to "
-        f"{P.num(s['shuffled_embedding_mean_auprc_unseen_genes'])}. Most of the benchmark number "
-        "is gene identity; what survives for genuinely unseen genes is real on the STRING "
-        "network and absent on the cell-type-specific one.</p>"
-        "<p>That is the same shape as this run's own cross-line transfer result, where a fixed "
-        "random vector per gene nearly matches the models over shared genes and collapses over "
-        "unseen ones. The gradient-trajectory and virtual-value arms are not re-run here: they "
-        "would need the feature extraction repeated against these datasets, which is a separate "
-        "harvest. So the finding that survives is about the controls, which the source paper "
-        "does not report: most of its embedding baseline is gene identity. The absolute "
-        "agreement with its published number is not established.</p>"
+        "lower on the third. No tolerance was pre-registered for this side result and no "
+        "seed-to-seed noise estimate was run, so the gap is unexplained and the "
+        "re-implementation is not established as the paper's setting.</p>"
+        "<p>So the arm is dropped rather than reported. A check that disagrees with the source "
+        "it is checking is not a check, and reporting anything measured inside it would invite "
+        "the reading that the paper was reproduced and then refuted, which is not what "
+        "happened. Controls were run in that setting and are not reported as findings here, "
+        "because a control is only informative once the setting it runs in is established. The "
+        "gradient-trajectory and virtual-value arms were not re-run at all: they would need the "
+        "feature extraction repeated against these datasets, which is a separate harvest. "
+        "Nothing else on this page depends on this arm - the translator scores, the protein "
+        "control and the cross-line transfer result are all measured on the CRISPRi screens and "
+        "never touch the BEELINE data - and the full output stays in the artifact record so the "
+        "attempt is auditable.</p>"
     )
-    return P.section("The source paper's embedding baseline, re-implemented: mostly gene identity",
-                     body + tab + chart, sources=[S_BEELINE])
+    return P.section("A dropped arm: the source paper's BEELINE benchmark did not reproduce",
+                     body + tab, sources=[S_BEELINE])
 
 
 def _beeline_limitation(r: Results) -> str:
@@ -1538,14 +1529,14 @@ def _beeline_limitation(r: Results) -> str:
         )
     s = r.beeline["summary"]
     return (
-        "<li>The source paper's benchmark is re-implemented, not reproduced. Its projector and "
-        "embedding baseline were re-run on its own BEELINE datasets and scored "
-        f"{P.num(s['mean_auprc'])} against {P.num(s['paper_mean_auprc'])} reported, up to "
-        f"{P.num(s['max_abs_difference'])} apart on one cell, with no pre-registered tolerance "
-        "and no noise estimate, so the discrepancy is unexplained. Its virtual-value and "
-        "gradient-trajectory features were not re-run at all, because those would need a fresh "
-        "extraction against those datasets. The controls run inside that setting stand on their "
-        "own; the comparison with the published number does not.</li>"
+        "<li>The source paper's own benchmark is not part of the evidence here. A "
+        "re-implementation of it was run and dropped: its projector and embedding baseline "
+        f"scored {P.num(s['mean_auprc'])} against {P.num(s['paper_mean_auprc'])} reported, up "
+        f"to {P.num(s['max_abs_difference'])} apart on one cell, with no pre-registered "
+        "tolerance and no noise estimate, so the setting is not established and no result on "
+        "this page rests on it or on any control run inside it. Its virtual-value and "
+        "gradient-trajectory features were never re-run, because those would need a fresh "
+        "extraction against those datasets.</li>"
     )
 
 
@@ -1659,20 +1650,8 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "null band, including at the uniform virtual value the source paper argues for.",
         sources=[S_SENS, S_FIGS],
     ) if "anchor_sensitivity" in made else ""
-    f_beeline = P.figure(
-        8, "The source paper's BEELINE benchmark, re-implemented with controls it does not run",
-        frag("beeline"),
-        "AUPRC on each held-out benchmark cell for the paper's scGPT embedding baseline: what it "
-        "reports, what this re-implementation gets, the same pipeline with gene embeddings "
-        "permuted between genes, and the score restricted to pairs whose genes never appear in "
-        "training with its own chance level beside it.",
-        "The re-implementation scores above the reported values on two cells and below on one, "
-        "so it does not reproduce them numerically. A control that keeps gene identity but "
-        "destroys the embedding's biology recovers most of its score.",
-        sources=[S_BEELINE, S_FIGS],
-    ) if "beeline" in made else ""
     f_split = P.figure(
-        9, "Grouped split against random split, every arm",
+        8, "Grouped split against random split, every arm",
         frag("split_gap"),
         "Each point is one arm in one cell line, scored on the fold-centred diagnostic under "
         "both splits. The dotted line is equality.",
@@ -1681,7 +1660,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RUNNER, S_FIGS],
     )
     f_overlap = P.figure(
-        10, "Effect of sharing control cells with the target",
+        9, "Effect of sharing control cells with the target",
         frag("control_cell_overlap"),
         "Each arm's score against a target built from the same control cells the co-expression "
         "features use, minus its score against a target built from the other half of the "
@@ -1691,7 +1670,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RECOMPUTE, S_ANALYSIS, S_FIGS],
     ) if "control_cell_overlap" in made else ""
     f_transfer = P.figure(
-        11, "Cross-cell-line transfer, over shared genes and over unseen genes",
+        10, "Cross-cell-line transfer, over shared genes and over unseen genes",
         frag("transfer"),
         "The translator is fitted on one screen and scored on the other. The top row scores "
         "every gene shared by the two screens; the bottom row scores only perturbations whose "
@@ -1702,7 +1681,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         sources=[S_RUNNER, S_FIGS],
     ) if "transfer" in made else ""
     f_grid = P.figure(
-        12, "All twelve cells of the scoring grid",
+        11, "All twelve cells of the scoring grid",
         frag("grid_cells"),
         "Every arm scored under each combination of target (residual, fold-centred, raw), "
         "weighting, and ceiling correction, grouped split, MLP translator.",
@@ -1722,7 +1701,7 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         protein_section(r, f_protein, f_tables),
         discrimination_section(r, f_disc),
         sensitivity_section(r, f_sens),
-        beeline_section(r, f_beeline),
+        beeline_section(r),
         scope_section(r),
         controls_section(r, f_split, f_overlap),
         transfer_section(r, f_transfer),

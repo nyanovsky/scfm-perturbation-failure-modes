@@ -419,46 +419,6 @@ def anchor_sensitivity(summary_dir: Path, out_root: Path) -> dict | None:
     return {"figure": "anchor_sensitivity", "n_records": int(s.shape[0]), "fig": fig}
 
 
-def beeline(summary_dir: Path, out_root: Path) -> dict | None:
-    """The source paper's benchmark: its number, ours, and what identity alone buys."""
-    path = summary_dir.parent / "beeline_reproduction.json"
-    if not path.exists():
-        return None
-    rep = json.loads(path.read_text())
-    rows = rep["rows"]
-    cells = [f"{r['network']} / {r['dataset']}" for r in rows]
-    series = [
-        ("reported by the paper", [r["paper_baseline_emb_auprc"] for r in rows], "#8C8880"),
-        ("reproduced here", [r["auprc"] for r in rows], COLOR["scgpt"]),
-        ("gene identity only", [r["auprc_shuffled_embedding"] for r in rows], COLOR["null"]),
-        ("unseen genes only", [r["auprc_unseen_genes"] for r in rows], COLOR["coexp"]),
-        ("unseen genes, chance", [r["positive_fraction_unseen"] for r in rows], GUIDE),
-    ]
-    fig = go.Figure()
-    for name, values, color in series:
-        fig.add_trace(
-            go.Bar(x=cells, y=values, name=name, marker=dict(color=color),
-                   hovertemplate="%{x}<br>" + name + ": %{y:.4f}<extra></extra>")
-        )
-    add_reference_line(fig, y=0.5, label="balanced chance")
-    fig.update_yaxes(title_text="AUPRC", range=[0.0, 1.0])
-    fig.update_xaxes(title_text="Held-out benchmark cell")
-    fig.update_layout(barmode="group")
-    apply_theme(fig, height=440)
-    save_figure_bundle(
-        fig, "beeline",
-        data={"records": rows, "summary": rep["summary"], "train_cell": rep["train_cell"]},
-        alt=(
-            "Grouped bars per held-out BEELINE cell: the AUPRC the source paper reports for its "
-            "scGPT embedding baseline, the AUPRC reproduced here, the same pipeline with gene "
-            "embeddings permuted between genes, and the score restricted to pairs whose genes "
-            "never appear in training with its own chance level."
-        ),
-        root=out_root,
-    )
-    return {"figure": "beeline", "n_records": len(rows), "fig": fig}
-
-
 def split_gap(summary_dir: Path, out_root: Path) -> dict:
     """Grouped against random split: how much of a score is family memorisation."""
     runs = pd.read_parquet(summary_dir / "runs.parquet")
@@ -840,7 +800,6 @@ def build_all(summary_dir: Path, out_root: Path | None = None) -> list[dict]:
         vs_coexpression(summary_dir, out_root),
         discrimination(summary_dir, out_root),
         anchor_sensitivity(summary_dir, out_root),
-        beeline(summary_dir, out_root),
         split_gap(summary_dir, out_root),
         protein_arms(summary_dir, out_root),
         table_similarity(summary_dir, out_root),

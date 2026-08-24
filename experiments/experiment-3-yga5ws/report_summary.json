@@ -1543,33 +1543,24 @@
         ]
       }
     },
-    "beeline_reproduction": {
+    "beeline_arm_dropped": {
+      "status": "dropped: the re-implementation did not reproduce the source paper's reported baseline, so neither it nor any control run inside it supports a claim here",
       "auprc_STRING_hHEP": 0.8237577662933298,
       "auprc_reported_STRING_hHEP": 0.732,
-      "auprc_gene_identity_only_STRING_hHEP": 0.7237763274495251,
-      "auprc_unseen_genes_STRING_hHEP": 0.5919840495632342,
-      "chance_unseen_genes_STRING_hHEP": 0.39870914816856384,
+      "pairs_scored_STRING_hHEP": 14288.0,
       "auprc_Non-Specific_hHEP": 0.6625730364853395,
       "auprc_reported_Non-Specific_hHEP": 0.586,
-      "auprc_gene_identity_only_Non-Specific_hHEP": 0.6331143305945971,
-      "auprc_unseen_genes_Non-Specific_hHEP": 0.545943083262657,
-      "chance_unseen_genes_Non-Specific_hHEP": 0.48878777027130127,
+      "pairs_scored_Non-Specific_hHEP": 7951.0,
       "auprc_Specific_hHEP": 0.5307612578292904,
       "auprc_reported_Specific_hHEP": 0.556,
-      "auprc_gene_identity_only_Specific_hHEP": 0.5243049480358106,
-      "auprc_unseen_genes_Specific_hHEP": 0.6014810828693786,
-      "chance_unseen_genes_Specific_hHEP": 0.5961751341819763,
+      "pairs_scored_Specific_hHEP": 19191.0,
       "mean_auprc": 0.6723640202026532,
       "paper_mean_auprc": 0.6246666666666667,
       "mean_difference": 0.04769735353598655,
       "max_abs_difference": 0.09175776629332977,
-      "shuffled_embedding_mean_auprc": 0.6270652020266443,
-      "mean_auprc_unseen_genes": 0.5798027385650899,
-      "shuffled_embedding_mean_auprc_unseen_genes": 0.5119055777072363,
-      "mean_fraction_pairs_unseen_genes": 0.39817278267246903,
       "train_cell": "STRING/hESC",
       "train_pairs": 8065,
-      "arms_not_reproduced": [
+      "arms_never_run": [
         "VVP and GDT: would need a fresh feature extraction against the BEELINE datasets",
         "the mouse datasets: their symbols are outside the human checkpoint's vocabulary"
       ]
@@ -1582,7 +1573,7 @@
     "The individual-cells anchor is a four-cell sample. Its no-op queries are excluded per (perturbed gene, value) and the exclusion is exact on the standardized feature, but four control cells is a small sample of the anchor.",
     "One translator shape for every arm. The query anchor was varied in HepG2 only, over the three models with full-coverage feature blocks; no anchor lifts a response-only arm above the shuffled-label ceiling there (0.0208 against 0.0286).",
     "The discrimination axis is inconclusive, not a second confirmation. The pre-registered pin cell-eval==0.5.19 was never released; the run used 0.8.2, and the two existing versions nearest the pin differ from it by up to 0.1141 on the same saved predictions, which reverses the co-expression-versus-model ranking on that axis in both cell lines.",
-    "The source paper's BEELINE benchmark is re-implemented, not reproduced: its embedding baseline scores 0.6724 here against 0.6247 reported, up to 0.09176 apart on one cell, with no pre-registered tolerance and no seed-noise estimate, so the discrepancy is unexplained and the comparison with the published number stays open. Its virtual-value and gradient-trajectory arms would need a fresh extraction against those datasets and were not run.",
+    "The source paper's own BEELINE benchmark is not part of the evidence. A re-implementation of it was run and dropped: its embedding baseline scored 0.6724 against 0.6247 reported, up to 0.09176 apart on one cell, with no pre-registered tolerance and no seed-noise estimate, so the setting is not established and neither it nor any control run inside it supports a claim here. Its virtual-value and gradient-trajectory arms would have needed a fresh extraction against those datasets and were never run.",
     "Two cell lines from a single screen, so the cross-line result is a weak test of generality.",
     "The additive node control is identically zero on the fold-centred score by construction, so the free node network is the informative version.",
     "AIDO.Cell is only comparable on the 250-gene subset it was harvested on, and the two scores disagree about it there: its best arm sits just above the shuffled-label ceiling on the pre-registered rule and below it on the fold-centred one. It is not shown to be worse than the others, only not separated from the null.",

@@ -1104,7 +1104,7 @@
       "key": "derived=per-model grouping of blocks[*].values_the_whole_dose_rule_deleted"
     },
     {
-      "claim": "AUPRC reproduced here on STRING/hHEP",
+      "claim": "AUPRC of the dropped re-implementation on STRING/hHEP",
       "value": 0.823758,
       "source": "results/beeline_reproduction.json",
       "key": "row=STRING_hHEP, field=auprc"
@@ -1116,25 +1116,13 @@
       "key": "row=STRING_hHEP, field=paper_baseline_emb_auprc"
     },
     {
-      "claim": "AUPRC with gene embeddings permuted between genes on STRING/hHEP",
-      "value": 0.723776,
+      "claim": "pairs scored on STRING/hHEP",
+      "value": 14288.0,
       "source": "results/beeline_reproduction.json",
-      "key": "row=STRING_hHEP, field=auprc_shuffled_embedding"
+      "key": "row=STRING_hHEP, field=n_pairs_kept"
     },
     {
-      "claim": "AUPRC on pairs whose genes never appear in training, STRING/hHEP",
-      "value": 0.591984,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=STRING_hHEP, field=auprc_unseen_genes"
-    },
-    {
-      "claim": "chance AUPRC on that unseen-gene slice (its positive fraction), STRING/hHEP",
-      "value": 0.398709,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=STRING_hHEP, field=positive_fraction_unseen"
-    },
-    {
-      "claim": "AUPRC reproduced here on Non-Specific/hHEP",
+      "claim": "AUPRC of the dropped re-implementation on Non-Specific/hHEP",
       "value": 0.662573,
       "source": "results/beeline_reproduction.json",
       "key": "row=Non-Specific_hHEP, field=auprc"
@@ -1146,25 +1134,13 @@
       "key": "row=Non-Specific_hHEP, field=paper_baseline_emb_auprc"
     },
     {
-      "claim": "AUPRC with gene embeddings permuted between genes on Non-Specific/hHEP",
-      "value": 0.633114,
+      "claim": "pairs scored on Non-Specific/hHEP",
+      "value": 7951.0,
       "source": "results/beeline_reproduction.json",
-      "key": "row=Non-Specific_hHEP, field=auprc_shuffled_embedding"
+      "key": "row=Non-Specific_hHEP, field=n_pairs_kept"
     },
     {
-      "claim": "AUPRC on pairs whose genes never appear in training, Non-Specific/hHEP",
-      "value": 0.545943,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=Non-Specific_hHEP, field=auprc_unseen_genes"
-    },
-    {
-      "claim": "chance AUPRC on that unseen-gene slice (its positive fraction), Non-Specific/hHEP",
-      "value": 0.488788,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=Non-Specific_hHEP, field=positive_fraction_unseen"
-    },
-    {
-      "claim": "AUPRC reproduced here on Specific/hHEP",
+      "claim": "AUPRC of the dropped re-implementation on Specific/hHEP",
       "value": 0.530761,
       "source": "results/beeline_reproduction.json",
       "key": "row=Specific_hHEP, field=auprc"
@@ -1176,70 +1152,34 @@
       "key": "row=Specific_hHEP, field=paper_baseline_emb_auprc"
     },
     {
-      "claim": "AUPRC with gene embeddings permuted between genes on Specific/hHEP",
-      "value": 0.524305,
+      "claim": "pairs scored on Specific/hHEP",
+      "value": 19191.0,
       "source": "results/beeline_reproduction.json",
-      "key": "row=Specific_hHEP, field=auprc_shuffled_embedding"
+      "key": "row=Specific_hHEP, field=n_pairs_kept"
     },
     {
-      "claim": "AUPRC on pairs whose genes never appear in training, Specific/hHEP",
-      "value": 0.601481,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=Specific_hHEP, field=auprc_unseen_genes"
-    },
-    {
-      "claim": "chance AUPRC on that unseen-gene slice (its positive fraction), Specific/hHEP",
-      "value": 0.596175,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=Specific_hHEP, field=positive_fraction_unseen"
-    },
-    {
-      "claim": "BEELINE reproduction, mean auprc",
+      "claim": "dropped BEELINE arm, mean auprc",
       "value": 0.672364,
       "source": "results/beeline_reproduction.json",
       "key": "field=summary.mean_auprc"
     },
     {
-      "claim": "BEELINE reproduction, paper mean auprc",
+      "claim": "dropped BEELINE arm, paper mean auprc",
       "value": 0.624667,
       "source": "results/beeline_reproduction.json",
       "key": "field=summary.paper_mean_auprc"
     },
     {
-      "claim": "BEELINE reproduction, mean difference",
+      "claim": "dropped BEELINE arm, mean difference",
       "value": 0.047697,
       "source": "results/beeline_reproduction.json",
       "key": "field=summary.mean_difference"
     },
     {
-      "claim": "BEELINE reproduction, max abs difference",
+      "claim": "dropped BEELINE arm, max abs difference",
       "value": 0.091758,
       "source": "results/beeline_reproduction.json",
       "key": "field=summary.max_abs_difference"
-    },
-    {
-      "claim": "BEELINE reproduction, shuffled embedding mean auprc",
-      "value": 0.627065,
-      "source": "results/beeline_reproduction.json",
-      "key": "field=summary.shuffled_embedding_mean_auprc"
-    },
-    {
-      "claim": "BEELINE reproduction, mean auprc unseen genes",
-      "value": 0.579803,
-      "source": "results/beeline_reproduction.json",
-      "key": "field=summary.mean_auprc_unseen_genes"
-    },
-    {
-      "claim": "BEELINE reproduction, shuffled embedding mean auprc unseen genes",
-      "value": 0.511906,
-      "source": "results/beeline_reproduction.json",
-      "key": "field=summary.shuffled_embedding_mean_auprc_unseen_genes"
-    },
-    {
-      "claim": "BEELINE reproduction, mean fraction pairs unseen genes",
-      "value": 0.398173,
-      "source": "results/beeline_reproduction.json",
-      "key": "field=summary.mean_fraction_pairs_unseen_genes"
     },
     {
       "claim": "largest absolute difference between TranscriptFormer's 23,823 gene rows and the ESM2 file shipped beside its weights",

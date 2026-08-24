@@ -542,14 +542,20 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                                "blocks[*].values_the_whole_dose_rule_deleted"),
         })
 
-    # the source paper's own benchmark
+    # a side arm that was run, did not reproduce its source, and was dropped. Only the
+    # numbers that decided the drop are carried; nothing measured inside that setting is
+    # reported as a finding, so those values stay in the artifact and out of the claims.
     bee: dict = {}
     if r.beeline:
         b = r.beeline
+        bee["status"] = (
+            "dropped: the re-implementation did not reproduce the source paper's reported "
+            "baseline, so neither it nor any control run inside it supports a claim here"
+        )
         for row in b["rows"]:
             cell = f"{row['network']}_{row['dataset']}"
             bee[f"auprc_{cell}"] = claim(
-                f"AUPRC reproduced here on {row['network']}/{row['dataset']}",
+                f"AUPRC of the dropped re-implementation on {row['network']}/{row['dataset']}",
                 row["auprc"], BEELINE, key(row=cell, field="auprc"),
             )
             bee[f"auprc_reported_{cell}"] = claim(
@@ -558,35 +564,19 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                 row["paper_baseline_emb_auprc"], BEELINE,
                 key(row=cell, field="paper_baseline_emb_auprc"),
             )
-            bee[f"auprc_gene_identity_only_{cell}"] = claim(
-                f"AUPRC with gene embeddings permuted between genes on "
-                f"{row['network']}/{row['dataset']}",
-                row["auprc_shuffled_embedding"], BEELINE,
-                key(row=cell, field="auprc_shuffled_embedding"),
-            )
-            bee[f"auprc_unseen_genes_{cell}"] = claim(
-                f"AUPRC on pairs whose genes never appear in training, "
-                f"{row['network']}/{row['dataset']}",
-                row["auprc_unseen_genes"], BEELINE, key(row=cell, field="auprc_unseen_genes"),
-            )
-            bee[f"chance_unseen_genes_{cell}"] = claim(
-                f"chance AUPRC on that unseen-gene slice (its positive fraction), "
-                f"{row['network']}/{row['dataset']}",
-                row["positive_fraction_unseen"], BEELINE,
-                key(row=cell, field="positive_fraction_unseen"),
+            bee[f"pairs_scored_{cell}"] = claim(
+                f"pairs scored on {row['network']}/{row['dataset']}",
+                row["n_pairs_kept"], BEELINE, key(row=cell, field="n_pairs_kept"),
             )
         for field in ("mean_auprc", "paper_mean_auprc", "mean_difference",
-                      "max_abs_difference", "shuffled_embedding_mean_auprc",
-                      "mean_auprc_unseen_genes",
-                      "shuffled_embedding_mean_auprc_unseen_genes",
-                      "mean_fraction_pairs_unseen_genes"):
+                      "max_abs_difference"):
             bee[field] = claim(
-                f"BEELINE reproduction, {field.replace('_', ' ')}",
+                f"dropped BEELINE arm, {field.replace('_', ' ')}",
                 b["summary"][field], BEELINE, key(field=f"summary.{field}"),
             )
         bee["train_cell"] = f"{b['train_cell']['network']}/{b['train_cell']['dataset']}"
         bee["train_pairs"] = b["train_cell"]["n_pairs_kept"]
-        bee["arms_not_reproduced"] = b["arms_not_reproduced"]
+        bee["arms_never_run"] = b["arms_not_reproduced"]
 
     # the protein-model control: where each gene table came from, and what a raw
     # protein table does through the same pipeline
@@ -803,7 +793,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
         "discrimination": disc,
         "anchor_sensitivity": sens,
         "no_op_query_correction": no_op,
-        "beeline_reproduction": bee,
+        "beeline_arm_dropped": bee,
     }
     return summary, claims
 
@@ -1010,12 +1000,13 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             f"{n['discrimination'].get('largest_difference_between_versions', float('nan')):.4f} "
             "on the same saved predictions, which reverses the co-expression-versus-model "
             "ranking on that axis in both cell lines.",
-            "The source paper's BEELINE benchmark is re-implemented, not reproduced: its "
-            "embedding baseline scores 0.6724 here against 0.6247 reported, up to 0.09176 apart "
-            "on one cell, with no pre-registered tolerance and no seed-noise estimate, so the "
-            "discrepancy is unexplained and the comparison with the published number stays "
-            "open. Its virtual-value and gradient-trajectory arms would need a fresh extraction "
-            "against those datasets and were not run.",
+            "The source paper's own BEELINE benchmark is not part of the evidence. A "
+            "re-implementation of it was run and dropped: its embedding baseline scored 0.6724 "
+            "against 0.6247 reported, up to 0.09176 apart on one cell, with no pre-registered "
+            "tolerance and no seed-noise estimate, so the setting is not established and "
+            "neither it nor any control run inside it supports a claim here. Its virtual-value "
+            "and gradient-trajectory arms would have needed a fresh extraction against those "
+            "datasets and were never run.",
             "Two cell lines from a single screen, so the cross-line result is a weak test of "
             "generality.",
             "The additive node control is identically zero on the fold-centred score by "
