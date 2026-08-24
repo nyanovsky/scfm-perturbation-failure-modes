@@ -148,6 +148,11 @@ ANCHOR_VALUE = "mean_control"
 #: step, so the run carries its own before/after contrast in addition to run 3's
 STAGES = ("init", "final")
 
+#: the form every feature enters the translator in, matching run 3's
+#: FEATURE_FORM: a z-score across read-out genes within one query, which is what
+#: makes models with different output scales comparable at all
+FEATURE_FORM_KEY = "standardized"
+
 #: how many control cells the anchor averages over. Run 3's primary anchor is
 #: the mean control profile, one query per perturbed gene.
 N_ANCHOR_PROFILES = 1

@@ -94,18 +94,39 @@ def esm2_table_file() -> Path:
 
 
 def cells_root() -> Path:
-    """The fine-tuning cell matrices written by the ingest job."""
+    """The fine-tuning cell matrices written by the ingest job.
+
+    They arrive either on the ingest job's mounted volume or as staged input
+    artifacts. The volume's internal layout is not part of any contract, so the
+    likely places are tried and then a bounded search is done rather than
+    assuming one.
+    """
     env = os.environ.get("SCFM_FT_CELLS")
     if env:
         return Path(env)
     reused = os.environ.get("SILICO_REUSED_VOLUME_DIR")
+    staged = os.environ.get("SILICO_INPUT_ARTIFACTS_DIR")
+    eid = os.environ.get("SILICO_EXPERIMENT_ID", "")
     found = _first_existing(
         Path(reused) / "outputs" / "cells" if reused else None,
+        Path(reused) / "cells" if reused else None,
+        Path(staged) / "experiments" / eid / "cells" if (staged and eid) else None,
         data_root() / "cells",
         repo_dir() / "results" / "artifacts_mirror" / "cells",
     )
+    if found is None and reused:
+        # the mounted volume's internal layout is not a documented contract, so
+        # look for the directory rather than guess at it, two levels deep only
+        for depth in ("*/cells", "*/*/cells"):
+            hits = sorted(Path(reused).glob(depth))
+            if hits:
+                found = hits[0]
+                break
     if found is None:
-        raise RuntimeError("the fine-tuning cell matrices are not visible to this process")
+        raise RuntimeError(
+            "the fine-tuning cell matrices are not visible to this process "
+            f"(reused volume {reused!r}, staged inputs {staged!r})"
+        )
     return found
 
 
