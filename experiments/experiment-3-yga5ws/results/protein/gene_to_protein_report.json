@@ -1,0 +1,32 @@
+{
+  "written_by": "scfm_pfm.protein.uniprot",
+  "uniprot": {
+    "query": "(organism_id:9606) AND (reviewed:true)",
+    "fields": "accession,id,gene_primary,gene_synonym,xref_ensembl,sequence,length,annotation_score,protein_existence",
+    "pages": 41,
+    "release": "2026_02",
+    "release_date": "10-June-2026",
+    "total": "20431",
+    "n_entries": 20431
+  },
+  "n_genes": 3755,
+  "routes": {
+    "ensembl": 3740,
+    "symbol": 15
+  },
+  "mapped_fraction": 1.0,
+  "tie_breaks": {
+    "single": 3742,
+    "annotation_score": 5,
+    "length": 4,
+    "primary_name": 4
+  },
+  "multi_candidate_genes": 13,
+  "length": {
+    "median": 362.0,
+    "max": 7570,
+    "over_esm2_context": 437
+  },
+  "unmapped_genes": [],
+  "duplicate_accessions": 1
+}

@@ -1,0 +1,37 @@
+{
+  "written_by": "scfm_pfm.protein.esm_embed",
+  "n_genes": 3755,
+  "n_mapped": 3755,
+  "models": {
+    "esm2_650m": {
+      "repo": "facebook/esm2_t33_650M_UR50D",
+      "hidden_size": 1280,
+      "n_sequences": 3755,
+      "n_chunks": 4355,
+      "max_residues_per_chunk": 1022,
+      "dtype": "float32",
+      "seconds": 74.0,
+      "residues_embedded": 2018451.0,
+      "row_norm_mean": 7.241166114807129,
+      "row_norm_sd": 1.1214293241500854,
+      "identical_rows": 1,
+      "max_abs_full_vs_truncated": 1.8970375061035156,
+      "genes_where_truncation_matters": 437
+    },
+    "esm2_3b": {
+      "repo": "facebook/esm2_t36_3B_UR50D",
+      "hidden_size": 2560,
+      "n_sequences": 3755,
+      "n_chunks": 4355,
+      "max_residues_per_chunk": 1022,
+      "dtype": "float32",
+      "seconds": 268.5,
+      "residues_embedded": 2018451.0,
+      "row_norm_mean": 11.84644889831543,
+      "row_norm_sd": 1.218739628791809,
+      "identical_rows": 1,
+      "max_abs_full_vs_truncated": 2.579336166381836,
+      "genes_where_truncation_matters": 437
+    }
+  }
+}

@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from silico_figures import add_reference_line, apply_theme, save_figure_bundle
+from silico_figures import SEQUENTIAL, add_reference_line, apply_theme, save_figure_bundle
 
 from .. import paths
 
@@ -30,9 +30,13 @@ from .. import paths
 #: is not one of the entity colours, so nothing in a legend shares its colour.
 GUIDE = "#A8A399"
 
-#: the cell the verdict is read from, and the cell config.py pre-registered.
-VERDICT = "centered__weighted__disattenuated"
+#: PREREG is the pre-registered decision rule and the cell the verdict is read
+#: from. DISCRIM is the post-hoc fold-centred version of the same correlation,
+#: reported beside it: it removes the held-out fold's own per-gene mean from
+#: both sides, so it uses held-out outcomes and answers the narrower question of
+#: how well an arm separates one held-out perturbation from another.
 PREREG = "residual__weighted__disattenuated"
+DISCRIM = "centered__weighted__disattenuated"
 
 SHUFFLE_TAG = "+shuffled_labels_d"
 
@@ -41,6 +45,7 @@ ENTITY_LABEL = {
     "scprint": "scPRINT",
     "transcriptformer": "TranscriptFormer",
     "aido_cell": "AIDO.Cell",
+    "esm2": "ESM2, protein only",
     "coexp": "co-expression",
     "node": "node only",
     "mean_only": "mean effect",
@@ -62,6 +67,8 @@ def entity_of(arm: str) -> str:
     """Which compared thing an arm belongs to."""
     if SHUFFLE_TAG in arm or arm.startswith("null_"):
         return "null"
+    if arm.startswith("esm2"):
+        return "esm2"
     for model in ("scgpt", "scprint", "transcriptformer", "aido_cell"):
         if arm.startswith(model):
             return model
@@ -102,7 +109,7 @@ def _legend_dummies(fig, entities: set[str], row: int = 1, col: int = 1) -> None
         )
 
 
-def _null_ceiling(runs: pd.DataFrame, col: str = VERDICT) -> float:
+def _null_ceiling(runs: pd.DataFrame, col: str = DISCRIM) -> float:
     d = runs[runs.arm.str.contains(SHUFFLE_TAG, regex=False)]
     return float(np.nanmax(d[col].to_numpy(dtype=float))) if not d.empty else float("nan")
 
@@ -165,6 +172,34 @@ def _dot_grid(
     return fig
 
 
+#: how each metric is named on a figure
+METRIC_LABEL = {PREREG: "pre-registered", DISCRIM: "fold-centred (post hoc)"}
+
+
+def _both_metrics(d: pd.DataFrame, lines: list[str]) -> tuple:
+    """One long frame carrying both metrics, and the panel order for it.
+
+    The verdict is read from the pre-registered cell; the fold-centred cell is
+    reported beside it rather than instead of it, so both are drawn.
+    """
+    pieces = []
+    for col in (PREREG, DISCRIM):
+        piece = d.copy()
+        piece["value"] = piece[col]
+        piece["lo"] = piece[col + "_lo"]
+        piece["hi"] = piece[col + "_hi"]
+        piece["panel"] = piece.cell_line + "|" + col
+        pieces.append(piece)
+    long = pd.concat(pieces, ignore_index=True)
+    panels = [f"{line}|{col}" for col in (PREREG, DISCRIM) for line in lines]
+    titles = {
+        f"{line}|{col}": f"{_line_label(line)}, {METRIC_LABEL[col]}"
+        for col in (PREREG, DISCRIM)
+        for line in lines
+    }
+    return long, panels, titles
+
+
 def arm_scores(summary_dir: Path, out_root: Path, translator: str = "mlp") -> dict:
     """The verdict figure: every arm's held-out score, per cell line."""
     runs = pd.read_parquet(summary_dir / "runs.parquet")
@@ -173,33 +208,38 @@ def arm_scores(summary_dir: Path, out_root: Path, translator: str = "mlp") -> di
              & (runs.translator == translator)
              & (runs.target_source == "run1_all_controls")]
     )
-    d = d[~d.arm.str.contains(SHUFFLE_TAG, regex=False) & d[VERDICT].notna()]
+    d = d[~d.arm.str.contains(SHUFFLE_TAG, regex=False) & d[DISCRIM].notna()]
     lines = sorted(d.cell_line.unique())
+    long, panels, titles = _both_metrics(d, lines)
     ref = {}
     for line in lines:
         block = runs[(runs.cell_line == line) & (runs.scope == "full")
                      & (runs.split == "grouped") & (runs.translator == translator)]
-        ref[line] = [(_null_ceiling(block), "shuffled-label null")]
+        for col in (PREREG, DISCRIM):
+            ref[f"{line}|{col}"] = [(_null_ceiling(block, col), "shuffled-label null")]
     fig = _dot_grid(
-        d, VERDICT, VERDICT + "_lo", VERDICT + "_hi", "cell_line",
-        {x: _line_label(x) for x in lines},
-        "Fold-centred correlation (disattenuated)", ref, 640,
+        long, "value", "lo", "hi", "panel", {k: titles[k] for k in panels},
+        "Held-out correlation (disattenuated)", ref, 1180,
     )
     payload = d[[
         "cell_line", "arm", "entity", "family", "feature_dim", "n_perturbations",
-        VERDICT, VERDICT + "_lo", VERDICT + "_hi", PREREG, PREREG + "_lo", PREREG + "_hi",
+        DISCRIM, DISCRIM + "_lo", DISCRIM + "_hi", PREREG, PREREG + "_lo", PREREG + "_hi",
     ]].to_dict("records")
     save_figure_bundle(
         fig, "arm_scores",
         data={
-            "records": payload, "metric": VERDICT, "preregistered_metric": PREREG,
+            "records": payload, "metric": PREREG, "discrimination_metric": DISCRIM,
             "translator": translator,
-            "null_ceiling": {line: ref[line][0][0] for line in lines},
+            "null_ceiling": {
+                f"{line}|{col}": ref[f"{line}|{col}"][0][0]
+                for line in lines for col in (PREREG, DISCRIM)
+            },
         },
         alt=(
-            "Sorted dot plot of the fold-centred held-out correlation for every arm, one "
-            "panel per cell line, with bootstrap intervals and the largest shuffled-label "
-            "draw marked."
+            "Sorted dot plot of every arm's held-out correlation with group-resampled "
+            "intervals, four panels: each cell line under the pre-registered rule and "
+            "under the post-hoc fold-centred version, with the largest shuffled-label "
+            "draw marked in each."
         ),
         root=out_root,
     )
@@ -215,7 +255,7 @@ def metric_check(summary_dir: Path, out_root: Path) -> dict:
     """
     runs = pd.read_parquet(summary_dir / "runs.parquet")
     d = _with_entity(_primary(runs))
-    d = d[d[PREREG].notna() & d[VERDICT].notna()]
+    d = d[d[PREREG].notna() & d[DISCRIM].notna()]
     lines = sorted(d.cell_line.unique())
     fig = make_subplots(
         rows=1, cols=len(lines), subplot_titles=[_line_label(x) for x in lines],
@@ -225,7 +265,7 @@ def metric_check(summary_dir: Path, out_root: Path) -> dict:
         block = d[d.cell_line == line]
         fig.add_trace(
             go.Scatter(
-                x=block[PREREG], y=block[VERDICT], mode="markers", text=block.arm,
+                x=block[PREREG], y=block[DISCRIM], mode="markers", text=block.arm,
                 showlegend=False,
                 marker=dict(color=_colors(block.entity), size=8, opacity=0.85),
                 hovertemplate="%{text}<br>pre-registered %{x:.4f}, "
@@ -240,7 +280,7 @@ def metric_check(summary_dir: Path, out_root: Path) -> dict:
     apply_theme(fig, height=470)
     save_figure_bundle(
         fig, "metric_check",
-        data={"records": d[["cell_line", "arm", "entity", PREREG, VERDICT]].to_dict("records")},
+        data={"records": d[["cell_line", "arm", "entity", PREREG, DISCRIM]].to_dict("records")},
         alt=(
             "Scatter of the pre-registered residual correlation against the fold-centred "
             "correlation for every arm, one panel per cell line; the shuffled-label draws "
@@ -255,7 +295,7 @@ def vs_coexpression(summary_dir: Path, out_root: Path, translator: str = "mlp") 
     """Paired difference against co-expression on the same held-out perturbations."""
     con = pd.read_parquet(summary_dir / "contrasts.parquet")
     d = con[(con.scope == "full") & (con.split == "grouped")
-            & (con.translator == translator) & (con.metric == "centered_weighted")
+            & (con.translator == translator) & (con.metric == "residual_weighted")
             & (con.target_source == "run1_all_controls")]
     d = _with_entity(d)
     d = d[~d.arm.str.contains(SHUFFLE_TAG, regex=False) & d.median_difference.notna()]
@@ -274,7 +314,7 @@ def vs_coexpression(summary_dir: Path, out_root: Path, translator: str = "mlp") 
     save_figure_bundle(
         fig, "vs_coexpression",
         data={"records": d.to_dict("records"), "translator": translator,
-              "metric": "centered_weighted", "min_resolvable_difference": resolvable},
+              "metric": "residual_weighted", "min_resolvable_difference": resolvable},
         alt=(
             "Paired difference between each arm and the co-expression arm on the same "
             "held-out perturbations, with bootstrap intervals; zero marks the "
@@ -310,7 +350,7 @@ def discrimination(summary_dir: Path, out_root: Path, translator: str = "mlp") -
     payload = d[[
         "cell_line", "arm", "entity", "family", "cell_eval_version",
         "discrimination_cell_eval_mean", "discrimination_cell_eval_median",
-        "discrimination_ours_residual_mean", VERDICT, PREREG,
+        "discrimination_ours_residual_mean", DISCRIM, PREREG,
     ]].to_dict("records")
     save_figure_bundle(
         fig, "discrimination",
@@ -348,12 +388,12 @@ def anchor_sensitivity(summary_dir: Path, out_root: Path) -> dict | None:
         sub = s[s.model == m].set_index("anchor").reindex(anchors).reset_index()
         fig.add_trace(
             go.Scatter(
-                x=sub[VERDICT], y=sub["anchor"], mode="markers", name=ENTITY_LABEL[m],
+                x=sub[DISCRIM], y=sub["anchor"], mode="markers", name=ENTITY_LABEL[m],
                 marker=dict(color=COLOR[m], size=9),
                 error_x=dict(
                     type="data", symmetric=False,
-                    array=sub[VERDICT + "_hi"] - sub[VERDICT],
-                    arrayminus=sub[VERDICT] - sub[VERDICT + "_lo"],
+                    array=sub[DISCRIM + "_hi"] - sub[DISCRIM],
+                    arrayminus=sub[DISCRIM] - sub[DISCRIM + "_lo"],
                     thickness=1.2, width=0, color=GUIDE,
                 ),
                 hovertemplate="%{y}: %{x:.4f}<extra></extra>",
@@ -367,7 +407,7 @@ def anchor_sensitivity(summary_dir: Path, out_root: Path) -> dict | None:
     apply_theme(fig, height=420)
     save_figure_bundle(
         fig, "anchor_sensitivity",
-        data={"records": s.to_dict("records"), "metric": VERDICT,
+        data={"records": s.to_dict("records"), "metric": DISCRIM,
               "cell_line": "hepg2", "null_ceiling": null},
         alt=(
             "Response-only score in HepG2 for each model at four query anchors: the "
@@ -379,53 +419,13 @@ def anchor_sensitivity(summary_dir: Path, out_root: Path) -> dict | None:
     return {"figure": "anchor_sensitivity", "n_records": int(s.shape[0]), "fig": fig}
 
 
-def beeline(summary_dir: Path, out_root: Path) -> dict | None:
-    """The source paper's benchmark: its number, ours, and what identity alone buys."""
-    path = summary_dir.parent / "beeline_reproduction.json"
-    if not path.exists():
-        return None
-    rep = json.loads(path.read_text())
-    rows = rep["rows"]
-    cells = [f"{r['network']} / {r['dataset']}" for r in rows]
-    series = [
-        ("reported by the paper", [r["paper_baseline_emb_auprc"] for r in rows], "#8C8880"),
-        ("reproduced here", [r["auprc"] for r in rows], COLOR["scgpt"]),
-        ("gene identity only", [r["auprc_shuffled_embedding"] for r in rows], COLOR["null"]),
-        ("unseen genes only", [r["auprc_unseen_genes"] for r in rows], COLOR["coexp"]),
-        ("unseen genes, chance", [r["positive_fraction_unseen"] for r in rows], GUIDE),
-    ]
-    fig = go.Figure()
-    for name, values, color in series:
-        fig.add_trace(
-            go.Bar(x=cells, y=values, name=name, marker=dict(color=color),
-                   hovertemplate="%{x}<br>" + name + ": %{y:.4f}<extra></extra>")
-        )
-    add_reference_line(fig, y=0.5, label="balanced chance")
-    fig.update_yaxes(title_text="AUPRC", range=[0.0, 1.0])
-    fig.update_xaxes(title_text="Held-out benchmark cell")
-    fig.update_layout(barmode="group")
-    apply_theme(fig, height=440)
-    save_figure_bundle(
-        fig, "beeline",
-        data={"records": rows, "summary": rep["summary"], "train_cell": rep["train_cell"]},
-        alt=(
-            "Grouped bars per held-out BEELINE cell: the AUPRC the source paper reports for its "
-            "scGPT embedding baseline, the AUPRC reproduced here, the same pipeline with gene "
-            "embeddings permuted between genes, and the score restricted to pairs whose genes "
-            "never appear in training with its own chance level."
-        ),
-        root=out_root,
-    )
-    return {"figure": "beeline", "n_records": len(rows), "fig": fig}
-
-
 def split_gap(summary_dir: Path, out_root: Path) -> dict:
     """Grouped against random split: how much of a score is family memorisation."""
     runs = pd.read_parquet(summary_dir / "runs.parquet")
     d = runs[(runs.scope == "full") & (runs.translator == "mlp")
              & (runs.target_source == "run1_all_controls")]
     d = _with_entity(d)
-    piv = d.pivot_table(index=["cell_line", "arm", "entity"], columns="split", values=VERDICT)
+    piv = d.pivot_table(index=["cell_line", "arm", "entity"], columns="split", values=DISCRIM)
     piv = piv.dropna().reset_index()
     fig = go.Figure()
     lim = [float(min(piv["grouped"].min(), piv["random"].min())) - 0.02,
@@ -449,7 +449,7 @@ def split_gap(summary_dir: Path, out_root: Path) -> dict:
     apply_theme(fig, height=480)
     save_figure_bundle(
         fig, "split_gap",
-        data={"records": piv.to_dict("records"), "metric": VERDICT},
+        data={"records": piv.to_dict("records"), "metric": DISCRIM},
         alt=(
             "Each arm's fold-centred score under the grouped split against the random "
             "split; the dotted diagonal is equality, and points above it score better "
@@ -460,6 +460,154 @@ def split_gap(summary_dir: Path, out_root: Path) -> dict:
     return {"figure": "split_gap", "n_records": int(piv.shape[0]), "fig": fig}
 
 
+#: the arms the protein control is read against: the embedding arms whose tables
+#: may come from a protein model, the statistical baseline, and the two nulls
+#: matched to the protein arms' widths
+PROTEIN_PANEL_ARMS = (
+    "esm2_3b_emb", "esm2_650m_emb", "transcriptformer_emb", "scprint_emb", "scgpt_emb",
+    "aido_cell_emb", "coexp", "null_randgene_d5120", "null_randgene_d2560",
+)
+
+
+def protein_arms(summary_dir: Path, out_root: Path, translator: str = "mlp") -> dict | None:
+    """The raw protein arm beside the arms whose tables came from a protein model."""
+    runs = pd.read_parquet(summary_dir / "runs.parquet")
+    if not runs.arm.str.startswith("esm2").any():
+        return None
+    d = _with_entity(
+        runs[(runs.scope == "full") & (runs.split == "grouped")
+             & (runs.translator == translator)
+             & (runs.target_source == "run1_all_controls")
+             & runs.arm.isin(PROTEIN_PANEL_ARMS) & runs[DISCRIM].notna()]
+    )
+    if d.empty:
+        return None
+    lines = sorted(d.cell_line.unique())
+    long, panels, titles = _both_metrics(d, lines)
+    ref = {}
+    for line in lines:
+        block = runs[(runs.cell_line == line) & (runs.scope == "full")
+                     & (runs.split == "grouped") & (runs.translator == translator)]
+        for col in (PREREG, DISCRIM):
+            ref[f"{line}|{col}"] = [(_null_ceiling(block, col), "shuffled-label null")]
+    fig = _dot_grid(
+        long, "value", "lo", "hi", "panel", {k: titles[k] for k in panels},
+        "Held-out correlation (disattenuated)", ref, 900,
+    )
+    payload = d[[
+        "cell_line", "arm", "entity", "family", "feature_dim", "n_perturbations",
+        DISCRIM, DISCRIM + "_lo", DISCRIM + "_hi", PREREG, PREREG + "_lo", PREREG + "_hi",
+    ]].to_dict("records")
+    save_figure_bundle(
+        fig, "protein_arms",
+        data={"records": payload, "metric": PREREG, "discrimination_metric": DISCRIM,
+              "translator": translator,
+              "null_ceiling": {
+                  f"{line}|{col}": ref[f"{line}|{col}"][0][0]
+                  for line in lines for col in (PREREG, DISCRIM)
+              }},
+        alt=(
+            "Sorted dot plot of the held-out correlation for the raw ESM2 arms, the four "
+            "model embedding arms, co-expression and the two width-matched random controls, "
+            "four panels: each cell line under the pre-registered rule and under the "
+            "post-hoc fold-centred version."
+        ),
+        root=out_root,
+    )
+    return {"figure": "protein_arms", "n_records": len(payload), "fig": fig}
+
+
+#: how the similarity matrix orders and names its tables
+TABLE_LABEL = {
+    "esm2_3b": "ESM2-3B",
+    "esm2_650m": "ESM2-650M",
+    "transcriptformer": "TranscriptFormer",
+    "scprint": "scPRINT",
+    "scgpt": "scGPT",
+    "aido_cell": "AIDO.Cell",
+}
+
+
+def table_similarity(summary_dir: Path, out_root: Path) -> dict | None:
+    """How much of the raw protein table survives in each model's gene table.
+
+    Read with representational similarity: the Spearman correlation between two
+    tables' gene-gene cosine similarities. Linear CKA is kept in the data file
+    but not plotted, because its floor moves with width -- two independent
+    random tables at 1,280 and 2,560 dimensions score 0.3934 on it, which is
+    the same as a real pair -- while the rank-similarity floor is at zero for
+    every width.
+    """
+    path = summary_dir / "table_similarity.json"
+    if not path.exists():
+        return None
+    record = json.loads(path.read_text())
+    lines = [x for x in ("hepg2", "jurkat") if x in record.get("lines", {})]
+    if not lines:
+        return None
+    names = [k for k in TABLE_LABEL if any(
+        k in {p.split("|")[0], p.split("|")[1]}
+        for p in record["lines"][lines[0]]["pairs"]
+    )]
+    fig = make_subplots(
+        rows=1, cols=len(lines), subplot_titles=[_line_label(x) for x in lines],
+        horizontal_spacing=0.16,
+    )
+    payload = []
+    for k, line in enumerate(lines):
+        pairs = record["lines"][line]["pairs"]
+        widths = record["lines"][line]["widths"]
+
+        def value(a: str, b: str, stat: str, pairs=pairs) -> float:
+            if a == b:
+                return 1.0
+            key = f"{a}|{b}" if f"{a}|{b}" in pairs else f"{b}|{a}"
+            return float(pairs[key][stat]) if key in pairs else float("nan")
+
+        z = [[value(a, b, "rsa_spearman") for b in names] for a in names]
+        cka = [[value(a, b, "cka") for b in names] for a in names]
+        rand = [p for p in pairs if "random_d" in p]
+        floor = max(abs(float(pairs[p]["rsa_spearman"])) for p in rand) if rand else float("nan")
+        cka_floor = max(
+            float(pairs[p]["cka"]) for p in rand
+            if p.split("|")[0].startswith("random") and p.split("|")[1].startswith("random")
+        ) if rand else float("nan")
+        payload.append({"cell_line": line, "names": names, "rsa_spearman": z, "cka": cka,
+                        "widths": widths, "random_table_floor_rsa": floor,
+                        "random_pair_ceiling_cka": cka_floor,
+                        "n_genes_compared": record["lines"][line]["n_genes_compared"],
+                        "n_genes_rsa": record["lines"][line]["n_genes_rsa"]})
+        fig.add_trace(
+            go.Heatmap(
+                z=z, x=[TABLE_LABEL[n] for n in names], y=[TABLE_LABEL[n] for n in names],
+                zmin=0, zmax=0.9, colorscale=SEQUENTIAL, showscale=(k == len(lines) - 1),
+                colorbar=dict(title="Rank<br>similarity"),
+                text=[[f"{v:.2f}" for v in row] for row in z],
+                texttemplate="%{text}",
+                hovertemplate="%{y} vs %{x}: %{z:.4f}<extra></extra>",
+            ),
+            row=1, col=k + 1,
+        )
+        fig.update_xaxes(title_text="Gene table", row=1, col=k + 1)
+        fig.update_yaxes(title_text="Gene table", autorange="reversed", row=1, col=k + 1)
+    apply_theme(fig, height=460)
+    save_figure_bundle(
+        fig, "table_similarity",
+        data={"panels": payload,
+              "metric": ("Spearman correlation between the two tables' gene-gene cosine "
+                         "similarities, over a fixed 1,500-gene subset"),
+              "secondary_metric": "linear CKA over every read-out gene, not plotted"},
+        alt=(
+            "Two heatmaps, one per cell line, of the rank similarity between every pair of "
+            "gene tables: the two raw ESM2 tables and the four single-cell models'. The two "
+            "ESM2 sizes agree strongly, TranscriptFormer and scPRINT keep a clear protein "
+            "signature, and scGPT and AIDO.Cell sit at the random-table floor."
+        ),
+        root=out_root,
+    )
+    return {"figure": "table_similarity", "n_records": len(payload), "fig": fig}
+
+
 def transfer_scores(summary_dir: Path, out_root: Path) -> dict | None:
     """Train on one screen, score on the other, against the gene-identity null."""
     path = summary_dir / "transfer_runs.parquet"
@@ -467,7 +615,7 @@ def transfer_scores(summary_dir: Path, out_root: Path) -> dict | None:
         return None
     d = pd.read_parquet(path)
     d = _with_entity(d[(d.translator == "mlp") & (d.split == "cross_line__dest_reference")])
-    d = d[d.scope.isin(["transfer_full", "transfer_unseen"]) & d[VERDICT].notna()]
+    d = d[d.scope.isin(["transfer_full", "transfer_unseen"]) & d[DISCRIM].notna()]
     if d.empty:
         return None
     scope_label = {"transfer_full": "every shared gene", "transfer_unseen": "unseen genes only"}
@@ -479,15 +627,16 @@ def transfer_scores(summary_dir: Path, out_root: Path) -> dict | None:
     ref = {}
     for p in panels:
         gi = d[(d.panel == p) & (d.arm == "null_randgene_d5120")]
-        ref[p] = [(float(gi[VERDICT].iloc[0]), "gene-identity null")] if not gi.empty else []
+        ref[p] = [(float(gi[PREREG].iloc[0]), "gene-identity null")] if not gi.empty else []
     fig = _dot_grid(
-        d, VERDICT, VERDICT + "_lo", VERDICT + "_hi", "panel",
+        d, PREREG, PREREG + "_lo", PREREG + "_hi", "panel",
         {p: p for p in panels},
-        "Fold-centred correlation on the held-out line", ref, 900, ncols=2,
+        "Pre-registered correlation on the held-out line", ref, 900, ncols=2,
     )
     save_figure_bundle(
         fig, "transfer",
-        data={"records": d.to_dict("records"), "metric": VERDICT, "mode": "dest_reference"},
+        data={"records": d.to_dict("records"), "metric": PREREG,
+              "discrimination_metric": DISCRIM, "mode": "dest_reference"},
         alt=(
             "Cross-cell-line transfer in both directions, over every shared gene and over "
             "only the genes never perturbed in the training line, with the "
@@ -506,7 +655,7 @@ def transfer_mode_agreement(summary_dir: Path, out_root: Path) -> dict | None:
     d = pd.read_parquet(path)
     d = _with_entity(d[d.translator == "mlp"])
     keys = ["cell_line", "scope", "arm", "entity"]
-    piv = d.pivot_table(index=keys, columns="transfer_mode", values=VERDICT).reset_index()
+    piv = d.pivot_table(index=keys, columns="transfer_mode", values=DISCRIM).reset_index()
     others = [m for m in ("source_only", "dest_all") if m in piv.columns]
     if "dest_reference" not in piv.columns or not others:
         return None
@@ -537,7 +686,7 @@ def transfer_mode_agreement(summary_dir: Path, out_root: Path) -> dict | None:
     apply_theme(fig, height=460)
     save_figure_bundle(
         fig, "transfer_mode_agreement",
-        data={"records": piv.to_dict("records"), "metric": VERDICT},
+        data={"records": piv.to_dict("records"), "metric": DISCRIM},
         alt=(
             "Each transfer arm's score under the held-out-reference mode against its score "
             "under the two other choices of reference, with the equality line drawn."
@@ -560,7 +709,7 @@ def control_cell_overlap(summary_dir: Path, out_root: Path) -> dict | None:
     d = _with_entity(pd.read_parquet(path))
     d = d[d.translator == "mlp"]
     piv = d.pivot_table(index=["cell_line", "arm", "entity"], columns="variant",
-                        values=VERDICT).reset_index()
+                        values=DISCRIM).reset_index()
     if not {"ctrl0", "ctrl1"}.issubset(piv.columns):
         return None
     piv = piv.assign(shared_minus_disjoint=piv["ctrl1"] - piv["ctrl0"])
@@ -590,7 +739,7 @@ def control_cell_overlap(summary_dir: Path, out_root: Path) -> dict | None:
     save_figure_bundle(
         fig, "control_cell_overlap",
         data={"records": piv.to_dict("records"), "absolute": d.to_dict("records"),
-              "metric": VERDICT},
+              "metric": DISCRIM},
         alt=(
             "Difference between each arm's score against a target built from the same "
             "control cells the co-expression features use and one built from the other "
@@ -651,8 +800,9 @@ def build_all(summary_dir: Path, out_root: Path | None = None) -> list[dict]:
         vs_coexpression(summary_dir, out_root),
         discrimination(summary_dir, out_root),
         anchor_sensitivity(summary_dir, out_root),
-        beeline(summary_dir, out_root),
         split_gap(summary_dir, out_root),
+        protein_arms(summary_dir, out_root),
+        table_similarity(summary_dir, out_root),
         grid_cells(summary_dir, out_root),
         control_cell_overlap(summary_dir, out_root),
         transfer_scores(summary_dir, out_root),

@@ -1,1 +1,0 @@
-Grouped bars per held-out BEELINE cell: the AUPRC the source paper reports for its scGPT embedding baseline, the AUPRC reproduced here, the same pipeline with gene embeddings permuted between genes, and the score restricted to pairs whose genes never appear in training with its own chance level.

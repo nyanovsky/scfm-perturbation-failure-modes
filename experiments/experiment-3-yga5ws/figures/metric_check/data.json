@@ -433,6 +433,118 @@
       "entity": "node",
       "residual__weighted__disattenuated": 0.04770225196064183,
       "centered__weighted__disattenuated": 0.018928220530529012
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d2560",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.030191407020425415,
+      "centered__weighted__disattenuated": 0.0068051563391568
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb",
+      "entity": "esm2",
+      "residual__weighted__disattenuated": 0.23311142633518622,
+      "centered__weighted__disattenuated": 0.10738655423271576
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_650m_emb",
+      "entity": "esm2",
+      "residual__weighted__disattenuated": 0.2015369281361112,
+      "centered__weighted__disattenuated": 0.078326551216008
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d2560",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.01731275100031504,
+      "centered__weighted__disattenuated": 0.008337391375397489
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb",
+      "entity": "esm2",
+      "residual__weighted__disattenuated": 0.2641756814272859,
+      "centered__weighted__disattenuated": 0.178378884550599
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_650m_emb",
+      "entity": "esm2",
+      "residual__weighted__disattenuated": 0.22822119259044,
+      "centered__weighted__disattenuated": 0.15818285213531866
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb+shuffled_labels_d0",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.027644179180561366,
+      "centered__weighted__disattenuated": 0.005035025201592945
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb+shuffled_labels_d1",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.0126627691998008,
+      "centered__weighted__disattenuated": -0.02549950742569859
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb+shuffled_labels_d2",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.0031708500468135476,
+      "centered__weighted__disattenuated": -0.021634175465091596
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb+shuffled_labels_d3",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.024073295057756208,
+      "centered__weighted__disattenuated": 0.009830709066096243
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb+shuffled_labels_d4",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.012622180303515505,
+      "centered__weighted__disattenuated": -0.015674520561697925
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb+shuffled_labels_d0",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.01720406598384041,
+      "centered__weighted__disattenuated": 0.010470388871493994
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb+shuffled_labels_d1",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.00023136907412210853,
+      "centered__weighted__disattenuated": -0.004622216869366073
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb+shuffled_labels_d2",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.018467396541767513,
+      "centered__weighted__disattenuated": 0.004989567090396961
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb+shuffled_labels_d3",
+      "entity": "null",
+      "residual__weighted__disattenuated": -0.010538060479628759,
+      "centered__weighted__disattenuated": -0.01954226668342579
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb+shuffled_labels_d4",
+      "entity": "null",
+      "residual__weighted__disattenuated": 0.01959065595086249,
+      "centered__weighted__disattenuated": -0.005576597316925846
     }
   ]
 }

@@ -1,0 +1,261 @@
+{
+  "written_by": "scfm_pfm.protein.audit_tables",
+  "cache": "/reused-volume/experiments/experiment-3-yga5ws/_ckpt",
+  "transcriptformer": {
+    "root": "/reused-volume/experiments/experiment-3-yga5ws/_ckpt/transcriptformer/tf_sapiens/tf_sapiens",
+    "reader": "torch.load(weights_only=True)",
+    "weights_key": "gene_embeddings.embedding.weight",
+    "weights_shape": [
+      23830,
+      2560
+    ],
+    "h5_file": "homo_sapiens_gene.h5",
+    "h5_n_datasets": 23824,
+    "h5_datasets_head": [
+      {
+        "name": "arrays/ENSG00000000003",
+        "shape": [
+          2560
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "arrays/ENSG00000000005",
+        "shape": [
+          2560
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "arrays/ENSG00000000419",
+        "shape": [
+          2560
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "arrays/ENSG00000000457",
+        "shape": [
+          2560
+        ],
+        "dtype": "float32"
+      },
+      {
+        "name": "arrays/ENSG00000000460",
+        "shape": [
+          2560
+        ],
+        "dtype": "float32"
+      }
+    ],
+    "h5_n_genes": 23823,
+    "h5_names_head": [
+      "ENSG00000000003",
+      "ENSG00000000005",
+      "ENSG00000000419",
+      "ENSG00000000457",
+      "ENSG00000000460"
+    ],
+    "rebuilt_shape": [
+      23830,
+      2560
+    ],
+    "rebuilt_summary": {
+      "shape": [
+        23830,
+        2560
+      ],
+      "l2_norm": 157908.9091507921,
+      "row_norm_mean": 1021.0349051660387,
+      "row_norm_sd": 62.18703084166751,
+      "zero_rows": 0,
+      "finite": true
+    },
+    "weights_summary": {
+      "shape": [
+        23830,
+        2560
+      ],
+      "l2_norm": 157908.9091507921,
+      "row_norm_mean": 1021.0349051660387,
+      "row_norm_sd": 62.18703084166737,
+      "zero_rows": 0,
+      "finite": true
+    },
+    "weights_vs_shipped": {
+      "comparable": true,
+      "bitwise_identical": false,
+      "max_abs_diff": 2.9801522583028373e-08,
+      "mean_abs_diff": 2.9304459144982373e-12,
+      "median_row_cosine": 1.0,
+      "min_row_cosine": 0.9999999999999996
+    },
+    "weights_vs_shipped_genes_only": {
+      "comparable": true,
+      "bitwise_identical": true,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0,
+      "median_row_cosine": 1.0,
+      "min_row_cosine": 0.9999999999999998
+    },
+    "special_token_rows": {
+      "comparable": true,
+      "bitwise_identical": false,
+      "max_abs_diff": 2.9801522583028373e-08,
+      "mean_abs_diff": 9.976075163213285e-09,
+      "median_row_cosine": 0.9999999999999998,
+      "min_row_cosine": 0.9999999999999996
+    }
+  },
+  "scprint": {
+    "reader": "torch.load(weights_only=True)",
+    "key": "gene_encoder.embedding.weight",
+    "shape": [
+      44756,
+      256
+    ],
+    "n_genes_in_hparams": 44756,
+    "precpt_gene_emb": "/lustre/fswork/projects/rech/xeg/uat95fg/gene_embeddings.parquet",
+    "freeze_embeddings": false,
+    "repo_listing": {
+      "root": [
+        {
+          "path": "embeddings",
+          "size": 0
+        },
+        {
+          "path": "other_ckpts",
+          "size": 0
+        },
+        {
+          "path": ".gitattributes",
+          "size": 1786
+        },
+        {
+          "path": ".mmap",
+          "size": 414330880
+        },
+        {
+          "path": "CONTRIBUTING.md",
+          "size": 3625
+        },
+        {
+          "path": "README.md",
+          "size": 7203
+        },
+        {
+          "path": "TFs.txt",
+          "size": 232480
+        },
+        {
+          "path": "attention_bias.npz",
+          "size": 263952453
+        },
+        {
+          "path": "cell-transformer.ckpt",
+          "size": 1043261597
+        },
+        {
+          "path": "esm-ft.ckpt",
+          "size": 421896120
+        },
+        {
+          "path": "figure1.png",
+          "size": 2392805
+        },
+        {
+          "path": "gNNpgpo6gATjuxTE7CCp.h5ad",
+          "size": 746061852
+        },
+        {
+          "path": "large-v1.ckpt",
+          "size": 1237154305
+        },
+        {
+          "path": "logo.png",
+          "size": 84466
+        },
+        {
+          "path": "medium-v1.5.ckpt",
+          "size": 221742980
+        },
+        {
+          "path": "medium-v1.ckpt",
+          "size": 303278001
+        },
+        {
+          "path": "small-v1.ckpt",
+          "size": 111120529
+        },
+        {
+          "path": "small-v2.ckpt",
+          "size": 889706878
+        },
+        {
+          "path": "yBCKp6HmXuHa0cZptMo7.h5ad",
+          "size": 105171035
+        }
+      ],
+      "embeddings": [
+        {
+          "path": "embeddings/.mmap",
+          "size": 414330880
+        }
+      ]
+    },
+    "readme_mentions": [
+      "- __cell embedding__: generate a low-dimensional representation of your dataset",
+      "### I want to generate cell embeddings and cell label predictions from scRNAseq data:",
+      "-> refer to the embeddings and cell annotations section in [this notebook](./notebooks/cancer_usecase.ipynb).",
+      "### I want to generate an atlas level embedding"
+    ],
+    "candidates": []
+  },
+  "transcriptformer_source": {
+    "python_files": 33,
+    "read": {
+      "src/transcriptformer/model/layers.py": {
+        "bytes": 15642,
+        "embedding_lines": [
+          "self.gene_embedding = nn.Embedding(gene_bias_size, 1)",
+          "freeze=True,",
+          "self.embedding = nn.Embedding.from_pretrained(embedding_matrix.type(torch.float32), freeze=freeze)",
+          "if freeze:",
+          "self.embedding.weight.requires_grad = False"
+        ],
+        "esm_lines": []
+      },
+      "src/transcriptformer/model/model.py": {
+        "bytes": 19807,
+        "embedding_lines": [
+          "emb_matrix: Tensor = None,",
+          "self._init_gene_embeddings(emb_matrix)",
+          "def _init_gene_embeddings(self, emb_matrix: Tensor = None):",
+          "embedding_matrix=emb_matrix,",
+          "freeze=True,",
+          "{key: nn.Embedding(len(vocab), self.model_config.embed_dim) for key, vocab in aux_vocab_dict.items()}",
+          "pad_mask.requires_grad = False"
+        ],
+        "esm_lines": [
+          "class ESM2CE(Transcriptformer):",
+          "\"\"\"ESM2-CE model.\"\"\""
+        ]
+      },
+      "src/transcriptformer/tokenizer/vocab.py": {
+        "bytes": 4140,
+        "embedding_lines": [
+          "gene_vocab, emb_matrix = construct_gene_embeddings(",
+          "emb_matrix = torch.tensor(emb_matrix)",
+          "assert emb_matrix.shape[0] == len(",
+          "), f\"Embeddings matrix has wrong shape, {emb_matrix.shape[0]} != {len(gene_vocab)}\"",
+          "return (gene_vocab, aux_vocab), emb_matrix"
+        ],
+        "esm_lines": [
+          "logging.info(f\"Loading ESM2 mappings from {cfg.model.data_config.esm2_mappings_path}\")",
+          "for file in cfg.model.data_config.esm2_mappings:",
+          "emb_files.append(os.path.join(cfg.model.data_config.esm2_mappings_path, file))"
+        ]
+      }
+    }
+  }
+}

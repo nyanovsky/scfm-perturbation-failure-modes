@@ -3,18 +3,35 @@
 One fixed translator maps a **gene-pair feature** to the **residual** (perturbation-specific)
 log2 fold change of a read-out gene under CRISPRi knockdown of a perturbed gene. Only the input
 feature varies across arms. The arms that matter are the four single-cell foundation models'
-response features against plain statistical co-expression computed from the same control cells —
+response features against plain statistical co-expression computed from the same control cells,
 the control the UGRN paper never ran.
+
+**What it found.** The response features add nothing to the model's static gene embedding; the
+embedding is what beats co-expression, on the pre-registered scoring rule and with every interval
+resampling the response groups the split holds out together (0.2719 for scGPT's embedding in HepG2
+against 0.04879 for co-expression; paired +0.1846 [0.1501, 0.2408]). Reading the four released
+checkpoints then shows that two of the four gene-identity tables are protein-derived rather than
+learned from cells, and a table built directly from UniProt protein sequence with a public ESM2
+checkpoint, run through the same translator and folds, beats co-expression in both lines and ties
+the single-cell arms in seven of eight paired comparisons, beating scGPT's in Jurkat. On genes
+never perturbed in the training screen, only the protein-derived tables keep a score clear of
+zero. `manifest.yaml` carries the numbers; the published report carries the argument.
+
+The fold-centred version of the score, which removes the held-out fold's own per-gene mean, is
+reported beside the pre-registered one everywhere. It uses held-out outcomes and was written after
+seeing the shuffled-label draws, so it is a diagnostic and never a substitute for the verdict.
 
 ## Layout
 
 | path | what |
 |---|---|
 | `src/scfm_pfm/config.py` | the pre-registration: scoring rule, splits, translator, arms |
-| `src/scfm_pfm/metrics.py` | reliability weights, residual ceiling, weighted correlation, bootstrap, power |
+| `src/scfm_pfm/metrics.py` | reliability weights, residual ceiling, weighted correlation, the group (cluster) bootstrap every interval uses, power |
+| `src/scfm_pfm/groups.py` | recovers the response groups from the bundle's effect matrix, so any scored table can be re-bootstrapped over groups |
 | `src/scfm_pfm/fetch.py` | pulls run 1 / run 2 artifacts into a job from a signed-link manifest |
 | `src/scfm_pfm/ingest/` | the one bundle every later job reads: targets, co-expression, features |
 | `src/scfm_pfm/translate/` | arms, splits, the translator, the sweep runner |
+| `src/scfm_pfm/protein/` | the protein-model control: checkpoint provenance audit, gene-to-protein mapping, ESM2 tables, table similarity |
 | `src/scfm_pfm/report/` | figures and the report |
 | `results/handoff/` | small tables that travel with the worktree into a job |
 
@@ -28,7 +45,14 @@ python -m scfm_pfm.ingest.build --urls results/handoff/urls/artifact_urls.json -
 # 2. the translator sweep (GPU job, mounts the ingest job's volume)
 python -m scfm_pfm.translate.runner --shard <k> --n-shards <n>
 
-# 3. scoring, figures, report
+# 3. the protein-model control (see `src/scfm_pfm/protein/`)
+python -m scfm_pfm.protein.audit --cache _ckpt --out results/provenance   # CPU
+python -m scfm_pfm.protein.uniprot --out results/protein                  # CPU, network
+python -m scfm_pfm.protein.esm_embed --genes results/protein --out results/protein  # GPU
+python -m scfm_pfm.protein.install_arm --tables results/protein --bundle <bundle>
+python -m scfm_pfm.translate.runner --bundle <bundle> --arms esm2_650m_emb,esm2_3b_emb,...
+
+# 4. scoring, figures, report
 python -m scfm_pfm.report.build
 ```
 
@@ -61,8 +85,12 @@ Small reviewable copies live in this worktree.
 | control-split targets | `ctrl_split_targets/` (store) | effect recomputed against each control half and against all control cells, plus `recompute_report.json` |
 | control-overlap scoring | `alt_target_ctrl0/`, `alt_target_ctrl1/`, `alt_target_ctrlall/` (store) | the key arms rescored against each of those targets |
 | anchor sensitivity | `sensitivity/` (store) | HepG2 response arms at the uniform-virtual, individual-cells and masked anchors, with each model's mean-control arm re-run as the in-job reference |
+| gene-table provenance | `provenance/audit.json`, `provenance/audit_tables.json` (store), same under `results/provenance/` (worktree) | per model, which tensor is the gene-identity table and whether pretraining updated it, read from the released checkpoints |
+| protein tables | `protein/` (store): `esm2_650m.npz`, `esm2_3b.npz`, `gene_to_protein.parquet`, `identity.json`, and the three reports; `results/protein/` (worktree) keeps the small ones | ESM2 embeddings of each read-out gene's canonical human protein, the mapping that produced them, and how close every gene table is to them |
+| protein arms | `protein_sweep/<line>/`, `protein_shuffle/<line>/`, `protein_transfer/` (store) | the ESM2 arms and their width-matched null over the same grid as every other arm, their shuffled-label draws, and both transfer directions |
+| protein in-job reference | `protein_reference/<line>/`, `protein_transfer_reference/` (store) | main-sweep arms re-run inside the protein jobs; kept out of the merged tables so no scored row is overwritten |
 | no-op query record | `results/handoff/no_op_queries_per_gene.csv`, `results/verification/no_op_correction.json` (worktree) | which (perturbed gene, value) queries were no-ops and in how many cells, derived from run 2's per-query records, plus the five checks behind the per-query exclusion |
-| BEELINE reproduction | `beeline/beeline_reproduction.json` (store), `results/beeline_reproduction.json` (worktree) | the source paper's scGPT embedding baseline re-fitted on its own benchmark, with a permuted-embedding control and an unseen-gene slice |
+| BEELINE arm (dropped) | `beeline/beeline_reproduction.json` (store), `results/beeline_reproduction.json` (worktree) | the source paper's scGPT embedding baseline re-fitted on its own benchmark. Dropped from the evidence: it scored 0.6724 against 0.6247 reported, so the setting is not established and neither it nor the controls run inside it (a permuted-embedding control, an unseen-gene slice) support a claim in the report. Kept for audit only |
 | discrimination versions | `results/discrimination_versions.json`, `results/discrimination/` (worktree) | the same saved predictions rescored under cell-eval 0.5.18, 0.5.21 and 0.8.2 |
 | merged tables | `results/summary/` (worktree) | `runs.parquet`, `contrasts.parquet`, `grid.parquet`, `transfer_runs.parquet`, `ordering_agreement.parquet`, `control_cell_overlap.parquet`, `null_band.parquet`, `headline.json` |
 | target recompute report | `results/recompute_report.json` (worktree) | agreement of each recomputed target with run 1's effect matrix, reliability weights, cells kept |
@@ -80,9 +108,14 @@ analysis command from the shards and are deliberately not committed.
 PYTHONPATH=src apy -m scfm_pfm.analysis \
   --sweep scratch/dl/leakcheck,scratch/dl/sweep,scratch/dl/sweep_common_random,\
 scratch/dl/sweep_node,scratch/dl/sweep_node_common,scratch/dl/alt_target_ctrl0,\
-scratch/dl/alt_target_ctrl1,scratch/dl/alt_target_ctrlall \
-  --transfer-sweep scratch/dl/transfer2,scratch/dl/transfer_unseen \
+scratch/dl/alt_target_ctrl1,scratch/dl/alt_target_ctrlall,\
+scratch/dl/protein_sweep/hepg2,scratch/dl/protein_sweep/jurkat,\
+scratch/dl/protein_shuffle/hepg2,scratch/dl/protein_shuffle/jurkat \
+  --transfer-sweep scratch/dl/transfer2,scratch/dl/transfer_unseen,scratch/dl/protein_transfer \
   --sensitivity-sweep scratch/dl/sensitivity \
+  --protein-reference scratch/dl/protein_reference/hepg2,scratch/dl/protein_reference/jurkat \
+  --protein-transfer-reference scratch/dl/protein_transfer_reference \
+  --bundle-root scratch/dl/bundle \
   --out results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.contract --summary results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_pfm.report.build \
@@ -111,8 +144,9 @@ The discrimination axis is computed with Arc Institute's `cell-eval`. The pre-re
 saved predictions under 0.5.18, 0.5.21 and 0.8.2 to show what that choice costs.
 
 `scratch/verify_claims.py` re-reads each entry of `claims_manifest.json` from the file and key it
-names and reports any disagreement. It resolves 95 of the 159 keys; the rest use prose locators
-that the script does not parse, and none of the values it could re-read disagreed.
+names and reports any disagreement. All 232 re-readable keys resolve and match; the remaining 11
+claims are differences between two rows that are themselves claimed, and their key states the
+formula instead of a locator.
 
 No external model provider is used anywhere in this run: every number comes from the four
 open single-cell foundation models' cached features and from code in this worktree.

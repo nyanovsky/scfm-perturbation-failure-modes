@@ -205,6 +205,108 @@ def bootstrap_median_difference(
     }
 
 
+# --------------------------------------------------------------------------- #
+# uncertainty over GROUPS rather than rows
+# --------------------------------------------------------------------------- #
+# Perturbed genes are not independent draws: paralogs and complex members give
+# near-identical responses, which is why whole response groups are held out
+# together. Resampling individual perturbations therefore understates the
+# uncertainty -- HepG2's 524 perturbations are only 226 groups, one of them 149
+# rows. The functions below resample GROUPS with replacement (a cluster
+# bootstrap) and take the median of the whole resampled multiset, which reduces
+# to the row bootstrap when every group is a singleton.
+
+
+def _group_counts(groups: np.ndarray, n_resamples: int, rng: np.random.Generator) -> tuple:
+    """(sorted-row order, group index per sorted row, multiplicity matrix).
+
+    Drawing ``G`` groups with replacement is exactly a Multinomial(G, 1/G) over
+    the groups, so one (n_resamples x G) count matrix stands in for the draws.
+    """
+    uniq, gidx = np.unique(np.asarray(groups), return_inverse=True)
+    n_groups = int(uniq.size)
+    counts = rng.multinomial(n_groups, np.full(n_groups, 1.0 / n_groups), size=n_resamples)
+    return gidx, counts.astype(np.int32), n_groups
+
+
+def _weighted_median(sorted_values: np.ndarray, sorted_gidx: np.ndarray, counts: np.ndarray):
+    """Median of the multiset that repeats each row by its group's count.
+
+    Matches ``np.median``: the average of the two central order statistics when
+    the resampled total is even, the central one when it is odd.
+    """
+    w = counts[:, sorted_gidx]
+    cw = np.cumsum(w, axis=1, dtype=np.int64)
+    total = cw[:, -1:]
+    i_lo = np.argmax(cw >= (total + 1) // 2, axis=1)
+    i_hi = np.argmax(cw >= total // 2 + 1, axis=1)
+    return 0.5 * (sorted_values[i_lo] + sorted_values[i_hi])
+
+
+def bootstrap_median_grouped(
+    values: np.ndarray,
+    groups: np.ndarray,
+    n_resamples: int = 2000,
+    ci: float = 0.95,
+    seed: int = 42,
+) -> dict:
+    """Cluster bootstrap of the median: groups resampled, rows carried whole."""
+    v = np.asarray(values, dtype=np.float64)
+    g = np.asarray(groups)
+    ok = np.isfinite(v)
+    v, g = v[ok], g[ok]
+    if v.size == 0:
+        return {"median": float("nan"), "lo": float("nan"), "hi": float("nan"),
+                "se": float("nan"), "n": 0, "n_groups": 0, "largest_group": 0}
+    rng = np.random.default_rng(seed)
+    gidx, counts, n_groups = _group_counts(g, n_resamples, rng)
+    order = np.argsort(v, kind="stable")
+    meds = _weighted_median(v[order], gidx[order], counts)
+    alpha = (1.0 - ci) / 2.0
+    return {
+        "median": float(np.median(v)),
+        "lo": float(np.quantile(meds, alpha)),
+        "hi": float(np.quantile(meds, 1 - alpha)),
+        "se": float(np.std(meds, ddof=1)),
+        "n": int(v.size),
+        "n_groups": n_groups,
+        "largest_group": int(np.bincount(gidx).max()),
+    }
+
+
+def bootstrap_median_difference_grouped(
+    a: np.ndarray,
+    b: np.ndarray,
+    groups: np.ndarray,
+    n_resamples: int = 2000,
+    ci: float = 0.95,
+    seed: int = 42,
+) -> dict:
+    """Paired cluster bootstrap of median(a) - median(b) over shared rows."""
+    a = np.asarray(a, dtype=np.float64)
+    b = np.asarray(b, dtype=np.float64)
+    g = np.asarray(groups)
+    ok = np.isfinite(a) & np.isfinite(b)
+    a, b, g = a[ok], b[ok], g[ok]
+    if a.size == 0:
+        return {"difference": float("nan"), "lo": float("nan"), "hi": float("nan"),
+                "se": float("nan"), "n": 0, "n_groups": 0}
+    rng = np.random.default_rng(seed)
+    gidx, counts, n_groups = _group_counts(g, n_resamples, rng)
+    oa, ob = np.argsort(a, kind="stable"), np.argsort(b, kind="stable")
+    diffs = _weighted_median(a[oa], gidx[oa], counts) - _weighted_median(b[ob], gidx[ob], counts)
+    alpha = (1.0 - ci) / 2.0
+    return {
+        "difference": float(np.median(a) - np.median(b)),
+        "lo": float(np.quantile(diffs, alpha)),
+        "hi": float(np.quantile(diffs, 1 - alpha)),
+        "se": float(np.std(diffs, ddof=1)),
+        "n": int(a.size),
+        "n_groups": n_groups,
+        "p_two_sided": float(2 * min((diffs <= 0).mean(), (diffs >= 0).mean())),
+    }
+
+
 def min_resolvable_difference(
     sd_single: float, n: int, paired_rho: float, alpha: float = 0.05, power: float = 0.80
 ) -> float:

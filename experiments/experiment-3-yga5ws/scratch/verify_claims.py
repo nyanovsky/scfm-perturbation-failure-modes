@@ -34,6 +34,8 @@ SELECTORS = (
     "check",
     "cell_line",
     "arm",
+    "reference",
+    "variant",
     "line",
     "name",
     "asked_for",
@@ -66,6 +68,7 @@ def from_table(df: pd.DataFrame, key: str):
     column = parts.pop("column", None)
     statistic = parts.pop("statistic", None)
     parts.pop("scope_note", None)
+    parts.pop("note", None)
     sub = df
     for name, value in parts.items():
         col = name[:-1] if name.endswith("s") and name[:-1] in sub.columns else name
@@ -129,11 +132,19 @@ def dotted(obj, path: str):
 
 ALIASES = {"version": "values", "check": "checks", "block": "blocks", "row": "rows"}
 
+#: aggregates a json locator may take over a list it fanned out to
+AGGREGATES = {
+    "max": max, "min": min, "sum": sum, "count": len,
+    "mean": lambda v: sum(v) / len(v),
+    "max_abs": lambda v: max(abs(x) for x in v),
+}
+
 COMPOSITE_KEYS = (
     ("model", "cell_line", "anchor"),
     ("network", "dataset"),
     ("model", "anchor"),
     ("cell_line", "arm"),
+    ("arm", "reference"),
     ("asked_for", "file"),
 )
 
@@ -231,6 +242,13 @@ def _resolve(obj, field, selectors, statistic, selectors_first: bool):
     if statistic:
         if isinstance(cur, dict) and statistic in cur:
             return cur[statistic], None
+        if isinstance(cur, list) and statistic in AGGREGATES:
+            if statistic == "count":
+                return len(cur), None
+            vals = [float(v) for v in cur if isinstance(v, (int, float))]
+            if not vals:
+                return None, f"no numbers to take {statistic!r} of"
+            return AGGREGATES[statistic](vals), None
         return None, f"no statistic {statistic!r}"
     return cur, None
 
@@ -253,6 +271,7 @@ def main() -> int:
     cache: dict[str, object] = {}
     bad: list[str] = []
     ok = 0
+    derived = 0
     for claim in claims:
         src = ROOT / claim["source"]
         label = f"{claim['source']} [{claim['key']}]"
@@ -268,6 +287,9 @@ def main() -> int:
                 cache[str(src)] = json.loads(src.read_text())
             else:
                 cache[str(src)] = None
+        if "derived=" in claim["key"]:
+            derived += 1
+            continue
         obj = cache[str(src)]
         if obj is None:
             bad.append(f"UNREADABLE      {label}")
@@ -295,7 +317,9 @@ def main() -> int:
         ok += 1
     for line in bad:
         print(line[:300])
-    print(f"{ok} of {len(claims)} claims re-read from source and matched")
+    print(f"{ok} of {len(claims) - derived} re-readable claims matched their source "
+          f"({derived} more are differences between two claimed rows and state their formula "
+          f"in the key)")
     kinds: dict[str, int] = {}
     for line in bad:
         kinds[line.split()[0]] = kinds.get(line.split()[0], 0) + 1

@@ -527,6 +527,78 @@
       "discrimination_ours_residual_mean": 0.5038644075393677,
       "centered__weighted__disattenuated": NaN,
       "residual__weighted__disattenuated": NaN
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "null_randgene_d2560",
+      "entity": "null",
+      "family": "null",
+      "cell_eval_version": "0.8.2",
+      "discrimination_cell_eval_mean": 0.4597306392401375,
+      "discrimination_cell_eval_median": 0.4494274809160305,
+      "discrimination_ours_residual_mean": 0.4919321835041046,
+      "centered__weighted__disattenuated": 0.0068051563391568,
+      "residual__weighted__disattenuated": 0.030191407020425415
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_3b_emb",
+      "entity": "esm2",
+      "family": "protein",
+      "cell_eval_version": "0.8.2",
+      "discrimination_cell_eval_mean": 0.5198087232678749,
+      "discrimination_cell_eval_median": 0.5286259541984732,
+      "discrimination_ours_residual_mean": 0.5506837368011475,
+      "centered__weighted__disattenuated": 0.10738655423271576,
+      "residual__weighted__disattenuated": 0.23311142633518622
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_650m_emb",
+      "entity": "esm2",
+      "family": "protein",
+      "cell_eval_version": "0.8.2",
+      "discrimination_cell_eval_mean": 0.5137776062001049,
+      "discrimination_cell_eval_median": 0.5267175572519084,
+      "discrimination_ours_residual_mean": 0.544849157333374,
+      "centered__weighted__disattenuated": 0.078326551216008,
+      "residual__weighted__disattenuated": 0.2015369281361112
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "null_randgene_d2560",
+      "entity": "null",
+      "family": "null",
+      "cell_eval_version": "0.8.2",
+      "discrimination_cell_eval_mean": 0.48788290327448314,
+      "discrimination_cell_eval_median": 0.4907801418439717,
+      "discrimination_ours_residual_mean": 0.5012531876564026,
+      "centered__weighted__disattenuated": 0.008337391375397489,
+      "residual__weighted__disattenuated": 0.01731275100031504
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_3b_emb",
+      "entity": "esm2",
+      "family": "protein",
+      "cell_eval_version": "0.8.2",
+      "discrimination_cell_eval_mean": 0.5739570444142649,
+      "discrimination_cell_eval_median": 0.6056737588652482,
+      "discrimination_ours_residual_mean": 0.5903308391571045,
+      "centered__weighted__disattenuated": 0.178378884550599,
+      "residual__weighted__disattenuated": 0.2641756814272859
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_650m_emb",
+      "entity": "esm2",
+      "family": "protein",
+      "cell_eval_version": "0.8.2",
+      "discrimination_cell_eval_mean": 0.5685086263266435,
+      "discrimination_cell_eval_median": 0.5957446808510638,
+      "discrimination_ours_residual_mean": 0.5855375528335571,
+      "centered__weighted__disattenuated": 0.15818285213531866,
+      "residual__weighted__disattenuated": 0.22822119259044
     }
   ],
   "chance": 0.5,

@@ -1,9 +1,11 @@
 {
-  "headline": "A gene-pair feature built from a single-cell foundation model's gene embedding predicts the perturbation-specific part of a CRISPRi knockdown response better than statistical co-expression computed from the same control cells, in both cell lines and on both splits. The response features harvested in the previous run add nothing to the embedding; on their own they are weak, and whether they beat co-expression depends on which score is read.",
-  "assessment": "Supported for the embedding arms against co-expression, on both cell lines, on a post-hoc scoring cell. The second pre-registered scoring axis, perturbation discrimination, does not settle it either way: the version pinned before the run does not exist upstream, and the two existing versions nearest it reverse the model-versus-co-expression ordering on the same saved predictions, so that axis is reported as version-dependent and inconclusive. The pre-registered cell of the scoring grid fails its own shuffled-label control, so the verdict is read from the fold-centred cell, which the pre-registration also defined but did not designate. Both are reported for every arm; they rank the arms similarly (rank correlation at least 0.8247) but not identically, and the arms that move are the weak ones. The response features are therefore only partly refuted: they add nothing to the embedding on either score, but on the pre-registered score TranscriptFormer's response features beat co-expression in HepG2 by more than the resolvable difference, and on the fold-centred score two of three models' response arms clear the null in Jurkat. 'Response features carry no usable signal' holds for the fold-centred score in HepG2 and is too strong elsewhere.",
+  "headline": "A gene-pair feature built from a single-cell foundation model's gene embedding predicts the perturbation-specific part of a CRISPRi knockdown response better than statistical co-expression computed from the same control cells, in both cell lines and on both splits, on the pre-registered scoring rule and with intervals that resample response groups rather than perturbations. The response features harvested in the previous run add nothing to the embedding; on their own they are weak. Reading the four released checkpoints shows that two of the four gene tables are protein-derived rather than learned from expression (TranscriptFormer's frozen ESM2 table and scPRINT's protein-initialised one), and a gene table built from UniProt protein sequence with a public ESM2 checkpoint, run through the identical translator, folds, scoring and nulls, beats co-expression in both lines and ties the single-cell arms in seven of eight paired comparisons, beating scGPT's in Jurkat. Protein sequence alone can therefore supply a gene table that does this job as well as the single-cell models' tables do; that does not identify the source of scGPT's signal, whose table carries no protein-space structure.",
+  "assessment": "Supported for the embedding arms against co-expression, on both cell lines, on the pre-registered scoring cell, with every interval resampling the response groups the split holds out together rather than individual perturbations. Every embedding arm's paired difference against co-expression excludes zero in both lines. The pre-registered cell has a known weakness -- perturbations in a held-out group share a per-gene response, so its shuffled-label draws sit above zero -- and a fold-centred version of the same correlation is reported beside it everywhere. That version is a diagnostic, not a second verdict: it subtracts the held-out fold's own mean, so it uses held-out outcomes, and it was written after the shuffled draws were seen. The two rank the arms similarly (rank correlation at least 0.8247) and the arms that move are the weak ones. The second pre-registered axis, perturbation discrimination, does not settle anything either way: the version pinned before the run does not exist upstream, and the two existing versions nearest it reverse the model-versus-co-expression ordering on the same saved predictions, so that axis is reported as version-dependent and inconclusive. The response features are refuted as an addition to the embedding on both scores; on their own they are numerically ahead of co-expression in three of six model-and-line combinations but never by more than the paired comparison resolves. The protein control is a positive: the raw ESM2 arm clears its width-matched random-vector null and its own shuffled-label draws in both cell lines, beats co-expression in both on a paired comparison, and ties TranscriptFormer's, scPRINT's and scGPT's embedding arms in seven of eight comparisons while beating scGPT's in Jurkat, with every arm it is compared against re-run inside the same job and reproducing the main sweep exactly. It shows where the signal can come from, not where each model's signal does come from: it does not decompose scGPT's or AIDO.Cell's learned table into a protein-like part and a cell-specific part, and scGPT's table has no measurable protein-space structure while scoring as well as the rest.",
   "decision_rule": {
     "preregistered": "residual target, reliability-weighted, ceiling-corrected per-perturbation Pearson correlation, median over held-out perturbations of a grouped split, compared to co-expression as a paired difference",
-    "used_for_the_verdict": "the same quantity after the held-out fold's per-gene mean is removed from both prediction and measurement (the fold-centred cell of the same grid), chosen post hoc because the shuffled-label control does not sit at zero on the pre-registered cell",
+    "used_for_the_verdict": "the pre-registered rule, unchanged. Residual is against the TRAINING folds' mean effect, so a held-out perturbation's own outcome never enters its score",
+    "reported_beside_it": "a fold-centred version of the same correlation, which removes the held-out fold's own per-gene mean from prediction and measurement. It uses held-out outcomes and was written after seeing that the pre-registered cell's shuffled-label draws sit above zero, so it is post hoc and answers the narrower question of separating one held-out perturbation from another. It is reported for every arm and never substituted for the pre-registered verdict",
+    "uncertainty": "2,000-resample bootstrap over RESPONSE GROUPS, not over perturbations: the grouped split holds correlated perturbations out together, so perturbations are not independent draws (226 groups over 524 perturbations in HepG2, one of them 149 rows; 452 over 705 in Jurkat). Groups are recomputed from the bundle's effect matrix and reproduce the group counts the scoring jobs recorded",
     "null": "labels permuted inside the training fold, five draws per null-bearing arm; an arm counts only if it exceeds the largest draw in its cell of the sweep"
   },
   "methods": {
@@ -11,8 +13,11 @@
     "target": "per-gene log2 fold change against the pooled non-targeting control, residualised by removing each read-out gene's mean effect across perturbations; split-half reproducibility ceiling 0.6546 (HepG2) and 0.5014 (Jurkat), Spearman-Brown corrected",
     "arms": "four models (scGPT, AIDO.Cell, scPRINT, TranscriptFormer) x four feature sets (gene embedding, run 2 response summary, both, either plus co-expression); statistical co-expression (Pearson, Spearman, mutual information, partial correlation) from one half of the non-targeting control cells; node-only controls (additive and free); random vector per gene and per pair; shuffled-label draws",
     "translator": "one fixed network for every arm: 128 and 64 ReLU units, Adam 1e-3, batch 4096, 30 epochs, reliability-weighted MSE. Ridge regression alongside as a capacity control. Seed 42, five folds, grouped and random splits.",
+    "uncertainty": "every interval in the report is a 2,000-resample cluster bootstrap over response groups (scfm_pfm/metrics.py bootstrap_median_grouped and bootstrap_median_difference_grouped). The groups are the ones the grouped split holds out together, recomputed from the bundle's effect matrix by scfm_pfm/groups.py; the reconstruction reproduces the n_groups and largest_group the scoring jobs recorded for all 256 grouped runs of the main sweep. The scoring jobs themselves bootstrapped rows, and those intervals are replaced, not averaged with, the group-resampled ones. Point estimates are unchanged and are re-derived from the per-perturbation tables as a check. The achieved minimum resolvable difference is the paired difference a two-sided 5% test would resolve at 80% power given the group-resampled standard error.",
+    "known_fix": "the control-cell job wrote its target_source label into its run table but not into its per-perturbation table. Filling that label after concatenating all waves made those per-perturbation rows look like the main target's and, being read later, replace them, which moved every paired difference onto the control-half target. load_sweep now fills the label per directory from that directory's own run rows; the paired differences in this report are the corrected ones and are consistent with the run-level scores.",
     "transfer": "fitted on one cell line and scored on the other over the shared read-out set, with three choices of what the destination response is measured against and an unseen-gene scope that drops any destination perturbation whose gene was perturbed in the training line",
-    "control_cell_overlap": "the effect target was recomputed from the raw count matrices three times, against the control half the co-expression features use, the other half, and all control cells, and the key arms rescored against each"
+    "control_cell_overlap": "the effect target was recomputed from the raw count matrices three times, against the control half the co-expression features use, the other half, and all control cells, and the key arms rescored against each",
+    "protein_control": "stage 1 reads the four released checkpoints (state-dict shapes, optimizer moment tensors, recorded hyper-parameters, and the shipped ESM2 file for TranscriptFormer) to determine where each gene-identity table came from. Stage 2 maps every read-out gene to its canonical reviewed human UniProt entry, embeds the sequence with facebook/esm2_t33_650M_UR50D and facebook/esm2_t36_3B_UR50D as the mean over final-layer residue states (proteins past the 1,022-residue context are chunked and averaged), installs the table as an ordinary embedding arm, and runs it through the identical translator, folds, weights, scoring, nulls and transfer design. The same jobs re-ran co-expression and the three model embedding arms as an in-job reference. Gene tables are additionally compared to each other by the Spearman correlation of their gene-gene cosine similarities, whose random-table floor is at zero for any width"
   },
   "results": {
     "lines": {
@@ -22,17 +27,28 @@
         "best_model_arm": "scgpt_emb",
         "best_model_score_fold_centred": 0.10887821051526674,
         "best_model_ci": [
-          0.0790922144775752,
-          0.1417428348371028
+          0.07688408030639927,
+          0.15628092366328597
         ],
         "best_model_score_preregistered": 0.27186890674361275,
+        "best_model_ci_preregistered": [
+          0.23936979692314256,
+          0.3813823263864087
+        ],
         "coexpression_score_fold_centred": 0.00517619255164999,
         "coexpression_ci": [
-          -0.006354608820104509,
-          0.016917808922339926
+          -0.007905112482596099,
+          0.018032255320557633
         ],
+        "coexpression_score_preregistered": 0.04879340318413257,
+        "coexpression_ci_preregistered": [
+          0.023464388025058708,
+          0.0929233904623557
+        ],
+        "n_response_groups": 226,
+        "largest_response_group": 149,
         "shuffled_label_ceiling_fold_centred": 0.028601970174156315,
-        "shuffled_label_ceiling_preregistered": 0.026616425215650726,
+        "shuffled_label_ceiling_preregistered": 0.027644179180561366,
         "best_response_only_score": 0.01212184944463636,
         "node_free_score": 0.036564355768129296,
         "residual_ceiling": 0.654599714269554,
@@ -42,18 +58,29 @@
       "jurkat": {
         "n_perturbations": 705,
         "n_readout": 3247,
-        "best_model_arm": "transcriptformer_emb",
-        "best_model_score_fold_centred": 0.17260292953650547,
+        "best_model_arm": "transcriptformer_full",
+        "best_model_score_fold_centred": 0.16586850867423908,
         "best_model_ci": [
-          0.13934274496444046,
-          0.20539077506138154
+          0.12002186322804544,
+          0.20361133164833048
         ],
-        "best_model_score_preregistered": 0.23135329957684056,
+        "best_model_score_preregistered": 0.23707784129326945,
+        "best_model_ci_preregistered": [
+          0.18305728686988765,
+          0.2937565400638958
+        ],
         "coexpression_score_fold_centred": 0.03363644111375723,
         "coexpression_ci": [
-          0.01679300819737662,
-          0.049287191592748865
+          0.00498008386936084,
+          0.052726496624511794
         ],
+        "coexpression_score_preregistered": 0.044622162296810125,
+        "coexpression_ci_preregistered": [
+          0.030201530682820655,
+          0.0616950393224154
+        ],
+        "n_response_groups": 452,
+        "largest_response_group": 81,
         "shuffled_label_ceiling_fold_centred": 0.020402085523727964,
         "shuffled_label_ceiling_preregistered": 0.023511483136266508,
         "best_response_only_score": 0.03438076130368694,
@@ -63,24 +90,1140 @@
         "fold_centred_ceiling_weighted": 0.4437062127878906
       }
     },
-    "paired_vs_coexpression": {
-      "hepg2": {
-        "arm": "scgpt_emb",
-        "median_difference": 0.038620726192005406,
-        "ci": [
-          0.011831537384347408,
-          0.06500279350238777
-        ],
-        "min_resolvable_difference": 0.031074854134122174
+    "protein_control": {
+      "gene_table_provenance": {
+        "transcriptformer": "a frozen ESM2 protein embedding, bitwise the file shipped beside the weights, never updated in pretraining",
+        "scprint": "ESM-initialised and then trained for 400,000 steps",
+        "scgpt": "learned from expression, no protein model in the path",
+        "aido_cell": "learned from expression, no protein model in the path"
       },
-      "jurkat": {
-        "arm": "transcriptformer_emb",
-        "median_difference": 0.07466061184064277,
+      "gene_to_protein": {
+        "n_genes": 3755,
+        "by_ensembl_xref": 3740,
+        "by_symbol": 15,
+        "unmapped": 0,
+        "uniprot_release": "2026_02",
+        "reviewed_human_entries": 20431,
+        "multi_candidate_genes": 13,
+        "over_esm2_context": 437
+      },
+      "zero_rows_installed": 0,
+      "scores": {
+        "hepg2": {
+          "esm2_3b_emb": 0.10738655423271576,
+          "esm2_3b_emb__preregistered": 0.23311142633518622,
+          "esm2_3b_emb__preregistered_ci": [
+            0.10349205411452783,
+            0.435647624816724
+          ],
+          "esm2_650m_emb": 0.078326551216008,
+          "esm2_650m_emb__preregistered": 0.2015369281361112,
+          "esm2_650m_emb__preregistered_ci": [
+            0.07513923971377395,
+            0.41387932217638546
+          ],
+          "transcriptformer_emb": 0.0847984206926103,
+          "transcriptformer_emb__preregistered": 0.21144337936424742,
+          "transcriptformer_emb__preregistered_ci": [
+            0.08986737414891505,
+            0.42181418043953245
+          ],
+          "scprint_emb": 0.08459949606608556,
+          "scprint_emb__preregistered": 0.23945296144747263,
+          "scprint_emb__preregistered_ci": [
+            0.15796767719392665,
+            0.39118416203445616
+          ],
+          "scgpt_emb": 0.10887821051526674,
+          "scgpt_emb__preregistered": 0.27186890674361275,
+          "scgpt_emb__preregistered_ci": [
+            0.23936979692314256,
+            0.3813823263864087
+          ],
+          "coexp": 0.00517619255164999,
+          "coexp__preregistered": 0.04879340318413257,
+          "coexp__preregistered_ci": [
+            0.023464388025058708,
+            0.0929233904623557
+          ],
+          "null_randgene_d2560": 0.0068051563391568,
+          "null_randgene_d2560__preregistered": 0.030191407020425415,
+          "null_randgene_d2560__preregistered_ci": [
+            -0.006271599249178561,
+            0.07492336387679341
+          ],
+          "null_randgene_d5120": -0.014815905139365971,
+          "null_randgene_d5120__preregistered": -0.024658697414011745,
+          "null_randgene_d5120__preregistered_ci": [
+            -0.07989412179590515,
+            0.0877854360002436
+          ],
+          "esm2_3b_emb__random_split": 0.4820257773850348,
+          "esm2_3b_emb__random_split__preregistered": 0.4834156534661958,
+          "transcriptformer_emb__random_split": 0.46465232326045214,
+          "transcriptformer_emb__random_split__preregistered": 0.461111616164135,
+          "scgpt_emb__random_split": 0.3517528339462375,
+          "scgpt_emb__random_split__preregistered": 0.3495818921603326,
+          "coexp__random_split": 0.046966669120455606,
+          "coexp__random_split__preregistered": 0.05259822314997651,
+          "null_randgene_d2560__random_split": 0.02575149122318692,
+          "null_randgene_d2560__random_split__preregistered": 0.005883466618154567,
+          "largest_protein_shuffled_draw": 0.009830709066096243
+        },
+        "jurkat": {
+          "esm2_3b_emb": 0.178378884550599,
+          "esm2_3b_emb__preregistered": 0.2641756814272859,
+          "esm2_3b_emb__preregistered_ci": [
+            0.19591223140809366,
+            0.32686361119806806
+          ],
+          "esm2_650m_emb": 0.15818285213531866,
+          "esm2_650m_emb__preregistered": 0.22822119259044,
+          "esm2_650m_emb__preregistered_ci": [
+            0.1848994580242744,
+            0.2935041429389208
+          ],
+          "transcriptformer_emb": 0.17260292953650547,
+          "transcriptformer_emb__preregistered": 0.23135329957684056,
+          "transcriptformer_emb__preregistered_ci": [
+            0.18063949721092623,
+            0.29580614087966456
+          ],
+          "scprint_emb": 0.15874266972479487,
+          "scprint_emb__preregistered": 0.2307567853836837,
+          "scprint_emb__preregistered_ci": [
+            0.17509204518065974,
+            0.29012446213549103
+          ],
+          "scgpt_emb": 0.11257733813165048,
+          "scgpt_emb__preregistered": 0.17327587924554624,
+          "scgpt_emb__preregistered_ci": [
+            0.13032356229909262,
+            0.21038278353341097
+          ],
+          "coexp": 0.03363644111375723,
+          "coexp__preregistered": 0.044622162296810125,
+          "coexp__preregistered_ci": [
+            0.030201530682820655,
+            0.0616950393224154
+          ],
+          "null_randgene_d2560": 0.008337391375397489,
+          "null_randgene_d2560__preregistered": 0.01731275100031504,
+          "null_randgene_d2560__preregistered_ci": [
+            -0.0028039998469910447,
+            0.046441876732870445
+          ],
+          "null_randgene_d5120": -0.009526331997169254,
+          "null_randgene_d5120__preregistered": 0.025441093143015455,
+          "null_randgene_d5120__preregistered_ci": [
+            -0.008095744418287101,
+            0.059899285411711425
+          ],
+          "esm2_3b_emb__random_split": 0.2768106045673171,
+          "esm2_3b_emb__random_split__preregistered": 0.27243371401742084,
+          "transcriptformer_emb__random_split": 0.24733580558428256,
+          "transcriptformer_emb__random_split__preregistered": 0.26211369379348226,
+          "scgpt_emb__random_split": 0.17812329329569623,
+          "scgpt_emb__random_split__preregistered": 0.18617132501592837,
+          "coexp__random_split": 0.05348318310778289,
+          "coexp__random_split__preregistered": 0.04935314232667417,
+          "null_randgene_d2560__random_split": -0.009484811140612894,
+          "null_randgene_d2560__random_split__preregistered": -0.010847337031147408,
+          "largest_protein_shuffled_draw": 0.010470388871493994
+        }
+      },
+      "paired_differences": {
+        "hepg2__esm2_3b_emb__vs__coexp": {
+          "median_difference": 0.07746710451937446,
+          "lo": 0.04646525380631356,
+          "hi": 0.1534769565993524,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_650m_emb__vs__coexp": {
+          "median_difference": 0.05544199616438009,
+          "lo": 0.01411300390084061,
+          "hi": 0.14104776987876405,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_3b_emb__vs__transcriptformer_emb": {
+          "median_difference": 0.017119959983206784,
+          "lo": 0.00034487585046899126,
+          "hi": 0.04855037149592927,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_650m_emb__vs__transcriptformer_emb": {
+          "median_difference": -0.004905148371787585,
+          "lo": -0.024994727954241888,
+          "hi": 0.03960729019542998,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_3b_emb__vs__scprint_emb": {
+          "median_difference": 0.01727072859982272,
+          "lo": -0.012993007363298621,
+          "hi": 0.08119257666947002,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_650m_emb__vs__scprint_emb": {
+          "median_difference": -0.0047543797551716505,
+          "lo": -0.04729813433147675,
+          "hi": 0.07262401092784938,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_3b_emb__vs__scgpt_emb": {
+          "median_difference": -0.0011305536077440975,
+          "lo": -0.02964663105170461,
+          "hi": 0.06106908712009927,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_650m_emb__vs__scgpt_emb": {
+          "median_difference": -0.023155661962738466,
+          "lo": -0.06451512700456243,
+          "hi": 0.053427090815116235,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "jurkat__esm2_3b_emb__vs__coexp": {
+          "median_difference": 0.09641478889461906,
+          "lo": 0.062423580961596045,
+          "hi": 0.13812668177531998,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_650m_emb__vs__coexp": {
+          "median_difference": 0.08296195394453204,
+          "lo": 0.04431662055651077,
+          "hi": 0.1169292765355996,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_3b_emb__vs__transcriptformer_emb": {
+          "median_difference": 0.003847437352345384,
+          "lo": -0.01175632361838477,
+          "hi": 0.025732252586073256,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_650m_emb__vs__transcriptformer_emb": {
+          "median_difference": -0.009605397597741636,
+          "lo": -0.03799943498517073,
+          "hi": 0.014229142097578674,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_3b_emb__vs__scprint_emb": {
+          "median_difference": 0.013079933308887376,
+          "lo": -0.006077369826677416,
+          "hi": 0.0405929117547482,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_650m_emb__vs__scprint_emb": {
+          "median_difference": -0.00037290164119964386,
+          "lo": -0.028547886598148473,
+          "hi": 0.02496777203339195,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_3b_emb__vs__scgpt_emb": {
+          "median_difference": 0.04383124988276643,
+          "lo": 0.02164019923802275,
+          "hi": 0.07415185394764595,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_650m_emb__vs__scgpt_emb": {
+          "median_difference": 0.030378414932679412,
+          "lo": 3.0416384625186848e-05,
+          "hi": 0.05585628326840547,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        }
+      },
+      "paired_differences_preregistered": {
+        "hepg2__esm2_3b_emb__vs__coexp": {
+          "median_difference": 0.15251829675541498,
+          "lo": 0.06469320007893155,
+          "hi": 0.29005651101401686,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_650m_emb__vs__coexp": {
+          "median_difference": 0.1263912333033333,
+          "lo": 0.039964516697160744,
+          "hi": 0.27206556715642255,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_3b_emb__vs__transcriptformer_emb": {
+          "median_difference": 0.017929736666693535,
+          "lo": -0.018366822496960485,
+          "hi": 0.0629276279154432,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_650m_emb__vs__transcriptformer_emb": {
+          "median_difference": -0.008197326785388148,
+          "lo": -0.044629798433960456,
+          "hi": 0.04372863582082818,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_3b_emb__vs__scprint_emb": {
+          "median_difference": -0.005247452840506733,
+          "lo": -0.055391412667441846,
+          "hi": 0.08198927336102872,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_650m_emb__vs__scprint_emb": {
+          "median_difference": -0.03137451629258842,
+          "lo": -0.08210922591602403,
+          "hi": 0.06248267886916485,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_3b_emb__vs__scgpt_emb": {
+          "median_difference": -0.03207079154478654,
+          "lo": -0.12627323081534553,
+          "hi": 0.08345740866440177,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "hepg2__esm2_650m_emb__vs__scgpt_emb": {
+          "median_difference": -0.05819785499686822,
+          "lo": -0.1478428066808456,
+          "hi": 0.06399317560711361,
+          "n_paired": 524,
+          "n_groups_paired": 226
+        },
+        "jurkat__esm2_3b_emb__vs__coexp": {
+          "median_difference": 0.15635878704981626,
+          "lo": 0.10479865738840383,
+          "hi": 0.20262549263328838,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_650m_emb__vs__coexp": {
+          "median_difference": 0.13075318397959412,
+          "lo": 0.09690134567070606,
+          "hi": 0.1742766951675262,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_3b_emb__vs__transcriptformer_emb": {
+          "median_difference": 0.023375019605910596,
+          "lo": -0.001652329793833627,
+          "hi": 0.04048871555124244,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_650m_emb__vs__transcriptformer_emb": {
+          "median_difference": -0.002230583464311542,
+          "lo": -0.022772565193818196,
+          "hi": 0.019662500101490996,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_3b_emb__vs__scprint_emb": {
+          "median_difference": 0.02379983737275576,
+          "lo": -0.002735450021587948,
+          "hi": 0.04426674585618223,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_650m_emb__vs__scprint_emb": {
+          "median_difference": -0.0018057656974663772,
+          "lo": -0.021747016843875873,
+          "hi": 0.025864396827483493,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_3b_emb__vs__scgpt_emb": {
+          "median_difference": 0.06473584604106752,
+          "lo": 0.03173152372178309,
+          "hi": 0.08902385670045439,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        },
+        "jurkat__esm2_650m_emb__vs__scgpt_emb": {
+          "median_difference": 0.039130242970845386,
+          "lo": 0.01839957225869155,
+          "hi": 0.06479037125339447,
+          "n_paired": 705,
+          "n_groups_paired": 452
+        }
+      },
+      "in_job_reference_check": {
+        "n_arms_rerun_within_line": 8,
+        "n_arms_rerun_cross_line": 36,
+        "largest_absolute_difference_from_the_main_sweep": 0.0
+      },
+      "table_similarity_rsa": {
+        "esm2_3b|esm2_650m": 0.850557,
+        "esm2_3b|transcriptformer": 0.396024,
+        "esm2_650m|scprint": 0.272706,
+        "esm2_3b|scprint": 0.237232,
+        "scgpt|scprint": 0.303713,
+        "esm2_3b|scgpt": -0.015785,
+        "aido_cell|esm2_3b": -0.000522
+      },
+      "unseen_gene_transfer": {
+        "hepg2->jurkat__dest_reference__esm2_650m_emb": {
+          "score": 0.07527976163641821,
+          "lo": 0.020140936640972676,
+          "hi": 0.11970211417933535,
+          "preregistered": 0.07146386499493036,
+          "preregistered_lo": 0.01861169542859356,
+          "preregistered_hi": 0.1251546336818099,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__transcriptformer_emb": {
+          "score": 0.07168902044554358,
+          "lo": 0.035496340200689425,
+          "hi": 0.13518551356733774,
+          "preregistered": 0.09375930526112168,
+          "preregistered_lo": 0.01831616444418879,
+          "preregistered_hi": 0.12081131331422294,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__esm2_3b_emb": {
+          "score": 0.06257325366572143,
+          "lo": -0.016726500387096693,
+          "hi": 0.11703738700052627,
+          "preregistered": 0.0911097942852214,
+          "preregistered_lo": 0.03530073442433232,
+          "preregistered_hi": 0.14363570071177717,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__scprint_emb": {
+          "score": 0.02844289908100535,
+          "lo": -0.01734716036355669,
+          "hi": 0.09800952166384326,
+          "preregistered": 0.07729465010375632,
+          "preregistered_lo": 0.02259287271275973,
+          "preregistered_hi": 0.11123515749983477,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__scgpt_emb": {
+          "score": 0.02215881596569805,
+          "lo": -0.029960839560621337,
+          "hi": 0.07314178584613029,
+          "preregistered": 0.04042289457132031,
+          "preregistered_lo": -0.03904844439907059,
+          "preregistered_hi": 0.07589017151315722,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__null_randgene_d5120": {
+          "score": 0.003235993381285271,
+          "lo": -0.041037301501133445,
+          "hi": 0.04866645684755263,
+          "preregistered": -0.0014899269396822616,
+          "preregistered_lo": -0.03610669392187045,
+          "preregistered_hi": 0.048197862581233965,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__null_randgene_d2560": {
+          "score": -0.006804612965232689,
+          "lo": -0.03961256807017445,
+          "hi": 0.058768957958018404,
+          "preregistered": -0.0008456359175048264,
+          "preregistered_lo": -0.03720721619621605,
+          "preregistered_hi": 0.0619314516755683,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_reference__coexp": {
+          "score": -0.009072121542023437,
+          "lo": -0.044541693159582105,
+          "hi": 0.021541477098452794,
+          "preregistered": 0.00905102807220337,
+          "preregistered_lo": -0.0359421863974011,
+          "preregistered_hi": 0.04154500695989776,
+          "n_perturbations": 89
+        },
+        "hepg2->jurkat__dest_all__transcriptformer_emb": {
+          "score": 0.07043475360218518,
+          "lo": 0.025184307280631455,
+          "hi": 0.10539210943710121,
+          "preregistered": 0.07935573828220231,
+          "preregistered_lo": 0.04140149783743861,
+          "preregistered_hi": 0.11129695973165823,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__esm2_650m_emb": {
+          "score": 0.06504829167005258,
+          "lo": 0.035645635101639664,
+          "hi": 0.10640429263022766,
+          "preregistered": 0.07113815418618236,
+          "preregistered_lo": 0.02938598577081847,
+          "preregistered_hi": 0.1157362388662588,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__scprint_emb": {
+          "score": 0.059568777139255104,
+          "lo": 0.0198616299322329,
+          "hi": 0.10257097147708581,
+          "preregistered": 0.09300855330584902,
+          "preregistered_lo": 0.05043110769478961,
+          "preregistered_hi": 0.11030281494433435,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__esm2_3b_emb": {
+          "score": 0.057657774163035636,
+          "lo": 0.017957020555020752,
+          "hi": 0.09325114336538923,
+          "preregistered": 0.0719794191807179,
+          "preregistered_lo": 0.041119862754005324,
+          "preregistered_hi": 0.11077266766741065,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__scgpt_emb": {
+          "score": 0.03406728511397768,
+          "lo": -0.006193438800667627,
+          "hi": 0.07534148049488848,
+          "preregistered": 0.041761647700548556,
+          "preregistered_lo": -0.0029733389533825785,
+          "preregistered_hi": 0.077780402200642,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__coexp": {
+          "score": -0.005537009870411353,
+          "lo": -0.02611327578620634,
+          "hi": 0.032766158834572526,
+          "preregistered": 0.00839836772039858,
+          "preregistered_lo": -0.014150765007149641,
+          "preregistered_hi": 0.029256797767770466,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__null_randgene_d2560": {
+          "score": -0.0068107919584469885,
+          "lo": -0.04317129698942385,
+          "hi": 0.04348753831275318,
+          "preregistered": -0.007858741554091359,
+          "preregistered_lo": -0.04906961357579273,
+          "preregistered_hi": 0.04643776549965866,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__dest_all__null_randgene_d5120": {
+          "score": -0.010526918270830658,
+          "lo": -0.04785003223467376,
+          "hi": 0.019783628790003734,
+          "preregistered": -0.01767727268999355,
+          "preregistered_lo": -0.04997491373594653,
+          "preregistered_hi": 0.018877691841847066,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__esm2_650m_emb": {
+          "score": 0.07225176402772274,
+          "lo": 0.02919097651291526,
+          "hi": 0.09678170718449669,
+          "preregistered": 0.508243707459342,
+          "preregistered_lo": 0.367892229000296,
+          "preregistered_hi": 0.5996939825371875,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__transcriptformer_emb": {
+          "score": 0.06953869928821238,
+          "lo": 0.015228429293194175,
+          "hi": 0.10190222168909313,
+          "preregistered": 0.5776974727431659,
+          "preregistered_lo": 0.4284808372360535,
+          "preregistered_hi": 0.6564965435373213,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__scprint_emb": {
+          "score": 0.06067168071194066,
+          "lo": 0.0242352604535338,
+          "hi": 0.10268117738923939,
+          "preregistered": 0.6389416683620952,
+          "preregistered_lo": 0.5204799399340667,
+          "preregistered_hi": 0.7073797908342773,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__esm2_3b_emb": {
+          "score": 0.05601949575423436,
+          "lo": 0.016084692671709797,
+          "hi": 0.09922359503220694,
+          "preregistered": 0.5362499245770569,
+          "preregistered_lo": 0.40598067820004285,
+          "preregistered_hi": 0.6616732994777409,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__scgpt_emb": {
+          "score": 0.03417357687394495,
+          "lo": -0.01978057158966359,
+          "hi": 0.07471357743351208,
+          "preregistered": 0.5319507575512398,
+          "preregistered_lo": 0.4223790439350935,
+          "preregistered_hi": 0.6285882534990518,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__null_randgene_d2560": {
+          "score": 0.003135564157517665,
+          "lo": -0.041297250081764485,
+          "hi": 0.04283340589261374,
+          "preregistered": 0.06886306556980933,
+          "preregistered_lo": -0.10047161348557825,
+          "preregistered_hi": 0.2422840364993442,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__coexp": {
+          "score": -0.0045374501807241,
+          "lo": -0.019597357843198788,
+          "hi": 0.030338417224240972,
+          "preregistered": 0.03968879175621079,
+          "preregistered_lo": 0.0010742811911113107,
+          "preregistered_hi": 0.059255470723870884,
+          "n_perturbations": 177
+        },
+        "hepg2->jurkat__source_only__null_randgene_d5120": {
+          "score": -0.01495697246244841,
+          "lo": -0.041580292029294676,
+          "hi": 0.02267765107576687,
+          "preregistered": 0.2118298140286326,
+          "preregistered_lo": 0.08928057237893532,
+          "preregistered_hi": 0.3843043722160683,
+          "n_perturbations": 177
+        },
+        "jurkat->hepg2__dest_reference__transcriptformer_emb": {
+          "score": 0.09392448963999318,
+          "lo": 0.060810579297615464,
+          "hi": 0.1394952028238464,
+          "preregistered": 0.12622135002641316,
+          "preregistered_lo": 0.05580686307299094,
+          "preregistered_hi": 0.16537787761856096,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__scprint_emb": {
+          "score": 0.08024742467943892,
+          "lo": 0.014551188202557866,
+          "hi": 0.15626426048721154,
+          "preregistered": 0.11786927662498813,
+          "preregistered_lo": 0.06663234525478436,
+          "preregistered_hi": 0.15080558830607152,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__esm2_650m_emb": {
+          "score": 0.07322752947488428,
+          "lo": 0.031820157535406096,
+          "hi": 0.13182013222850136,
+          "preregistered": 0.14245057878212783,
+          "preregistered_lo": 0.05638030070081878,
+          "preregistered_hi": 0.2064696959477854,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__esm2_3b_emb": {
+          "score": 0.07256165098749312,
+          "lo": 0.006916465459063948,
+          "hi": 0.13336365179854037,
+          "preregistered": 0.13007822459898227,
+          "preregistered_lo": 0.10637899137228411,
+          "preregistered_hi": 0.1945898267108509,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__coexp": {
+          "score": -0.007117000292288443,
+          "lo": -0.05718961420747887,
+          "hi": 0.058609161312259364,
+          "preregistered": -0.012151912459032606,
+          "preregistered_lo": -0.04155624201637454,
+          "preregistered_hi": -0.001149528376775574,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__scgpt_emb": {
+          "score": -0.014408461592569189,
+          "lo": -0.0601393369403764,
+          "hi": 0.019576512666524326,
+          "preregistered": 0.0318402143488689,
+          "preregistered_lo": -0.0341451929695832,
+          "preregistered_hi": 0.08285972379257901,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__null_randgene_d5120": {
+          "score": -0.01506851170934811,
+          "lo": -0.0436341154917435,
+          "hi": 0.053959056250891965,
+          "preregistered": 0.0272831150587587,
+          "preregistered_lo": -0.027277912661548772,
+          "preregistered_hi": 0.08100278130632883,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_reference__null_randgene_d2560": {
+          "score": -0.04027551514721171,
+          "lo": -0.06624056417321994,
+          "hi": 0.0014292718242803369,
+          "preregistered": -0.012775123023568638,
+          "preregistered_lo": -0.048800551976470805,
+          "preregistered_hi": 0.041047578044053214,
+          "n_perturbations": 78
+        },
+        "jurkat->hepg2__dest_all__transcriptformer_emb": {
+          "score": 0.08815438888738676,
+          "lo": 0.04006791145402945,
+          "hi": 0.10701265698706193,
+          "preregistered": 0.09389574868992447,
+          "preregistered_lo": 0.055718291998401746,
+          "preregistered_hi": 0.13034821141238623,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__esm2_3b_emb": {
+          "score": 0.0854378625355505,
+          "lo": 0.030028694929316892,
+          "hi": 0.12336565211430703,
+          "preregistered": 0.08039661847310585,
+          "preregistered_lo": 0.05688723417835329,
+          "preregistered_hi": 0.12400387276487955,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__esm2_650m_emb": {
+          "score": 0.08483781890590948,
+          "lo": 0.03427812501664898,
+          "hi": 0.11569538846678486,
+          "preregistered": 0.10194982786743212,
+          "preregistered_lo": -0.001986930267395395,
+          "preregistered_hi": 0.15199019653444684,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__scprint_emb": {
+          "score": 0.07458937663738809,
+          "lo": 0.043572638012895244,
+          "hi": 0.12022217546732361,
+          "preregistered": 0.09676702363615605,
+          "preregistered_lo": 0.0496133348822283,
+          "preregistered_hi": 0.1352050741254394,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__scgpt_emb": {
+          "score": 0.0323431290433036,
+          "lo": -0.022593214401550592,
+          "hi": 0.08089156956305751,
+          "preregistered": 0.07178637467731995,
+          "preregistered_lo": 0.030809642868425788,
+          "preregistered_hi": 0.11455055536261068,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__null_randgene_d5120": {
+          "score": 0.012271778126741312,
+          "lo": -0.029863673212590567,
+          "hi": 0.04366879584043069,
+          "preregistered": 0.02129282832821344,
+          "preregistered_lo": -0.015523384976542763,
+          "preregistered_hi": 0.06686229820838598,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__coexp": {
+          "score": 0.006094785122021438,
+          "lo": -0.0365178723642353,
+          "hi": 0.060004383236982366,
+          "preregistered": -0.014347928769071755,
+          "preregistered_lo": -0.029878832017948064,
+          "preregistered_hi": 0.0051190320052392135,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__dest_all__null_randgene_d2560": {
+          "score": -0.025194725645383557,
+          "lo": -0.05733175127583937,
+          "hi": 0.013405134134235034,
+          "preregistered": -0.022883780890846164,
+          "preregistered_lo": -0.048214950245815236,
+          "preregistered_hi": 0.02669415846908906,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__transcriptformer_emb": {
+          "score": 0.0961346667312693,
+          "lo": 0.03822815448568116,
+          "hi": 0.11359864250467018,
+          "preregistered": 0.0905562751553691,
+          "preregistered_lo": 0.04766180545160782,
+          "preregistered_hi": 0.1368658720718035,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__esm2_650m_emb": {
+          "score": 0.08863706964288678,
+          "lo": 0.024283909990367513,
+          "hi": 0.12033954722201201,
+          "preregistered": 0.13020427121545045,
+          "preregistered_lo": 0.06386112661279486,
+          "preregistered_hi": 0.18655395526845184,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__esm2_3b_emb": {
+          "score": 0.07802790038987772,
+          "lo": 0.041725045524539595,
+          "hi": 0.11371918739842812,
+          "preregistered": 0.16143869647688586,
+          "preregistered_lo": 0.10993082392210918,
+          "preregistered_hi": 0.2054625879351116,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__scprint_emb": {
+          "score": 0.07773464438736802,
+          "lo": 0.031190672134922066,
+          "hi": 0.12633747724727518,
+          "preregistered": 0.11344372308252038,
+          "preregistered_lo": 0.0712503186150764,
+          "preregistered_hi": 0.16560767162191503,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__scgpt_emb": {
+          "score": 0.043092301359794936,
+          "lo": -0.016882776144237457,
+          "hi": 0.08984773673489868,
+          "preregistered": 0.099471214312624,
+          "preregistered_lo": 0.042248137537045205,
+          "preregistered_hi": 0.13162619080406215,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__null_randgene_d5120": {
+          "score": 0.016913833409664618,
+          "lo": -0.029987479996392855,
+          "hi": 0.04708321470828666,
+          "preregistered": 0.0060456805837883765,
+          "preregistered_lo": -0.04092574342422897,
+          "preregistered_hi": 0.05494844274949115,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__coexp": {
+          "score": 0.0068941562903525695,
+          "lo": -0.03175163099082795,
+          "hi": 0.04935291654955623,
+          "preregistered": -0.007702587505315734,
+          "preregistered_lo": -0.02747898159768159,
+          "preregistered_hi": 0.00905917853264971,
+          "n_perturbations": 156
+        },
+        "jurkat->hepg2__source_only__null_randgene_d2560": {
+          "score": -0.024742324973587197,
+          "lo": -0.05154634446349552,
+          "hi": 0.010671349932715166,
+          "preregistered": -0.03904310288715465,
+          "preregistered_lo": -0.058362812736781296,
+          "preregistered_hi": 0.02474494331294498,
+          "n_perturbations": 156
+        }
+      },
+      "unseen_gene_transfer_counts": {
+        "dest_all": {
+          "protein_derived": "7 of 8",
+          "protein_derived__discrimination_metric": "8 of 8",
+          "scgpt": "1 of 2",
+          "scgpt__discrimination_metric": "0 of 2",
+          "coexpression_and_nulls": "0 of 6",
+          "coexpression_and_nulls__discrimination_metric": "0 of 6",
+          "n_perturbations_scored": "156-177"
+        },
+        "dest_reference": {
+          "protein_derived": "8 of 8",
+          "protein_derived__discrimination_metric": "6 of 8",
+          "scgpt": "0 of 2",
+          "scgpt__discrimination_metric": "0 of 2",
+          "coexpression_and_nulls": "0 of 6",
+          "coexpression_and_nulls__discrimination_metric": "0 of 6",
+          "n_perturbations_scored": "78-89"
+        },
+        "source_only": {
+          "protein_derived": "8 of 8",
+          "protein_derived__discrimination_metric": "8 of 8",
+          "scgpt": "2 of 2",
+          "scgpt__discrimination_metric": "0 of 2",
+          "coexpression_and_nulls": "2 of 6",
+          "coexpression_and_nulls__discrimination_metric": "0 of 6",
+          "n_perturbations_scored": "156-177"
+        }
+      }
+    },
+    "paired_vs_coexpression": {
+      "hepg2__scgpt_emb__preregistered": {
+        "arm": "scgpt_emb",
+        "cell_line": "hepg2",
+        "metric": "residual_weighted",
+        "median_difference": 0.18458908830020151,
         "ci": [
-          0.051495871138448904,
-          0.10062858168218769
+          0.1501408296408086,
+          0.24082644843405374
         ],
-        "min_resolvable_difference": 0.029195090065073162
+        "n_paired": 524,
+        "n_groups_paired": 226,
+        "min_resolvable_difference": 0.05941618340070061
+      },
+      "hepg2__scprint_emb__preregistered": {
+        "arm": "scprint_emb",
+        "cell_line": "hepg2",
+        "metric": "residual_weighted",
+        "median_difference": 0.1577657495959217,
+        "ci": [
+          0.1083013364127161,
+          0.24914441828112513
+        ],
+        "n_paired": 524,
+        "n_groups_paired": 226,
+        "min_resolvable_difference": 0.10367516797661712
+      },
+      "hepg2__transcriptformer_emb__preregistered": {
+        "arm": "transcriptformer_emb",
+        "cell_line": "hepg2",
+        "metric": "residual_weighted",
+        "median_difference": 0.13458856008872144,
+        "ci": [
+          0.04736358219464217,
+          0.2760441491520408
+        ],
+        "n_paired": 524,
+        "n_groups_paired": 226,
+        "min_resolvable_difference": 0.18260777133439374
+      },
+      "hepg2__esm2_3b_emb__preregistered": {
+        "arm": "esm2_3b_emb",
+        "cell_line": "hepg2",
+        "metric": "residual_weighted",
+        "median_difference": 0.15251829675541498,
+        "ci": [
+          0.06469320007893155,
+          0.29005651101401686
+        ],
+        "n_paired": 524,
+        "n_groups_paired": 226,
+        "min_resolvable_difference": 0.17337267333641082
+      },
+      "hepg2__esm2_650m_emb__preregistered": {
+        "arm": "esm2_650m_emb",
+        "cell_line": "hepg2",
+        "metric": "residual_weighted",
+        "median_difference": 0.1263912333033333,
+        "ci": [
+          0.039964516697160744,
+          0.27206556715642255
+        ],
+        "n_paired": 524,
+        "n_groups_paired": 226,
+        "min_resolvable_difference": 0.16947599266073085
+      },
+      "jurkat__transcriptformer_full__preregistered": {
+        "arm": "transcriptformer_full",
+        "cell_line": "jurkat",
+        "metric": "residual_weighted",
+        "median_difference": 0.13706059756141778,
+        "ci": [
+          0.09441542136220749,
+          0.18192470248748685
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.058740419124936105
+      },
+      "jurkat__scgpt_emb__preregistered": {
+        "arm": "scgpt_emb",
+        "cell_line": "jurkat",
+        "metric": "residual_weighted",
+        "median_difference": 0.09162294100874874,
+        "ci": [
+          0.056743212353163625,
+          0.11999897365661723
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.04484808052508346
+      },
+      "jurkat__scprint_emb__preregistered": {
+        "arm": "scprint_emb",
+        "cell_line": "jurkat",
+        "metric": "residual_weighted",
+        "median_difference": 0.1325589496770605,
+        "ci": [
+          0.08802691656277253,
+          0.1773611146163765
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.06343398792677198
+      },
+      "jurkat__transcriptformer_emb__preregistered": {
+        "arm": "transcriptformer_emb",
+        "cell_line": "jurkat",
+        "metric": "residual_weighted",
+        "median_difference": 0.13298376744390566,
+        "ci": [
+          0.09220424943957423,
+          0.1818583069559962
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.06374138286163547
+      },
+      "jurkat__esm2_3b_emb__preregistered": {
+        "arm": "esm2_3b_emb",
+        "cell_line": "jurkat",
+        "metric": "residual_weighted",
+        "median_difference": 0.15635878704981626,
+        "ci": [
+          0.10479865738840383,
+          0.20262549263328838
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.06759782088288685
+      },
+      "jurkat__esm2_650m_emb__preregistered": {
+        "arm": "esm2_650m_emb",
+        "cell_line": "jurkat",
+        "metric": "residual_weighted",
+        "median_difference": 0.13075318397959412,
+        "ci": [
+          0.09690134567070606,
+          0.1742766951675262
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.05313824519411602
+      },
+      "hepg2__scgpt_emb__fold_centred": {
+        "arm": "scgpt_emb",
+        "cell_line": "hepg2",
+        "metric": "centered_weighted",
+        "median_difference": 0.07859765812711855,
+        "ci": [
+          0.04991628972501489,
+          0.11924304470636651
+        ],
+        "n_paired": 524,
+        "n_groups_paired": 226,
+        "min_resolvable_difference": 0.04609195893952397
+      },
+      "hepg2__scprint_emb__fold_centred": {
+        "arm": "scprint_emb",
+        "cell_line": "hepg2",
+        "metric": "centered_weighted",
+        "median_difference": 0.060196375919551744,
+        "ci": [
+          0.024654856301364377,
+          0.0979044691199361
+        ],
+        "n_paired": 524,
+        "n_groups_paired": 226,
+        "min_resolvable_difference": 0.04915484421361988
+      },
+      "hepg2__transcriptformer_emb__fold_centred": {
+        "arm": "transcriptformer_emb",
+        "cell_line": "hepg2",
+        "metric": "centered_weighted",
+        "median_difference": 0.06034714453616768,
+        "ci": [
+          0.012560269374332786,
+          0.11784092661082345
+        ],
+        "n_paired": 524,
+        "n_groups_paired": 226,
+        "min_resolvable_difference": 0.075958475608732
+      },
+      "hepg2__esm2_3b_emb__fold_centred": {
+        "arm": "esm2_3b_emb",
+        "cell_line": "hepg2",
+        "metric": "centered_weighted",
+        "median_difference": 0.07746710451937446,
+        "ci": [
+          0.04646525380631356,
+          0.1534769565993524
+        ],
+        "n_paired": 524,
+        "n_groups_paired": 226,
+        "min_resolvable_difference": 0.07521531526814818
+      },
+      "hepg2__esm2_650m_emb__fold_centred": {
+        "arm": "esm2_650m_emb",
+        "cell_line": "hepg2",
+        "metric": "centered_weighted",
+        "median_difference": 0.05544199616438009,
+        "ci": [
+          0.01411300390084061,
+          0.14104776987876405
+        ],
+        "n_paired": 524,
+        "n_groups_paired": 226,
+        "min_resolvable_difference": 0.10216978408574776
+      },
+      "jurkat__transcriptformer_full__fold_centred": {
+        "arm": "transcriptformer_full",
+        "cell_line": "jurkat",
+        "metric": "centered_weighted",
+        "median_difference": 0.08808146785573599,
+        "ci": [
+          0.05455825577734818,
+          0.12146180393284435
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.0480532576295621
+      },
+      "jurkat__scgpt_emb__fold_centred": {
+        "arm": "scgpt_emb",
+        "cell_line": "jurkat",
+        "metric": "centered_weighted",
+        "median_difference": 0.05258353901185263,
+        "ci": [
+          0.026601743258507646,
+          0.07686256389666209
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.037163401554983565
+      },
+      "jurkat__scprint_emb__fold_centred": {
+        "arm": "scprint_emb",
+        "cell_line": "jurkat",
+        "metric": "centered_weighted",
+        "median_difference": 0.08333485558573168,
+        "ci": [
+          0.04939190806460096,
+          0.11966798931046801
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.0519554090059599
+      },
+      "jurkat__transcriptformer_emb__fold_centred": {
+        "arm": "transcriptformer_emb",
+        "cell_line": "jurkat",
+        "metric": "centered_weighted",
+        "median_difference": 0.09256735154227368,
+        "ci": [
+          0.05404973138853584,
+          0.1290509873372552
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.056575504325405486
+      },
+      "jurkat__esm2_3b_emb__fold_centred": {
+        "arm": "esm2_3b_emb",
+        "cell_line": "jurkat",
+        "metric": "centered_weighted",
+        "median_difference": 0.09641478889461906,
+        "ci": [
+          0.062423580961596045,
+          0.13812668177531998
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.055108768543909885
+      },
+      "jurkat__esm2_650m_emb__fold_centred": {
+        "arm": "esm2_650m_emb",
+        "cell_line": "jurkat",
+        "metric": "centered_weighted",
+        "median_difference": 0.08296195394453204,
+        "ci": [
+          0.04431662055651077,
+          0.1169292765355996
+        ],
+        "n_paired": 705,
+        "n_groups_paired": 452,
+        "min_resolvable_difference": 0.05395455833623616
       }
     },
     "metric_check": {
@@ -108,8 +1251,8 @@
         "best_model_arm": "transcriptformer_emb",
         "best_model_score": 0.2896473625690525,
         "best_model_ci": [
-          0.2440276925441045,
-          0.3264797839696275
+          0.22795440326166594,
+          0.34534729562871785
         ],
         "gene_identity_null": 0.2516594327773732,
         "coexpression": -0.023469549136396203
@@ -119,8 +1262,8 @@
         "best_model_arm": "transcriptformer_emb",
         "best_model_score": 0.2547641634542399,
         "best_model_ci": [
-          0.21040438634209824,
-          0.2830722913632741
+          0.18660252511231085,
+          0.3123326773719669
         ],
         "gene_identity_null": 0.23644391550538174,
         "coexpression": 0.0024356531490913546
@@ -130,8 +1273,8 @@
         "best_model_arm": "transcriptformer_full",
         "best_model_score": 0.08496481728118072,
         "best_model_ci": [
-          0.02483380746796159,
-          0.12611484802560186
+          0.02404776277325772,
+          0.12849711423742752
         ],
         "gene_identity_null": 0.003235993381285271,
         "coexpression": -0.009072121542023437
@@ -142,7 +1285,7 @@
         "best_model_score": 0.09392448963999318,
         "best_model_ci": [
           0.060810579297615464,
-          0.14941236168159255
+          0.1394952028238464
         ],
         "gene_identity_null": -0.01506851170934811,
         "coexpression": -0.007117000292288443
@@ -150,7 +1293,7 @@
     },
     "transfer_reference_mode": {
       "largest_shift_from_reference_choice": 0.07527144403163899,
-      "lowest_rank_correlation_across_modes": 0.7752682100508189
+      "lowest_rank_correlation_across_modes": 0.8215384615384616
     },
     "ordering_agreement_min": {
       "centered": 0.8246941045606229,
@@ -176,8 +1319,6 @@
       }
     },
     "control_cell_overlap": {
-      "largest_shift_coexpression_arms": 0.02397178537696014,
-      "largest_shift_embedding_arms": 0.0191519276253313,
       "per_arm": [
         {
           "cell_line": "hepg2",
@@ -292,6 +1433,14 @@
           "delta": -0.0176092908833807
         }
       ],
+      "largest_shift_coexpression_arms": 0.02397178537696014,
+      "largest_shift_coexpression_arms_arm": "jurkat/coexp_check",
+      "largest_shift_coexpression_arms_ctrl0": 0.020720226605978234,
+      "largest_shift_coexpression_arms_ctrl1": 0.04469201198293837,
+      "largest_shift_embedding_arms": 0.0191519276253313,
+      "largest_shift_embedding_arms_arm": "jurkat/scgpt_emb",
+      "largest_shift_embedding_arms_ctrl0": 0.097917416582175,
+      "largest_shift_embedding_arms_ctrl1": 0.1170693442075063,
       "recomputed_target_agreement_hepg2": 0.7712414639996538,
       "recomputed_reliability_weight_hepg2": 0.27689638221410134,
       "recomputed_target_agreement_jurkat": 0.716054297215079,
@@ -394,49 +1543,43 @@
         ]
       }
     },
-    "beeline_reproduction": {
+    "beeline_arm_dropped": {
+      "status": "dropped: the re-implementation did not reproduce the source paper's reported baseline, so neither it nor any control run inside it supports a claim here",
       "auprc_STRING_hHEP": 0.8237577662933298,
       "auprc_reported_STRING_hHEP": 0.732,
-      "auprc_gene_identity_only_STRING_hHEP": 0.7237763274495251,
-      "auprc_unseen_genes_STRING_hHEP": 0.5919840495632342,
-      "chance_unseen_genes_STRING_hHEP": 0.39870914816856384,
+      "pairs_scored_STRING_hHEP": 14288.0,
       "auprc_Non-Specific_hHEP": 0.6625730364853395,
       "auprc_reported_Non-Specific_hHEP": 0.586,
-      "auprc_gene_identity_only_Non-Specific_hHEP": 0.6331143305945971,
-      "auprc_unseen_genes_Non-Specific_hHEP": 0.545943083262657,
-      "chance_unseen_genes_Non-Specific_hHEP": 0.48878777027130127,
+      "pairs_scored_Non-Specific_hHEP": 7951.0,
       "auprc_Specific_hHEP": 0.5307612578292904,
       "auprc_reported_Specific_hHEP": 0.556,
-      "auprc_gene_identity_only_Specific_hHEP": 0.5243049480358106,
-      "auprc_unseen_genes_Specific_hHEP": 0.6014810828693786,
-      "chance_unseen_genes_Specific_hHEP": 0.5961751341819763,
+      "pairs_scored_Specific_hHEP": 19191.0,
       "mean_auprc": 0.6723640202026532,
       "paper_mean_auprc": 0.6246666666666667,
       "mean_difference": 0.04769735353598655,
       "max_abs_difference": 0.09175776629332977,
-      "shuffled_embedding_mean_auprc": 0.6270652020266443,
-      "mean_auprc_unseen_genes": 0.5798027385650899,
-      "shuffled_embedding_mean_auprc_unseen_genes": 0.5119055777072363,
-      "mean_fraction_pairs_unseen_genes": 0.39817278267246903,
       "train_cell": "STRING/hESC",
       "train_pairs": 8065,
-      "arms_not_reproduced": [
+      "arms_never_run": [
         "VVP and GDT: would need a fresh feature extraction against the BEELINE datasets",
         "the mouse datasets: their symbols are outside the human checkpoint's vocabulary"
       ]
     }
   },
   "limitations": [
-    "The ranking metric is post hoc; the pre-registered cell is reported everywhere and fails its own shuffled-label control.",
-    "Scores are small in absolute terms even after the ceiling correction: the best arm reaches 0.1089 in HepG2 and 0.1726 in Jurkat on a scale where 1.0 is the reproducibility limit.",
+    "The pre-registered score gives an arm credit for the part of a held-out group's response its members share, which is why its shuffled-label draws sit above zero. The fold-centred version reported beside it removes that component but uses a mean of the held-out outcomes to do so, so neither confirms the other; where they disagree the report says so.",
+    "The independent unit is the response group, not the perturbation: HepG2's 524 in-scope perturbations are 226 groups, one holding 149 of them, and Jurkat's 705 are 452. Intervals resample groups, so the effective sample size is closer to the group count.",
+    "Scores are small in absolute terms even after the ceiling correction: the best arm reaches 0.2719 in HepG2 and 0.2371 in Jurkat on a scale where 1.0 is the reproducibility limit.",
     "The individual-cells anchor is a four-cell sample. Its no-op queries are excluded per (perturbed gene, value) and the exclusion is exact on the standardized feature, but four control cells is a small sample of the anchor.",
     "One translator shape for every arm. The query anchor was varied in HepG2 only, over the three models with full-coverage feature blocks; no anchor lifts a response-only arm above the shuffled-label ceiling there (0.0208 against 0.0286).",
     "The discrimination axis is inconclusive, not a second confirmation. The pre-registered pin cell-eval==0.5.19 was never released; the run used 0.8.2, and the two existing versions nearest the pin differ from it by up to 0.1141 on the same saved predictions, which reverses the co-expression-versus-model ranking on that axis in both cell lines.",
-    "The source paper's benchmark is reproduced only for its embedding baseline on its three human held-out cells; its virtual-value and gradient-trajectory arms would need a fresh extraction against those datasets.",
+    "The source paper's own BEELINE benchmark is not part of the evidence. A re-implementation of it was run and dropped: its embedding baseline scored 0.6724 against 0.6247 reported, up to 0.09176 apart on one cell, with no pre-registered tolerance and no seed-noise estimate, so the setting is not established and neither it nor any control run inside it supports a claim here. Its virtual-value and gradient-trajectory arms would have needed a fresh extraction against those datasets and were never run.",
     "Two cell lines from a single screen, so the cross-line result is a weak test of generality.",
     "The additive node control is identically zero on the fold-centred score by construction, so the free node network is the informative version.",
-    "AIDO.Cell is only comparable on the 250-gene subset it was harvested on; it is not shown to be worse than the others there, only not shown to work.",
-    "Co-expression is represented by four statistics over control cells; a fitted network-inference method could do better."
+    "AIDO.Cell is only comparable on the 250-gene subset it was harvested on, and the two scores disagree about it there: its best arm sits just above the shuffled-label ceiling on the pre-registered rule and below it on the fold-centred one. It is not shown to be worse than the others, only not separated from the null.",
+    "Co-expression is represented by four statistics over control cells; a fitted network-inference method could do better.",
+    "The protein control shows where the signal can come from, not where each model's signal does come from. It does not decompose scGPT's or AIDO.Cell's learned table into a protein-like part and a cell-specific part, and it says nothing about what these models do outside this gene-pair task. One protein model at two sizes, and one pooling rule (mean over the final layer), stand in for protein space.",
+    "The unseen-gene cross-line slice is small and its three destination-reference modes are not interchangeable: the non-transductive one scores 78 to 89 perturbations because the rest build its reference, while the other two score 156 to 177, so their clearance counts are reported separately and never pooled. The slice separates the protein-derived tables from scGPT's rather than ranking the arms inside either group."
   ],
   "artifacts": [
     "results/summary/runs.parquet",
@@ -469,6 +1612,26 @@
     "src/scfm_pfm/analysis.py",
     "src/scfm_pfm/ingest/recompute_effects.py",
     "src/scfm_pfm/report/figures.py",
-    "src/scfm_pfm/report/build.py"
+    "src/scfm_pfm/report/build.py",
+    "results/provenance/audit.json",
+    "results/provenance/audit_tables.json",
+    "results/protein/gene_to_protein_report.json",
+    "results/protein/esm_embed_report.json",
+    "results/protein/install_report.json",
+    "results/protein/identity.json",
+    "results/protein/gene_to_protein.parquet",
+    "results/summary/protein_reference.parquet",
+    "results/summary/protein_transfer_reference.parquet",
+    "results/summary/ordering_agreement_with_protein.parquet",
+    "src/scfm_pfm/protein/audit.py",
+    "src/scfm_pfm/protein/audit_tables.py",
+    "src/scfm_pfm/protein/uniprot.py",
+    "src/scfm_pfm/protein/esm_embed.py",
+    "src/scfm_pfm/protein/install_arm.py",
+    "src/scfm_pfm/protein/identity.py",
+    "jobs/run_provenance.sh",
+    "jobs/run_protein_embed.sh",
+    "jobs/run_protein_line.sh",
+    "jobs/run_protein_transfer.sh"
   ]
 }

@@ -207,6 +207,7 @@ def run_cell(
     shuffle_null: bool,
     only_arms: tuple[str, ...] = (),
     save_predictions: bool = False,
+    extra_shuffle_arms: tuple[str, ...] = (),
 ) -> tuple[list[dict], list[pd.DataFrame]]:
     device = str(bundle.effect.device)
     rows = bundle.scope_rows(scope, C.PRIMARY_ANCHOR)
@@ -223,9 +224,11 @@ def run_cell(
     include_sens = (
         scope == "full" and bundle.cell_line == C.SENSITIVITY_CELL_LINE and split == "grouped"
     )
-    specs = armsmod.resolve_arms(bundle, models, C.PRIMARY_ANCHOR, include_sens)
+    # a model with a gene table and no response features: the protein arm
+    emb_only = [m for m in sorted(bundle.emb) if m not in models]
+    specs = armsmod.resolve_arms(bundle, models, C.PRIMARY_ANCHOR, include_sens, emb_only)
     if shuffle_null:
-        for name in C.SHUFFLE_NULL_ARMS:
+        for name in tuple(C.SHUFFLE_NULL_ARMS) + tuple(extra_shuffle_arms):
             base = [s for s in specs if s.name == name]
             if not base:
                 continue
@@ -254,7 +257,9 @@ def run_cell(
             continue
         if spec.model is not None:
             entry = bundle.features.get((spec.model, spec.anchor))
-            if entry is None or (entry["row_map_np"][rows] < 0).any():
+            if entry is None and "resp" in spec.blocks:
+                continue  # the arm needs response features this model has none of
+            if entry is not None and (entry["row_map_np"][rows] < 0).any():
                 continue
         for translator in translators:
             if spec.name == "mean_only" and translator != "ridge":
@@ -564,14 +569,15 @@ def run_transfer(
         if (sv.features[(m, C.PRIMARY_ANCHOR)]["row_map_np"][rows_src] >= 0).all()
         and (dv.features[(m, C.PRIMARY_ANCHOR)]["row_map_np"][rows_dst] >= 0).all()
     ]
-    specs = armsmod.resolve_arms(sv, models, C.PRIMARY_ANCHOR, False)
+    emb_only = [m for m in sorted(sv.emb) if m in dv.emb and m not in models]
+    specs = armsmod.resolve_arms(sv, models, C.PRIMARY_ANCHOR, False, emb_only)
     records, tables = [], []
     lookup_src = torch.as_tensor(rows_src, device=device)
     lookup_dst = torch.as_tensor(rows_dst, device=device)
     print(
         f"=== transfer {src.cell_line}->{dst.cell_line} [{scope}] "
         f"{rows_src.size} train x {rows_dst.size} test perturbations, "
-        f"{shared.size} shared genes, models={models} ===",
+        f"{shared.size} shared genes, models={models}, embedding-only={emb_only} ===",
         flush=True,
     )
     for spec in specs:
@@ -701,6 +707,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--save-predictions", action="store_true")
     ap.add_argument("--no-cell-eval", action="store_true")
     ap.add_argument("--no-shuffle-null", action="store_true")
+    ap.add_argument(
+        "--extra-shuffle-arms",
+        default="",
+        help=("arms to draw the shuffled-label null for beyond config.SHUFFLE_NULL_ARMS; "
+              "for a control added after that list was fixed"),
+    )
     ap.add_argument("--transfer", action="store_true", help="cross-cell-line direction only")
     ap.add_argument("--transfer-scopes", default=",".join(C.TRANSFER_SCOPES))
     ap.add_argument("--transfer-modes", default=",".join(C.TRANSFER_MODES))
@@ -778,6 +790,7 @@ def main(argv: list[str] | None = None) -> int:
                     not args.no_shuffle_null,
                     tuple(x for x in args.arms.split(",") if x),
                     args.save_predictions,
+                    tuple(x for x in args.extra_shuffle_arms.split(",") if x),
                 )
                 records += r
                 tables += t
