@@ -1998,10 +1998,22 @@
       "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__preregistered.difference"
     },
     {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in hepg2, grouped split",
+      "value": 0.136595,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
       "claim": "two-table arm minus scgpt_emb, fold_centred in hepg2, grouped split",
       "value": 0.009885,
       "source": "results/summary/headline.json",
       "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in hepg2, grouped split",
+      "value": 0.079791,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
     },
     {
       "claim": "two-table arm minus esm2_3b_emb, preregistered in hepg2, grouped split",
@@ -2010,10 +2022,22 @@
       "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__preregistered.difference"
     },
     {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in hepg2, grouped split",
+      "value": 0.054511,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
       "claim": "two-table arm minus esm2_3b_emb, fold_centred in hepg2, grouped split",
       "value": 0.011015,
       "source": "results/summary/headline.json",
       "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in hepg2, grouped split",
+      "value": 0.044147,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
     },
     {
       "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in hepg2, grouped split",
@@ -2088,10 +2112,22 @@
       "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__preregistered.difference"
     },
     {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in hepg2, random split",
+      "value": 0.062228,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
       "claim": "two-table arm minus scgpt_emb, fold_centred in hepg2, random split",
       "value": 0.113176,
       "source": "results/summary/headline.json",
       "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in hepg2, random split",
+      "value": 0.076806,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
     },
     {
       "claim": "two-table arm minus esm2_3b_emb, preregistered in hepg2, random split",
@@ -2100,10 +2136,22 @@
       "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__preregistered.difference"
     },
     {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in hepg2, random split",
+      "value": 0.046883,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
       "claim": "two-table arm minus esm2_3b_emb, fold_centred in hepg2, random split",
       "value": 0.007658,
       "source": "results/summary/headline.json",
       "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in hepg2, random split",
+      "value": 0.040279,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
     },
     {
       "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in hepg2, random split",
@@ -2178,10 +2226,22 @@
       "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__preregistered.difference"
     },
     {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in jurkat, grouped split",
+      "value": 0.039802,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
       "claim": "two-table arm minus scgpt_emb, fold_centred in jurkat, grouped split",
       "value": 0.067194,
       "source": "results/summary/headline.json",
       "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in jurkat, grouped split",
+      "value": 0.037472,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
     },
     {
       "claim": "two-table arm minus esm2_3b_emb, preregistered in jurkat, grouped split",
@@ -2190,10 +2250,22 @@
       "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__preregistered.difference"
     },
     {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in jurkat, grouped split",
+      "value": 0.026196,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
       "claim": "two-table arm minus esm2_3b_emb, fold_centred in jurkat, grouped split",
       "value": 0.023363,
       "source": "results/summary/headline.json",
       "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in jurkat, grouped split",
+      "value": 0.023235,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
     },
     {
       "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in jurkat, grouped split",
@@ -2268,10 +2340,22 @@
       "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__preregistered.difference"
     },
     {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in jurkat, random split",
+      "value": 0.049795,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
       "claim": "two-table arm minus scgpt_emb, fold_centred in jurkat, random split",
       "value": 0.082346,
       "source": "results/summary/headline.json",
       "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in jurkat, random split",
+      "value": 0.054802,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
     },
     {
       "claim": "two-table arm minus esm2_3b_emb, preregistered in jurkat, random split",
@@ -2280,10 +2364,22 @@
       "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__preregistered.difference"
     },
     {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in jurkat, random split",
+      "value": 0.033639,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
       "claim": "two-table arm minus esm2_3b_emb, fold_centred in jurkat, random split",
       "value": 0.012409,
       "source": "results/summary/headline.json",
       "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in jurkat, random split",
+      "value": 0.038727,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
     },
     {
       "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in jurkat, random split",

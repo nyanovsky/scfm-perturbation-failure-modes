@@ -959,8 +959,8 @@ CONCAT_HEADING = {
                   "buys nothing"),
     "complementary": ("The two tables carry different information: putting them together "
                       "beats either alone"),
-    "mixed": ("Putting the two tables together does not resolve whether they hold the "
-              "same information"),
+    "mixed": ("The two tables agree weakly, and the hybrid test was too underpowered to "
+              "say whether that buys anything"),
 }
 CONCAT_ROW_ARMS = ("scgpt_esm2_3b_emb", "scgpt_emb", "esm2_3b_emb", "null_randgene_d6144")
 #: the arms scored only in the two-table job, which are kept out of runs.parquet
@@ -1012,18 +1012,34 @@ def concat_section(r: Results, chart: str = "") -> str:
         ),
     )
     hg, jk = _concat_block(h, "hepg2", "grouped"), _concat_block(h, "jurkat", "grouped")
-    pieces = []
-    for line, block in (("HepG2", hg), ("Jurkat", jk)):
+    # the power limit is stated for every cell, not only the two grouped ones
+    pieces, n_under, better_by_cell = [], 0, []
+    for line, split in (("hepg2", "grouped"), ("hepg2", "random"),
+                        ("jurkat", "grouped"), ("jurkat", "random")):
+        block = _concat_block(h, line, split)
         if not block:
             continue
-        gain = _concat_gain(block, block["better_part"])
-        res = block["paired_against_parts"].get(
-            f"{block['better_part']}__preregistered", {}).get(
-            "min_resolvable_difference", float("nan"))
+        d = block["paired_against_parts"].get(f"{block['better_part']}__preregistered", {})
+        if not d:
+            continue
+        n_under += int(abs(d["difference"]) < d["min_resolvable_difference"])
         pieces.append(
-            f"in {line} it is {gain} against {label(block['better_part'])}, the better of "
-            f"the two, on a comparison that resolves {P.num(res)}"
+            f"{LINE[line]} {split} {P.sig(d['difference'], signed_=True)} against "
+            f"{P.sig(d['min_resolvable_difference'])}"
         )
+        better_by_cell.append((label(block["better_part"]), f"{LINE[line]} {split}"))
+    by_part: dict[str, list[str]] = {}
+    for part, cell in better_by_cell:
+        by_part.setdefault(part, []).append(cell)
+    sizes = sorted(len(v) for v in by_part.values())
+    if len(by_part) == 2 and sizes == [1, len(better_by_cell) - 1]:
+        one = next(k for k, v in by_part.items() if len(v) == 1)
+        rest = next(k for k, v in by_part.items() if len(v) > 1)
+        word = {2: "two", 3: "three", 4: "four"}.get(len(by_part[rest]),
+                                                      str(len(by_part[rest])))
+        better_phrase = f"{one} in {by_part[one][0]} and {rest} in the other {word}"
+    else:
+        better_phrase = _join([f"{k} in {_join(v)}" for k, v in by_part.items()])
     agreement = []
     for line, block in (("HepG2", hg), ("Jurkat", jk)):
         if not block:
@@ -1054,30 +1070,19 @@ def concat_section(r: Results, chart: str = "") -> str:
         f" The fold-centred diagnostic reads the same way on all {n_cells} comparisons "
         "against the better part."
     )
-    ref_pairs = []
-    for key, name in (
-        ("esm2_650m_emb__esm2_3b_emb__residual_weighted", "the two ESM2 sizes"),
-        ("scgpt_emb__transcriptformer_emb__residual_weighted",
-         "scGPT against TranscriptFormer"),
-        ("scgpt_emb__coexp__residual_weighted", "scGPT against co-expression"),
-    ):
-        vals = [b["agreement"].get(key, {}).get("spearman") for b in (hg, jk) if b]
-        vals = [v for v in vals if v is not None and v == v]
-        if vals:
-            ref_pairs.append(f"{name} {' and '.join(P.num(v) for v in vals)}")
+    def _pair(key: str) -> list[str]:
+        out = []
+        for line, b in (("HepG2", hg), ("Jurkat", jk)):
+            v = b["agreement"].get(key, {}).get("spearman") if b else None
+            if v is not None and v == v:
+                out.append(f"{P.num(v)} in {line}")
+        return out
+
+    same_family = _pair("esm2_650m_emb__esm2_3b_emb__residual_weighted")
+    vs_tf = _pair("scgpt_emb__transcriptformer_emb__residual_weighted")
+    vs_coexp = _pair("scgpt_emb__coexp__residual_weighted")
     reading = h.get("reading", "mixed")
     thresholds = h.get("agreement_thresholds", {})
-    # the primary comparison is imprecise, so its width is stated where the reading is drawn
-    primary = hg["paired_against_parts"].get(
-        f"{hg['better_part']}__preregistered", {}) if hg else {}
-    primary_clause = (
-        " That is a failure to resolve a gain rather than a demonstration that the two tables "
-        "hold the same information: in HepG2 under the grouped split the difference against "
-        f"{label(hg['better_part'])} is {_concat_gain(hg, hg['better_part'])} on a "
-        f"comparison that resolves {P.num(primary['min_resolvable_difference'])}, so a gain "
-        "narrower than that would not have been detected."
-        if primary else ""
-    )
     verdicts = _join([
         f"{LINE[ln]} under the {sp} split reads {_concat_block(h, ln, sp)['reading']}"
         for ln in ("hepg2", "jurkat") for sp in ("grouped", "random")
@@ -1105,35 +1110,42 @@ def concat_section(r: Results, chart: str = "") -> str:
         f"perturbations, below {P.num(thresholds.get('weak_below', 0.3))} is different ones, "
         "and anything between is neither.</p>"
         + tab
-        + f"<p>The concatenation is not an improvement: {_join(pieces)}. "
-        "The same holds under the random split, and the two-table arm sits far above its own "
-        "width-matched random projection, so the extra columns are not what is being "
-        f"measured.{centred_clause}</p>"
-        + f"<p>The agreement half of the rule comes in weak rather than strong: Spearman "
-        f"{_join(agreement)} between the scGPT-table arm's and the protein-table arm's "
-        f"per-perturbation scores, on the same folds, below the "
-        f"{P.num(thresholds.get('weak_below', 0.3))} the rule set for different "
-        "perturbations. Read alone that number would say the two tables are right about "
-        "different genes, but the comparison pairs say the statistic cannot carry that "
-        f"here: {_join(ref_pairs)}. Both unrelated reference pairs sit in the same band, and "
-        "only two sizes of one protein model - the same model twice - clears the strong "
-        "threshold. Per-perturbation scores at this sample size are noisy enough that the "
-        "paired comparison is the informative half of the reading and the correlation is "
-        "context for it.</p>"
+        + "<p>The concatenation does not beat the better of its two parts, and the "
+        "comparison could not have resolved a gain of the size on offer either: in "
+        f"{'all four cells' if n_under == len(pieces) == 4 else f'{n_under} of the {len(pieces)} cells'} "
+        "the difference against the better part is smaller than the smallest difference the "
+        f"paired comparison resolves - {'; '.join(pieces)}, the better part being "
+        f"{better_phrase}. That is a property of this design rather than of the "
+        "models, so the arm cannot be read as the two tables being equivalent or either one "
+        "being redundant. What it does rule out is the extra width: the two-table arm sits "
+        "far above its own width-matched random projection, so the added columns are not "
+        f"what is being measured.{centred_clause}</p>"
+        + "<p>The half of the rule that does carry information is the agreement statistic, "
+        "and it only means something beside its calibration. The scGPT-table arm and the "
+        f"protein-table arm agree on which held-out perturbations they score well at Spearman "
+        f"{_join(agreement)}. Two sizes of the same protein model - two views of one "
+        f"underlying quantity in this exact setup - agree at {_join(same_family)}. scGPT "
+        f"against co-expression agrees at {_join(vs_coexp)}, and scGPT against "
+        f"TranscriptFormer at {_join(vs_tf)}. So scGPT's table agrees with a protein model "
+        "about as weakly as it agrees with co-expression, and far below what the same model "
+        f"at two sizes reaches - below the {P.num(thresholds.get('weak_below', 0.3))} the "
+        "rule set for different perturbations, and nowhere near the "
+        f"{P.num(thresholds.get('strong_at_or_above', 0.5))} it set for the same ones. "
+        "Per-perturbation scores are noisy at this sample size, which is why the same-family "
+        "pair is the reference that matters: it shows what this statistic reaches when two "
+        "arms really are two routes to one quantity.</p>"
         + chart
         + f"<p>Read against the rule, that is {reading}: {h['rule'][reading]}. "
-        f"By cell and split, {verdicts}. Both halves are worth stating exactly. What the run "
-        "does establish is that no gain over the better part is resolved: in all four cells "
-        "the two-table arm lands within what the paired comparison resolves of the better of "
-        f"its parts.{primary_clause} What it "
-        "does not establish is why. The agreement statistic would have to reach "
-        f"{P.num(thresholds.get('strong_at_or_above', 0.5))} to call the two tables one "
-        "quantity reached by two routes, and neither unrelated reference pair measured here "
-        "reaches it, so 'the same information by different routes' and 'different "
-        "information this task cannot use' are both still open. It does not say scGPT's table "
-        "is protein-derived either; the checkpoint audit already says it is not, and the "
-        "similarity measure still finds no protein geometry in it. A finer-grained or "
-        "different task could still separate what the two tables carry.</p>"
+        f"By cell and split, {verdicts}. The finding is a discrepancy identified rather than "
+        "resolved. The weak agreement points toward scGPT's table and the protein table "
+        "carrying different information rather than being redundant routes to one quantity, "
+        "and the concatenation test is too underpowered to say whether that difference "
+        "converts into a gain this translator can use. Neither half of that is a null and "
+        "neither is a positive. It does not say scGPT's table is protein-derived either; the "
+        "checkpoint audit already says it is not, and the similarity measure still finds no "
+        "protein geometry in it. A task with finer resolution than a per-perturbation "
+        "correlation, or a different way of combining the two tables, is what would settle "
+        "it.</p>"
     )
     return P.section(CONCAT_HEADING.get(reading, CONCAT_HEADING["mixed"]),
                      body, sources=[S_RUNNER, S_ANALYSIS])
@@ -1829,10 +1841,10 @@ def build(summary_dir: Path, out_dir: Path, fig_root: Path) -> Path:
         "against the score the raw ESM2-3B-table arm reached on the same perturbation, full "
         "scope, grouped split, MLP translator, pre-registered rule. The dotted line is "
         "equality and the rank correlation is printed in each panel.",
-        "The cloud is broad rather than tight around the diagonal: the two arms agree on "
-        "which perturbations are easy only weakly, at about the level of the two unrelated "
-        "reference pairs measured here, so the scatter does not settle what the "
-        "concatenation left open.",
+        "The cloud is broad rather than tight around the diagonal. The two arms agree on "
+        "which perturbations are easy about as weakly as scGPT agrees with co-expression, "
+        "and far below the 0.6816 two sizes of one protein model reach here, which points "
+        "toward two different tables rather than two routes to one quantity.",
         sources=[S_RUNNER, S_FIGS],
     ) if "concat_agreement" in made else ""
     f_disc = P.figure(

@@ -823,6 +823,15 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                     "value": round(float(d["difference"]), 6), "source": HEAD,
                     "key": key(field=f"concat.lines.{cell}.paired_against_parts.{tag}.difference"),
                 })
+                # the assessment states the power limit as a number, so it is claimed too
+                claims.append({
+                    "claim": f"smallest difference the two-table comparison against "
+                             f"{tag.replace('__', ', ')} can resolve in {line}, "
+                             f"{split} split",
+                    "value": round(float(d["min_resolvable_difference"]), 6), "source": HEAD,
+                    "key": key(field=(f"concat.lines.{cell}.paired_against_parts.{tag}."
+                                      "min_resolvable_difference")),
+                })
             concat["agreement"][cell] = claim(
                 "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table "
                 f"arm's per-perturbation scores in {line}, {split} split",
@@ -884,11 +893,13 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
 def _concat_assessment(n: dict) -> str:
     """What the two-table arm adds to the assessment, in its own words.
 
-    A supplementary test with its own pre-registered reading, not a second
-    verdict on the run's question. It is stated here so the scope of the
-    'mixed' reading is explicit: no gain over the better part is resolved,
-    which is a failure to resolve rather than a demonstration of equivalence,
-    and the agreement statistic is too weak in this run to say why.
+    The paired contrast is underpowered by design: in every cell the
+    difference against the better part is smaller than the smallest
+    difference that comparison can resolve, so it could not have detected a
+    gain of the size on offer. The agreement statistic, read against its own
+    calibration, is the half that carries information, and it points toward
+    two tables holding different information rather than two routes to one
+    quantity. Neither half closes the question.
     """
     concat = n.get("two_table_arm")
     if not concat:
@@ -899,13 +910,63 @@ def _concat_assessment(n: dict) -> str:
         got = agree.get(cell)
         return None if got is None else float(got)
 
+    paired = concat.get("paired_against_parts", {})
+    better = concat.get("better_part_by_cell", {})
+    cells = (("hepg2|grouped", "HepG2 grouped"), ("hepg2|random", "HepG2 random"),
+             ("jurkat|grouped", "Jurkat grouped"), ("jurkat|random", "Jurkat random"))
+    power, under, total = [], 0, 0
+    for cell, name in cells:
+        d = paired.get(f"{cell}__{better.get(cell, '')}__preregistered")
+        if not d:
+            continue
+        total += 1
+        under += int(abs(d["difference"]) < d["min_resolvable_difference"])
+        power.append(
+            f"{name} {B.P.sig(d['difference'], signed_=True)} against "
+            f"{B.P.sig(d['min_resolvable_difference'])}"
+        )
+    power_clause = (
+        " Its paired comparison was underpowered for the effect it was looking for: in "
+        f"{'all four cells' if under == total == 4 else f'{under} of the {total} cells'} "
+        "the two-table arm's "
+        "difference against the better of its two parts is smaller than the smallest "
+        f"difference that comparison can resolve ({'; '.join(power)}). That is a property of "
+        "the design, not of the models: a gain the size of the ones on offer could not have "
+        "been detected here, so nothing in this arm supports calling the two tables "
+        "equivalent or calling either one redundant."
+        if power else ""
+    )
+    # the agreement statistic is reported with the two references that calibrate it: the
+    # same protein model at two sizes above it, and scGPT against co-expression beside it
     hg, jk = val("hepg2|grouped"), val("jurkat|grouped")
+    same_family = [val(f"{c}__esm2_650m_emb__esm2_3b_emb") for c in
+                   ("hepg2|grouped", "jurkat|grouped")]
+    vs_coexp = [val(f"{c}__scgpt_emb__coexp") for c in ("hepg2|grouped", "jurkat|grouped")]
+    thresholds = concat.get("agreement_thresholds", {})
+    weak = float(thresholds.get("weak_below", 0.3))
+    strong = float(thresholds.get("strong_at_or_above", 0.5))
+    if hg is not None and jk is not None and all(
+            v is not None for v in (*same_family, *vs_coexp)):
+        agreement_clause = (
+            " The half that does carry information is the agreement statistic, and it is "
+            "read against its own calibration. scGPT's table and the raw ESM2-3B table agree "
+            f"on which held-out perturbations they score well at Spearman {hg:.4f} in HepG2 "
+            f"and {jk:.4f} in Jurkat. Two sizes of the same protein model, which is what two "
+            "views of one underlying quantity look like in this setup, agree at "
+            f"{same_family[0]:.4f} and {same_family[1]:.4f}; scGPT against co-expression "
+            f"agrees at {vs_coexp[0]:.4f} and {vs_coexp[1]:.4f}. scGPT's table therefore "
+            "agrees with a protein model about as weakly as it agrees with co-expression and "
+            f"far below the same-family reference, below the {weak:g} the rule set for "
+            f"different information and well below the {strong:g} it set for the same "
+            "information."
+        )
+    else:
+        agreement_clause = ""
     # only the comparison against the better part decides the reading, so only that
     # one is checked on the diagnostic
-    better = concat.get("better_part_by_cell", {})
     centred = []
     for cell, part in better.items():
-        d = concat.get("paired_against_parts", {}).get(f"{cell}__{part}__fold_centred")
+        d = paired.get(f"{cell}__{part}__fold_centred")
         if d and d["lo"] > 0 and d["difference"] > d["min_resolvable_difference"]:
             centred.append(
                 f"{cell.replace('|', ', ')} against {part} "
@@ -915,56 +976,21 @@ def _concat_assessment(n: dict) -> str:
     centred_clause = (
         " On the fold-centred diagnostic, " + "; ".join(centred)
         + f" clears what it resolves, {len(centred)} of the {len(better)} comparisons "
-        "against the better part."
+        "against the better part; that diagnostic is not the verdict and one cell does not "
+        "change the reading."
         if centred else
         " The fold-centred diagnostic reads the same way on every one of those comparisons."
     )
-    # only two unrelated reference pairs were scored, so they are named rather than
-    # described as if they covered every unrelated pair in the run
-    by_cell = []
-    for cell, name in (("hepg2|grouped", "HepG2"), ("jurkat|grouped", "Jurkat")):
-        vals = [
-            v for suffix in ("scgpt_emb__transcriptformer_emb", "scgpt_emb__coexp")
-            if (v := val(f"{cell}__{suffix}")) is not None
-        ]
-        if len(vals) == 2:
-            by_cell.append(f"{vals[0]:.4f} and {vals[1]:.4f} in {name}")
-    thresholds = concat.get("agreement_thresholds", {})
-    weak = float(thresholds.get("weak_below", 0.3))
-    strong = float(thresholds.get("strong_at_or_above", 0.5))
-    numbers = (
-        f"Spearman {hg:.4f} in HepG2 and {jk:.4f} in Jurkat"
-        if hg is not None and jk is not None else "the agreement statistic"
-    )
-    context = (
-        ", and about where the only two unrelated reference pairs this run measured sit "
-        "(scGPT against TranscriptFormer and scGPT against co-expression, "
-        f"{'; '.join(by_cell)})"
-        if by_cell else ""
-    )
-    primary = concat.get("paired_against_parts", {}).get(
-        f"hepg2|grouped__{better.get('hepg2|grouped', '')}__preregistered"
-    )
-    primary_clause = (
-        " That is a failure to resolve a gain, not a demonstration that the two tables hold "
-        "the same information: in the primary HepG2 grouped comparison the two-table arm "
-        f"minus {better.get('hepg2|grouped', '')} is {primary['difference']:+.4g} "
-        f"({primary['lo']:.4g} to {primary['hi']:.4g}), against "
-        f"{primary['min_resolvable_difference']:.4f} resolvable, so a gain smaller than that "
-        "width would not have been detected."
-        if primary else ""
-    )
     return (
         " The two-table arm is a supplementary test with its own reading, not a second "
-        "verdict on the run's question. Concatenating scGPT's table with the raw ESM2-3B "
-        "table lands within what the paired comparison resolves of the better of the two "
-        "parts in all four cells, so the run resolves no gain over the better part."
-        f"{primary_clause}"
-        f" The reading is mixed rather than resolved: the two parts agree at {numbers}, "
-        f"below the {weak:g} the rule set for different information and well "
-        f"below the {strong:g} it set for the same information{context}, so the run does not "
-        "distinguish 'one quantity by two routes' from 'different information this task "
-        "cannot use'."
+        "verdict on the run's question."
+        + power_clause
+        + agreement_clause
+        + " Taken together that is a discrepancy identified rather than resolved: the "
+        "agreement numbers point toward the two tables carrying different information rather "
+        "than being redundant routes to one quantity, and the concatenation test is too "
+        "underpowered to say whether that difference converts into a gain. It is reported as "
+        "an open question with its numbers attached, not as a null and not as a positive."
         + centred_clause
     )
 
@@ -1244,11 +1270,13 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
     if n.get("two_table_arm"):
         doc["limitations"].append(
             "The two-table test is one concatenation at one width, scored by the same "
-            "translator as everything else. It asks whether that translator can use both "
-            "gene tables together better than it uses the better one alone; it does not "
-            "rule out that a different way of combining them, or a task with finer "
-            "resolution than a held-out per-perturbation correlation, would separate what "
-            "the two tables carry."
+            "translator as everything else, and its paired comparison is underpowered: in "
+            "every cell the difference against the better part is smaller than the smallest "
+            "difference that comparison resolves, so a gain of the size on offer would not "
+            "have been detected. It asks whether that translator can use both gene tables "
+            "together better than it uses the better one alone; it does not rule out that a "
+            "different way of combining them, or a task with finer resolution than a "
+            "held-out per-perturbation correlation, would separate what the two tables carry."
         )
         doc["artifacts"].extend([
             "results/summary/concat_runs.parquet",

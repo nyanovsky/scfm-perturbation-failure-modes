@@ -15,12 +15,16 @@ learned from cells, and a table built directly from UniProt protein sequence wit
 checkpoint, run through the same translator and folds, beats co-expression in both lines and ties
 the single-cell arms in seven of eight paired comparisons, beating scGPT's in Jurkat. On genes
 never perturbed in the training screen, only the protein-derived tables keep a score clear of
-zero. Concatenating scGPT's table with the raw ESM2-3B table into one arm resolves no gain over
-the better of the two parts in any cell (HepG2, grouped split: +0.0223 [-0.0342, +0.1305] against
-0.1366 resolvable, so a narrower gain would not have been detected), and the per-perturbation
-agreement between the parts (0.2503 HepG2, 0.2394 Jurkat) sits about where the two unrelated
-reference pairs measured here sit, so that test is reported as mixed rather than as evidence that
-the two tables are one quantity. `manifest.yaml` carries the
+zero. Concatenating scGPT's table with the raw ESM2-3B table into one arm does not beat the better
+of the two parts, and that contrast was underpowered for the effect on offer: in all four cells
+the difference against the better part is smaller than what the comparison resolves (+0.02233
+against 0.1366, +0.02134 against 0.04688, +0.004363 against 0.02620, +0.01529 against 0.03364).
+The informative half is the agreement statistic read against its calibration: the two parts agree
+on which perturbations they score well at Spearman 0.2503 and 0.2394, against 0.6816 and 0.6727
+for two sizes of one protein model and 0.2843 and 0.2295 for scGPT against co-expression. scGPT's
+table agrees with a protein model about as weakly as with co-expression and far below the
+same-family reference, which points toward two tables holding different information rather than
+two routes to one quantity; whether that difference converts into a gain is open, not null. `manifest.yaml` carries the
 numbers; the published report carries the argument.
 
 The fold-centred version of the score, which removes the held-out fold's own per-gene mean, is
@@ -157,7 +161,7 @@ The discrimination axis is computed with Arc Institute's `cell-eval`. The pre-re
 saved predictions under 0.5.18, 0.5.21 and 0.8.2 to show what that choice costs.
 
 `scratch/verify_claims.py` re-reads each entry of `claims_manifest.json` from the file and key it
-names and reports any disagreement. All 373 re-readable keys resolve and match; the remaining 11
+names and reports any disagreement. All 389 re-readable keys resolve and match; the remaining 11
 claims are differences between two rows that are themselves claimed, and their key states the
 formula instead of a locator.
 

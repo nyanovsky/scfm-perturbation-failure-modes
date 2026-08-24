@@ -101,6 +101,22 @@ def num(x: float, digits: int = 4) -> str:
     return f"{v:.{digits}g}"
 
 
+def sig(x: float, digits: int = 4, signed_: bool = False) -> str:
+    """Exactly `digits` significant figures, trailing zeros kept.
+
+    ``num`` uses %g, which drops a trailing zero and so shows 0.026196 as
+    0.0262. Where a number is quoted against another one - a difference against
+    the difference the comparison can resolve - both are written to the same
+    number of significant figures instead.
+    """
+    import math
+    v = float(x)
+    if v != v:
+        return "n/a"
+    dec = 0 if v == 0 else max(0, digits - 1 - math.floor(math.log10(abs(v))))
+    return f"{v:{'+' if signed_ else ''}.{dec}f}"
+
+
 def signed(x: float, digits: int = 3) -> str:
     v = float(x)
     return f"{'+' if v >= 0 else ''}{v:.{digits}f}"
