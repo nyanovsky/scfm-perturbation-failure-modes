@@ -340,6 +340,63 @@ def rescore(
     return summary
 
 
+# --------------------------------------------------------------------------- #
+# how much of the predicted response depends on which gene was knocked down
+# --------------------------------------------------------------------------- #
+def prediction_spread(ckpt_root: Path, out_file: Path | None = None) -> list[dict]:
+    """How perturbation-specific each fine-tuned model's own prediction is.
+
+    Run 3 reports, for the measured effects, the median over perturbations of
+    the fraction of a perturbation's variance across genes that survives
+    subtracting the mean effect. The same statistic is computed here on the
+    model's predicted response, so the two are read on the same scale: a model
+    that predicts the same profile whatever gene is knocked down scores near
+    zero however well it reproduces the average knockdown.
+    """
+    rows = []
+    for d in sorted(Path(ckpt_root).iterdir()):
+        npz = d / "direct_prediction.npz"
+        if not npz.exists():
+            continue
+        line, _, run_name = d.name.partition("__")
+        if line not in C.CELL_LINES:
+            continue
+        z = np.load(npz, allow_pickle=False)
+        if "flagged" not in z or "control_mean_log1p" not in z:
+            continue
+        row = {"run": d.name, "cell_line": line, "arm": run_name}
+        for label, pred in (
+            ("vs_measured_control_mean",
+             z["flagged"].astype(np.float64)
+             - z["control_mean_log1p"].astype(np.float64)[None, :]),
+            ("vs_unflagged_forward_pass",
+             z["flagged"].astype(np.float64) - z["unflagged"].astype(np.float64)),
+        ):
+            resid = pred - pred.mean(axis=0, keepdims=True)
+            frac = np.var(resid, axis=1) / np.maximum(np.var(pred, axis=1), 1e-12)
+            # how alike two perturbations' predicted profiles are, on a bounded
+            # subsample so the pairwise matrix stays small
+            rng = np.random.default_rng(C.SEED)
+            take = (
+                rng.choice(pred.shape[0], 100, replace=False)
+                if pred.shape[0] > 100
+                else np.arange(pred.shape[0])
+            )
+            sub = pred[take]
+            sub = sub - sub.mean(axis=1, keepdims=True)
+            norm = np.linalg.norm(sub, axis=1, keepdims=True)
+            cor = (sub / np.maximum(norm, 1e-12)) @ (sub / np.maximum(norm, 1e-12)).T
+            iu = np.triu_indices(cor.shape[0], k=1)
+            row[f"{label}__median_residual_fraction_of_variance"] = float(np.median(frac))
+            row[f"{label}__median_pairwise_profile_correlation"] = float(np.median(cor[iu]))
+        rows.append(row)
+        print(json.dumps(row), flush=True)
+    if out_file is not None:
+        Path(out_file).parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(rows).to_parquet(Path(out_file))
+    return rows
+
+
 def _heldout_of(
     scores_dir: Path, cell_line: str, run: str, ckpt_root: Path | None = None
 ) -> list[int]:
@@ -387,6 +444,10 @@ def main(argv: list[str] | None = None) -> int:
         le.add_argument("--esm2", default=None)
         le.add_argument("--device", default="cuda")
 
+    sp = sub.add_parser("spread")
+    sp.add_argument("--checkpoints", required=True)
+    sp.add_argument("--out", default=None)
+
     x = sub.add_parser("crossfit")
     x.add_argument("--bundle", default=None)
     x.add_argument("--scores", required=True)
@@ -398,6 +459,12 @@ def main(argv: list[str] | None = None) -> int:
     x.add_argument("--device", default="cuda")
 
     a = ap.parse_args(argv)
+    if a.cmd == "spread":
+        prediction_spread(
+            Path(a.checkpoints),
+            Path(a.out) if a.out else paths.scores_dir() / "prediction_spread.parquet",
+        )
+        return 0
     bundle_root = Path(a.bundle) if a.bundle else paths.bundle_root()
     if a.cmd in ("lastepoch", "rescore"):
         last = a.cmd == "lastepoch"

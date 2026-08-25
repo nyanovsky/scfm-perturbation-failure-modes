@@ -29,22 +29,62 @@ tar -xzf "$STAGED/followup_pack.tar.gz" -C "$PACK"
 find "$PACK" -maxdepth 2 -type d | sort | head -20
 echo "unpacked $(find "$PACK" -type f | wc -l) files"
 
+# The tagged control runs were scored twice: once inside the training job,
+# where a name collision dropped their response arms, and again from their
+# saved weights. The second reading is unpacked last so it replaces the first,
+# file for file, under the same names.
+#
+# HepG2 arrives as one archive. Jurkat needed three jobs -- the first ran out
+# of wall clock after the two cross-fitted re-reads -- so its pieces arrive as
+# two archives plus the loose files the first job left in the artifact tree.
+RESC="$PWD/scratch/rescored"
+mkdir -p "$RESC"
+for A in "$STAGED"/rescore_pack_*.tar.gz "$STAGED"/rescore_tail_*.tar.gz \
+         "$STAGED"/crossfit_pack_*.tar.gz; do
+    [ -f "$A" ] || continue
+    tar -xzf "$A" -C "$RESC"
+    echo "unpacked $A"
+done
+for LINE in hepg2 jurkat; do
+    if [ -d "$STAGED/rescore/$LINE" ]; then
+        cp "$STAGED/rescore/$LINE"/* "$RESC"/ 2>/dev/null || true
+        echo "copied loose files from rescore/$LINE"
+    fi
+done
+ls "$RESC"
+for LINE in hepg2 jurkat; do
+    for TAG in f23 f4 upstream lastepoch; do
+        F="$RESC/restricted_${LINE}__own_trainable__${TAG}.parquet"
+        [ -f "$F" ] || echo "WARNING: missing $(basename "$F")" >&2
+    done
+    [ -f "$RESC/crossfit_${LINE}__own_trainable.json" ] \
+        || echo "WARNING: no cross-fit pooling for $LINE" >&2
+done
+
 # The training jobs and the follow-up job both write direct_* tables. Same
 # filename for the same (line, arm, baseline), so copying the follow-up over
 # the staged copy replaces rather than duplicates.
 echo "=== merging ==="
 cp "$STAGED/scores"/*.parquet "$MERGED"/
 cp "$PACK/followup"/*.parquet "$MERGED"/ 2>/dev/null || true
+for F in "$RESC"/restricted_*.parquet "$RESC"/contrasts_*.parquet "$RESC"/runs_*.parquet; do
+    [ -f "$F" ] && cp "$F" "$MERGED"/
+done
 echo "merged: $(ls "$MERGED" | wc -l) files"
+
+echo "=== how perturbation-specific each model's own prediction is ==="
+python3 -m scfm_ft.followup spread \
+    --checkpoints "$STAGED/checkpoints" --out "$SUMMARY/prediction_spread.parquet"
 
 echo "=== summary tables ==="
 python3 -m scfm_ft.analysis \
     --scores "$MERGED" --checkpoints "$PACK/checkpoint_meta" --out "$SUMMARY"
 
 # the cross-fit tables are not part of the arm grid, so they ride along whole
-cp "$PACK/followup"/crossfit_*.parquet "$PACK/followup"/crossfit_*.json \
-   "$SUMMARY"/ 2>/dev/null || true
+cp "$STAGED/scores"/summary_*.json "$SUMMARY"/ 2>/dev/null || true
 cp "$PACK/followup"/summary_*.json "$SUMMARY"/ 2>/dev/null || true
+cp "$RESC"/crossfit_*.parquet "$RESC"/crossfit_*.json "$SUMMARY"/ 2>/dev/null || true
+cp "$RESC"/summary_*.json "$SUMMARY"/ 2>/dev/null || true
 
 echo "=== one archive so the summary needs one download ==="
 tar -czf "$SILICO_EXPERIMENT_ARTIFACTS_DIR/summary.tar.gz" -C "$SUMMARY" .

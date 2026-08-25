@@ -90,6 +90,7 @@ class Results:
         self.epochs = self._opt("training_epochs")
         self.runs = self._opt("training_runs")
         self.agreement = self._opt("reference_agreement")
+        self.spread = self._opt("prediction_spread")
         self.crossfit = self._crossfit()
         self.ingest = self._ingest()
 
@@ -158,12 +159,16 @@ class Results:
             "n_groups": int(r["n_groups"]),
         }
 
-    def last_epoch_row(self, line: str, arm: str, family: str = "ft",
-                       suffix: str = "resp") -> dict | None:
-        """The features read off the run's last epoch, if that control ran."""
+    def run_feature_row(self, line: str, run: str, family: str = "ft",
+                        suffix: str = "resp") -> dict | None:
+        """One run's feature arm in the verdict cell, by run name.
+
+        Works for a tagged run (``own_trainable__upstream``) as well as a plain
+        one; the scored arm name embeds the bundle model key, not the run name.
+        """
         s = self.restricted[
             (self.restricted.cell_line == line)
-            & (self.restricted.arm == last_epoch_arm(arm, family, suffix))
+            & (self.restricted.arm == f"{family}_{C.model_stem(run)}_{suffix}")
             & (self.restricted.target == VERDICT[0])
             & (self.restricted.weighting == VERDICT[1])
             & (self.restricted.translator == "mlp")
@@ -179,6 +184,29 @@ class Results:
             "n": int(r["n_scored"]),
             "n_groups": int(r["n_groups"]),
         }
+
+    def last_epoch_row(self, line: str, arm: str, family: str = "ft",
+                       suffix: str = "resp") -> dict | None:
+        """The features read off the run's last epoch, if that control ran."""
+        return self.run_feature_row(line, f"{arm}__lastepoch", family, suffix)
+
+    def spread_row(self, line: str, arm: str) -> dict | None:
+        """How perturbation-specific one model's own predicted response is."""
+        if self.spread.empty:
+            return None
+        s = self.spread[(self.spread.cell_line == line) & (self.spread.arm == arm)]
+        return None if s.empty else s.iloc[0].to_dict()
+
+    def measured_spread(self, line: str) -> float:
+        """The same statistic on the measured effects, from run 3's reference."""
+        ref = (
+            self.ingest.get(line, {})
+            .get("bundle_inventory", {})
+            .get("reference", {})
+            .get("shared_response", {})
+        )
+        v = ref.get("median_residual_fraction_of_variance")
+        return float(v) if v is not None else nan()
 
     def paired(self, line: str, arm: str, against: str) -> dict | None:
         for d in self.arm(line, arm).get("paired_differences", []):
@@ -232,12 +260,15 @@ def opening(r: Results) -> str:
         "fine-tuning does not move that either.</p>"
         "<p>The stronger result is that the fine-tuned model does not acquire the signal on "
         "its own prediction head. Its predicted perturbation response, scored with no "
-        "translator in the path against the same measured effects, reaches "
-        f"{civ(direct_h)} in HepG2 and {civ(direct_j)} in Jurkat once the response shared by "
-        "every perturbation is removed, against a raw agreement well above 0.6 before that "
-        "subtraction. Fine-tuning teaches the model what a knockdown does on average in that "
-        "cell line. It does not teach it which gene was knocked down, so there is no "
-        "gene-specific signal for the feature swap to find.</p>",
+        "translator in the path against the same measured effects, agrees well before the "
+        "response shared by every perturbation is removed "
+        f"({P.num((direct_h or {}).get('raw', nan()))} in HepG2, "
+        f"{P.num((direct_j or {}).get('raw', nan()))} in Jurkat) and reaches "
+        f"{P.num((direct_h or {}).get('fold_centred', nan()))} and "
+        f"{P.num((direct_j or {}).get('fold_centred', nan()))} once it is. Fine-tuning "
+        "teaches the model what a knockdown does on average in that cell line. It does not "
+        "teach it which gene was knocked down, so there is no gene-specific signal for the "
+        "feature swap to find.</p>",
         sources=[S_RUNARM, S_ANALYSIS],
     )
 
@@ -411,23 +442,31 @@ def direct_section(r: Results, chart: str) -> str:
             d = a.get("direct_prediction")
             t = a.get("training", {})
             agree = t.get("response_agreement_at_selected_epoch", {})
+            sp = r.spread_row(line, arm) or {}
             rows.append([
                 LINE[line],
                 ARM_LABEL[arm],
+                P.num((d or {}).get("raw", nan())),
                 civ(d),
                 P.num((d or {}).get("fold_centred", nan())),
-                P.num(agree.get("ctrlmean", nan())),
+                P.num(sp.get("vs_measured_control_mean__median_residual_fraction_of_variance",
+                             nan())),
                 P.num(agree.get("ctrlmean_centered", nan())),
             ])
     tbl = P.table(
-        ["cell line", "arm", "held-out response, residual", "held-out response, fold-centred",
-         "validation agreement", "validation agreement, centred"],
+        ["cell line", "arm", "held-out response, raw", "held-out response, residual",
+         "held-out response, fold-centred", "gene-specific fraction of the prediction",
+         "validation agreement, centred"],
         rows,
         sources=[S_FOLLOWUP, S_TRAIN],
         caption="The model's own predicted perturbation response, with no translator in the "
-                "path. The first two columns are scored on the held-out folds against the "
-                "measured effects; the last two are recorded during training on held-out "
-                "validation cells.",
+                "path, against the baseline the published recipe is evaluated on. The first "
+                "three columns are scored on the held-out folds against the measured effects. "
+                "The fourth is the median fraction of a predicted profile's variance that "
+                "survives subtracting the mean prediction, the statistic run 3 reports for "
+                "the measured effects, taken over every in-scope perturbation because it is "
+                "a property of the model's output rather than a score. The last is the "
+                "recipe's own validation diagnostic, centred, at the selected epoch.",
     )
     return P.section(
         "What the fine-tuned model actually learned",
@@ -440,18 +479,49 @@ def direct_section(r: Results, chart: str) -> str:
         "feature arms use.</p>"
         + chart
         + tbl
-        + "<p>Two numbers tell the story and they point in opposite directions. Against the "
-        "raw measured profile the fine-tuned model does well, because most of what a CRISPRi "
-        "knockdown does to a cell is shared across knockdowns and the model learns that "
-        "shared response. Remove it, by scoring the residual after each gene's average "
-        "response across perturbations is taken out, and the agreement collapses to "
-        "approximately zero. The same contrast appears inside training: the recipe's own "
-        "validation diagnostic reads high before centring and at zero after it, in every "
-        "epoch of every run.</p>"
+        + spread_note(r)
+        + "<p>Read across a row, the three scored columns point in opposite directions and "
+        "the reason is the same in both cell lines. Against the raw measured profile the "
+        "fine-tuned model does well, because most of what a CRISPRi knockdown does to a cell "
+        "is shared across knockdowns and the model learns that shared response. The residual "
+        "column subtracts the mean effect from the measurement but not from the prediction, "
+        "so a prediction that hardly changes between perturbations still correlates with the "
+        "fold's shared offset; that is why its interval is wide enough to cross zero. The "
+        "fold-centred column removes the held-out fold's own mean from both sides, which is "
+        "the only one of the three that asks whether the prediction separates one "
+        "perturbation from another, and there the agreement is approximately zero. The same "
+        "contrast appears inside training: the recipe's own validation diagnostic reads high "
+        "before centring and at zero after it, in every epoch of every run.</p>"
         "<p>This matters for how the rest of the page should be read. The response features "
         "sitting in the null band is not a failure of the feature swap to find something the "
         "model has. The model does not have it.</p>",
         sources=[S_FOLLOWUP, S_SCORE],
+    )
+
+
+def spread_note(r: Results) -> str:
+    """How much of the predicted response depends on which gene was knocked down."""
+    bits = []
+    for line in C.CELL_LINES:
+        sp = r.spread_row(line, "own_trainable")
+        if not sp:
+            continue
+        bits.append(
+            f"{LINE[line]} "
+            f"{P.num(sp['vs_measured_control_mean__median_residual_fraction_of_variance'])} "
+            f"against {P.num(r.measured_spread(line))} in the measurement, with a median "
+            f"correlation of "
+            f"{P.num(sp['vs_measured_control_mean__median_pairwise_profile_correlation'])} "
+            "between the profiles it predicts for two different knockdowns"
+        )
+    if not bits:
+        return ""
+    return (
+        "<p>The fourth column says the same thing without any scoring rule in the path. For "
+        "the measured effects, roughly three quarters of a perturbation's variance across "
+        "genes survives subtracting the average response: knocking down different genes "
+        "really does do different things. For the fine-tuned model's own prediction almost "
+        "none of it does. In the primary arm: " + "; ".join(bits) + ".</p>"
     )
 
 
@@ -521,15 +591,49 @@ def controls_section(r: Results) -> str:
             "path itself.</p>"
         )
 
-    parts.append(
-        "<p>Two variants of the primary arm test choices we made rather than inherited. "
-        "Under <code>--upstream-sampling</code> the batch sampler reproduces the published "
-        "one exactly, where the random gene subset drops the perturbed gene from about 40% of "
-        "rows and those rows carry no perturbation flag at all; our default forces the "
-        "perturbed gene into every batch. Both select the same epoch and both leave the "
-        "response features in the band. The second variant refits the arm on the complementary "
-        "folds so that pooling covers the whole screen, reported above.</p>"
+    # variants of the primary arm: each is the same recipe with one choice
+    # changed, and each is read in the same cell as the primary arm
+    VARIANTS = (
+        ("own_trainable", "the primary arm"),
+        ("own_trainable__upstream", "upstream gene sampling"),
+        ("own_trainable__f23", "refitted, folds 2 and 3 withheld"),
+        ("own_trainable__f4", "refitted, fold 4 withheld"),
+        ("own_trainable__lastepoch", "last epoch, not the selected one"),
     )
+    var_rows = []
+    for line in C.CELL_LINES:
+        band = r.null_ceiling(line)
+        for run, label in VARIANTS:
+            row = r.run_feature_row(line, run)
+            t = r.run_row(line, run.replace("__lastepoch", "")) or {}
+            if row is None:
+                continue
+            var_rows.append([
+                LINE[line], label,
+                "last" if run.endswith("__lastepoch") else str(t.get("selected_epoch", "n/a")),
+                civ(row), str(row["n"]),
+                "yes" if row["score"] <= band else "no",
+            ])
+    if var_rows:
+        parts.append(
+            "<p>Four variants of the primary arm test choices we made rather than inherited. "
+            "Under <code>--upstream-sampling</code> the batch sampler reproduces the published "
+            "one exactly, where the random gene subset drops the perturbed gene from about "
+            "40% of rows and those rows carry no perturbation flag at all; our default forces "
+            "the perturbed gene into every batch. Two refits withhold the complementary folds, "
+            "so that pooling covers the whole screen. The last reads the features off the "
+            "final epoch rather than the one the recipe's selection rule keeps, which matters "
+            "in Jurkat, where the validation loss never improves after the first epoch.</p>"
+        )
+        parts.append(P.table(
+            ["cell line", "variant", "epoch read", "response features", "perturbations",
+             "inside the shuffled-label band"],
+            var_rows,
+            sources=[S_RUNARM, S_FOLLOWUP],
+            caption="Each variant scored in the same cell as the primary arm, on the folds "
+                    "that variant withheld. The refits are read on folds 2-4, so their "
+                    "perturbation counts and their ceilings differ from the primary arm's.",
+        ))
     return P.section("Controls", "".join(parts), sources=[S_SCORE, S_RUNARM])
 
 
@@ -571,6 +675,11 @@ def limitations(r: Results) -> str:
         "<li>Two of five folds are scored for the main arms, which resolves a paired "
         "difference more coarsely than run 3's five. The cross-fitted variant covers the "
         "whole screen and agrees.</li>"
+        "<li>The translator is fitted leave-one-fold-out across all five folds, so for a "
+        "given held-out fold it has seen features from folds the fine-tuned model trained "
+        "on. That is true of run 3's frozen arms as well and is what keeps the two "
+        "comparable; it means the held-out claim is about the perturbation, not about the "
+        "translator's independence from the model's training set.</li>"
         "<li>The response features are read at run 3's primary anchor. Run 3 swept four "
         "anchors on the frozen model and none of them lifted the features out of the band; "
         "that sweep was not repeated on every fine-tuned checkpoint.</li>"

@@ -111,6 +111,22 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                 )
                 a_out["direct_residual__lo"] = d["lo"]
                 a_out["direct_residual__hi"] = d["hi"]
+                if d.get("fold_centred") is not None:
+                    a_out["direct_fold_centred"] = claim(
+                        f"{ARM_LABEL[arm]} in {L}, its own predicted response with the "
+                        f"held-out fold's mean removed from both sides, baseline {base}",
+                        d["fold_centred"], DIRECT,
+                        key(cell_line=line, arm_label=f"direct_prediction/{arm}",
+                            target="centered", weighting="weighted", baseline=base),
+                    )
+                if d.get("raw") is not None:
+                    a_out["direct_raw"] = claim(
+                        f"{ARM_LABEL[arm]} in {L}, its own predicted response against the raw "
+                        f"measured effect, baseline {base}",
+                        d["raw"], DIRECT,
+                        key(cell_line=line, arm_label=f"direct_prediction/{arm}",
+                            target="raw", weighting="weighted", baseline=base),
+                    )
             by = r.arm(line, arm).get("direct_prediction_by_baseline", {})
             for bname, row in by.items():
                 a_out[f"direct_residual__{bname}"] = row["score"]
@@ -208,10 +224,13 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             f"model's static gene table at {h.get('scgpt_emb', float('nan')):.4f} in HepG2 and "
             f"{j.get('scgpt_emb', float('nan')):.4f} in Jurkat. The reason is visible on the "
             "model's own prediction head, before any feature swap: the fine-tuned model "
-            "reproduces the response shared across knockdowns well but scores "
-            f"{ho.get('direct_residual', float('nan')):.4f} in HepG2 and "
-            f"{jo.get('direct_residual', float('nan')):.4f} in Jurkat on the residual after "
-            "that shared response is removed. Fine-tuning teaches the average knockdown "
+            "reproduces the response shared across knockdowns well "
+            f"({ho.get('direct_raw', float('nan')):.4f} in HepG2, "
+            f"{jo.get('direct_raw', float('nan')):.4f} in Jurkat) but scores "
+            f"{ho.get('direct_fold_centred', float('nan')):.4f} and "
+            f"{jo.get('direct_fold_centred', float('nan')):.4f} once the held-out fold's own "
+            "mean is removed from both sides, the only reading that asks whether it separates "
+            "one perturbation from another. Fine-tuning teaches the average knockdown "
             "response, not which gene was knocked down."
         ),
         "assessment": (

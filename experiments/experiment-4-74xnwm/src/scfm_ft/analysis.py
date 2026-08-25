@@ -330,18 +330,23 @@ def headline(
                     if "baseline" in dr.columns:
                         for b, g in dr.groupby("baseline"):
                             r = _row(g)
+                            same = direct[
+                                (direct.cell_line == line)
+                                & (direct.arm_label == f"direct_prediction/{a.name}")
+                                & (direct.baseline == b)
+                            ]
+                            # the same prediction read in the other two cells of
+                            # run 3's grid: against the raw measured effect, and
+                            # with the held-out fold's own mean removed from both
+                            # sides. A prediction that barely varies across
+                            # perturbations scores high on the first and zero on
+                            # the last, which is the point of reporting all three.
                             dg = _row(
-                                _pick(
-                                    direct[
-                                        (direct.cell_line == line)
-                                        & (direct.arm_label == f"direct_prediction/{a.name}")
-                                        & (direct.baseline == b)
-                                    ],
-                                    target=DIAGNOSTIC[0],
-                                    weighting=DIAGNOSTIC[1],
-                                )
+                                _pick(same, target=DIAGNOSTIC[0], weighting=DIAGNOSTIC[1])
                             )
+                            dw = _row(_pick(same, target="raw", weighting=VERDICT[1]))
                             r["fold_centred"] = dg["score"] if dg else None
+                            r["raw"] = dw["score"] if dw else None
                             by_base[str(b)] = r
                     else:  # a table written before the baseline column existed
                         by_base["unflagged_model_output"] = _row(dr)
