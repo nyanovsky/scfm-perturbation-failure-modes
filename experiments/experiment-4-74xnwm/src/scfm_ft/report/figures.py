@@ -48,6 +48,19 @@ def entity_colors() -> dict:
 COLOR = entity_colors()
 
 
+def tint(hex_colour: str, amount: float) -> str:
+    """Blend a colour toward white.
+
+    Two series that carry the same meaning-bearing hue (both are the same gene
+    table) but a different reading of it are separated by lightness as well as
+    by marker, so the pair stays distinguishable without colour vision.
+    """
+    h = hex_colour.lstrip("#")
+    r, g, b = (int(h[i : i + 2], 16) for i in (0, 2, 4))
+    m = lambda c: int(round(c + (255 - c) * amount))  # noqa: E731
+    return f"#{m(r):02X}{m(g):02X}{m(b):02X}"
+
+
 def entity_of_arm(arm: str) -> str:
     """Which compared thing a training arm is built from."""
     if arm.startswith("own"):
@@ -164,15 +177,19 @@ def figure_swap(restricted: pd.DataFrame, band: pd.DataFrame, out: Path) -> dict
                     ),
                     row=1, col=col,
                 )
-            for state, point, symbol in (("before", before, "circle-open"), ("after", after, "circle")):
+            for state, point, symbol, shade in (
+                ("before", before, "circle-open", 0.55),
+                ("after", after, "circle", 0.0),
+            ):
                 if point is None:
                     continue
                 name = f"{state} fine-tuning"
+                mcolour = tint(colour, shade)
                 fig.add_trace(
                     go.Scatter(
                         x=[point["score"]], y=[y], mode="markers",
-                        marker=dict(color=colour, size=10, symbol=symbol,
-                                    line=dict(color=colour, width=1.5)),
+                        marker=dict(color=mcolour, size=10, symbol=symbol,
+                                    line=dict(color=mcolour, width=1.5)),
                         error_x=dict(
                             type="data", symmetric=False,
                             array=[point["hi"] - point["score"]],
@@ -202,7 +219,7 @@ def figure_swap(restricted: pd.DataFrame, band: pd.DataFrame, out: Path) -> dict
         fig.update_xaxes(title_text="Response-feature score", row=1, col=col)
     apply_theme(fig, height=430)
     save_figure_bundle(
-        fig, "swap_before_after", data={"rows": data, "metric": VERDICT}, root=paths.repo_dir(),
+        fig, "swap_before_after", data={"rows": data, "metric": VERDICT}, root=paths.repo_dir() / "figures",
         alt=(
             "Two panels, HepG2 and Jurkat. For each of five training arms, the score of the "
             "response features read off the model before and after fine-tuning, against the "
@@ -225,9 +242,9 @@ def figure_predict_vs_features(
     ] if not direct.empty else pd.DataFrame()
 
     series = [
-        ("direct", "the model's predicted response", "diamond"),
-        ("own_query", "response features, own query", "square"),
-        ("value_substitution", "response features, value query", "circle"),
+        ("direct", "the model's predicted response", "diamond", 0.0),
+        ("own_query", "response features, own query", "square", 0.35),
+        ("value_substitution", "response features, value query", "circle-open", 0.65),
     ]
     data = []
     for line in C.CELL_LINES:
@@ -278,16 +295,17 @@ def figure_predict_vs_features(
             if entry["cell_line"] != line:
                 continue
             colour = COLOR[entry["entity"]]
-            for key, label, symbol in series:
+            for key, label, symbol, shade in series:
                 point = entry.get(key)
                 if not point:
                     continue
                 off = {"direct": 0.22, "own_query": 0.0, "value_substitution": -0.22}[key]
+                mcolour = tint(colour, shade)
                 fig.add_trace(
                     go.Scatter(
                         x=[point["score"]], y=[ypos[entry["arm"]] + off], mode="markers",
-                        marker=dict(color=colour, size=9, symbol=symbol,
-                                    line=dict(color=colour, width=1.5)),
+                        marker=dict(color=mcolour, size=9, symbol=symbol,
+                                    line=dict(color=mcolour, width=1.5)),
                         name=label, legendgroup=label, showlegend=label not in seen,
                         hovertemplate=(
                             f"{ARM_LABEL[entry['arm']]}<br>{label}<br>"
@@ -310,7 +328,7 @@ def figure_predict_vs_features(
     apply_theme(fig, height=430)
     save_figure_bundle(
         fig, "predicted_and_features", data={"rows": data, "metric": VERDICT},
-        root=paths.repo_dir(),
+        root=paths.repo_dir() / "figures",
         alt=(
             "For each fine-tuned model, three scores on one axis: the model's own predicted "
             "perturbation response, and the response features read from it through its own "
@@ -374,7 +392,7 @@ def figure_training(epochs: pd.DataFrame, runs: pd.DataFrame, out: Path) -> dict
     save_figure_bundle(
         fig, "training_curves",
         data={"epochs": epochs.to_dict(orient="records"), "runs": runs.to_dict(orient="records")},
-        root=paths.repo_dir(),
+        root=paths.repo_dir() / "figures",
         alt=(
             "Validation loss per epoch for the ten fine-tuning runs, and beneath it the "
             "agreement between the predicted and the measured perturbation response on the "

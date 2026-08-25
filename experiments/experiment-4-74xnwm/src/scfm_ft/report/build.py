@@ -153,6 +153,28 @@ class Results:
             "n_groups": int(r["n_groups"]),
         }
 
+    def last_epoch_row(self, line: str, arm: str, family: str = "ft",
+                       suffix: str = "resp") -> dict | None:
+        """The features read off the run's last epoch, if that control ran."""
+        s = self.restricted[
+            (self.restricted.cell_line == line)
+            & (self.restricted.arm == f"{family}_{arm}__lastepoch_{suffix}")
+            & (self.restricted.target == VERDICT[0])
+            & (self.restricted.weighting == VERDICT[1])
+            & (self.restricted.translator == "mlp")
+            & (~self.restricted.is_shuffled)
+        ]
+        if s.empty:
+            return None
+        r = s.iloc[0]
+        return {
+            "score": float(r["disattenuated"]),
+            "lo": float(r["disattenuated_lo"]),
+            "hi": float(r["disattenuated_hi"]),
+            "n": int(r["n_scored"]),
+            "n_groups": int(r["n_groups"]),
+        }
+
     def paired(self, line: str, arm: str, against: str) -> dict | None:
         for d in self.arm(line, arm).get("paired_differences", []):
             if d["against"] == against and d["arm"] == arm:
@@ -180,14 +202,12 @@ class Results:
 # --------------------------------------------------------------------------- #
 def opening(r: Results) -> str:
     rows = r.all_feature_points("final__value_substitution_resp")
-    worst = max((p["score"] for p in rows), default=nan())
+    best = max((p["score"] for p in rows), default=nan())
     n_in = sum(1 for p in rows if r.in_band(p["cell_line"], p))
     direct_h = r.arm("hepg2", "own_trainable").get("direct_prediction")
     direct_j = r.arm("jurkat", "own_trainable").get("direct_prediction")
     emb_h = r.ref("hepg2", "scgpt_emb")
     emb_j = r.ref("jurkat", "scgpt_emb")
-    co_h = r.ref("hepg2", "coexp")
-    co_j = r.ref("jurkat", "coexp")
     return P.section(
         "",
         "<p>Runs 2 and 3 found that when you ask a single-cell foundation model what happens "
@@ -196,21 +216,23 @@ def opening(r: Results) -> str:
         "table beat co-expression comfortably. The obvious objection is that the models were "
         "never trained to answer that question. So we trained one to.</p>"
         "<p>We fine-tuned scGPT on each CRISPRi screen with the recipe scGPT publishes for "
-        "perturbation prediction, holding out two of run 3's five folds so the fine-tuned "
-        "model is only ever scored on perturbations it has not seen, and then pushed the "
-        f"fine-tuned checkpoints through run 3's feature swap unchanged. Across {len(rows)} "
-        f"fine-tuned models in two cell lines, {n_in} of them leave the response features "
-        f"inside the shuffled-label band; the best score any of them reaches is "
-        f"{P.num(worst)}, against a gene-table arm at {P.num((emb_h or {}).get('score', nan()))} "
-        f"in HepG2 and {P.num((emb_j or {}).get('score', nan()))} in Jurkat and co-expression "
-        f"at {P.num((co_h or {}).get('score', nan()))} and "
-        f"{P.num((co_j or {}).get('score', nan()))}.</p>"
+        "perturbation prediction, holding out two of run 3's five folds so a fine-tuned model "
+        "is only ever scored on perturbations it has not seen, and then pushed the fine-tuned "
+        f"checkpoints through run 3's feature swap unchanged. Across the {len(rows)} fine-tuned "
+        f"models in two cell lines, {n_in} leave the response features inside the "
+        f"shuffled-label band; the highest any of them reaches is {P.num(best)}. The same "
+        "model's static gene table, read through the same translator on the same held-out "
+        f"perturbations, sits at {P.num((emb_h or {}).get('score', nan()))} in HepG2 and "
+        f"{P.num((emb_j or {}).get('score', nan()))} in Jurkat, roughly ten times higher, and "
+        "fine-tuning does not move that either.</p>"
         "<p>The stronger result is that the fine-tuned model does not acquire the signal on "
-        "its own prediction head either. Its predicted perturbation response, scored with no "
+        "its own prediction head. Its predicted perturbation response, scored with no "
         "translator in the path against the same measured effects, reaches "
         f"{civ(direct_h)} in HepG2 and {civ(direct_j)} in Jurkat once the response shared by "
-        "every perturbation is removed. Fine-tuning teaches the model what a knockdown does "
-        "on average in that cell line. It does not teach it which gene was knocked down.</p>",
+        "every perturbation is removed, against a raw agreement well above 0.6 before that "
+        "subtraction. Fine-tuning teaches the model what a knockdown does on average in that "
+        "cell line. It does not teach it which gene was knocked down, so there is no "
+        "gene-specific signal for the feature swap to find.</p>",
         sources=[S_RUNARM, S_ANALYSIS],
     )
 
@@ -277,6 +299,37 @@ def setup(r: Results) -> str:
     )
 
 
+def resolution_note(r: Results) -> str:
+    """How much this evaluation can see, stated with the null rather than implied."""
+    parts = []
+    for line in C.CELL_LINES:
+        band = r.null(line, "coexp")
+        co = r.ref(line, "coexp")
+        pts = [p for p in r.all_feature_points("final__value_substitution_resp")
+               if p["cell_line"] == line]
+        if not (band and co and pts):
+            continue
+        parts.append(
+            f"<li><strong>{LINE[line]}</strong>: the shuffled-label draws span "
+            f"{P.num(r.null_ceiling(line))} at the top, and co-expression itself scores "
+            f"{P.num(co['score'])} on these {pts[0]['n_groups']} response groups. An effect "
+            "smaller than the band is not resolvable here.</li>"
+        )
+    if not parts:
+        return ""
+    return (
+        "<p>Two folds is a narrower evaluation than run 3's five, and it is worth being "
+        "explicit about what that costs before reading the null. Scoring only the folds a "
+        "fine-tuned model never saw leaves fewer response groups to resample, so the "
+        "shuffled-label band is wider than it is over the whole screen, and co-expression, "
+        "which run 3 resolves clearly above zero, is not separated from it here either:</p>"
+        f"<ul>{''.join(parts)}</ul>"
+        "<p>So the claim this section supports is bounded: fine-tuning does not lift the "
+        "response features to anywhere near the gene table, and does not move them "
+        "detectably at all. It is not evidence that they are exactly zero.</p>"
+    )
+
+
 def holdout_note(r: Results) -> str:
     cf = []
     for line in C.CELL_LINES:
@@ -336,10 +389,10 @@ def verdict_section(r: Results, chart: str) -> str:
         + chart
         + tbl
         + f"<p>{n_in} of the {len(post)} fine-tuned models sit at or below the largest "
-        "shuffled-label draw in their cell line, and none of them approaches the gene-table "
-        "arm. Reading the features through the model's own perturbation-flag query, which is "
-        "the query the fine-tuning objective is literally defined on, does not change "
-        "that.</p>"
+        "shuffled-label draw in their cell line, and none approaches the gene-table arm. "
+        "Reading the features through the model's own perturbation-flag query, the query the "
+        "fine-tuning objective is literally defined on, does not change that.</p>"
+        + resolution_note(r)
         + holdout_note(r),
         sources=[S_QUERY, S_SCORE],
     )
