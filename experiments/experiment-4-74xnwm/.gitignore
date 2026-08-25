@@ -22,8 +22,7 @@ __pycache__/
 # Stranded _atomic_write temps (name.<pid>.<hex>.tmp) from a crashed write.
 *.*.*.tmp
 
-# Short-lived signed artifact-store links used to pull run 3 objects into a
-# session for a check. They embed live one-hour credentials; never committed.
-scratch/_urls.json
-scratch/_ckpt/
-scratch/_raw/
+# Scratch is one-off probes, downloads and dead ends: never a deliverable, and
+# it holds short-lived signed artifact-store links that embed live one-hour
+# credentials. None of it is committed.
+scratch/

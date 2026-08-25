@@ -12,8 +12,16 @@ perturbation in the screen is scored by a model that never saw it. The pooled
 number is read against the whole-screen ceiling and is therefore comparable to
 run 3's published five-fold numbers, which the two-fold restriction is not.
 
+``lastepoch`` reads the response features off a run's LAST epoch rather than
+the epoch the recipe selects. The recipe selects on held-out masked MSE, which
+in one of the two screens is lowest after a single epoch; that leaves the
+objection that the features might appear later, at a checkpoint the selection
+rule rejects. This answers it directly from the saved ``model_final.pt``, with
+no retraining.
+
     python -m scfm_ft.followup direct --scores DIR --checkpoints DIR
     python -m scfm_ft.followup crossfit --scores DIR --runs own_trainable,own_trainable__f23,...
+    python -m scfm_ft.followup lastepoch --checkpoints DIR --cell-line hepg2 --arm own_trainable
 """
 
 from __future__ import annotations
@@ -93,6 +101,7 @@ def crossfit(
     device: str = "cuda",
     reference_arms: tuple[str, ...] = ("coexp", "scgpt_resp", "scgpt_emb", "node"),
     translator: str = "mlp",
+    ckpt_root: Path | None = None,
 ) -> dict:
     """Pool one arm's held-out rows across the models fitted on complementary folds."""
     C3 = run3("config")
@@ -119,7 +128,7 @@ def crossfit(
         if not f.exists():
             raise RuntimeError(f"missing per-perturbation table for {cell_line}/{run}: {f}")
         t = pd.read_parquet(f)
-        cfg_folds = _heldout_of(scores_dir, cell_line, run)
+        cfg_folds = _heldout_of(scores_dir, cell_line, run, ckpt_root)
         take = [x for x in cfg_folds if x not in covered]
         covered.update(take)
         sub = t[
@@ -209,13 +218,128 @@ def crossfit(
     return out
 
 
-def _heldout_of(scores_dir: Path, cell_line: str, run: str) -> list[int]:
+# --------------------------------------------------------------------------- #
+# the last epoch, not the selected one
+# --------------------------------------------------------------------------- #
+def last_epoch(
+    bundle_root: Path,
+    ckpt_root: Path,
+    cell_line: str,
+    arm_name: str,
+    scores_out: Path,
+    work: Path,
+    esm2_path: Path | None = None,
+    device: str = "cuda",
+) -> dict:
+    """Score the response features of a run's final epoch.
+
+    Everything except which state dict is loaded is the main run's code path:
+    the same model build, the same two query families, the same block writer
+    and the same scorer on the same held-out folds.
+    """
+    import torch
+
+    from . import run_arm as ra
+    from .scgpt_pert import checkpoint as ckptmod
+    from .scgpt_pert import model as modelmod
+
+    arm = C.ARMS_BY_NAME[arm_name]
+    src = Path(ckpt_root) / f"{cell_line}__{arm_name}"
+    state_file = src / "model_final.pt"
+    if not state_file.exists():
+        raise RuntimeError(f"no saved final state at {state_file}")
+    cfg = json.loads((src / "train_config.json").read_text())
+    hist = json.loads((src / "loss_history.json").read_text())
+    heldout = [int(x) for x in (cfg.get("model_heldout_folds") or C.MODEL_HELDOUT_FOLDS)]
+    epochs_run = len(hist.get("history", []))
+    selected = int(hist.get("best_epoch", 0))
+
+    readout = pd.read_parquet(paths.readout_table(cell_line))
+    targets = ra.load_targets(bundle_root, cell_line)
+    cache = paths.checkpoint_cache()
+    ckptmod.fetch(cache)
+    if arm.table == "scgpt":
+        table = None
+    else:
+        table, _ = ra.substituted_table(
+            arm, Path(esm2_path) if esm2_path else paths.esm2_table_file(),
+            targets["readout_gene_id"],
+        )
+    positions = readout["scgpt_position"].to_numpy(dtype=np.int64)
+    model, _ = modelmod.build_arm_model(arm, cache, table, positions, device)
+    state = torch.load(state_file, map_location=device)
+    missing, unexpected = model.load_state_dict(state, strict=False)
+    if missing or unexpected:
+        raise RuntimeError(
+            f"state dict does not match the rebuilt model: {len(missing)} missing, "
+            f"{len(unexpected)} unexpected"
+        )
+
+    run_name = f"{arm_name}__lastepoch"
+    block = ra.extract_stage(model, "final", run_name, readout, targets, device)
+    del model
+    torch.cuda.empty_cache()
+
+    all_rows = np.arange(targets["pert_target"].size)
+    bdir = score.stage_bundle(bundle_root, Path(work) / "bundle", cell_line)
+    installed = [
+        score.write_block(
+            bdir, cell_line, block["value_key"], C.ANCHOR_VALUE, all_rows, block["gene_table"],
+            block["value_forms"], block["values"], block["value_keep"],
+        ),
+        score.write_block(
+            bdir, cell_line, block["flag_key"], C.ANCHOR_VALUE, all_rows, block["gene_table"],
+            block["flag_forms"], block["flag_values"], block["flag_value_keep"],
+        ),
+    ]
+    summary = score.score_bundle(
+        bdir, cell_line, run_name, Path(scores_out), False, device=device, eval_folds=heldout,
+    )
+    summary["installed_blocks"] = installed
+    summary["heldout_folds"] = heldout
+    summary["read_from"] = str(state_file)
+    summary["epochs_run"] = epochs_run
+    summary["selected_epoch"] = selected
+    summary["note"] = (
+        "features read from the last epoch, which the recipe's selection rule rejected"
+    )
+    (Path(scores_out) / f"summary_{cell_line}__{run_name}.json").write_text(
+        json.dumps(summary, indent=2, default=str)
+    )
+    print(
+        json.dumps(
+            {k: v for k, v in summary.items() if k != "bundle_inventory"},
+            indent=2, default=str,
+        )[:3000],
+        flush=True,
+    )
+    return summary
+
+
+def _heldout_of(
+    scores_dir: Path, cell_line: str, run: str, ckpt_root: Path | None = None
+) -> list[int]:
+    """Which folds a run withheld from training.
+
+    Recorded in two places by the training job. The cross-fitted runs withhold
+    different folds from the main run, so guessing the default here would
+    silently score a model on perturbations it trained on.
+    """
     f = Path(scores_dir) / f"summary_{cell_line}__{run}.json"
     if f.exists():
         d = json.loads(f.read_text())
         if d.get("heldout_folds"):
             return [int(x) for x in d["heldout_folds"]]
-    return list(C.MODEL_HELDOUT_FOLDS)
+    if ckpt_root is not None:
+        g = Path(ckpt_root) / f"{cell_line}__{run}" / "train_config.json"
+        if g.exists():
+            d = json.loads(g.read_text())
+            if d.get("model_heldout_folds"):
+                return [int(x) for x in d["model_heldout_folds"]]
+    raise RuntimeError(
+        f"cannot tell which folds {cell_line}/{run} withheld: no "
+        f"summary_{cell_line}__{run}.json under {scores_dir} and no train_config.json"
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -228,17 +352,35 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--out", default=None)
     d.add_argument("--device", default="cuda")
 
+    le = sub.add_parser("lastepoch")
+    le.add_argument("--bundle", default=None)
+    le.add_argument("--checkpoints", required=True)
+    le.add_argument("--cell-line", required=True, choices=list(C.CELL_LINES))
+    le.add_argument("--arm", default="own_trainable")
+    le.add_argument("--scores-out", default=None)
+    le.add_argument("--work", default="scratch/lastepoch")
+    le.add_argument("--esm2", default=None)
+    le.add_argument("--device", default="cuda")
+
     x = sub.add_parser("crossfit")
     x.add_argument("--bundle", default=None)
     x.add_argument("--scores", required=True)
     x.add_argument("--cell-line", required=True, choices=list(C.CELL_LINES))
     x.add_argument("--runs", required=True, help="comma-separated run names, main run first")
     x.add_argument("--arm", required=True)
+    x.add_argument("--checkpoints", default=None)
     x.add_argument("--out", default=None)
     x.add_argument("--device", default="cuda")
 
     a = ap.parse_args(argv)
     bundle_root = Path(a.bundle) if a.bundle else paths.bundle_root()
+    if a.cmd == "lastepoch":
+        last_epoch(
+            bundle_root, Path(a.checkpoints), a.cell_line, a.arm,
+            Path(a.scores_out) if a.scores_out else paths.scores_dir(),
+            Path(a.work), Path(a.esm2) if a.esm2 else None, a.device,
+        )
+        return 0
     out = Path(a.out) if a.out else paths.scores_dir()
     if a.cmd == "direct":
         rows = rescore_direct(bundle_root, Path(a.checkpoints), out, a.device)
@@ -247,6 +389,7 @@ def main(argv: list[str] | None = None) -> int:
     crossfit(
         bundle_root, Path(a.scores), a.cell_line,
         [r for r in a.runs.split(",") if r], a.arm, out, a.device,
+        ckpt_root=Path(a.checkpoints) if a.checkpoints else None,
     )
     return 0
 

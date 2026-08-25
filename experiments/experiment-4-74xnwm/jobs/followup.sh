@@ -1,13 +1,19 @@
 #!/bin/sh
-# Rescore the models' own predictions against the published baseline, pool the
-# cross-fitted arms so every perturbation is scored by a model that never saw
-# it, and merge every arm's scores into the summary tables the report reads.
+# Everything after the sixteen training runs that still needs a GPU and the
+# bundle:
+#   1. rescore each model's own predicted response against the measured control
+#      profile, the baseline the published evaluation uses
+#   2. pool the cross-fitted arms so every perturbation is scored by a model
+#      that never saw it
+#   3. read the response features off the LAST epoch instead of the selected one
 #
-#   sh $SILICO_EXPERIMENT_RELATIVE_DIR/jobs/followup.sh <crossfit runs jurkat> <hepg2> [arm]
+#   sh $SILICO_EXPERIMENT_RELATIVE_DIR/jobs/followup.sh <jurkat runs> <hepg2 runs> [arm]
 #
-# The bundle, the saved predictions and every training job's score tables
-# arrive as staged input artifacts. Nothing is read from a job volume, so this
-# can run long after the training jobs' volumes have expired.
+# Staging is capped at 128 files, so this job takes only what these three steps
+# need: the bundle, the saved predictions, the per-run metadata, the two final
+# state dicts, and the per-perturbation tables of the cross-fitted runs. The
+# merge and the summary tables are a second, CPU-only job; this one leaves a
+# single archive for it to pick up.
 set -eu
 JURKAT_RUNS="$1"
 HEPG2_RUNS="$2"
@@ -18,52 +24,65 @@ sh jobs/env_gpu.sh
 export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 STAGED="$SILICO_INPUT_ARTIFACTS_DIR/experiments/$SILICO_EXPERIMENT_ID"
 OUT="$SILICO_EXPERIMENT_ARTIFACTS_DIR/followup"
-SUMMARY="$SILICO_EXPERIMENT_ARTIFACTS_DIR/summary"
-MERGED="$PWD/scratch/merged_scores"
-mkdir -p "$OUT" "$SUMMARY" "$MERGED"
+mkdir -p "$OUT"
 
 echo "=== staged inputs ==="
 ls "$STAGED"
-echo "--- score tables ---"
-ls "$STAGED/scores" | wc -l
+echo "--- score tables: $(ls "$STAGED/scores" 2>/dev/null | wc -l) files ---"
 echo "--- checkpoint dirs ---"
 ls "$STAGED/checkpoints"
 
-echo "=== the model's own prediction, against the measured control profile ==="
+echo
+echo "=== 1. the model's own prediction, against the measured control profile ==="
 python3 -m scfm_ft.followup direct \
     --checkpoints "$STAGED/checkpoints" --out "$OUT" --device cuda
 
+echo
+echo "=== 2. pooling the cross-fitted arms ==="
 for LINE in jurkat hepg2; do
     RUNS="$JURKAT_RUNS"
     [ "$LINE" = "hepg2" ] && RUNS="$HEPG2_RUNS"
-    echo "=== $LINE: pooling $RUNS ==="
+    echo "--- $LINE: $RUNS ---"
     python3 -m scfm_ft.followup crossfit \
-        --scores "$STAGED/scores" --cell-line "$LINE" --runs "$RUNS" \
-        --arm "$ARM" --out "$OUT" --device cuda
+        --scores "$STAGED/scores" --checkpoints "$STAGED/checkpoints" \
+        --cell-line "$LINE" --runs "$RUNS" --arm "$ARM" --out "$OUT" --device cuda
 done
 
-# ------------------------------------------------------------------ #
-# merge and summarise
-# ------------------------------------------------------------------ #
-# The training jobs and this job both write direct_* tables. Same filename for
-# the same (line, arm, baseline), so copying the follow-up over the staged copy
-# replaces rather than duplicates.
-echo "=== merging score tables ==="
-cp "$STAGED/scores"/*.parquet "$MERGED"/
-cp "$OUT"/direct_*.parquet "$MERGED"/ 2>/dev/null || true
-ls "$MERGED" | wc -l
+echo
+echo "=== 3. the last epoch, which the selection rule rejected ==="
+# A control on a choice the recipe makes, not on the result. If it fails the
+# rest of the run is still valid, so it must not take the job down with it.
+for LINE in hepg2 jurkat; do
+    echo "--- $LINE ---"
+    if python3 -m scfm_ft.followup lastepoch \
+        --checkpoints "$STAGED/checkpoints" --cell-line "$LINE" --arm "$ARM" \
+        --scores-out "$OUT" --work "$PWD/scratch/lastepoch_$LINE" --device cuda
+    then
+        echo "lastepoch $LINE ok"
+    else
+        echo "WARNING: lastepoch $LINE failed; continuing" >&2
+    fi
+done
 
-echo "=== summary tables ==="
-python3 -m scfm_ft.analysis \
-    --scores "$MERGED" --checkpoints "$STAGED/checkpoints" --out "$SUMMARY"
+echo
+echo "=== packing one archive for the summary job ==="
+# The per-run training metadata rides along so the summary job does not have to
+# stage thirty-two more files against its own cap.
+PACK="$PWD/scratch/pack"
+rm -rf "$PACK"
+mkdir -p "$PACK/followup" "$PACK/checkpoint_meta"
+cp "$OUT"/* "$PACK/followup"/ 2>/dev/null || true
+for D in "$STAGED/checkpoints"/*; do
+    R=$(basename "$D")
+    mkdir -p "$PACK/checkpoint_meta/$R"
+    for F in train_config.json loss_history.json; do
+        [ -f "$D/$F" ] && cp "$D/$F" "$PACK/checkpoint_meta/$R/$F"
+    done
+done
+tar -czf "$SILICO_EXPERIMENT_ARTIFACTS_DIR/followup_pack.tar.gz" -C "$PACK" .
+echo "packed $(find "$PACK" -type f | wc -l) files"
 
-# the cross-fit tables are not part of the arm grid, so they ride along whole
-cp "$OUT"/crossfit_*.parquet "$OUT"/crossfit_*.json "$SUMMARY"/ 2>/dev/null || true
-cp "$STAGED/scores"/summary_*.json "$SUMMARY"/ 2>/dev/null || true
-
-echo "=== one archive so the summary needs one download ==="
-tar -czf "$SILICO_EXPERIMENT_ARTIFACTS_DIR/summary.tar.gz" -C "$SUMMARY" .
-
+echo
 echo "=== outputs ==="
 ls -la "$OUT"
-ls -la "$SUMMARY"
+ls -la "$SILICO_EXPERIMENT_ARTIFACTS_DIR/followup_pack.tar.gz"

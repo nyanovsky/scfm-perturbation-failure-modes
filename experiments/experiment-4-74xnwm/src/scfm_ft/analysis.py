@@ -31,11 +31,28 @@ DIAGNOSTIC = ("centered", "weighted")
 DIRECT_BASELINES = ("measured_control_mean", "unflagged_model_output")
 
 
+#: the per-perturbation tables sit beside the summary ones and share their
+#: prefix, so ``direct_*`` would otherwise also match ``direct_per_pert_*``.
+#: Those have a different schema and belong to a different level of the run.
+_PER_PERT = ("per_pert_", "direct_per_pert_", "crossfit_per_pert_")
+
+
 def _read_all(root: Path, stem: str) -> pd.DataFrame:
-    files = sorted(Path(root).glob(f"{stem}_*.parquet"))
+    files = [
+        f
+        for f in sorted(Path(root).glob(f"{stem}_*.parquet"))
+        if not any(f.name.startswith(p) for p in _PER_PERT)
+    ]
     if not files:
         return pd.DataFrame()
-    return pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+    frames = [pd.read_parquet(f) for f in files]
+    cols = {frozenset(f.columns) for f in frames}
+    if len(cols) > 1:
+        raise RuntimeError(
+            f"{stem}: the {len(files)} tables do not share one schema; "
+            f"{len(cols)} distinct column sets across {[f.name for f in files][:6]}"
+        )
+    return pd.concat(frames, ignore_index=True)
 
 
 def arm_of(name: str) -> tuple[str, str, str]:
