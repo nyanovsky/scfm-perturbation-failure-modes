@@ -211,6 +211,22 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                 NULLCHECK, key(family=fam, columns="draw_min,draw_max", agg="max_abs"),
             )
 
+    # the same before/after-centring contrast inside training, over every epoch
+    if not r.epochs.empty and "delta_ctrlmean" in r.epochs:
+        raw = r.epochs["delta_ctrlmean"].dropna()
+        cen = r.epochs["delta_ctrlmean_centered"].dropna()
+        n["n_validation_epochs"] = int(len(raw))
+        n["val_agreement_uncentred_min"] = claim(
+            "lowest uncentred validation response agreement over every epoch of every run",
+            float(raw.min()), TRAIN_EPOCHS, key(column="delta_ctrlmean", agg="min"),
+        )
+        n["val_agreement_centred_max_abs"] = claim(
+            "largest absolute centred validation response agreement over every epoch of "
+            "every run",
+            float(cen.abs().max()), TRAIN_EPOCHS,
+            key(column="delta_ctrlmean_centered", agg="max_abs"),
+        )
+
     # whether run 4's re-reading of run 3's arms lands on run 3's own numbers
     if not r.run3_cmp.empty:
         cmp = r.run3_cmp.dropna(subset=["run3", "run4"])

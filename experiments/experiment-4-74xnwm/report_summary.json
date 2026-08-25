@@ -423,6 +423,9 @@
     "own_null_arms__value_substitution": 14,
     "own_null_inside_band__pert_flag": 9,
     "own_null_arms__pert_flag": 14,
+    "n_validation_epochs": 229,
+    "val_agreement_uncentred_min": 0.06916631357752032,
+    "val_agreement_centred_max_abs": 0.06860417794693442,
     "run3_arms_compared": 7,
     "run3_arms_mutually_contained": 6
   },

@@ -615,22 +615,39 @@ def direct_section(r: Results, chart: str) -> str:
         + chart
         + tbl
         + spread_note(r)
-        + "<p>Read across a row, the three scored columns point in opposite directions and "
-        "the reason is the same in both cell lines. Against the raw measured profile the "
-        "fine-tuned model does well, because most of what a CRISPRi knockdown does to a cell "
-        "is shared across knockdowns and the model learns that shared response. The residual "
-        "column subtracts the mean effect from the measurement but not from the prediction, "
-        "so a prediction that hardly changes between perturbations still correlates with the "
-        "fold's shared offset; that is why its interval is wide enough to cross zero. The "
-        "fold-centred column removes the held-out fold's own mean from both sides, which is "
-        "the only one of the three that asks whether the prediction separates one "
-        "perturbation from another, and there the agreement is approximately zero. The same "
-        "contrast appears inside training: the recipe's own validation diagnostic reads high "
-        "before centring and at zero after it, in every epoch of every run.</p>"
-        "<p>This matters for how the rest of the page should be read. The response features "
+        + "<p>The three scored columns disagree, and the reason is the same in both cell "
+        "lines. Against the raw measured profile the fine-tuned model does well, because most "
+        "of what a CRISPRi knockdown does to a cell is shared across knockdowns and the model "
+        "learns that shared response. The residual column subtracts the mean effect from the "
+        "measurement but not from the prediction, which makes it a mismatched comparison: a "
+        "prediction that hardly changes between perturbations still tracks the fold's shared "
+        "offset, so in HepG2 the column reads large and positive on an interval that crosses "
+        "zero, while in Jurkat it reads at or below zero. Neither reading is about "
+        "gene-specific agreement. The fold-centred column removes the held-out fold's own "
+        "mean from both sides, which is the only one of the three that asks whether the "
+        "prediction separates one perturbation from another, and there the agreement is "
+        "approximately zero.</p>"
+        + epoch_diagnostic_note(r)
+        + "<p>This matters for how the rest of the page should be read. The response features "
         "sitting in the null band is not a failure of the feature swap to find something the "
         "model has. The model does not have it.</p>",
         sources=[S_FOLLOWUP, S_SCORE],
+    )
+
+
+def epoch_diagnostic_note(r: Results) -> str:
+    """The same contrast inside training, over every epoch of every run."""
+    if r.epochs.empty or "delta_ctrlmean" not in r.epochs:
+        return ""
+    raw, cen = r.epochs["delta_ctrlmean"].dropna(), r.epochs["delta_ctrlmean_centered"].dropna()
+    if raw.empty or cen.empty:
+        return ""
+    return (
+        "<p>The same contrast appears inside training, on the validation cells the recipe "
+        f"selects on. Over all {len(raw)} epochs of all {len(r.runs)} runs, the uncentred "
+        f"agreement never falls below {P.num(raw.min())}, while the centred version stays "
+        f"within {P.num(cen.abs().max())} of zero throughout. Fine-tuning improves the one "
+        "and never moves the other.</p>"
     )
 
 
@@ -910,8 +927,10 @@ def build(summary_dir: Path, out_dir: Path) -> Path:
         first["done"] = True
         return fig.to_html(full_html=False, include_plotlyjs=include, config=PLOTLY_CONFIG)
 
+    # numbered in reading order: the direct-prediction figure comes first on
+    # the page, so it is Figure 1
     f_swap = P.figure(
-        1, "Response features before and after fine-tuning",
+        2, "Response features before and after fine-tuning",
         frag("swap_before_after"),
         "Held-out score of the response-feature arm read from each checkpoint, on the "
         "residual target with reliability weighting and ceiling correction, 95% intervals "
@@ -924,7 +943,7 @@ def build(summary_dir: Path, out_dir: Path) -> Path:
         sources=[S_SCORE, S_FIGS],
     )
     f_pred = P.figure(
-        2, "Three ways of reading the same fine-tuned model",
+        1, "Three ways of reading the same fine-tuned model",
         frag("predicted_and_features"),
         "For each fine-tuned model: its own predicted perturbation response scored directly "
         "against the measured effects, and the response features read from it through its own "

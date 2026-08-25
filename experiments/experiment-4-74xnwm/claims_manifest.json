@@ -817,6 +817,18 @@
       "key": "family=pert_flag, columns=draw_min,draw_max, agg=max_abs"
     },
     {
+      "claim": "lowest uncentred validation response agreement over every epoch of every run",
+      "value": 0.069166,
+      "source": "results/summary/training_epochs.parquet",
+      "key": "column=delta_ctrlmean, agg=min"
+    },
+    {
+      "claim": "largest absolute centred validation response agreement over every epoch of every run",
+      "value": 0.068604,
+      "source": "results/summary/training_epochs.parquet",
+      "key": "column=delta_ctrlmean_centered, agg=max_abs"
+    },
+    {
       "claim": "largest difference between run 3's published whole-screen score and run 4's re-reading of the same arm, among the arms whose intervals each contain the other's estimate",
       "value": 0.008241,
       "source": "results/run3_comparison.parquet",
