@@ -253,8 +253,15 @@ def opening(r: Results) -> str:
     best = max((p["score"] for p in rows), default=nan())
     n_in = sum(1 for p in rows if r.in_band(p["cell_line"], p))
     in_band = "every one leaves" if n_in == len(rows) else f"{n_in} leave"
-    direct_h = r.arm("hepg2", "own_trainable").get("direct_prediction")
-    direct_j = r.arm("jurkat", "own_trainable").get("direct_prediction")
+    base_h = r.arm("hepg2", "own_trainable").get("direct_prediction_by_baseline") or {}
+    base_j = r.arm("jurkat", "own_trainable").get("direct_prediction_by_baseline") or {}
+    direct_h = base_h.get("measured_control_mean")
+    direct_j = base_j.get("measured_control_mean")
+    own_h = base_h.get("unflagged_model_output")
+    own_j = base_j.get("unflagged_model_output")
+    key = "vs_measured_control_mean__median_residual_fraction_of_variance"
+    sp_h = (r.spread_row("hepg2", "own_trainable") or {}).get(key, nan())
+    sp_j = (r.spread_row("jurkat", "own_trainable") or {}).get(key, nan())
     emb_h = r.ref("hepg2", "scgpt_emb")
     emb_j = r.ref("jurkat", "scgpt_emb")
     # stated as a ratio against the strongest fine-tuned reading rather than a
@@ -277,18 +284,26 @@ def opening(r: Results) -> str:
         "model's static gene table, read through the same translator on the same held-out "
         f"perturbations, sits at {P.num((emb_h or {}).get('score', nan()))} in HepG2 and "
         f"{P.num((emb_j or {}).get('score', nan()))} in Jurkat, at least {ratio:.0f} times "
-        "higher than any of them, and fine-tuning does not move that either.</p>"
-        "<p>The stronger result is that the fine-tuned model does not acquire the signal on "
-        "its own prediction head. Its predicted perturbation response, scored with no "
-        "translator in the path against the same measured effects, agrees well before the "
-        "response shared by every perturbation is removed "
-        f"({P.num((direct_h or {}).get('raw', nan()))} in HepG2, "
-        f"{P.num((direct_j or {}).get('raw', nan()))} in Jurkat) and reaches "
-        f"{P.num((direct_h or {}).get('fold_centred', nan()))} and "
-        f"{P.num((direct_j or {}).get('fold_centred', nan()))} once it is. Fine-tuning "
-        "teaches the model what a knockdown does on average in that cell line. It does not "
-        "teach it which gene was knocked down, so there is no gene-specific signal for the "
-        "feature swap to find.</p>",
+        "higher than any of them, and fine-tuning does not move that either. The paired "
+        "differences are small and mostly indistinguishable from zero, with two exceptions in "
+        "Jurkat that are reported below; none of them is a change of the order that would be "
+        "needed to reach the gene table.</p>"
+        "<p>The same thing is visible on the model's own prediction head, with no translator "
+        "in the path. Its predicted profile correlates with the measured effect at "
+        f"{P.num((direct_h or {}).get('raw', nan()))} in HepG2 and "
+        f"{P.num((direct_j or {}).get('raw', nan()))} in Jurkat, which looks like a model "
+        "that has learned to predict knockdowns. Measure only what the perturbation flag "
+        f"changes, against the model's own unflagged output, and that falls to "
+        f"{P.num((own_h or {}).get('raw', nan()))} and "
+        f"{P.num((own_j or {}).get('raw', nan()))}. Remove the held-out fold's own mean from "
+        f"both sides and it is {P.num((direct_h or {}).get('fold_centred', nan()))} and "
+        f"{P.num((direct_j or {}).get('fold_centred', nan()))}. Of a predicted profile's "
+        f"variance, {P.num(sp_h)} in HepG2 and {P.num(sp_j)} in Jurkat survives subtracting "
+        "the mean prediction, against "
+        f"{P.num(r.measured_spread('hepg2'))} and {P.num(r.measured_spread('jurkat'))} for "
+        "the measurement itself. What fine-tuning installed is close to one profile for every "
+        "knockdown, so a read-out that asks which gene was knocked down has very little to "
+        "recover.</p>",
         sources=[S_RUNARM, S_ANALYSIS],
     )
 
@@ -718,68 +733,79 @@ def verdict_section(r: Results, chart: str) -> str:
     )
 
 
+def _cell(d: dict | None, prefix: str) -> str:
+    if not d or d.get(prefix) is None:
+        return "n/a"
+    return ci(d[prefix], d.get(f"{prefix}_lo", nan()), d.get(f"{prefix}_hi", nan()))
+
+
 def direct_section(r: Results, chart: str) -> str:
     rows = []
     for line in C.CELL_LINES:
         for arm in ARM_ORDER:
             a = r.arm(line, arm)
-            d = a.get("direct_prediction")
-            t = a.get("training", {})
-            agree = t.get("response_agreement_at_selected_epoch", {})
+            by_base = a.get("direct_prediction_by_baseline") or {}
+            d = by_base.get("measured_control_mean") or a.get("direct_prediction")
+            own = by_base.get("unflagged_model_output")
             sp = r.spread_row(line, arm) or {}
             rows.append([
                 LINE[line],
                 ARM_LABEL[arm],
-                P.num((d or {}).get("raw", nan())),
-                civ(d),
-                P.num((d or {}).get("fold_centred", nan())),
+                _cell(d, "raw"),
+                _cell(own, "raw"),
+                _cell(d, "fold_centred"),
                 P.num(sp.get("vs_measured_control_mean__median_residual_fraction_of_variance",
                              nan())),
-                P.num(agree.get("ctrlmean_centered", nan())),
             ])
     tbl = P.table(
-        ["cell line", "arm", "held-out response, raw", "held-out response, residual",
-         "held-out response, fold-centred", "gene-specific fraction of the prediction",
-         "validation agreement, centred"],
+        ["cell line", "arm", "predicted profile vs measured",
+         "flag-induced change vs measured", "same, fold-centred",
+         "gene-specific fraction of the prediction"],
         rows,
         sources=[S_FOLLOWUP, S_TRAIN],
         caption="The model's own predicted perturbation response, with no translator in the "
-                "path, against the baseline the published recipe is evaluated on. The first "
-                "three columns are scored on the held-out folds against the measured effects. "
-                "The fourth is the median fraction of a predicted profile's variance that "
-                "survives subtracting the mean prediction, the statistic run 3 reports for "
-                "the measured effects, taken over every in-scope perturbation because it is "
-                "a property of the model's output rather than a score. The last is the "
-                "recipe's own validation diagnostic, centred, at the selected epoch.",
+                "path, on the held-out folds. The first column measures the whole predicted "
+                "profile against the measured effect, the comparison the published recipe is "
+                "evaluated on. The second replaces the measured control profile with the "
+                "model's own no-flag output, so it measures only what the perturbation flag "
+                "changes. The third removes the held-out fold's own mean from both sides. The "
+                "last is the median fraction of a predicted profile's variance that survives "
+                "subtracting the mean prediction, taken over every in-scope perturbation "
+                "because it is a property of the model's output rather than a score.",
     )
     return P.section(
-        "The fine-tuned model predicts the shared response, not the gene-specific part",
+        "The prediction is nearly the same for every knockdown",
         "<p>A feature swap can only find signal the model has. Before concluding anything "
-        "about the features, it is worth asking whether fine-tuning worked at all on its own "
-        "terms. So we scored the model's prediction directly: run the perturbation forward "
-        "pass, subtract the measured control profile, and compare the predicted change in "
-        "every read-out gene against the measured change, one correlation per held-out "
-        "perturbation, through the same reliability weighting and ceiling correction the "
-        "feature arms use.</p>"
+        "about the features, it is worth asking whether fine-tuning worked on its own terms. "
+        "So we scored the model's prediction directly, with no translator in the path: run the "
+        "perturbation forward pass and compare the predicted profile against the measured "
+        "effect, one correlation per held-out perturbation, through the same reliability "
+        "weighting and ceiling correction the feature arms use.</p>"
         + chart
         + tbl
+        + "<p>The first two columns are the same prediction measured against two different "
+        "reference points, and the gap between them is the result. Against the measured "
+        "control profile the fine-tuned model looks like it is predicting knockdowns: the "
+        "whole predicted profile correlates with the whole measured effect, between 0.3093 "
+        "and 0.6159 in every arm. Replace that reference with the model's own output for the "
+        "same "
+        "cell without the perturbation flag, so that only what the flag changes is left, and "
+        "the agreement collapses: no arm reaches 0.16 and six of the ten are negative. The "
+        "first column is therefore mostly a systematic difference between the model's output "
+        "and the measured control profile, shared across every perturbation, rather than the "
+        "model responding to the gene it was told about.</p>"
+        + "<p>The third column settles it. Removing the held-out fold's own mean from both "
+        "sides leaves only what distinguishes one perturbation from another, and there the "
+        "agreement is approximately zero in both cell lines. The intervals on that column are "
+        "wide, so it is a bound rather than a precise zero; the next two paragraphs give the "
+        "same conclusion from quantities that are not correlations and do not carry that "
+        "width.</p>"
         + spread_note(r)
-        + "<p>The three scored columns disagree, and the reason is the same in both cell "
-        "lines. Against the raw measured profile the fine-tuned model does well, because most "
-        "of what a CRISPRi knockdown does to a cell is shared across knockdowns and the model "
-        "learns that shared response. The residual column subtracts the mean effect from the "
-        "measurement but not from the prediction, which makes it a mismatched comparison: a "
-        "prediction that hardly changes between perturbations still tracks the fold's shared "
-        "offset, so in HepG2 the column reads large and positive on an interval that crosses "
-        "zero, while in Jurkat it reads at or below zero. Neither reading is about "
-        "gene-specific agreement. The fold-centred column removes the held-out fold's own "
-        "mean from both sides, which is the only one of the three that asks whether the "
-        "prediction separates one perturbation from another, and there the agreement is "
-        "approximately zero.</p>"
         + epoch_diagnostic_note(r)
         + "<p>This matters for how the rest of the page should be read. The response features "
-        "sitting in the null band is not a failure of the feature swap to find something the "
-        "model has. The model does not have it.</p>",
+        "sitting inside the null band is not the feature swap failing to find something the "
+        "model has. There is very little gene-specific structure in the prediction for any "
+        "read-out to recover.</p>",
         sources=[S_FOLLOWUP, S_SCORE],
     )
 
@@ -818,11 +844,12 @@ def spread_note(r: Results) -> str:
     if not bits:
         return ""
     return (
-        "<p>The fourth column says the same thing without any scoring rule in the path. For "
-        "the measured effects, most of a perturbation's variance across genes survives "
-        "subtracting the average response: knocking down different genes really does do "
-        "different things. For the fine-tuned model's own prediction almost none of it "
-        "does. In the primary arm: " + "; ".join(bits) + ".</p>"
+        "<p>The last column says the same thing with no scoring rule in the path at all, so "
+        "it does not inherit the width of a correlation interval. For the measured effects, "
+        "most of a perturbation's variance across genes survives subtracting the average "
+        "response: knocking down different genes really does do different things. For the "
+        "fine-tuned model's own prediction almost none of it does. In the primary arm: "
+        + "; ".join(bits) + ".</p>"
     )
 
 
@@ -1042,9 +1069,38 @@ def artifacts_section(r: Results) -> str:
 
 
 def limitations(r: Results) -> str:
+    excl = ""
+    if not r.contrasts.empty:
+        c = r.contrasts[
+            (r.contrasts.translator == "mlp")
+            & (r.contrasts.target == VERDICT[0])
+            & (r.contrasts.weighting == VERDICT[1])
+            & (r.contrasts.against == "scgpt_resp")
+            & (r.contrasts.arm.isin([f"ft_{a}_resp" for a in ARM_ORDER]))
+        ]
+        out = c[~((c["lo"] <= 0) & (c["hi"] >= 0))]
+        if not out.empty:
+            excl = (
+                f"{len(out)} of the {len(c)} paired differences against the frozen arm exclude "
+                f"zero, the largest being {P.num(out['difference'].abs().max())}, both in "
+                "Jurkat, and 36 such differences are computed across all arms and both "
+                "references. "
+            )
     return P.section(
         "Limitations",
         "<ul>"
+        "<li>This is a bound, not a demonstrated absence. " + excl +
+        "The fold-centred intervals on the direct prediction are wide enough to admit a "
+        "modest positive effect, and on these two folds co-expression itself is not separated "
+        "from the shuffled-label band, so an effect of co-expression's size would not be "
+        "resolved here. What the design supports is that fine-tuning produces no detectable "
+        "improvement in the queried response features and leaves them far below the gene "
+        "table.</li>"
+        "<li>One setting of the recipe could not be reproduced: the tutorial's "
+        "<code>use_fast_transformer=True</code> needs flash-attn 1.x, which will not build "
+        "against this torch, so scGPT's own fallback attention path was used. Same attention "
+        "math, different kernel and different exact numerics. Every other setting the "
+        "notebook names was checked against it and matches.</li>"
         "<li>This is one model family and one recipe. It is scGPT's own published "
         "perturbation recipe on the screen the question is about, which is the strongest "
         "single test available, but a different architecture or a different objective could "
@@ -1100,20 +1156,22 @@ def build(summary_dir: Path, out_dir: Path) -> Path:
         "before any gradient step; filled markers are after fine-tuning. The shaded band is "
         "the range of the shuffled-label draws in that cell line and the dashed line is the "
         "gene-table arm.",
-        "Fine-tuning does not move the response features out of the band, in either cell "
-        "line, under any of the five gene-table arms.",
+        "No fine-tuned model's response features leave the band, in either cell line, under "
+        "any of the five gene-table arms.",
         sources=[S_SCORE, S_FIGS],
     )
     f_pred = P.figure(
-        1, "Three ways of reading the same fine-tuned model",
+        1, "The perturbation-specific part of three readings of the same model",
         frag("predicted_and_features"),
         "For each fine-tuned model: its own predicted perturbation response scored directly "
         "against the measured effects, and the response features read from it through its own "
         "perturbation-flag query and through the value-substitution query runs 2 and 3 use. "
-        "All three on the same held-out perturbations, the same target and the same "
-        "correction.",
-        "The model's own prediction sits in the same place as the features read out of it. "
-        "The feature swap is not losing a signal the prediction head has.",
+        "All three on the same held-out perturbations, and all three on the fold-centred "
+        "target, which removes the held-out fold's own mean from both sides and so leaves "
+        "only what separates one perturbation from another. That is the one target on which "
+        "the direct prediction and the feature arms measure the same thing.",
+        "The prediction and the features read out of it sit in the same place, near zero. The "
+        "feature swap is not losing a signal the prediction head has.",
         sources=[S_FOLLOWUP, S_FIGS],
     )
     f_train = P.figure(
@@ -1128,8 +1186,8 @@ def build(summary_dir: Path, out_dir: Path) -> Path:
         sources=[S_TRAIN, S_FIGS],
     )
 
-    title = ("Fine-tuning scGPT on the screen teaches it the average knockdown response, "
-             "not which gene was knocked down")
+    title = ("Fine-tuning scGPT on the screen leaves the queried response features inside "
+             "the shuffled-label band, far below its own gene table")
     blocks = [
         P.section("", f"<h1>{P.esc(title)}</h1>"),
         opening(r),

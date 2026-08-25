@@ -402,18 +402,24 @@ def headline(
                                 & (direct.arm_label == f"direct_prediction/{a.name}")
                                 & (direct.baseline == b)
                             ]
-                            # the same prediction read in the other two cells of
-                            # run 3's grid: against the raw measured effect, and
-                            # with the held-out fold's own mean removed from both
-                            # sides. A prediction that barely varies across
-                            # perturbations scores high on the first and zero on
-                            # the last, which is the point of reporting all three.
+                            # The two cells that are interpretable for a
+                            # prediction the model makes on its own scale: raw,
+                            # the predicted profile against the measured one,
+                            # and centred, which removes the held-out fold's own
+                            # mean from both sides and so asks only whether the
+                            # prediction separates one perturbation from another.
+                            # The residual cell would have to subtract a measured
+                            # profile from a prediction that is not on the
+                            # measured scale, so it is carried but not headlined.
                             dg = _row(
                                 _pick(same, target=DIAGNOSTIC[0], weighting=DIAGNOSTIC[1])
                             )
                             dw = _row(_pick(same, target="raw", weighting=VERDICT[1]))
-                            r["fold_centred"] = dg["score"] if dg else None
-                            r["raw"] = dw["score"] if dw else None
+                            r["residual_not_interpretable"] = True
+                            for prefix, cell in (("fold_centred", dg), ("raw", dw)):
+                                r[prefix] = cell["score"] if cell else None
+                                r[f"{prefix}_lo"] = cell["lo"] if cell else None
+                                r[f"{prefix}_hi"] = cell["hi"] if cell else None
                             by_base[str(b)] = r
                     else:  # a table written before the baseline column existed
                         by_base["unflagged_model_output"] = _row(dr)

@@ -314,13 +314,24 @@ def score_direct(
     fold mean on top of a prediction that already contains it, and the raw cell
     it produces is not a correlation with the measured effect at all.
 
-    So the training-fold mean is removed here, per fold, before the call. Then
-    every cell of the grid means what it says: the raw cell compares the
-    predicted profile with the measured one, shared response included; the
-    residual cell removes the same training-fold mean from both sides; and the
-    centred cell, which subtracts each held-out fold's own mean from both
-    sides, is unchanged by a constant shift and asks only whether the
-    prediction separates one perturbation from another.
+    So the training-fold mean is removed here, per fold, before the call, which
+    makes the raw cell what it should be: the predicted profile against the
+    measured one, shared response included.
+
+    Two of the three cells are then interpretable and the third is not:
+
+    * raw, ``corr(prediction, effect)``, is the reading the published recipe is
+      evaluated on and is scale-free per perturbation.
+    * centred subtracts each held-out fold's own mean from both sides, so it is
+      unchanged by any constant shift and asks only whether the prediction
+      separates one perturbation from another.
+    * residual would subtract the measured training-fold mean from both sides.
+      The model's output is not on the measured log2 fold-change scale, so
+      subtracting a measured profile from it mixes two scales and the result is
+      not a comparison of anything. It is left in the table for completeness and
+      excluded from ``meaningful_cells``; the earlier version of this function
+      got it wrong in the other direction, subtracting the mean from the
+      measurement only.
     """
     C3 = run3("config")
     runner = run3("translate.runner")
@@ -356,8 +367,12 @@ def score_direct(
     return {
         "baseline": baseline,
         "note": "no translator: the model's own predicted response against the measured one",
-        "meaningful_cells": ["raw", "residual", "centered"],
+        "meaningful_cells": ["raw", "centered"],
         "fold_mean_removed_before_scoring": True,
+        "residual_note": (
+            "not interpretable for this arm: the model's output is not on the measured "
+            "log2 fold-change scale, so no single profile can be subtracted from both sides"
+        ),
         "residual_weighted": head[0] if head else None,
         "all_cells": restricted,
     }

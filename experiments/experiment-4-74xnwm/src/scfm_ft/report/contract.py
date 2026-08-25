@@ -25,6 +25,7 @@ TRAIN_RUNS = "results/summary/training_runs.parquet"
 TRAIN_EPOCHS = "results/summary/training_epochs.parquet"
 CONTRASTS = "results/summary/contrasts.parquet"
 AGREE = "results/summary/reference_agreement.parquet"
+SPREAD = "results/summary/prediction_spread.parquet"
 NULLCHECK = "results/summary/null_check.parquet"
 RUN3CMP = "results/run3_comparison.parquet"
 
@@ -101,37 +102,37 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                 a_out[f"{label}__lo"] = p["lo"]
                 a_out[f"{label}__hi"] = p["hi"]
 
-            d = r.arm(line, arm).get("direct_prediction")
-            if d:
-                base = r.arm(line, arm).get("direct_prediction_baseline")
-                a_out["direct_residual"] = claim(
-                    f"{ARM_LABEL[arm]} in {L}, its own predicted response against the measured "
-                    f"one on the residual target, baseline {base}",
-                    d["score"], DIRECT,
-                    key(cell_line=line, arm_label=f"direct_prediction/{arm}",
-                        target="residual", weighting="weighted", baseline=base),
-                )
-                a_out["direct_residual__lo"] = d["lo"]
-                a_out["direct_residual__hi"] = d["hi"]
-                if d.get("fold_centred") is not None:
-                    a_out["direct_fold_centred"] = claim(
-                        f"{ARM_LABEL[arm]} in {L}, its own predicted response with the "
-                        f"held-out fold's mean removed from both sides, baseline {base}",
-                        d["fold_centred"], DIRECT,
-                        key(cell_line=line, arm_label=f"direct_prediction/{arm}",
-                            target="centered", weighting="weighted", baseline=base),
-                    )
-                if d.get("raw") is not None:
-                    a_out["direct_raw"] = claim(
-                        f"{ARM_LABEL[arm]} in {L}, its own predicted response against the raw "
-                        f"measured effect, baseline {base}",
-                        d["raw"], DIRECT,
-                        key(cell_line=line, arm_label=f"direct_prediction/{arm}",
-                            target="raw", weighting="weighted", baseline=base),
-                    )
+            # The direct arm has two interpretable cells. `raw` compares the
+            # predicted profile with the measured effect; `centered` removes the
+            # held-out fold's own mean from both sides. The residual cell would
+            # need a measured profile subtracted from a prediction that is not on
+            # the measured scale, so it is not claimed.
             by = r.arm(line, arm).get("direct_prediction_by_baseline", {})
             for bname, row in by.items():
-                a_out[f"direct_residual__{bname}"] = row["score"]
+                what = (
+                    "against the measured control profile, so the whole predicted profile"
+                    if bname == "measured_control_mean"
+                    else "against the model's own unflagged output, so only what the "
+                         "perturbation flag changes"
+                )
+                tag = "" if bname == "measured_control_mean" else f"__{bname}"
+                # (summary field, key in the by-baseline row, run 3 grid cell)
+                for field, rowkey, cell, desc in (
+                    ("direct_raw", "raw", "raw",
+                     "its own predicted response versus the measured effect"),
+                    ("direct_fold_centred", "fold_centred", "centered",
+                     "the same with the held-out fold's mean removed from both sides"),
+                ):
+                    if row.get(rowkey) is None:
+                        continue
+                    a_out[f"{field}{tag}"] = claim(
+                        f"{ARM_LABEL[arm]} in {L}, {desc}, {what}",
+                        row[rowkey], DIRECT,
+                        key(cell_line=line, arm_label=f"direct_prediction/{arm}",
+                            target=cell, weighting="weighted", baseline=bname),
+                    )
+                    for side in ("lo", "hi"):
+                        a_out[f"{field}{tag}__{side}"] = row.get(f"{rowkey}_{side}")
 
             t = r.training(line, arm)
             if t:
@@ -175,7 +176,44 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                 le["score"], RESTRICTED,
                 rkey(cell_line=line, arm=B.last_epoch_arm("own_trainable")),
             )
+        key_sp = "vs_measured_control_mean__median_residual_fraction_of_variance"
+        sp = r.spread_row(line, "own_trainable") or {}
+        e["prediction_spread"] = claim(
+            f"{L}, fraction of the primary arm's predicted profile variance that survives "
+            "subtracting the mean prediction",
+            sp.get(key_sp), SPREAD, key(cell_line=line, arm="own_trainable", column=key_sp),
+        )
+        e["measured_spread"] = r.measured_spread(line)
         n["lines"][line] = e
+
+    # the pre-registered comparison is a paired difference, so how many of those
+    # differences include zero is the claim, not a pair of separate scores
+    if not r.contrasts.empty:
+        c = r.contrasts[
+            (r.contrasts.translator == "mlp")
+            & (r.contrasts.target == "residual")
+            & (r.contrasts.weighting == "weighted")
+            & (r.contrasts.against == "scgpt_resp")
+            & (r.contrasts.arm.isin([f"ft_{a.name}_resp" for a in C.ARMS]))
+        ]
+        n["n_paired"] = int(len(c))
+        n["n_paired_zero"] = int(((c["lo"] <= 0) & (c["hi"] >= 0)).sum())
+        n["paired_excluding_zero"] = [
+            {"cell_line": x.cell_line, "arm": x.arm, "difference": round(float(x.difference), 6),
+             "lo": round(float(x.lo), 6), "hi": round(float(x.hi), 6),
+             "p_two_sided": float(x.p_two_sided)}
+            for x in c.itertuples()
+            if not (x.lo <= 0 <= x.hi)
+        ]
+        n["n_paired_all_references"] = int(len(
+            r.contrasts[
+                (r.contrasts.translator == "mlp")
+                & (r.contrasts.target == "residual")
+                & (r.contrasts.weighting == "weighted")
+                & (r.contrasts.arm.str.startswith("ft_"))
+                & (r.contrasts.arm.str.endswith("_resp"))
+            ]
+        ))
 
     pts = r.all_feature_points("final__value_substitution_resp")
     n["n_models"] = len(pts)
@@ -278,46 +316,70 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
     doc = {
         "headline": (
             "Fine-tuning scGPT on the CRISPRi screen it is evaluated on, with scGPT's own "
-            "published perturbation recipe, does not install a gene-specific regulatory signal "
-            f"in the model. Across the {n['n_models']} fine-tuned models (five gene-table arms "
-            f"in two cell lines), {'every one leaves' if n['n_models_in_band'] == n['n_models'] else str(n['n_models_in_band']) + ' leave'} the queried response "
-            "features inside the shuffled-label band, and the highest any reaches is "
-            f"{n.get('best_response_feature_score', float('nan')):.4f}, against the same "
-            f"model's static gene table at {h.get('scgpt_emb', float('nan')):.4f} in HepG2 and "
-            f"{j.get('scgpt_emb', float('nan')):.4f} in Jurkat. The reason is visible on the "
-            "model's own prediction head, before any feature swap: the fine-tuned model "
-            "reproduces the response shared across knockdowns well "
-            f"({ho.get('direct_raw', float('nan')):.4f} in HepG2, "
-            f"{jo.get('direct_raw', float('nan')):.4f} in Jurkat) but scores "
+            "published perturbation recipe, leaves the queried response features inside the "
+            "shuffled-label band and far below the model's own static gene table. Across the "
+            f"{n['n_models']} fine-tuned models (five gene-table arms in two cell lines), "
+            f"{'every one leaves' if n['n_models_in_band'] == n['n_models'] else str(n['n_models_in_band']) + ' leave'} them inside the band, and the highest "
+            f"any reaches is {n.get('best_response_feature_score', float('nan')):.4f}, against "
+            f"the gene table at {h.get('scgpt_emb', float('nan')):.4f} in HepG2 and "
+            f"{j.get('scgpt_emb', float('nan')):.4f} in Jurkat. Paired against the frozen "
+            f"model's own response features, {n.get('n_paired_zero', '?')} of the "
+            f"{n.get('n_paired', '?')} differences include zero; the exceptions are in Jurkat "
+            "and are a few hundredths of a correlation point. On the model's own prediction "
+            "head the predicted profile matches the measured effect at "
+            f"{ho.get('direct_raw', float('nan')):.4f} in HepG2 and "
+            f"{jo.get('direct_raw', float('nan')):.4f} in Jurkat, but that agreement is not "
+            "perturbation-specific: measuring only what the perturbation flag changes gives "
+            f"{ho.get('direct_raw__unflagged_model_output', float('nan')):.4f} and "
+            f"{jo.get('direct_raw__unflagged_model_output', float('nan')):.4f}, and removing "
+            "the held-out fold's own mean from both sides gives "
             f"{ho.get('direct_fold_centred', float('nan')):.4f} and "
-            f"{jo.get('direct_fold_centred', float('nan')):.4f} once the held-out fold's own "
-            "mean is removed from both sides, the only reading that asks whether it separates "
-            "one perturbation from another. Fine-tuning teaches the average knockdown "
-            "response, not which gene was knocked down."
+            f"{jo.get('direct_fold_centred', float('nan')):.4f}. Only "
+            f"{h.get('prediction_spread', float('nan')):.4f} and "
+            f"{j.get('prediction_spread', float('nan')):.4f} of a predicted profile's variance "
+            "survives subtracting the mean prediction, against "
+            f"{h.get('measured_spread', float('nan')):.4f} and "
+            f"{j.get('measured_spread', float('nan')):.4f} for the measurement. What "
+            "fine-tuning installed is close to one profile for every knockdown, so a read-out "
+            "that asks which gene was knocked down has very little to recover."
         ),
         "assessment": (
-            "The pre-registered prediction is confirmed in its first half and overtaken in its "
-            "second. It said the response features would stay in the null band while the model "
-            "might still predict better; the features do stay in the band, but the model does "
-            "not predict the perturbation-specific part better either, so the null is a "
-            "property of the fine-tuned model rather than of the read-out procedure. That is "
-            "the strongest form the result could take, because it does not depend on the "
-            "translator, the query family, or the feature standardisation: the same conclusion "
-            "is reached by scoring the model's own output directly.\n\n"
-            "Scope and limits. This is one architecture and one recipe, run on the screen the "
-            "question is about, which is the setting most favourable to installing the signal "
-            "and therefore the setting in which a null is most informative; it does not speak "
-            "to other architectures or to fine-tuning on a different screen. A fine-tuned "
-            "model may only be scored on perturbations it never saw, so the main arms read two "
-            f"of run 3's five folds. That costs resolution and the report states it: "
-            f"{_band_clause(n)}. The claim the design supports is therefore that fine-tuning "
-            "does not lift the response features anywhere near the gene table and does not "
-            "move them detectably at all, not that they are exactly zero. Three controls "
-            "address the obvious objections: the arm is refitted on the complementary folds so "
-            "the pooled result covers the whole screen, the batch sampler is run in the exact "
-            "upstream configuration as well as ours, and because the recipe's selection rule "
-            "picks epoch 1 in Jurkat the features are also read off the last epoch, which the "
-            "rule rejected."
+            "The pre-registered prediction holds in its first half: the response features stay "
+            "inside the shuffled-label band in all ten fine-tuned models, and the gene-table "
+            "arm stays six to thirteen times higher. Its second half, that the model might "
+            "predict better even so, is not borne out either, but the evidence for that is of "
+            "two different strengths and they should not be run together.\n\n"
+            "What the data supports. No fine-tuned arm's response features clear the band. The "
+            "paired differences against the frozen model's own response features are small; "
+            "most include zero, and the two that do not are both in Jurkat, both from "
+            "trainable-table arms, both about two hundredths of a correlation point, and both "
+            "among thirty-six paired differences computed on this page, so neither is evidence "
+            "on its own. The model's predicted profile matches the measured effect when the "
+            "reference is the measured control, and stops matching when the reference is the "
+            "model's own unflagged output, which locates that agreement in a systematic offset "
+            "shared across perturbations rather than in a response to the gene. The strongest "
+            "single statement is the spread of the prediction itself, which is not a "
+            "correlation and carries no interval width: almost none of a predicted profile's "
+            "variance survives subtracting the mean prediction, and the profiles predicted for "
+            "two different knockdowns correlate above 0.9.\n\n"
+            "What it does not support. This is not a demonstration that fine-tuning cannot "
+            "install the signal. The fold-centred correlation intervals are wide enough to "
+            "admit a modest positive effect, and on the restricted folds co-expression itself "
+            "is not separated from the band, so the evaluation cannot resolve a co-expression"
+            "-sized effect there. The result is a bound, not a zero: at the resolution these "
+            "folds achieve, fine-tuning produces no detectable improvement in the queried "
+            "response features and leaves them far below the gene table.\n\n"
+            "Scope and limits. One architecture and one recipe, run on the screen the question "
+            "is about, which is the setting most favourable to installing the signal and "
+            "therefore the setting in which a null is most informative; it does not speak to "
+            "other architectures or to fine-tuning on a different screen. A fine-tuned model "
+            "may only be scored on perturbations it never saw, so the main arms read two of "
+            f"run 3's five folds: {_band_clause(n)}. Four controls address the obvious "
+            "objections: the arm is refitted on the complementary folds so the pooled result "
+            "covers the whole screen, the batch sampler is run in the exact upstream "
+            "configuration as well as ours, the features are also read off the last epoch "
+            "because the recipe's selection rule picks epoch 1 in Jurkat, and every recipe "
+            "setting is checked field by field against the published notebook."
         ),
         "decision_rule": {
             "preregistered": (

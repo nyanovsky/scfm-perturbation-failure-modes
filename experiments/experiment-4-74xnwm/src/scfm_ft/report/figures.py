@@ -105,7 +105,9 @@ def null_band(band: pd.DataFrame, cell_line: str, base_arm: str) -> tuple[float,
     return float(r["null_min"]), float(r["null_max"])
 
 
-def pooled_null(band: pd.DataFrame, cell_line: str) -> tuple[float, float] | None:
+def pooled_null(
+    band: pd.DataFrame, cell_line: str, target: tuple[str, str] = VERDICT
+) -> tuple[float, float] | None:
     """The widest shuffled-label band measured in this cell line.
 
     Several arms carry their own draws; the band a score has to clear is the
@@ -114,8 +116,8 @@ def pooled_null(band: pd.DataFrame, cell_line: str) -> tuple[float, float] | Non
     sub = band[
         (band.cell_line == cell_line)
         & (band.translator == "mlp")
-        & (band.target == VERDICT[0])
-        & (band.weighting == VERDICT[1])
+        & (band.target == target[0])
+        & (band.weighting == target[1])
     ]
     if sub.empty:
         return None
@@ -235,10 +237,19 @@ def figure_swap(restricted: pd.DataFrame, band: pd.DataFrame, out: Path) -> dict
 def figure_predict_vs_features(
     restricted: pd.DataFrame, direct: pd.DataFrame, band: pd.DataFrame, out: Path
 ) -> dict:
-    """Three quantities per fine-tuned model, on one axis."""
-    v = _verdict(restricted)
+    """Three quantities per fine-tuned model, on one axis and one target.
+
+    The target here is the fold-centred one, not the verdict cell. Every series
+    then answers the same question -- how much of the reading is specific to
+    which gene was perturbed -- and the three are directly comparable. The
+    direct arm has no interpretable residual cell (its prediction is not on the
+    measured log2 fold-change scale, so no single profile can be subtracted from
+    both sides), so putting it on the verdict cell alongside the feature arms
+    would compare two different quantities.
+    """
+    v = _verdict(restricted, DIAGNOSTIC)
     d = direct[
-        (direct.target == VERDICT[0]) & (direct.weighting == VERDICT[1])
+        (direct.target == DIAGNOSTIC[0]) & (direct.weighting == DIAGNOSTIC[1])
     ] if not direct.empty else pd.DataFrame()
 
     series = [
@@ -285,7 +296,7 @@ def figure_predict_vs_features(
     ypos = {a: len(order) - i for i, a in enumerate(order)}
     seen = set()
     for col, line in enumerate(C.CELL_LINES, start=1):
-        nb = pooled_null(band, line)
+        nb = pooled_null(band, line, DIAGNOSTIC)
         if nb is not None:
             fig.add_vrect(
                 x0=nb[0], x1=nb[1], row=1, col=col,

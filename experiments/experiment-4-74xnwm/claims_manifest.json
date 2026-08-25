@@ -61,22 +61,28 @@
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_own_trainable_emb"
     },
     {
-      "claim": "scGPT table, trainable in HepG2, its own predicted response against the measured one on the residual target, baseline measured_control_mean",
-      "value": 0.289046,
+      "claim": "scGPT table, trainable in HepG2, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.547755,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=hepg2, arm_label=direct_prediction/own_trainable, target=residual, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "scGPT table, trainable in HepG2, its own predicted response with the held-out fold's mean removed from both sides, baseline measured_control_mean",
+      "claim": "scGPT table, trainable in HepG2, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
       "value": 0.004675,
       "source": "results/summary/direct.parquet",
       "key": "cell_line=hepg2, arm_label=direct_prediction/own_trainable, target=centered, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "scGPT table, trainable in HepG2, its own predicted response against the raw measured effect, baseline measured_control_mean",
-      "value": 0.694384,
+      "claim": "scGPT table, trainable in HepG2, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.157701,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=hepg2, arm_label=direct_prediction/own_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_trainable, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.004675,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_trainable, target=centered, weighting=weighted, baseline=unflagged_model_output"
     },
     {
       "claim": "scGPT table, trainable in HepG2, lowest masked MSE on held-out validation cells",
@@ -127,22 +133,28 @@
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_own_frozen_emb"
     },
     {
-      "claim": "scGPT table, frozen in HepG2, its own predicted response against the measured one on the residual target, baseline measured_control_mean",
-      "value": 0.311036,
+      "claim": "scGPT table, frozen in HepG2, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.583792,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=hepg2, arm_label=direct_prediction/own_frozen, target=residual, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "scGPT table, frozen in HepG2, its own predicted response with the held-out fold's mean removed from both sides, baseline measured_control_mean",
+      "claim": "scGPT table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
       "value": 0.008112,
       "source": "results/summary/direct.parquet",
       "key": "cell_line=hepg2, arm_label=direct_prediction/own_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "scGPT table, frozen in HepG2, its own predicted response against the raw measured effect, baseline measured_control_mean",
-      "value": 0.699463,
+      "claim": "scGPT table, frozen in HepG2, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.366903,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=hepg2, arm_label=direct_prediction/own_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.008112,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
     },
     {
       "claim": "scGPT table, frozen in HepG2, lowest masked MSE on held-out validation cells",
@@ -193,22 +205,28 @@
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_esm2_trainable_emb"
     },
     {
-      "claim": "ESM2-3B table, trainable in HepG2, its own predicted response against the measured one on the residual target, baseline measured_control_mean",
-      "value": 0.283757,
+      "claim": "ESM2-3B table, trainable in HepG2, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.615871,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_trainable, target=residual, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "ESM2-3B table, trainable in HepG2, its own predicted response with the held-out fold's mean removed from both sides, baseline measured_control_mean",
+      "claim": "ESM2-3B table, trainable in HepG2, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
       "value": 0.023485,
       "source": "results/summary/direct.parquet",
       "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_trainable, target=centered, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "ESM2-3B table, trainable in HepG2, its own predicted response against the raw measured effect, baseline measured_control_mean",
-      "value": 0.692992,
+      "claim": "ESM2-3B table, trainable in HepG2, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.089366,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_trainable, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.023485,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_trainable, target=centered, weighting=weighted, baseline=unflagged_model_output"
     },
     {
       "claim": "ESM2-3B table, trainable in HepG2, lowest masked MSE on held-out validation cells",
@@ -259,22 +277,28 @@
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_esm2_frozen_emb"
     },
     {
-      "claim": "ESM2-3B table, frozen in HepG2, its own predicted response against the measured one on the residual target, baseline measured_control_mean",
-      "value": 0.256852,
+      "claim": "ESM2-3B table, frozen in HepG2, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.512794,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_frozen, target=residual, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "ESM2-3B table, frozen in HepG2, its own predicted response with the held-out fold's mean removed from both sides, baseline measured_control_mean",
+      "claim": "ESM2-3B table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
       "value": 0.033541,
       "source": "results/summary/direct.parquet",
       "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "ESM2-3B table, frozen in HepG2, its own predicted response against the raw measured effect, baseline measured_control_mean",
-      "value": 0.686076,
+      "claim": "ESM2-3B table, frozen in HepG2, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.056043,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.033541,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
     },
     {
       "claim": "ESM2-3B table, frozen in HepG2, lowest masked MSE on held-out validation cells",
@@ -325,22 +349,28 @@
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_rand_frozen_emb"
     },
     {
-      "claim": "random table, frozen in HepG2, its own predicted response against the measured one on the residual target, baseline measured_control_mean",
-      "value": 0.265384,
+      "claim": "random table, frozen in HepG2, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.584482,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=hepg2, arm_label=direct_prediction/rand_frozen, target=residual, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=hepg2, arm_label=direct_prediction/rand_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "random table, frozen in HepG2, its own predicted response with the held-out fold's mean removed from both sides, baseline measured_control_mean",
+      "claim": "random table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
       "value": 0.008285,
       "source": "results/summary/direct.parquet",
       "key": "cell_line=hepg2, arm_label=direct_prediction/rand_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "random table, frozen in HepG2, its own predicted response against the raw measured effect, baseline measured_control_mean",
-      "value": 0.689334,
+      "claim": "random table, frozen in HepG2, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.025308,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=hepg2, arm_label=direct_prediction/rand_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=hepg2, arm_label=direct_prediction/rand_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "random table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.008285,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/rand_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
     },
     {
       "claim": "random table, frozen in HepG2, lowest masked MSE on held-out validation cells",
@@ -395,6 +425,12 @@
       "value": 0.033549,
       "source": "results/summary/restricted.parquet",
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_own_trainable-lastepoch_resp"
+    },
+    {
+      "claim": "HepG2, fraction of the primary arm's predicted profile variance that survives subtracting the mean prediction",
+      "value": 0.063979,
+      "source": "results/summary/prediction_spread.parquet",
+      "key": "cell_line=hepg2, arm=own_trainable, column=vs_measured_control_mean__median_residual_fraction_of_variance"
     },
     {
       "claim": "largest shuffled-label draw in Jurkat on the verdict cell",
@@ -457,22 +493,28 @@
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_own_trainable_emb"
     },
     {
-      "claim": "scGPT table, trainable in Jurkat, its own predicted response against the measured one on the residual target, baseline measured_control_mean",
-      "value": -0.06368,
+      "claim": "scGPT table, trainable in Jurkat, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.358158,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=jurkat, arm_label=direct_prediction/own_trainable, target=residual, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "scGPT table, trainable in Jurkat, its own predicted response with the held-out fold's mean removed from both sides, baseline measured_control_mean",
+      "claim": "scGPT table, trainable in Jurkat, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
       "value": -0.017556,
       "source": "results/summary/direct.parquet",
       "key": "cell_line=jurkat, arm_label=direct_prediction/own_trainable, target=centered, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "scGPT table, trainable in Jurkat, its own predicted response against the raw measured effect, baseline measured_control_mean",
-      "value": 0.447069,
+      "claim": "scGPT table, trainable in Jurkat, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.016803,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=jurkat, arm_label=direct_prediction/own_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_trainable, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.017556,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_trainable, target=centered, weighting=weighted, baseline=unflagged_model_output"
     },
     {
       "claim": "scGPT table, trainable in Jurkat, lowest masked MSE on held-out validation cells",
@@ -523,22 +565,28 @@
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_own_frozen_emb"
     },
     {
-      "claim": "scGPT table, frozen in Jurkat, its own predicted response against the measured one on the residual target, baseline measured_control_mean",
-      "value": 0.014283,
+      "claim": "scGPT table, frozen in Jurkat, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.341333,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=jurkat, arm_label=direct_prediction/own_frozen, target=residual, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "scGPT table, frozen in Jurkat, its own predicted response with the held-out fold's mean removed from both sides, baseline measured_control_mean",
+      "claim": "scGPT table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
       "value": 0.040358,
       "source": "results/summary/direct.parquet",
       "key": "cell_line=jurkat, arm_label=direct_prediction/own_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "scGPT table, frozen in Jurkat, its own predicted response against the raw measured effect, baseline measured_control_mean",
-      "value": 0.458153,
+      "claim": "scGPT table, frozen in Jurkat, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.023122,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=jurkat, arm_label=direct_prediction/own_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.040358,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
     },
     {
       "claim": "scGPT table, frozen in Jurkat, lowest masked MSE on held-out validation cells",
@@ -589,22 +637,28 @@
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_esm2_trainable_emb"
     },
     {
-      "claim": "ESM2-3B table, trainable in Jurkat, its own predicted response against the measured one on the residual target, baseline measured_control_mean",
-      "value": -0.029979,
+      "claim": "ESM2-3B table, trainable in Jurkat, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.379748,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_trainable, target=residual, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "ESM2-3B table, trainable in Jurkat, its own predicted response with the held-out fold's mean removed from both sides, baseline measured_control_mean",
+      "claim": "ESM2-3B table, trainable in Jurkat, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
       "value": 0.009047,
       "source": "results/summary/direct.parquet",
       "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_trainable, target=centered, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "ESM2-3B table, trainable in Jurkat, its own predicted response against the raw measured effect, baseline measured_control_mean",
-      "value": 0.464548,
+      "claim": "ESM2-3B table, trainable in Jurkat, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.06416,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_trainable, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.009047,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_trainable, target=centered, weighting=weighted, baseline=unflagged_model_output"
     },
     {
       "claim": "ESM2-3B table, trainable in Jurkat, lowest masked MSE on held-out validation cells",
@@ -655,22 +709,28 @@
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_esm2_frozen_emb"
     },
     {
-      "claim": "ESM2-3B table, frozen in Jurkat, its own predicted response against the measured one on the residual target, baseline measured_control_mean",
-      "value": -0.10205,
+      "claim": "ESM2-3B table, frozen in Jurkat, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.309319,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_frozen, target=residual, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "ESM2-3B table, frozen in Jurkat, its own predicted response with the held-out fold's mean removed from both sides, baseline measured_control_mean",
+      "claim": "ESM2-3B table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
       "value": -0.059067,
       "source": "results/summary/direct.parquet",
       "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "ESM2-3B table, frozen in Jurkat, its own predicted response against the raw measured effect, baseline measured_control_mean",
-      "value": 0.444153,
+      "claim": "ESM2-3B table, frozen in Jurkat, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.011626,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.059067,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
     },
     {
       "claim": "ESM2-3B table, frozen in Jurkat, lowest masked MSE on held-out validation cells",
@@ -721,22 +781,28 @@
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_rand_frozen_emb"
     },
     {
-      "claim": "random table, frozen in Jurkat, its own predicted response against the measured one on the residual target, baseline measured_control_mean",
-      "value": -0.044341,
+      "claim": "random table, frozen in Jurkat, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.329851,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=jurkat, arm_label=direct_prediction/rand_frozen, target=residual, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=jurkat, arm_label=direct_prediction/rand_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "random table, frozen in Jurkat, its own predicted response with the held-out fold's mean removed from both sides, baseline measured_control_mean",
+      "claim": "random table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
       "value": 0.024972,
       "source": "results/summary/direct.parquet",
       "key": "cell_line=jurkat, arm_label=direct_prediction/rand_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
     },
     {
-      "claim": "random table, frozen in Jurkat, its own predicted response against the raw measured effect, baseline measured_control_mean",
-      "value": 0.450223,
+      "claim": "random table, frozen in Jurkat, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.026426,
       "source": "results/summary/direct.parquet",
-      "key": "cell_line=jurkat, arm_label=direct_prediction/rand_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+      "key": "cell_line=jurkat, arm_label=direct_prediction/rand_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.024972,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/rand_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
     },
     {
       "claim": "random table, frozen in Jurkat, lowest masked MSE on held-out validation cells",
@@ -791,6 +857,12 @@
       "value": 0.013069,
       "source": "results/summary/restricted.parquet",
       "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_own_trainable-lastepoch_resp"
+    },
+    {
+      "claim": "Jurkat, fraction of the primary arm's predicted profile variance that survives subtracting the mean prediction",
+      "value": 0.011984,
+      "source": "results/summary/prediction_spread.parquet",
+      "key": "cell_line=jurkat, arm=own_trainable, column=vs_measured_control_mean__median_residual_fraction_of_variance"
     },
     {
       "claim": "highest response-feature score reached by any fine-tuned model, verdict cell",

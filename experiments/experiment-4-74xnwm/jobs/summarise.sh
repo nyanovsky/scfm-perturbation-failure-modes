@@ -70,6 +70,21 @@ cp "$PACK/followup"/*.parquet "$MERGED"/ 2>/dev/null || true
 for F in "$RESC"/restricted_*.parquet "$RESC"/contrasts_*.parquet "$RESC"/runs_*.parquet; do
     [ -f "$F" ] && cp "$F" "$MERGED"/
 done
+# The direct-prediction tables were re-scored after the fold-mean correction,
+# so they are unpacked LAST and replace, file for file, every earlier direct_*
+# table for the same (line, arm, baseline). Anything left from before the
+# correction would otherwise still be in the merge.
+FIX="$PWD/scratch/direct_fix"
+if [ -f "$STAGED/direct_fix.tar.gz" ]; then
+    mkdir -p "$FIX"
+    tar -xzf "$STAGED/direct_fix.tar.gz" -C "$FIX"
+    echo "--- corrected direct tables: $(ls "$FIX"/direct_*.parquet 2>/dev/null | wc -l) ---"
+    rm -f "$MERGED"/direct_*.parquet
+    cp "$FIX"/direct_*.parquet "$MERGED"/
+    cp "$FIX"/direct_rescored.json "$SUMMARY"/ 2>/dev/null || true
+else
+    echo "WARNING: no direct_fix.tar.gz staged; direct tables are the uncorrected ones" >&2
+fi
 echo "merged: $(ls "$MERGED" | wc -l) files"
 
 echo "=== how perturbation-specific each model's own prediction is ==="
