@@ -353,7 +353,6 @@ def score_bundle(
     """Run every arm, then read the grid on the evaluation folds."""
     C3 = run3("config")
     runner = run3("translate.runner")
-    splitsmod = run3("translate.splits")
     LineBundle = run3("translate.data").LineBundle
 
     bundle = LineBundle(cell_line, root=Path(bundle_dir), device=device)

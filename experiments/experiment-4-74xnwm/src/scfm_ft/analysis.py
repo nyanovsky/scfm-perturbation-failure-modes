@@ -23,6 +23,12 @@ from . import config as C
 #: diagnostic reported beside it everywhere
 VERDICT = ("residual", "weighted")
 DIAGNOSTIC = ("centered", "weighted")
+#: the model's own predicted response can be read against two reference points.
+#: ``measured_control_mean`` subtracts the control cells' measured profile, which
+#: is the comparison the published recipe is evaluated on; ``unflagged_model_output``
+#: subtracts the model's own no-flag forward pass, which is the reference the
+#: response features use. The first is primary, the second is reported beside it.
+DIRECT_BASELINES = ("measured_control_mean", "unflagged_model_output")
 
 
 def _read_all(root: Path, stem: str) -> pd.DataFrame:
@@ -290,7 +296,34 @@ def headline(
                     & (direct.arm_label == f"direct_prediction/{a.name}")
                 ]
                 if not dr.empty:
-                    per_arm["direct_prediction"] = _row(dr)
+                    by_base = {}
+                    if "baseline" in dr.columns:
+                        for b, g in dr.groupby("baseline"):
+                            r = _row(g)
+                            dg = _row(
+                                _pick(
+                                    direct[
+                                        (direct.cell_line == line)
+                                        & (direct.arm_label == f"direct_prediction/{a.name}")
+                                        & (direct.baseline == b)
+                                    ],
+                                    target=DIAGNOSTIC[0],
+                                    weighting=DIAGNOSTIC[1],
+                                )
+                            )
+                            r["fold_centred"] = dg["score"] if dg else None
+                            by_base[str(b)] = r
+                    else:  # a table written before the baseline column existed
+                        by_base["unflagged_model_output"] = _row(dr)
+                    per_arm["direct_prediction_by_baseline"] = by_base
+                    primary = next(
+                        (by_base[b] for b in DIRECT_BASELINES if b in by_base),
+                        next(iter(by_base.values())),
+                    )
+                    per_arm["direct_prediction"] = primary
+                    per_arm["direct_prediction_baseline"] = next(
+                        (b for b in DIRECT_BASELINES if b in by_base), None
+                    )
             cs = contrasts[
                 (contrasts.cell_line == line)
                 & (contrasts.translator == "mlp")

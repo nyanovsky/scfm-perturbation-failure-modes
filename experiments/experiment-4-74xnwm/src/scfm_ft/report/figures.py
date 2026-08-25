@@ -14,7 +14,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -25,6 +24,8 @@ from .. import paths
 
 VERDICT = ("residual", "weighted")
 DIAGNOSTIC = ("centered", "weighted")
+#: same order of preference as ``analysis.DIRECT_BASELINES``
+DIRECT_BASELINES = ("measured_control_mean", "unflagged_model_output")
 
 #: guide marks are drawn in a neutral that is not one of the entity colours
 GUIDE = "#A8A399"
@@ -208,7 +209,7 @@ def figure_swap(restricted: pd.DataFrame, band: pd.DataFrame, out: Path) -> dict
             "shuffled-label band and the co-expression and gene-table reference lines."
         ),
     )
-    return {"rows": data}
+    return {"fig": fig, "rows": data}
 
 
 # --------------------------------------------------------------------------- #
@@ -236,11 +237,23 @@ def figure_predict_vs_features(
             entry["own_query"] = _score(v, line, f"ftq_{arm}_resp")
             if not d.empty:
                 sub = d[(d.cell_line == line) & (d.arm_label == f"direct_prediction/{arm}")]
+                if "baseline" in sub.columns and not sub.empty:
+                    for b in DIRECT_BASELINES:
+                        pick = sub[sub.baseline == b]
+                        if not pick.empty:
+                            sub = pick
+                            break
+                if len(sub) > 1:
+                    raise RuntimeError(
+                        f"{line}/{arm}: {len(sub)} direct-prediction rows for one cell of the "
+                        f"grid; baselines present = {sorted(set(sub.get('baseline', [])))}"
+                    )
                 entry["direct"] = (
                     {
                         "score": float(sub.iloc[0]["disattenuated"]),
                         "lo": float(sub.iloc[0]["disattenuated_lo"]),
                         "hi": float(sub.iloc[0]["disattenuated_hi"]),
+                        "baseline": str(sub.iloc[0].get("baseline", "unflagged_model_output")),
                     }
                     if not sub.empty
                     else None
@@ -304,7 +317,7 @@ def figure_predict_vs_features(
             "query and through the value-substitution query, against the shuffled-label band."
         ),
     )
-    return {"rows": data}
+    return {"fig": fig, "rows": data}
 
 
 # --------------------------------------------------------------------------- #
@@ -368,7 +381,7 @@ def figure_training(epochs: pd.DataFrame, runs: pd.DataFrame, out: Path) -> dict
             "same validation perturbations, which the recipe records but does not select on."
         ),
     )
-    return {"n_runs": int(runs.shape[0]) if not runs.empty else 0}
+    return {"fig": fig, "n_runs": int(runs.shape[0]) if not runs.empty else 0}
 
 
 def build_all(summary: Path) -> dict:
@@ -404,4 +417,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--summary", default="results/summary")
     a = ap.parse_args()
-    print(json.dumps(build_all(Path(a.summary)), indent=2, default=str)[:2000])
+    made = {
+        name: {k: v for k, v in res.items() if k != "fig"}
+        for name, res in build_all(Path(a.summary)).items()
+    }
+    print(json.dumps(made, indent=2, default=str)[:2000])

@@ -109,7 +109,7 @@ def crossfit(
         effect_rows, C.SPLIT, C3.N_FOLDS, C3.SEED, C3.GROUP_CORR_THRESHOLD
     )
     ref = runnermod.fold_reference(bundle, rows_idx, info["fold"], C3.N_FOLDS)
-    fold, groups = info["fold"], info["groups"]
+    groups = info["groups"]
     all_folds = np.arange(C3.N_FOLDS)
     ceilings = score.restricted_ceilings(bundle, ref, rows_idx, all_folds)
 

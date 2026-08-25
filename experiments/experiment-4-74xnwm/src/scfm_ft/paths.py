@@ -18,7 +18,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from .sibling import experiments_dir, run2_dir
+from .sibling import run2_dir
 
 
 def repo_dir() -> Path:
