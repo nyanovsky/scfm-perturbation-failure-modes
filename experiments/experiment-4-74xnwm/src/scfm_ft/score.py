@@ -304,11 +304,23 @@ def score_direct(
     """Score the model's own prediction, with no translator in the path.
 
     ``delta`` is the model's predicted perturbation response, one row per
-    perturbation over the read-out genes. It goes through run 3's ``score_run``
-    as the prediction of the residual, which is a correlation per perturbation
-    and therefore does not care about the scale the model predicts in. Only the
-    residual and centred cells are meaningful: the raw cell adds the training
-    mean effect to a prediction that is not on the log2 fold-change scale.
+    perturbation over the read-out genes.
+
+    ``score_run`` takes a prediction of the RESIDUAL: it forms the raw
+    prediction as ``argument + training-fold mean`` and scores that against the
+    measured effect. A translator trained on residual targets satisfies that
+    contract; the model does not, because it predicts the perturbed profile
+    itself. Handing the model's own effect over unchanged therefore adds the
+    fold mean on top of a prediction that already contains it, and the raw cell
+    it produces is not a correlation with the measured effect at all.
+
+    So the training-fold mean is removed here, per fold, before the call. Then
+    every cell of the grid means what it says: the raw cell compares the
+    predicted profile with the measured one, shared response included; the
+    residual cell removes the same training-fold mean from both sides; and the
+    centred cell, which subtracts each held-out fold's own mean from both
+    sides, is unchanged by a constant shift and asks only whether the
+    prediction separates one perturbation from another.
     """
     C3 = run3("config")
     runner = run3("translate.runner")
@@ -320,7 +332,11 @@ def score_direct(
     eval_folds = np.asarray(C.MODEL_HELDOUT_FOLDS if eval_folds is None else eval_folds)
     ceilings = restricted_ceilings(bundle, ref, rows, eval_folds)
     pred = np.asarray(delta, dtype=np.float32)[rows]
-    _, per_pert, _, _ = runner.score_run(pred, ref, fold, C3.N_FOLDS)
+    pred_resid = pred.copy()
+    for f in range(C3.N_FOLDS):
+        info = ref["folds"][f]
+        pred_resid[info["test"]] = pred[info["test"]] - info["mean"][None, :]
+    _, per_pert, _, _ = runner.score_run(pred_resid, ref, fold, C3.N_FOLDS)
     per_pert = per_pert.assign(
         arm="direct_prediction", translator="none", perturbation=bundle.pert_target[rows]
     )
@@ -340,7 +356,8 @@ def score_direct(
     return {
         "baseline": baseline,
         "note": "no translator: the model's own predicted response against the measured one",
-        "meaningful_cells": ["residual", "centered"],
+        "meaningful_cells": ["raw", "residual", "centered"],
+        "fold_mean_removed_before_scoring": True,
         "residual_weighted": head[0] if head else None,
         "all_cells": restricted,
     }

@@ -70,26 +70,49 @@ def rescore_direct(
             d / "train_config.json"
         ).exists() else {}
         heldout = cfg.get("model_heldout_folds") or list(C.MODEL_HELDOUT_FOLDS)
-        pred = z["flagged"].astype(np.float64) - z["control_mean_log1p"].astype(np.float64)[None, :]
-        res = score.score_direct(
-            bundle_root, line, pred, Path(out_dir), run_name, device=device,
-            eval_folds=heldout, baseline="measured_control_mean",
-        )
-        head = res.get("residual_weighted") or {}
-        rows.append(
-            {
-                "run": d.name,
-                "cell_line": line,
-                "arm": run_name,
-                "heldout_folds": heldout,
-                "baseline": "measured_control_mean",
-                "disattenuated": head.get("disattenuated"),
-                "lo": head.get("disattenuated_lo"),
-                "hi": head.get("disattenuated_hi"),
-                "n_scored": head.get("n_scored"),
+        # both reference points, from the same saved forward pass: the measured
+        # control profile the published evaluation uses, and the model's own
+        # no-flag output. Scoring them together keeps the two columns of the
+        # report on one code path.
+        ctrl = z["control_mean_log1p"].astype(np.float64)[None, :]
+        preds = {"measured_control_mean": z["flagged"].astype(np.float64) - ctrl}
+        if "unflagged" in z:
+            preds["unflagged_model_output"] = (
+                z["flagged"].astype(np.float64)
+                - z["unflagged"].astype(np.float64)[None, :]
+            )
+        for baseline, pred in preds.items():
+            res = score.score_direct(
+                bundle_root, line, pred, Path(out_dir), run_name, device=device,
+                eval_folds=heldout, baseline=baseline,
+            )
+            cells = {
+                (r["target"], r["weighting"]): r
+                for r in res.get("all_cells") or []
             }
-        )
-        print(json.dumps(rows[-1], default=str), flush=True)
+            head = cells.get(("residual", "weighted"), {})
+            raw = cells.get(("raw", "weighted"), {})
+            cen = cells.get(("centered", "weighted"), {})
+            rows.append(
+                {
+                    "run": d.name,
+                    "cell_line": line,
+                    "arm": run_name,
+                    "heldout_folds": heldout,
+                    "baseline": baseline,
+                    "disattenuated": head.get("disattenuated"),
+                    "lo": head.get("disattenuated_lo"),
+                    "hi": head.get("disattenuated_hi"),
+                    "raw": raw.get("disattenuated"),
+                    "raw_lo": raw.get("disattenuated_lo"),
+                    "raw_hi": raw.get("disattenuated_hi"),
+                    "centered": cen.get("disattenuated"),
+                    "centered_lo": cen.get("disattenuated_lo"),
+                    "centered_hi": cen.get("disattenuated_hi"),
+                    "n_scored": head.get("n_scored"),
+                }
+            )
+            print(json.dumps(rows[-1], default=str), flush=True)
     return rows
 
 

@@ -856,25 +856,38 @@ def controls_section(r: Results) -> str:
     return P.section("Controls", "".join(parts), sources=[S_SCORE, S_RUNARM])
 
 
+#: the variant runs, labelled by what each varies rather than by its tag
+VARIANT_LABEL = {
+    "own_trainable__f23": "scGPT table, trainable, refitted with folds 2 and 3 withheld",
+    "own_trainable__f4": "scGPT table, trainable, refitted with fold 4 withheld",
+    "own_trainable__upstream": "scGPT table, trainable, upstream gene sampling",
+}
+
+
 def artifacts_section(r: Results) -> str:
-    rows = []
-    for line in C.CELL_LINES:
-        for arm in ARM_ORDER:
-            t = r.training(line, arm)
-            if not t or not t.get("artifact"):
-                continue
-            rows.append([
-                LINE[line], ARM_LABEL[arm],
-                f'<code>{P.esc(str(t["artifact"]))}</code>',
-            ])
+    """Every training run's durable directory, read from the runs table itself."""
+    if r.runs.empty:
+        return ""
+    label = {**ARM_LABEL, **VARIANT_LABEL}
+    order = {a: i for i, a in enumerate(list(ARM_ORDER) + list(VARIANT_LABEL))}
+    frame = r.runs[r.runs["artifact"].notna()].copy()
+    frame["_line"] = frame["cell_line"].map({name: i for i, name in enumerate(C.CELL_LINES)})
+    frame["_arm"] = frame["arm"].map(lambda a: order.get(a, len(order)))
+    frame = frame.sort_values(["_line", "_arm"])
+    rows = [
+        [LINE.get(x.cell_line, x.cell_line), label.get(x.arm, x.arm),
+         f"<code>{P.esc(str(x.artifact))}</code>"]
+        for x in frame.itertuples()
+    ]
     return P.section(
         "Checkpoints",
-        "<p>Every fine-tuned model is kept. Each directory holds the selected and final "
+        f"<p>All {len(rows)} fine-tuning runs are kept: the five arms in each cell line plus "
+        "the three variants of the primary arm. Each directory holds the selected and final "
         "weights, the exact training configuration, the resolved gene table before and after "
         "training including the learned projection where one exists, the per-epoch loss and "
         "validation history, the base checkpoint revision, and the saved predicted "
         "response.</p>"
-        + P.table(["cell line", "arm", "artifact"], rows, sources=[S_RUNARM]),
+        + P.table(["cell line", "run", "artifact"], rows, sources=[S_RUNARM]),
         sources=[S_RUNARM],
     )
 
