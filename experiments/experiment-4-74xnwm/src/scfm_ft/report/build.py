@@ -362,28 +362,57 @@ def resolution_note(r: Results) -> str:
         f"<ul>{''.join(parts)}</ul>"
         "<p>So the claim this section supports is bounded: fine-tuning does not lift the "
         "response features to anywhere near the gene table, and does not move them "
-        "detectably at all. It is not evidence that they are exactly zero.</p>"
+        "detectably at all. It is not evidence that they are exactly zero. The whole-screen "
+        "reading below recovers the resolution the restriction costs, by fitting the primary "
+        "arm on complementary folds and pooling.</p>"
     )
+
+
+CROSSFIT_ARMS = (
+    ("ft_own_trainable_resp", "response features, after fine-tuning"),
+    ("scgpt_resp", "response features, before fine-tuning"),
+    ("coexp", "co-expression"),
+    ("scgpt_emb", "gene table, before fine-tuning"),
+    ("node", "node covariates"),
+)
 
 
 def holdout_note(r: Results) -> str:
-    cf = []
+    """The whole-screen reading, where the restricted evaluation runs out of power."""
+    rows, covered = [], []
     for line in C.CELL_LINES:
-        row = r.crossfit_row(line, "own_trainable")
-        if row:
-            cf.append((line, row))
-    if not cf:
+        got = False
+        for arm, label in CROSSFIT_ARMS:
+            row = r.crossfit_row(line, arm)
+            if not row:
+                continue
+            got = True
+            rows.append([LINE[line], label, civ(row), str(row["n"]), str(row["n_groups"])])
+        if got:
+            base = r.crossfit_row(line, "ft_own_trainable_resp")
+            if base:
+                covered.append(f"{LINE[line]} {base['n']} perturbations in "
+                               f"{base['n_groups']} groups")
+    if not rows:
         return ""
-    parts = ", ".join(
-        f"{LINE[line]} {civ(row)} over {row['n']} perturbations in {row['n_groups']} groups"
-        for line, row in cf
-    )
     return (
-        "<p>Scoring only two folds costs resolution, so the primary arm was fitted twice "
-        "more, once on folds 2 and 3 and once on fold 4, and the held-out rows pooled. Every "
-        "perturbation in the screen is then scored by a model that never saw it, and the "
-        f"pooled response-feature score is {parts}. Pooling does not change the picture; it "
-        "removes the objection that two folds is too small a window to see an effect in.</p>"
+        "<p>Two folds is a narrow window, so the primary arm was fitted twice more, once "
+        "with folds 2 and 3 withheld and once with fold 4 withheld, and each model's "
+        "held-out rows were pooled. Every perturbation in the screen is then scored by a "
+        f"model that never saw it: {', '.join(covered)}. The other arms do not depend on "
+        "which folds a model saw, so they are read over the same whole screen.</p>"
+        + P.table(
+            ["cell line", "arm", "score", "perturbations", "groups"],
+            rows,
+            sources=[S_FOLLOWUP],
+            caption="Whole-screen scores. The fine-tuned response arm is pooled across three "
+                    "models fitted on complementary folds; every other arm is scored once "
+                    "over the same perturbations, against the same whole-screen ceiling.",
+        )
+        + "<p>At this sample size co-expression separates from both response arms, which the "
+        "restricted evaluation could not resolve. The response features sit where they sat "
+        "before fine-tuning, an order of magnitude below the gene table, and pooling does "
+        "not change that.</p>"
     )
 
 

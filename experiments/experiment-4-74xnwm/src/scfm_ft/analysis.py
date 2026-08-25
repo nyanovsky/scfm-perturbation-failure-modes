@@ -37,7 +37,9 @@ DIRECT_BASELINES = ("measured_control_mean", "unflagged_model_output")
 _PER_PERT = ("per_pert_", "direct_per_pert_", "crossfit_per_pert_")
 
 
-def _read_all(root: Path, stem: str) -> pd.DataFrame:
+def _read_all(
+    root: Path, stem: str, defaults: dict[str, object] | None = None
+) -> pd.DataFrame:
     files = [
         f
         for f in sorted(Path(root).glob(f"{stem}_*.parquet"))
@@ -46,6 +48,14 @@ def _read_all(root: Path, stem: str) -> pd.DataFrame:
     if not files:
         return pd.DataFrame()
     frames = [pd.read_parquet(f) for f in files]
+    # A column added to the scorer after some tables were written is filled in
+    # with what those tables meant, rather than left absent: concatenating over
+    # a missing column would put NaN there, and a groupby would then drop those
+    # rows without saying so.
+    for name, value in (defaults or {}).items():
+        for f in frames:
+            if name not in f.columns:
+                f[name] = value
     cols = {frozenset(f.columns) for f in frames}
     if len(cols) > 1:
         raise RuntimeError(
@@ -157,7 +167,7 @@ def build(scores: Path, out: Path, checkpoints: Path | None = None) -> dict:
     restricted = _read_all(scores, "restricted")
     contrasts = _read_all(scores, "contrasts")
     runs = _read_all(scores, "runs")
-    direct = _read_all(scores, "direct")
+    direct = _read_all(scores, "direct", defaults={"baseline": "unflagged_model_output"})
     if restricted.empty:
         raise RuntimeError(f"no restricted_*.parquet under {scores}")
 

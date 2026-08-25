@@ -36,13 +36,38 @@ sh jobs/ingest.sh <hepg2|jurkat>
 # 2. one GPU job per (arm, cell line): fine-tune, extract both query families, score
 sh jobs/train_arm.sh <cell_line> <arm>
 
-# 3. merge, figures, page (pod)
-PYTHONPATH=src apy -m scfm_ft.analysis --scores <dirs> --out results/summary
+# 3. each model's own prediction, the whole-screen pooling, the last-epoch reading
+sh jobs/followup.sh
+sh jobs/rescore.sh <cell_line>          # re-read a tagged run from its saved weights
+sh jobs/crossfit.sh <cell_line>         # pool the complementary-fold models
+
+# 4. merge, figures, page (pod)
+sh jobs/summarise.sh
+PYTHONPATH=src uv run --no-sync python -m scfm_ft.report.figures --summary results/summary
+PYTHONPATH=src uv run --no-sync python -m scfm_ft.report.build --summary results/summary --out "$SILICO_APP_DIR"
 ```
+
+The job image is `docker.io/library/python:3.11-slim` with `jobs/env_gpu.sh` installing run 2's
+pinned stack (torch 2.5.1+cu121, numpy 1.26.4, scgpt 0.2.4 with `--no-deps`). The catalogue image
+is not used here because it ships no pip.
 
 ## Outputs
 
-_Filled in at completion._
+All durable outputs live under
+`artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/`.
+
+| prefix | what | how to load |
+|---|---|---|
+| `cells/` | per-cell-line training matrices and the fold assignment, built from GSE264667 | `np.load`, see `src/scfm_ft/ingest.py` |
+| `checkpoints/<line>__<run>/` | 16 fine-tuned models: `model_best.pt` and `model_final.pt` (bare state dicts for `scfm_ft.scgpt_pert.model.build_arm_model`), `gene_table_{init,final}.npz` (resolved table including any learned projection), `train_config.json`, `loss_history.json`, `direct_prediction.npz` | registered as `scfm-run4-ft-<line>-<arm>` |
+| `scores/` | per training run: `restricted_`, `contrasts_`, `runs_`, `direct_`, `per_pert_` tables and `summary_` json | `pd.read_parquet` |
+| `rescore/<line>/` | the tagged control runs re-read from saved weights after the naming fix, and the whole-screen `crossfit_` pooling | `pd.read_parquet` |
+| `followup/` | each model's own predicted response scored against both baselines, plus the training metadata | `pd.read_parquet` |
+| `summary.tar.gz` | the merged tables the report reads, unpacked locally to `results/summary` | `tar -xzf` |
+
+Models and credentials: no external model API is used. Every number comes from `wanglab/scGPT-human`
+at the pinned revision, fine-tuned on this cluster, plus run 3's ESM2-3B gene tables.
+
 
 Source experiments: run 1 `exp_01m09d588jez38j6trqk30499z` (effect matrices), run 2
 `exp_01m0c7ecnnf3fvxskxj5nygwcv` (response-feature extractor), run 3

@@ -151,17 +151,19 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                 a_out["artifact"] = t.get("artifact")
             e["arms"][arm] = a_out
 
-        cf = r.crossfit_row(line, "own_trainable")
-        if cf:
-            e["crossfit"] = claim(
-                f"{L}, response features of the published recipe pooled over the whole screen "
-                "by cross-fitting, verdict cell",
-                cf["score"], "results/summary/crossfit_%s__own_trainable.parquet" % line,
-                key(cell_line=line, arm="own_trainable", scope="whole_screen",
-                    target="residual", weighting="weighted"),
+        cfsrc = "results/summary/crossfit_%s__own_trainable.parquet" % line
+        for arm, label in B.CROSSFIT_ARMS:
+            cf = r.crossfit_row(line, arm)
+            if not cf:
+                continue
+            stem = "crossfit" if arm == "ft_own_trainable_resp" else f"crossfit__{arm}"
+            e[stem] = claim(
+                f"{L}, {label}, scored over the whole screen, verdict cell",
+                cf["score"], cfsrc,
+                key(cell_line=line, arm=arm, target="residual", weighting="weighted"),
             )
-            e["crossfit__lo"], e["crossfit__hi"] = cf["lo"], cf["hi"]
-            e["crossfit__n"], e["crossfit__n_groups"] = cf["n"], cf["n_groups"]
+            e[f"{stem}__lo"], e[f"{stem}__hi"] = cf["lo"], cf["hi"]
+            e[f"{stem}__n"], e[f"{stem}__n_groups"] = cf["n"], cf["n_groups"]
 
         le = r.last_epoch_row(line, "own_trainable")
         if le:

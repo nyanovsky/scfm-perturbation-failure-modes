@@ -3,7 +3,66 @@ eid: "exp_01m0trpxqyf0g8pq29k774xnwm"
 title: "Does fine-tuning for perturbation prediction install the regulatory signal?"
 date: "2026-08-24"
 status: in-progress
-data: {}
-outputs: {}
+
+data:
+  screen:
+    source: "GEO GSE264667 (Nadig et al. genome-scale CRISPRi screen)"
+    cell_lines: [hepg2, jurkat]
+    built_by: "src/scfm_ft/ingest.py, one streaming pass per cell line"
+    artifact: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/cells/"
+  evaluation_bundle:
+    from: "exp_01m0emwktvfe892x6ebqyga5ws (run 3)"
+    artifact: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/bundle/"
+    what: "effect matrices, reliability weights, co-expression, frozen-model gene tables and response features, the fold assignment and the translator"
+  esm2_gene_tables:
+    from: "exp_01m0emwktvfe892x6ebqyga5ws (run 3)"
+    artifact: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein/esm2_3b.npz"
+  base_model:
+    id: "wanglab/scGPT-human"
+    revision: "a24c237737a40f3720f75abb555489e9fe753be6"
+
+outputs:
+  checkpoints:
+    artifact: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/checkpoints/"
+    what: "16 fine-tuned models, one directory per (cell line, run): model_best.pt, model_final.pt, gene_table_{init,final}.npz, train_config.json, loss_history.json, direct_prediction.npz"
+    registered_as: "scfm-run4-ft-<line>-<arm>"
+  scores:
+    artifact: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/scores/"
+    what: "per training run: restricted_, contrasts_, runs_, direct_, per_pert_ tables and summary_ json"
+  rescore:
+    artifact: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/rescore/"
+    what: "the tagged control runs re-read from their saved weights after the model-key naming fix, plus the whole-screen cross-fit pooling"
+  followup:
+    artifact: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/followup/"
+    what: "each model's own predicted response scored against both baselines, and the training metadata the summary reads"
+  summary:
+    artifact: "artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/summary.tar.gz"
+    local: "results/summary"
+    what: "merged tables the report reads: restricted, contrasts, runs, direct, null_band, reference_agreement, prediction_spread, crossfit, headline.json"
+
 results: {}
-slurm_jobs: []
+
+slurm_jobs:
+  - {job_id: "704848932631", name: "ingest_hepg2", gpus: 0}
+  - {job_id: "970289442098", name: "ingest_jurkat + first training probe", gpus: 1}
+  - {job_id: "588611846164", name: "hepg2/own_trainable", gpus: 1}
+  - {job_id: "390529995626", name: "hepg2/own_frozen", gpus: 1}
+  - {job_id: "225426946490", name: "hepg2/esm2_trainable", gpus: 1}
+  - {job_id: "623460393612", name: "hepg2/esm2_frozen", gpus: 1}
+  - {job_id: "491240861877", name: "hepg2/rand_frozen", gpus: 1}
+  - {job_id: "620386816255", name: "jurkat/own_trainable", gpus: 1}
+  - {job_id: "920992759170", name: "jurkat/own_frozen", gpus: 1}
+  - {job_id: "495937933745", name: "jurkat/esm2_trainable", gpus: 1}
+  - {job_id: "560515707301", name: "jurkat/esm2_frozen", gpus: 1}
+  - {job_id: "203104786951", name: "jurkat/rand_frozen", gpus: 1}
+  - {job_id: "659777476862", name: "hepg2/own_trainable folds 2,3", gpus: 1}
+  - {job_id: "249416621603", name: "hepg2/own_trainable fold 4", gpus: 1}
+  - {job_id: "430030221595", name: "hepg2/own_trainable upstream sampling", gpus: 1}
+  - {job_id: "497731760165", name: "jurkat/own_trainable folds 2,3", gpus: 1}
+  - {job_id: "643418130092", name: "jurkat/own_trainable fold 4", gpus: 1}
+  - {job_id: "691565390412", name: "jurkat/own_trainable upstream sampling", gpus: 1}
+  - {job_id: "473092290031", name: "followup: direct prediction, cross-fit, last epoch", gpus: 1}
+  - {job_id: "262498648980", name: "rescore-hepg2 (tagged runs re-read + cross-fit)", gpus: 1}
+  - {job_id: "526921943279", name: "rescore-jurkat (hit the 2h wall after two re-reads)", gpus: 1}
+  - {job_id: "293492613878", name: "crossfit-jurkat", gpus: 1}
+  - {job_id: "166435995187", name: "rescore-tail-jurkat", gpus: 1}
