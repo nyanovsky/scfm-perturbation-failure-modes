@@ -28,6 +28,11 @@ AGREE = "results/summary/reference_agreement.parquet"
 SPREAD = "results/summary/prediction_spread.parquet"
 NULLCHECK = "results/summary/null_check.parquet"
 RUN3CMP = "results/run3_comparison.parquet"
+PROV = "results/recipe_provenance.json"
+#: an earlier, separate execution of the same sixteen arms, selected on masked
+#: MSE. It predates the three faithfulness controls, so it differs from the
+#: primary execution in random initialisation as well as in the rule.
+ALT = "results/summary_masked_mse"
 
 LINE = B.LINE
 ARM_LABEL = B.ARM_LABEL
@@ -305,9 +310,58 @@ def _band_clause(n: dict) -> str:
     return "; ".join(parts)
 
 
-def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
+def selection_claims(r: B.Results, alt: B.Results, n: dict, claims: list[dict]) -> dict:
+    """Each arm read in each execution, as traceable claims.
+
+    The rule decides which weights every other number comes from, so the
+    comparison is part of the contract rather than a remark on the page. Two
+    distinct comparisons live here and they are kept apart: within the primary
+    execution the masked-MSE epoch is tracked on the same trajectory, and the
+    alternative summary is a separate earlier execution of the same arms.
+    """
+    same, tot = B._rule_agreement(r)
+    out = {
+        "within_run_same_epoch": same,
+        "within_run_n": tot,
+        "n_arms": 0,
+        "n_both_in_band": 0,
+        "arms": {},
+    }
+    for line in C.CELL_LINES:
+        band = r.null_ceiling(line)
+        for arm in B.ARM_ORDER:
+            a = r.feat(line, arm, "final__value_substitution_resp")
+            b = alt.feat(line, arm, "final__value_substitution_resp")
+            if not a or not b:
+                continue
+            ta, tb = r.training(line, arm), alt.training(line, arm)
+            out["n_arms"] += 1
+            out["n_both_in_band"] += int(max(a["score"], b["score"]) <= band)
+            out["arms"][f"{line}/{arm}"] = {
+                "pearson_rule_epoch": ta.get("selected_epoch"),
+                "pearson_rule_score": a["score"],
+                "masked_mse_rule_epoch": tb.get("selected_epoch"),
+                "masked_mse_rule_score": b["score"],
+                "band_ceiling": band,
+            }
+            claims.append({
+                "claim": f"{line} {arm}: response features in the earlier masked-MSE execution",
+                "value": round(float(b["score"]), 6),
+                "source": f"{ALT}/restricted.parquet",
+                "key": rkey(cell_line=line, arm=f"ft_{C.model_stem(arm)}_resp"),
+            })
+    n["selection_rule"] = out
+    return out
+
+
+def build(summary_dir: Path, out_dir: Path, alt_dir: Path | None = None) -> tuple[Path, Path]:
     r = B.Results(summary_dir)
     n, claims = collect(r)
+    sel = (
+        selection_claims(r, B.Results(alt_dir), n, claims)
+        if alt_dir is not None and Path(alt_dir).exists()
+        else None
+    )
     h = n["lines"].get("hepg2", {})
     j = n["lines"].get("jurkat", {})
     ho = h.get("arms", {}).get("own_trainable", {})
@@ -377,9 +431,10 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             f"run 3's five folds: {_band_clause(n)}. Four controls address the obvious "
             "objections: the arm is refitted on the complementary folds so the pooled result "
             "covers the whole screen, the batch sampler is run in the exact upstream "
-            "configuration as well as ours, the features are also read off the last epoch "
-            "because the recipe's selection rule picks epoch 1 in Jurkat, and every recipe "
-            "setting is checked field by field against the published notebook."
+            "configuration as well as ours, the alternative checkpoint-selection rule is "
+            "tracked inside every run and read again in a separate earlier execution of all "
+            "sixteen arms, and every recipe setting including the selection rule is checked "
+            "field by field against the published notebook."
         ),
         "decision_rule": {
             "preregistered": (
@@ -424,6 +479,29 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
                 "exactly, including the ~40% of rows that lose their perturbed gene"
             ),
             "n_training_runs": 16,
+            "checkpoint_selection": (
+                "the tutorial's own rule, read out of its training-loop cell by "
+                "src/scfm_ft/recipe_provenance.py: keep the epoch with the highest mean "
+                "Pearson correlation, across all genes, between each held-out perturbation's "
+                "measured and predicted mean expression profile, and apply the patience "
+                "counter to that score. The masked MSE on the same held-out cells is tracked "
+                "in parallel with its own patience counter, so the epoch that rule would keep "
+                "is recorded from the same run and both checkpoints are saved"
+            ),
+            "selection_rule_sensitivity": (
+                None
+                if sel is None
+                else (
+                    f"the two rules keep the same epoch in {sel['within_run_same_epoch']} of "
+                    f"{sel['within_run_n']} runs of this execution, where the selected weights "
+                    "are therefore identical; separately, an earlier execution of the same "
+                    f"sixteen arms selected on masked MSE throughout has {sel['n_arms']} arms "
+                    f"comparable here and {sel['n_both_in_band']} of them are inside the "
+                    "shuffled-label band in both executions. That earlier execution predates "
+                    "the three faithfulness controls, so it differs in random initialisation "
+                    "as well as in the rule and is read as a replicate"
+                )
+            ),
         },
         "results": n,
         "limitations": [
@@ -446,7 +524,9 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
         ],
         "artifacts": [
             HEAD, RESTRICTED, BAND, DIRECT, TRAIN_RUNS, TRAIN_EPOCHS, CONTRASTS, AGREE,
-            NULLCHECK, RUN3CMP,
+            NULLCHECK, RUN3CMP, PROV,
+            *([f"{ALT}/restricted.parquet", f"{ALT}/training_runs.parquet"] if sel else []),
+            "src/scfm_ft/recipe_provenance.py",
             "src/scfm_ft/compare_run3.py",
             "src/scfm_ft/analysis.py",
             "src/scfm_ft/config.py",
@@ -471,11 +551,17 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--summary", default=None)
+    ap.add_argument("--alt-summary", default=None)
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
     summary = Path(args.summary) if args.summary else paths.results_dir() / "summary"
+    alt = (
+        Path(args.alt_summary)
+        if args.alt_summary
+        else paths.repo_dir() / ALT
+    )
     out = Path(args.out) if args.out else paths.repo_dir()
-    a, b = build(summary, out)
+    a, b = build(summary, out, alt)
     doc = json.loads(a.read_text())
     print(doc["headline"])
     print(f"\nwrote {a} and {b} ({len(json.loads(b.read_text())['claims'])} claims)")

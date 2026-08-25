@@ -420,6 +420,7 @@ def recipe_provenance(r: Results) -> str:
                     "is not vendored here; its URL and the sha256 of the file compared "
                     "against are in the source table, so the comparison can be repeated.",
         )
+        + selection_provenance(p)
         + "<p>One thing does differ, and it is an environment constraint rather than a "
         "choice. The notebook sets <code>use_fast_transformer=True</code>, which needs "
         "scGPT's FlashMHA layers; their API exists only in flash-attn 1.x, which will not "
@@ -428,6 +429,35 @@ def recipe_provenance(r: Results) -> str:
         "the checkpoint's fused attention tensors are remapped onto torch's packed "
         "projection. The attention math is the same; the kernel and therefore the exact "
         "numerics are not.</p>"
+    )
+
+
+def selection_provenance(p: dict) -> str:
+    """The one recipe choice that is not a named setting: which epoch is kept.
+
+    Read out of the notebook's training-loop cell rather than described, because
+    it decides which weights every number on this page comes from.
+    """
+    sel = (p or {}).get("selection")
+    if not sel:
+        return ""
+    t = sel["tutorial"]
+    agree = (
+        "This run applies the same rule"
+        if sel.get("matches")
+        else "This run does NOT apply the same rule"
+    )
+    return (
+        "<p>The checkpoint rule is not a named setting, so it is read out of the notebook's "
+        "training-loop cell the same way. That loop sets "
+        f"<code>{P.esc(t['val_score_expression'])}</code>, copies the model when "
+        f"<code>{P.esc(t['best_model_guard'])}</code>, and resets its early-stopping counter "
+        "on the same comparison"
+        + ("" if t["early_stopping_counter_reset_by_the_same_guard"] else " (it does not)")
+        + f". {agree}: it keeps the epoch whose held-out perturbations have the highest mean "
+        "Pearson correlation, across all genes, between their measured and their predicted "
+        "mean expression profile, which is what "
+        "<code>compute_perturbation_metrics(...)['pearson']</code> returns.</p>"
     )
 
 
@@ -864,31 +894,141 @@ def training_section(r: Results, chart: str) -> str:
                 LINE[line],
                 ARM_LABEL[arm],
                 str(t.get("selected_epoch", "n/a")),
+                P.num(t.get("selected_val_pearson", nan())),
+                str(t.get("mse_selected_epoch") or "n/a"),
                 str(t.get("epochs_run", "n/a")),
                 P.num(t.get("best_val_loss", nan())),
                 str(t.get("n_train_cells", "n/a")),
             ])
     tbl = P.table(
-        ["cell line", "arm", "selected epoch", "epochs run", "best validation loss",
+        ["cell line", "arm", "epoch the recipe keeps", "its validation Pearson",
+         "epoch masked MSE would keep", "epochs run", "best validation loss",
          "training cells"],
         rows,
         sources=[S_TRAIN],
-        caption="Fine-tuning outcome per run. Selection is the tutorial's: the epoch with the "
-                "lowest masked MSE on held-out validation cells.",
+        caption="Fine-tuning outcome per run. The recipe keeps the epoch with the highest "
+                "validation Pearson; the epoch the masked-MSE rule would keep is recorded "
+                "beside it from the same run.",
     )
     return P.section(
         "Training curves and selected epochs",
         "<p>Every run trains, in the sense the recipe means: the training loss falls, the "
-        "validation loss falls and then turns, and early stopping fires. The selected epoch "
-        "is chosen on held-out masked MSE, which is what the tutorial selects on, and not on "
-        "the response agreement, which is recorded every epoch as a diagnostic.</p>"
+        "validation loss falls and then turns, and early stopping fires. The checkpoint the "
+        "recipe keeps is the one with the highest validation Pearson between the predicted "
+        "and the measured mean expression profile of each held-out perturbation, which is "
+        "what the tutorial's loop selects on. The masked MSE on the same cells is tracked in "
+        "parallel under its own patience counter, so the epoch that rule would have kept is a "
+        "number from the same run rather than a separate experiment.</p>"
         + chart
         + tbl
-        + "<p>The lower panel of the figure is the reason the diagnostic is worth recording. "
-        "Response agreement against the control mean rises over training while the centred "
-        "version stays flat at zero. The optimisation is real and it is moving the model "
-        "toward the average perturbed cell.</p>",
+        + "<p>The bottom panel of the figure is the reason the response agreement is worth "
+        "recording even though nothing selects on it. Agreement against the control mean "
+        "rises over training while the centred version stays flat at zero. The optimisation "
+        "is real and it is moving the model toward the average perturbed cell.</p>",
         sources=[S_TRAIN, S_FIGS],
+    )
+
+
+def _rule_agreement(r: Results) -> tuple[int, int]:
+    """How many of this execution's runs the two rules keep the same epoch for.
+
+    Both rules are tracked inside every run with independent patience counters,
+    so this is a within-run comparison: where the epochs coincide the two rules
+    keep the same weights and every downstream number is identical by
+    construction.
+    """
+    if r.runs.empty or "mse_selected_epoch" not in r.runs.columns:
+        return 0, 0
+    t = r.runs.dropna(subset=["mse_selected_epoch"])
+    if t.empty:
+        return 0, 0
+    same = int((t.selected_epoch.astype(int) == t.mse_selected_epoch.astype(int)).sum())
+    return same, int(len(t))
+
+
+def selection_section(r: Results, alt: Results | None) -> str:
+    """The recipe read at the checkpoint each selection rule keeps.
+
+    The recipe's rule decides which weights every number above comes from, so
+    the alternative is worth reading rather than assuming. Two readings are
+    available and they are not equivalent: the masked-MSE epoch is tracked
+    inside each of this execution's own runs, and a separate earlier execution
+    of the same sixteen arms selected on masked MSE.
+    """
+    if alt is None:
+        return ""
+    rows, moved = [], []
+    for line in C.CELL_LINES:
+        band = r.null_ceiling(line)
+        for arm in ARM_ORDER:
+            a = r.feat(line, arm, "final__value_substitution_resp")
+            b = alt.feat(line, arm, "final__value_substitution_resp")
+            if not a or not b:
+                continue
+            ta, tb = r.training(line, arm), alt.training(line, arm)
+            rows.append([
+                LINE[line], ARM_LABEL[arm],
+                str(ta.get("selected_epoch", "n/a")), civ(a),
+                str(tb.get("selected_epoch", "n/a")), civ(b),
+                "yes" if max(a["score"], b["score"]) <= band else "no",
+            ])
+            if max(a["score"], b["score"]) > band:
+                moved.append(f"{LINE[line]} {ARM_LABEL[arm]}")
+    if not rows:
+        return ""
+    last = [
+        [LINE[line], str(row["n"]), civ(row)]
+        for line in C.CELL_LINES
+        if (row := alt.last_epoch_row(line, "own_trainable")) is not None
+    ]
+    same, total = _rule_agreement(r)
+    parts = [
+        "<p>The recipe's checkpoint rule decides which weights the features and the "
+        "prediction are read from, so it is worth reading rather than assuming. Every run "
+        "reported above tracks both rules at once, each with its own patience counter, so "
+        "the epoch the masked-MSE rule would have kept is known for the same trajectory. "
+        f"The two rules keep the same epoch in {same} of {total} runs; there the weights are "
+        "the same object and every number below them is identical by construction.</p>",
+        "<p>An earlier execution of the same sixteen arms was selected on masked MSE "
+        "throughout. It is a genuinely separate run rather than the same trajectory re-read: "
+        "it predates the three faithfulness controls added later, so its random "
+        "initialisation and its whole trajectory differ, and it varies the selection rule "
+        "and the run together. Read as a replicate rather than as an isolated rule change, "
+        "the table puts the response-feature arm of each execution in the same verdict "
+        "cell.</p>",
+        P.table(
+            ["cell line", "arm", "epoch, Pearson rule", "response features",
+             "epoch, masked-MSE rule", "response features",
+             "both inside the shuffled-label band"],
+            rows,
+            sources=[S_SCORE, S_TRAIN],
+            caption="This execution on the left, selected as the recipe selects; the earlier "
+                    "masked-MSE execution on the right, each read at the epoch its rule "
+                    "keeps. Same verdict cell as everywhere else: residual target, "
+                    "reliability weighting, ceiling correction, MLP translator, folds 0 "
+                    "and 1.",
+        ),
+    ]
+    parts.append(
+        "<p>" + (
+            "Every arm stays inside the band in both executions, so neither the checkpoint "
+            "the recipe keeps nor the run it was trained in changes the reading."
+            if not moved
+            else "In at least one execution these arms leave the band: " + ", ".join(moved)
+            + ". That difference is read on its own terms rather than folded into the "
+            "summary above."
+        ) + "</p>"
+    )
+    if last:
+        parts.append(
+            "<p>The masked-MSE execution was also read at its last epoch rather than its "
+            "selected one, which is the sharper version of the same question, since that rule "
+            "selects the first epoch in Jurkat there: "
+            + "; ".join(f"{line} {score} on {n} perturbations" for line, n, score in last)
+            + ".</p>"
+        )
+    return P.section(
+        "The two checkpoint-selection rules", "".join(parts), sources=[S_SCORE, S_TRAIN]
     )
 
 
@@ -987,7 +1127,6 @@ def controls_section(r: Results) -> str:
         ("own_trainable__upstream", "upstream gene sampling"),
         ("own_trainable__f23", "refitted, folds 2 and 3 withheld"),
         ("own_trainable__f4", "refitted, fold 4 withheld"),
-        ("own_trainable__lastepoch", "last epoch, not the selected one"),
     )
     var_rows = []
     for line in C.CELL_LINES:
@@ -1009,14 +1148,13 @@ def controls_section(r: Results) -> str:
             ])
     if var_rows:
         parts.append(
-            "<p>Four variants of the primary arm test choices we made rather than inherited. "
+            "<p>Three variants of the primary arm test choices we made rather than inherited. "
             "Under <code>--upstream-sampling</code> the batch sampler reproduces the published "
             "one exactly, where the random gene subset drops the perturbed gene from about "
             "40% of rows and those rows carry no perturbation flag at all; our default forces "
             "the perturbed gene into every batch. Two refits withhold the complementary folds, "
-            "so that pooling covers the whole screen. The last reads the features off the "
-            "final epoch rather than the one the recipe's selection rule keeps, which matters "
-            "in Jurkat, where the validation loss never improves after the first epoch.</p>"
+            "so that pooling covers the whole screen. The checkpoint the recipe keeps is a "
+            "choice we inherited rather than made, and it has its own section above.</p>"
         )
         parts.append(P.table(
             ["cell line", "variant", "epoch read", "response features", "perturbations",
@@ -1130,8 +1268,9 @@ def limitations(r: Results) -> str:
 
 
 # --------------------------------------------------------------------------- #
-def build(summary_dir: Path, out_dir: Path) -> Path:
+def build(summary_dir: Path, out_dir: Path, alt_dir: Path | None = None) -> Path:
     r = Results(summary_dir)
+    alt = Results(alt_dir) if alt_dir else None
     made = figmod.build_all(summary_dir)
     figs = {k: v.get("fig") for k, v in made.items() if isinstance(v, dict)}
 
@@ -1175,14 +1314,16 @@ def build(summary_dir: Path, out_dir: Path) -> Path:
         sources=[S_FOLLOWUP, S_FIGS],
     )
     f_train = P.figure(
-        3, "Validation loss and response agreement per epoch",
+        3, "Three quantities per epoch, and the epoch each rule keeps",
         frag("training_curves"),
-        "Top: masked MSE on held-out validation cells per epoch, one line per run, with the "
-        "selected epoch marked. Bottom: on the same validation cells, the agreement between "
-        "the predicted and the measured perturbation response, before and after removing the "
-        "response shared across perturbations.",
-        "Validation loss falls and turns, so the runs train. The uncentred response agreement "
-        "rises with it; the centred one does not move off zero.",
+        "Top: the recipe's own checkpoint-selection score, the Pearson correlation across all "
+        "genes between each held-out perturbation's mean measured and mean predicted "
+        "expression profile, averaged over perturbations. Middle: masked MSE on the same "
+        "held-out cells, the training objective's own validation value. Bottom: the agreement "
+        "between the predicted and the measured perturbation response after removing the "
+        "response shared across perturbations. A star marks the epoch that panel's rule keeps.",
+        "Both validation quantities move over training, so the runs train. The centred "
+        "response agreement does not move off zero.",
         sources=[S_TRAIN, S_FIGS],
     )
 
@@ -1195,6 +1336,7 @@ def build(summary_dir: Path, out_dir: Path) -> Path:
         direct_section(r, f_pred),
         verdict_section(r, f_swap),
         training_section(r, f_train),
+        selection_section(r, alt),
         controls_section(r),
         artifacts_section(r),
         limitations(r),
@@ -1209,10 +1351,18 @@ def build(summary_dir: Path, out_dir: Path) -> Path:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--summary", default=None)
+    ap.add_argument(
+        "--alt-summary",
+        default=None,
+        help="the same runs trained under the other checkpoint-selection rule",
+    )
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
     summary = Path(a.summary) if a.summary else paths.results_dir() / "summary"
-    dest = build(summary, Path(a.out))
+    alt = Path(a.alt_summary) if a.alt_summary else None
+    if alt is not None and not alt.exists():
+        raise SystemExit(f"no alternative-rule summary at {alt}")
+    dest = build(summary, Path(a.out), alt)
     print(f"wrote {dest} ({dest.stat().st_size / 1000:.0f} kB)")
     return 0
 

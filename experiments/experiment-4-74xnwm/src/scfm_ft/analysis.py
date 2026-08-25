@@ -383,6 +383,20 @@ def headline(
                         "selected_epoch": int(r["selected_epoch"]),
                         "epochs_run": int(r["epochs_run"]),
                         "best_val_loss": float(r["best_val_loss"]),
+                        "selected_val_pearson": (
+                            float(r["selected_val_pearson"])
+                            if "selected_val_pearson" in t.columns
+                            and np.isfinite(r["selected_val_pearson"])
+                            else None
+                        ),
+                        "mse_selected_epoch": (
+                            int(r["mse_selected_epoch"])
+                            if "mse_selected_epoch" in t.columns
+                            and r["mse_selected_epoch"] is not None
+                            and np.isfinite(r["mse_selected_epoch"])
+                            else None
+                        ),
+                        "selection_rule": str(r["selection_rule"]),
                         "n_train_cells": r["n_train_cells"],
                         "artifact": str(r["artifact"]),
                         "response_agreement_at_selected_epoch": {

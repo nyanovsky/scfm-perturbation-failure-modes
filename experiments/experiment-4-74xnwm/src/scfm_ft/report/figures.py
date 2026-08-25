@@ -353,16 +353,33 @@ def figure_predict_vs_features(
 # figure 3: what fine-tuning did to the training objective
 # --------------------------------------------------------------------------- #
 def figure_training(epochs: pd.DataFrame, runs: pd.DataFrame, out: Path) -> dict:
-    """Validation loss per epoch, and the agreement the recipe does not select on."""
+    """Three quantities per epoch: the recipe's selection score, the training
+    objective's validation value, and the response agreement it does not select on.
+    """
     if epochs.empty:
         return {}
+    has_sel = "val_tutorial_pearson" in epochs and epochs["val_tutorial_pearson"].notna().any()
+    panels: list[tuple[str, str, str]] = []
+    if has_sel:
+        panels.append(("val_tutorial_pearson", "selection score", "Pearson over all genes"))
+    panels.append(("val_loss", "validation loss", "Masked MSE"))
+    panels.append(("delta_ctrlmean_centered", "response agreement", "Pearson, held-out"))
     fig = make_subplots(
-        rows=2, cols=2,
+        rows=len(panels), cols=2,
         subplot_titles=[
-            f"{LINE_LABEL[c]}, validation loss" for c in C.CELL_LINES
-        ] + [f"{LINE_LABEL[c]}, response agreement" for c in C.CELL_LINES],
-        vertical_spacing=0.16, horizontal_spacing=0.14,
+            f"{LINE_LABEL[c]}, {title}" for _, title, _ in panels for c in C.CELL_LINES
+        ],
+        vertical_spacing=0.11, horizontal_spacing=0.14,
     )
+    #: which epoch each rule keeps, so the marked point is read from the run
+    #: table rather than re-derived from the curve
+    picked = {}
+    if not runs.empty:
+        for x in runs.itertuples():
+            picked[(x.cell_line, x.arm)] = {
+                "val_tutorial_pearson": int(getattr(x, "selected_epoch", 0) or 0),
+                "val_loss": int(getattr(x, "mse_selected_epoch", 0) or 0),
+            }
     seen = set()
     for col, line in enumerate(C.CELL_LINES, start=1):
         for arm in [a.name for a in C.ARMS]:
@@ -372,45 +389,56 @@ def figure_training(epochs: pd.DataFrame, runs: pd.DataFrame, out: Path) -> dict
             colour = COLOR[entity_of_arm(arm)]
             dash = "solid" if arm.endswith("trainable") else "dot"
             label = ARM_LABEL[arm]
-            fig.add_trace(
-                go.Scatter(
-                    x=sub["epoch"], y=sub["val_loss"], mode="lines+markers",
-                    line=dict(color=colour, width=2, dash=dash), marker=dict(size=5),
-                    name=label, legendgroup=label, showlegend=label not in seen,
-                    hovertemplate="epoch %{x}<br>validation loss %{y:.4f}<extra></extra>",
-                ),
-                row=1, col=col,
-            )
-            seen.add(label)
-            if "delta_ctrlmean_centered" in sub:
+            for row, (column, _, _) in enumerate(panels, start=1):
+                if column not in sub:
+                    continue
                 fig.add_trace(
                     go.Scatter(
-                        x=sub["epoch"], y=sub["delta_ctrlmean_centered"], mode="lines+markers",
+                        x=sub["epoch"], y=sub[column], mode="lines+markers",
                         line=dict(color=colour, width=2, dash=dash), marker=dict(size=5),
-                        name=label, legendgroup=label, showlegend=False,
-                        hovertemplate="epoch %{x}<br>agreement %{y:.4f}<extra></extra>",
+                        name=label, legendgroup=label,
+                        showlegend=row == 1 and label not in seen,
+                        hovertemplate="epoch %{x}<br>%{y:.4f}<extra></extra>",
                     ),
-                    row=2, col=col,
+                    row=row, col=col,
                 )
-        add_reference_line(fig, y=0.0, label="no agreement", row=2, col=col)
-        fig.update_xaxes(title_text="Epoch", row=2, col=col)
-        fig.update_xaxes(title_text="Epoch", row=1, col=col)
-        fig.update_yaxes(title_text="Masked MSE" if col == 1 else "", row=1, col=col)
-        fig.update_yaxes(
-            title_text="Pearson, held-out perturbations" if col == 1 else "", row=2, col=col
-        )
-    apply_theme(fig, height=620)
+                kept = picked.get((line, arm), {}).get(column)
+                if kept:
+                    at = sub[sub["epoch"] == kept]
+                    if not at.empty:
+                        fig.add_trace(
+                            go.Scatter(
+                                x=at["epoch"], y=at[column], mode="markers",
+                                marker=dict(color=colour, size=13, symbol="star",
+                                            line=dict(color="white", width=1)),
+                                name="epoch kept", legendgroup="kept",
+                                showlegend=False,
+                                hovertemplate=(
+                                    "epoch %{x} is the one this rule keeps<extra></extra>"
+                                ),
+                            ),
+                            row=row, col=col,
+                        )
+            seen.add(label)
+        for row, (column, _, ytitle) in enumerate(panels, start=1):
+            if column == "delta_ctrlmean_centered":
+                add_reference_line(fig, y=0.0, label="no agreement", row=row, col=col)
+            fig.update_xaxes(title_text="Epoch", row=row, col=col)
+            fig.update_yaxes(title_text=ytitle if col == 1 else "", row=row, col=col)
+    apply_theme(fig, height=300 * len(panels))
     save_figure_bundle(
         fig, "training_curves",
         data={"epochs": epochs.to_dict(orient="records"), "runs": runs.to_dict(orient="records")},
         root=paths.repo_dir() / "figures",
         alt=(
-            "Validation loss per epoch for the ten fine-tuning runs, and beneath it the "
-            "agreement between the predicted and the measured perturbation response on the "
-            "same validation perturbations, which the recipe records but does not select on."
+            "Per epoch for the ten fine-tuning runs: the recipe's own checkpoint-selection "
+            "score, the masked MSE on the same held-out cells, and the agreement between the "
+            "predicted and the measured perturbation response, which the recipe records but "
+            "does not select on. A star marks the epoch each rule keeps."
         ),
     )
-    return {"fig": fig, "n_runs": int(runs.shape[0]) if not runs.empty else 0}
+    return {"fig": fig, "n_runs": int(runs.shape[0]) if not runs.empty else 0,
+            "panels": [c for c, _, _ in panels]}
 
 
 def build_all(summary: Path) -> dict:

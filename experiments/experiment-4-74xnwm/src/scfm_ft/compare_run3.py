@@ -48,17 +48,16 @@ ARMS = (
 )
 
 
-def build(out_dir: Path | None = None) -> Path:
+def build(out_dir: Path | None = None, summary: Path | None = None) -> Path:
     out_dir = Path(out_dir) if out_dir else paths.results_dir()
+    summary = Path(summary) if summary else paths.results_dir() / "summary"
     run3 = pd.read_parquet(run3_dir() / "results" / "summary" / "runs.parquet")
     for k, v in RUN3_FILTER.items():
         run3 = run3[run3[k].astype(str) == v]
 
     rows = []
     for line in C.CELL_LINES:
-        cf = pd.read_parquet(
-            paths.results_dir() / "summary" / f"crossfit_{line}__own_trainable.parquet"
-        )
+        cf = pd.read_parquet(summary / f"crossfit_{line}__own_trainable.parquet")
         cf = cf[(cf.target == "residual") & (cf.weighting == "weighted")]
         for arm, label in ARMS:
             a = run3[(run3.cell_line == line) & (run3.arm == arm)]
@@ -99,8 +98,11 @@ def build(out_dir: Path | None = None) -> Path:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--summary", default=None)
     a = ap.parse_args(argv)
-    dest = build(Path(a.out) if a.out else None)
+    dest = build(
+        Path(a.out) if a.out else None, Path(a.summary) if a.summary else None
+    )
     frame = pd.read_parquet(dest)
     print(frame.to_string(index=False))
     print(f"wrote {dest}")
