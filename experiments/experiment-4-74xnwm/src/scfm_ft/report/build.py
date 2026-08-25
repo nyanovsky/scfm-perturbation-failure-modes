@@ -327,12 +327,12 @@ def setup(r: Results) -> str:
             ("gene subset per batch", f"{rec.max_seq_len} of the read-out set"),
             ("selection", rec.val_metric),
         ]),
-        ("what varies across arms", [
+        ("the five arms", [
             (ARM_LABEL[a.name], a.note) for a in C.ARMS
         ]),
     ])
     return P.section(
-        "What was fine-tuned",
+        "The recipe and the five arms",
         "<p>scGPT ships a perturbation fine-tuning tutorial. We restated it rather than "
         "importing it, because the run needs the model to be queryable the way runs 2 and 3 "
         "query it, and checked the restatement against the installed library: the masked-MSE "
@@ -604,7 +604,7 @@ def direct_section(r: Results, chart: str) -> str:
                 "recipe's own validation diagnostic, centred, at the selected epoch.",
     )
     return P.section(
-        "What the fine-tuned model actually learned",
+        "The fine-tuned model predicts the shared response, not the gene-specific part",
         "<p>A feature swap can only find signal the model has. Before concluding anything "
         "about the features, it is worth asking whether fine-tuning worked at all on its own "
         "terms. So we scored the model's prediction directly: run the perturbation forward "
@@ -684,7 +684,7 @@ def training_section(r: Results, chart: str) -> str:
                 "lowest masked MSE on held-out validation cells.",
     )
     return P.section(
-        "The runs themselves",
+        "Training curves and selected epochs",
         "<p>Every run trains, in the sense the recipe means: the training loss falls, the "
         "validation loss falls and then turns, and early stopping fires. The selected epoch "
         "is chosen on held-out masked MSE, which is what the tutorial selects on, and not on "
@@ -719,7 +719,8 @@ def controls_section(r: Results) -> str:
         ["cell line", "run 3 arm", "score on these folds", "perturbations", "groups"],
         ref_rows,
         sources=[S_SCORE],
-        caption="Run 3's arms re-run inside every run-4 job on the same restricted folds, so "
+        caption="Run 3's arms re-run alongside every fine-tuned arm on the same restricted "
+                "folds, so "
                 "the fine-tuned arms are compared against numbers from the same code path.",
     ))
     if unscored:
@@ -740,7 +741,7 @@ def controls_section(r: Results) -> str:
                  f"is {P.num(spread)} correlation points"
         )
         parts.append(
-            f"<p>Those reference arms are recomputed independently inside every job. Across "
+            f"<p>Those reference arms are recomputed independently for every arm. Across "
             f"the {n_read} readings per cell line that withhold the same two folds, {found}, "
             "which is the reproducibility of the scoring path itself. The two refits withhold "
             "different folds, so their recomputations are scored on different perturbations "
@@ -766,7 +767,8 @@ def controls_section(r: Results) -> str:
             parts.append(
                 "<p>The shuffled-label band every score above is read against is run 3's "
                 "pre-registered null, unchanged: the co-expression arm re-scored against "
-                "shuffled labels, recomputed inside every job. Each fine-tuned arm also draws "
+                "shuffled labels, recomputed alongside the arm it judges. Each fine-tuned arm "
+                "also draws "
                 "its own shuffled labels; those draws are not folded into the band, because "
                 f"each addition could only widen it, and {verdict}.</p>"
             )
@@ -862,7 +864,7 @@ def artifacts_section(r: Results) -> str:
 
 def limitations(r: Results) -> str:
     return P.section(
-        "What this does and does not settle",
+        "Limitations",
         "<ul>"
         "<li>This is one model family and one recipe. It is scGPT's own published "
         "perturbation recipe on the screen the question is about, which is the strongest "
@@ -934,7 +936,7 @@ def build(summary_dir: Path, out_dir: Path) -> Path:
         sources=[S_FOLLOWUP, S_FIGS],
     )
     f_train = P.figure(
-        3, "What fine-tuning optimised",
+        3, "Validation loss and response agreement per epoch",
         frag("training_curves"),
         "Top: masked MSE on held-out validation cells per epoch, one line per run, with the "
         "selected epoch marked. Bottom: on the same validation cells, the agreement between "
