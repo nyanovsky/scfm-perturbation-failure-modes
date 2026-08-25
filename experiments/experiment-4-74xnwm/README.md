@@ -16,6 +16,21 @@ Five fine-tuning arms per cell line, varying only the gene table and whether it 
 | `esm2_frozen` | ESM2-3B substituted | frozen | the same, with the table held fixed |
 | `rand_frozen` | random, ESM2's width | frozen | capacity-matched null for the two ESM2 arms |
 
+## Result
+
+All 10 fine-tuned models (5 arms x 2 cell lines) leave the queried response features inside run 3's
+shuffled-label band. The highest reaches 0.045629 against the same model's static gene table at
+0.227871 in HepG2 and 0.231806 in Jurkat, so 5 to 43 times below it. Fine-tuning does work on its
+own terms — the predicted profile correlates with the measured effect at 0.545115 and 0.344712 — but
+that agreement is not perturbation-specific: measured against the model's own unflagged output it
+falls to 0.081793 and 0.001952, and only 0.120229 and 0.055233 of a predicted profile's variance
+survives subtracting the mean prediction, against 0.744403 and 0.869399 for the measurement itself.
+Reading the same checkpoints through the model's own perturbation-flag query instead is noisier and
+not a clean null: 2 of those 10 readings, both in Jurkat, sit above the band and above that query's
+own pooled shuffled draws. This is a bound at the achieved resolution, not a demonstration that
+fine-tuning cannot install the signal; on these two folds co-expression itself is not separated from
+the band.
+
 ## Layout
 
 | path | what |
