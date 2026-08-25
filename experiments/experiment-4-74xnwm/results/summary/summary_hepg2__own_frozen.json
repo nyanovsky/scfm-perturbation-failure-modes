@@ -1,0 +1,510 @@
+{
+  "cell_line": "hepg2",
+  "arm": "own_frozen",
+  "n_perturbations_total": 524,
+  "n_scored": 243,
+  "n_groups_total": 226,
+  "n_groups_scored": 54,
+  "eval_folds": [
+    0,
+    1
+  ],
+  "fold_sizes": [
+    149,
+    94,
+    94,
+    94,
+    93
+  ],
+  "ceilings_restricted": {
+    "residual_weighted": 0.7632134402640142,
+    "residual_unweighted": 0.7325602886897388,
+    "raw_weighted": 0.8504610525358257,
+    "raw_unweighted": 0.8261454743830965,
+    "centered_weighted": 0.6079052362596387,
+    "centered_unweighted": 0.5691417782016369
+  },
+  "ceilings_all_folds": {
+    "residual_weighted": 0.6847125460703934,
+    "residual_unweighted": 0.6480816460587595,
+    "raw_weighted": 0.7476372159536739,
+    "raw_unweighted": 0.7150876608854085,
+    "centered_weighted": 0.5744401635887746,
+    "centered_unweighted": 0.5394138464315211
+  },
+  "n_runs": 43,
+  "bundle_inventory": {
+    "cell_line": "hepg2",
+    "n_perturbations": 524,
+    "n_readout": 2721,
+    "embeddings": {
+      "ft_own_frozen": 512,
+      "ftq_own_frozen": 512,
+      "pre_own_frozen": 512,
+      "preq_own_frozen": 512,
+      "scgpt": 512
+    },
+    "features": {
+      "ft_own_frozen__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "ftq_own_frozen__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "pre_own_frozen__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "preq_own_frozen__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "scgpt__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      }
+    },
+    "coexpr_keys": [
+      "mi_bits",
+      "mi_bits_check",
+      "partial",
+      "partial_check",
+      "pearson",
+      "pearson_check",
+      "spearman",
+      "spearman_check"
+    ],
+    "node_features": [
+      "log1p_mean_cp10k",
+      "mean_log1p",
+      "sd_log1p",
+      "detection_rate",
+      "coexpr_degree_fraction",
+      "mean_abs_corr"
+    ],
+    "strata": [
+      "S3",
+      "S4_highest"
+    ],
+    "perturbed_genes_in_readout": 524,
+    "reference": {
+      "cell_line": "hepg2",
+      "n_perturbations": 524,
+      "n_readout_genes": 2721,
+      "reliability": {
+        "shrinkage_lambda": 0.9779701865651215,
+        "median_weight": 0.6365889289188426,
+        "mean_weight": 0.631341617795463,
+        "fraction_weight_below_0.1": 0.0,
+        "fraction_weight_above_0.5": 0.7680999632488056,
+        "var_between_z": 0.08520735280334922,
+        "var_sampling_z": 0.0019193857965451055
+      },
+      "residual_ceiling": {
+        "median_half_split": 0.4865466606616985,
+        "median_spearman_brown": 0.654599714269554,
+        "q25": 0.516463906738253,
+        "q75": 0.774487753669816,
+        "sd": 0.17714481246605918
+      },
+      "raw_effect_ceiling": {
+        "median_half_split": 0.6011743317820577,
+        "median_spearman_brown": 0.7509098238167695
+      },
+      "shared_response": {
+        "mean_effect_l2": 12.660398483276367,
+        "median_residual_fraction_of_variance": 0.7444034880736327
+      },
+      "power": {
+        "n_held_out_perturbations": 524,
+        "sd_per_perturbation_used": 0.17714481246605918,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "min_resolvable_difference": {
+          "paired_rho_0.5": 0.02168036715761371,
+          "paired_rho_0.8": 0.01371186814535401
+        },
+        "note": "sd is the spread of the per-perturbation residual ceiling, used as the pre-run estimate of per-perturbation heterogeneity; the achieved resolution is recomputed from the actual paired differences"
+      }
+    }
+  },
+  "installed_blocks": [
+    {
+      "model_key": "pre_own_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "preq_own_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0
+      ]
+    },
+    {
+      "model_key": "ft_own_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "ftq_own_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0
+      ]
+    }
+  ],
+  "heldout_folds": [
+    0,
+    1
+  ],
+  "force_perturbed_gene_in_sequence": true,
+  "direct_prediction": {
+    "baseline": "unflagged_model_output",
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "raw",
+      "centered"
+    ],
+    "fold_mean_removed_before_scoring": true,
+    "residual_note": "not interpretable for this arm: the model's output is not on the measured log2 fold-change scale, so no single profile can be subtracted from both sides",
+    "residual_weighted": {
+      "cell_line": "hepg2",
+      "arm_label": "direct_prediction/own_frozen",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": -0.2525411850855645,
+      "attenuated_lo": -0.35261388966288487,
+      "attenuated_hi": 0.5897301280800786,
+      "disattenuated": -0.28907411801803506,
+      "disattenuated_lo": -0.40362346886378686,
+      "disattenuated_hi": 0.6750412475717654,
+      "ceiling": 0.7632134402640142,
+      "n_scored": 243,
+      "n_groups": 54,
+      "se": 0.34248377376099043,
+      "sd_single": 0.4047379939598359
+    },
+    "all_cells": [
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": -0.2525411850855645,
+        "attenuated_lo": -0.35261388966288487,
+        "attenuated_hi": 0.5897301280800786,
+        "disattenuated": -0.28907411801803506,
+        "disattenuated_lo": -0.40362346886378686,
+        "disattenuated_hi": 0.6750412475717654,
+        "ceiling": 0.7632134402640142,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.34248377376099043,
+        "sd_single": 0.4047379939598359
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": -0.24690901082917033,
+        "attenuated_lo": -0.3576723769543297,
+        "attenuated_hi": 0.5514518171165363,
+        "disattenuated": -0.2884796971380601,
+        "disattenuated_lo": -0.4178916704251972,
+        "disattenuated_hi": 0.6442966688569998,
+        "ceiling": 0.7325602886897388,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.32990829812880196,
+        "sd_single": 0.39043205288976074
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": 0.006283891484262563,
+        "attenuated_lo": -0.03663197282157029,
+        "attenuated_hi": 0.01853336698570174,
+        "disattenuated": 0.008059548897955583,
+        "disattenuated_lo": -0.046983175461164546,
+        "disattenuated_hi": 0.023770394164046905,
+        "ceiling": 0.6079052362596387,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.014914468414745514,
+        "sd_single": 0.10851634532672819
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": 0.00771445766637461,
+        "attenuated_lo": -0.03476841692691384,
+        "attenuated_hi": 0.01761682756474198,
+        "disattenuated": 0.0102257499080335,
+        "disattenuated_lo": -0.046086601491448914,
+        "disattenuated_hi": 0.023351644488919875,
+        "ceiling": 0.5691417782016369,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.013355022163176838,
+        "sd_single": 0.09855743544730038
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": 0.04175719997388938,
+        "attenuated_lo": 0.015145573857067787,
+        "attenuated_hi": 0.04588126713993139,
+        "disattenuated": 0.04527976399670516,
+        "disattenuated_lo": 0.01642322785702867,
+        "disattenuated_hi": 0.04975173022292982,
+        "ceiling": 0.8504610525358257,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.009200325380126089,
+        "sd_single": 0.10462604206499349
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": 0.04489493429646554,
+        "attenuated_lo": 0.0126805030013209,
+        "attenuated_hi": 0.05171666001557708,
+        "disattenuated": 0.04939341755339299,
+        "disattenuated_lo": 0.013951092463913146,
+        "disattenuated_hi": 0.05689868183674719,
+        "ceiling": 0.8261454743830965,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.011321196533494265,
+        "sd_single": 0.0976961396848108
+      }
+    ]
+  },
+  "direct_prediction_control_mean": {
+    "baseline": "measured_control_mean",
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "raw",
+      "centered"
+    ],
+    "fold_mean_removed_before_scoring": true,
+    "residual_note": "not interpretable for this arm: the model's output is not on the measured log2 fold-change scale, so no single profile can be subtracted from both sides",
+    "residual_weighted": {
+      "cell_line": "hepg2",
+      "arm_label": "direct_prediction/own_frozen",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": -0.24405710401771774,
+      "attenuated_lo": -0.3398909373595532,
+      "attenuated_hi": 0.5815738756406251,
+      "disattenuated": -0.2793627188612981,
+      "disattenuated_lo": -0.38905999790191187,
+      "disattenuated_hi": 0.6657051011548212,
+      "ceiling": 0.7632134402640142,
+      "n_scored": 243,
+      "n_groups": 54,
+      "se": 0.33656262120890007,
+      "sd_single": 0.3950545227287546
+    },
+    "all_cells": [
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": -0.24405710401771774,
+        "attenuated_lo": -0.3398909373595532,
+        "attenuated_hi": 0.5815738756406251,
+        "disattenuated": -0.2793627188612981,
+        "disattenuated_lo": -0.38905999790191187,
+        "disattenuated_hi": 0.6657051011548212,
+        "ceiling": 0.7632134402640142,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.33656262120890007,
+        "sd_single": 0.3950545227287546
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": -0.24475942892400104,
+        "attenuated_lo": -0.34308137590433974,
+        "attenuated_hi": 0.546285100118092,
+        "disattenuated": -0.28596820217522245,
+        "disattenuated_lo": -0.400844064306219,
+        "disattenuated_hi": 0.6382600606752896,
+        "ceiling": 0.7325602886897388,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.3250794794572512,
+        "sd_single": 0.3817995911274201
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": 0.006283762106892147,
+        "attenuated_lo": -0.0366319695552202,
+        "attenuated_hi": 0.018533398043780316,
+        "disattenuated": 0.008059382962046956,
+        "disattenuated_lo": -0.04698317127183245,
+        "disattenuated_hi": 0.02377043399829668,
+        "ceiling": 0.6079052362596387,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.014914467747009883,
+        "sd_single": 0.10851634643716199
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": 0.007714499105830926,
+        "attenuated_lo": -0.03476844634860752,
+        "attenuated_hi": 0.017616828342493212,
+        "disattenuated": 0.010225804837302017,
+        "disattenuated_lo": -0.046086640490804985,
+        "disattenuated_hi": 0.023351645519852953,
+        "ceiling": 0.5691417782016369,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.013355028297614127,
+        "sd_single": 0.09855743656328754
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": 0.5212160688897473,
+        "attenuated_lo": 0.23381637971763425,
+        "attenuated_hi": 0.5418245067799875,
+        "disattenuated": 0.565184940689881,
+        "disattenuated_lo": 0.2535407186975799,
+        "disattenuated_hi": 0.5875318701917233,
+        "ceiling": 0.8504610525358257,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.09702653630971296,
+        "sd_single": 0.15904858780242725
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_frozen",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": 0.5094638749410307,
+        "attenuated_lo": 0.20984408790394515,
+        "attenuated_hi": 0.5259328470197652,
+        "disattenuated": 0.5605122782262993,
+        "disattenuated_lo": 0.2308705161812982,
+        "disattenuated_hi": 0.5786314452839543,
+        "ceiling": 0.8261454743830965,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.10004988047870945,
+        "sd_single": 0.15682804066783046
+      }
+    ]
+  }
+}

@@ -1,0 +1,510 @@
+{
+  "cell_line": "hepg2",
+  "arm": "esm2_trainable",
+  "n_perturbations_total": 524,
+  "n_scored": 243,
+  "n_groups_total": 226,
+  "n_groups_scored": 54,
+  "eval_folds": [
+    0,
+    1
+  ],
+  "fold_sizes": [
+    149,
+    94,
+    94,
+    94,
+    93
+  ],
+  "ceilings_restricted": {
+    "residual_weighted": 0.7632134402640142,
+    "residual_unweighted": 0.7325602886897388,
+    "raw_weighted": 0.8504610525358257,
+    "raw_unweighted": 0.8261454743830965,
+    "centered_weighted": 0.6079052362596387,
+    "centered_unweighted": 0.5691417782016369
+  },
+  "ceilings_all_folds": {
+    "residual_weighted": 0.6847125460703934,
+    "residual_unweighted": 0.6480816460587595,
+    "raw_weighted": 0.7476372159536739,
+    "raw_unweighted": 0.7150876608854085,
+    "centered_weighted": 0.5744401635887746,
+    "centered_unweighted": 0.5394138464315211
+  },
+  "n_runs": 43,
+  "bundle_inventory": {
+    "cell_line": "hepg2",
+    "n_perturbations": 524,
+    "n_readout": 2721,
+    "embeddings": {
+      "ft_esm2_trainable": 512,
+      "ftq_esm2_trainable": 512,
+      "pre_esm2_trainable": 512,
+      "preq_esm2_trainable": 512,
+      "scgpt": 512
+    },
+    "features": {
+      "ft_esm2_trainable__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "ftq_esm2_trainable__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "pre_esm2_trainable__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "preq_esm2_trainable__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "scgpt__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      }
+    },
+    "coexpr_keys": [
+      "mi_bits",
+      "mi_bits_check",
+      "partial",
+      "partial_check",
+      "pearson",
+      "pearson_check",
+      "spearman",
+      "spearman_check"
+    ],
+    "node_features": [
+      "log1p_mean_cp10k",
+      "mean_log1p",
+      "sd_log1p",
+      "detection_rate",
+      "coexpr_degree_fraction",
+      "mean_abs_corr"
+    ],
+    "strata": [
+      "S3",
+      "S4_highest"
+    ],
+    "perturbed_genes_in_readout": 524,
+    "reference": {
+      "cell_line": "hepg2",
+      "n_perturbations": 524,
+      "n_readout_genes": 2721,
+      "reliability": {
+        "shrinkage_lambda": 0.9779701865651215,
+        "median_weight": 0.6365889289188426,
+        "mean_weight": 0.631341617795463,
+        "fraction_weight_below_0.1": 0.0,
+        "fraction_weight_above_0.5": 0.7680999632488056,
+        "var_between_z": 0.08520735280334922,
+        "var_sampling_z": 0.0019193857965451055
+      },
+      "residual_ceiling": {
+        "median_half_split": 0.4865466606616985,
+        "median_spearman_brown": 0.654599714269554,
+        "q25": 0.516463906738253,
+        "q75": 0.774487753669816,
+        "sd": 0.17714481246605918
+      },
+      "raw_effect_ceiling": {
+        "median_half_split": 0.6011743317820577,
+        "median_spearman_brown": 0.7509098238167695
+      },
+      "shared_response": {
+        "mean_effect_l2": 12.660398483276367,
+        "median_residual_fraction_of_variance": 0.7444034880736327
+      },
+      "power": {
+        "n_held_out_perturbations": 524,
+        "sd_per_perturbation_used": 0.17714481246605918,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "min_resolvable_difference": {
+          "paired_rho_0.5": 0.02168036715761371,
+          "paired_rho_0.8": 0.01371186814535401
+        },
+        "note": "sd is the spread of the per-perturbation residual ceiling, used as the pre-run estimate of per-perturbation heterogeneity; the achieved resolution is recomputed from the actual paired differences"
+      }
+    }
+  },
+  "installed_blocks": [
+    {
+      "model_key": "pre_esm2_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "preq_esm2_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0
+      ]
+    },
+    {
+      "model_key": "ft_esm2_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "ftq_esm2_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0
+      ]
+    }
+  ],
+  "heldout_folds": [
+    0,
+    1
+  ],
+  "force_perturbed_gene_in_sequence": true,
+  "direct_prediction": {
+    "baseline": "unflagged_model_output",
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "raw",
+      "centered"
+    ],
+    "fold_mean_removed_before_scoring": true,
+    "residual_note": "not interpretable for this arm: the model's output is not on the measured log2 fold-change scale, so no single profile can be subtracted from both sides",
+    "residual_weighted": {
+      "cell_line": "hepg2",
+      "arm_label": "direct_prediction/esm2_trainable",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": -0.22567879874276792,
+      "attenuated_lo": -0.3326545945003026,
+      "attenuated_hi": 0.5832596384747889,
+      "disattenuated": -0.25832578428675607,
+      "disattenuated_lo": -0.3807768363692484,
+      "disattenuated_hi": 0.6676347286106691,
+      "ceiling": 0.7632134402640142,
+      "n_scored": 243,
+      "n_groups": 54,
+      "se": 0.3265077040399701,
+      "sd_single": 0.39867780334472996
+    },
+    "all_cells": [
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": -0.22567879874276792,
+        "attenuated_lo": -0.3326545945003026,
+        "attenuated_hi": 0.5832596384747889,
+        "disattenuated": -0.25832578428675607,
+        "disattenuated_lo": -0.3807768363692484,
+        "disattenuated_hi": 0.6676347286106691,
+        "ceiling": 0.7632134402640142,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.3265077040399701,
+        "sd_single": 0.39867780334472996
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": -0.23399277166506624,
+        "attenuated_lo": -0.34128496843904876,
+        "attenuated_hi": 0.5511924286436998,
+        "disattenuated": -0.27338882317720065,
+        "disattenuated_lo": -0.3987452057842745,
+        "disattenuated_hi": 0.6439936086007794,
+        "ceiling": 0.7325602886897388,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.3158568172776266,
+        "sd_single": 0.385136182050495
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": 0.08537666697892361,
+        "attenuated_lo": -0.013602490220279142,
+        "attenuated_hi": 0.10463208270673922,
+        "disattenuated": 0.1095017990021601,
+        "disattenuated_lo": -0.017446185272113723,
+        "disattenuated_hi": 0.1341982733122993,
+        "ceiling": 0.6079052362596387,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.030709120366900055,
+        "sd_single": 0.17685114732180524
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": 0.08227047826256609,
+        "attenuated_lo": -0.012027403074594246,
+        "attenuated_hi": 0.10034133885270159,
+        "disattenuated": 0.1090520386409306,
+        "disattenuated_lo": -0.01594269113952017,
+        "disattenuated_hi": 0.13300551781071196,
+        "ceiling": 0.5691417782016369,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.02999502625290106,
+        "sd_single": 0.16618346711712123
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": -0.19670313590173005,
+        "attenuated_lo": -0.337829486899532,
+        "attenuated_hi": -0.1071353262031983,
+        "disattenuated": -0.21329666684096313,
+        "disattenuated_lo": -0.36632818885135643,
+        "disattenuated_hi": -0.11617307408600652,
+        "ceiling": 0.8504610525358257,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.0553169984376379,
+        "sd_single": 0.1724830797686836
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": -0.1919009337564959,
+        "attenuated_lo": -0.31798335367890485,
+        "attenuated_hi": -0.09683916074469638,
+        "disattenuated": -0.21112945365568425,
+        "disattenuated_lo": -0.3498453624984346,
+        "disattenuated_hi": -0.10654246803429451,
+        "ceiling": 0.8261454743830965,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.05277748299689194,
+        "sd_single": 0.1669538200275278
+      }
+    ]
+  },
+  "direct_prediction_control_mean": {
+    "baseline": "measured_control_mean",
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "raw",
+      "centered"
+    ],
+    "fold_mean_removed_before_scoring": true,
+    "residual_note": "not interpretable for this arm: the model's output is not on the measured log2 fold-change scale, so no single profile can be subtracted from both sides",
+    "residual_weighted": {
+      "cell_line": "hepg2",
+      "arm_label": "direct_prediction/esm2_trainable",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": -0.2473602612524013,
+      "attenuated_lo": -0.3582292827853261,
+      "attenuated_hi": 0.5831857792906971,
+      "disattenuated": -0.2831437150737278,
+      "disattenuated_lo": -0.4100511919840544,
+      "disattenuated_hi": 0.6675501848619272,
+      "ceiling": 0.7632134402640142,
+      "n_scored": 243,
+      "n_groups": 54,
+      "se": 0.34224613253098446,
+      "sd_single": 0.3953892488481331
+    },
+    "all_cells": [
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": -0.2473602612524013,
+        "attenuated_lo": -0.3582292827853261,
+        "attenuated_hi": 0.5831857792906971,
+        "disattenuated": -0.2831437150737278,
+        "disattenuated_lo": -0.4100511919840544,
+        "disattenuated_hi": 0.6675501848619272,
+        "ceiling": 0.7632134402640142,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.34224613253098446,
+        "sd_single": 0.3953892488481331
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": -0.24735628692631859,
+        "attenuated_lo": -0.3540255532120225,
+        "attenuated_hi": 0.5460803013981367,
+        "disattenuated": -0.2890022786048487,
+        "disattenuated_lo": -0.4136308514086546,
+        "disattenuated_hi": 0.6380207811426855,
+        "ceiling": 0.7325602886897388,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.33025699312634155,
+        "sd_single": 0.38256525279437736
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": 0.08537663837305376,
+        "attenuated_lo": -0.013602509593355936,
+        "attenuated_hi": 0.1046320835033506,
+        "disattenuated": 0.10950176231304676,
+        "disattenuated_lo": -0.017446210119496926,
+        "disattenuated_hi": 0.13419827433401146,
+        "ceiling": 0.6079052362596387,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.030709116370265792,
+        "sd_single": 0.17685114769482485
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": 0.08227047697677416,
+        "attenuated_lo": -0.012027374359997723,
+        "attenuated_hi": 0.10034134892381558,
+        "disattenuated": 0.10905203693657402,
+        "disattenuated_lo": -0.015942653077443036,
+        "disattenuated_hi": 0.133005531160282,
+        "ceiling": 0.5691417782016369,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.029995022407895956,
+        "sd_single": 0.16618346752891622
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": 0.5039874066585828,
+        "attenuated_lo": 0.2332142114086432,
+        "attenuated_hi": 0.5285815050502196,
+        "disattenuated": 0.5465028987834822,
+        "disattenuated_lo": 0.252887752528046,
+        "disattenuated_hi": 0.5731717121038534,
+        "ceiling": 0.8504610525358257,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.08399043244315763,
+        "sd_single": 0.15478884836502174
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_trainable",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": 0.49509699976996835,
+        "attenuated_lo": 0.21280820961310568,
+        "attenuated_hi": 0.5189054344106403,
+        "disattenuated": 0.5447058386940418,
+        "disattenuated_lo": 0.23413164360143943,
+        "disattenuated_hi": 0.5708998842345419,
+        "ceiling": 0.8261454743830965,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.08764423832509008,
+        "sd_single": 0.15288693682064292
+      }
+    ]
+  }
+}

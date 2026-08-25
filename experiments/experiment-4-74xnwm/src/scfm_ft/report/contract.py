@@ -74,6 +74,23 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
             key(cell_line=line, target="residual", weighting="weighted", translator="mlp",
                 column="null_max", over="all base arms"),
         )
+        if (d := B.own_query_draws(r, line)) is not None:
+            e["own_query_draw_min"] = claim(
+                f"lowest shuffled-label draw of the perturbation-flag query in {L}, "
+                "pooled over the arms scored on the band's folds",
+                d[0], NULLCHECK,
+                key(cell_line=line, family="pert_flag", column="draw_min", agg="min"),
+            )
+            e["own_query_draw_max"] = claim(
+                f"highest shuffled-label draw of the perturbation-flag query in {L}, "
+                "pooled over the arms scored on the band's folds",
+                d[1], NULLCHECK,
+                key(cell_line=line, family="pert_flag", column="draw_max", agg="max"),
+            )
+            e["own_query_readings_above_draws"] = int(sum(
+                1 for arm in (a.name for a in C.ARMS)
+                if (p := r.feat(line, arm, "final__pert_flag_resp")) and p["score"] > d[1]
+            ))
         for ref in ("coexp", "scgpt_emb", "scgpt_resp", "null_randpair"):
             row = r.ref(line, ref)
             if row:
@@ -362,6 +379,36 @@ def build(summary_dir: Path, out_dir: Path, alt_dir: Path | None = None) -> tupl
         if alt_dir is not None and Path(alt_dir).exists()
         else None
     )
+    # the numbers the prose below asserts, read from the tables rather than
+    # restated from a previous execution
+    exc = B.paired_exceptions(r)
+    exc_frozen = [d for d in exc if d["against"] == "scgpt_resp"]
+    exc_text = (
+        "; ".join(d["label"] for d in exc_frozen) if exc_frozen else "none"
+    )
+    ratios = [
+        e["score"] / p["score"]
+        for p in r.all_feature_points("final__value_substitution_resp")
+        if (e := r.ref(p["cell_line"], "scgpt_emb")) and p["score"] > 0
+    ]
+    ratio_text = (
+        f"{min(ratios):.0f} to {max(ratios):.0f} times higher" if ratios else "far higher"
+    )
+    own_above = B.own_query_above(r)
+    own_text = (
+        ""
+        if not own_above
+        else " One secondary read-out is not a clean null: querying the checkpoints "
+        "through the model's own perturbation-flag input rather than through the "
+        f"value substitution runs 2 and 3 use puts {len(own_above)} of "
+        f"{n['n_models']} readings above both the band and that query's own shuffled "
+        "draws ("
+        + "; ".join(
+            f"{B.LINE[p['cell_line']]} {B.ARM_LABEL.get(p['arm'], p['arm'])} "
+            f"{p['score']:.4f}" for p in own_above
+        )
+        + "), and those two are reported as unexplained rather than resolved."
+    )
     h = n["lines"].get("hepg2", {})
     j = n["lines"].get("jurkat", {})
     ho = h.get("arms", {}).get("own_trainable", {})
@@ -378,8 +425,9 @@ def build(summary_dir: Path, out_dir: Path, alt_dir: Path | None = None) -> tupl
             f"the gene table at {h.get('scgpt_emb', float('nan')):.4f} in HepG2 and "
             f"{j.get('scgpt_emb', float('nan')):.4f} in Jurkat. Paired against the frozen "
             f"model's own response features, {n.get('n_paired_zero', '?')} of the "
-            f"{n.get('n_paired', '?')} differences include zero; the exceptions are in Jurkat "
-            "and are a few hundredths of a correlation point. On the model's own prediction "
+            f"{n.get('n_paired', '?')} differences include zero; the exceptions are "
+            f"{exc_text}, a few hundredths of a correlation point and in opposite "
+            f"directions.{own_text} On the model's own prediction "
             "head the predicted profile matches the measured effect at "
             f"{ho.get('direct_raw', float('nan')):.4f} in HepG2 and "
             f"{jo.get('direct_raw', float('nan')):.4f} in Jurkat, but that agreement is not "
@@ -400,14 +448,15 @@ def build(summary_dir: Path, out_dir: Path, alt_dir: Path | None = None) -> tupl
         "assessment": (
             "The pre-registered prediction holds in its first half: the response features stay "
             "inside the shuffled-label band in all ten fine-tuned models, and the gene-table "
-            "arm stays six to thirteen times higher. Its second half, that the model might "
+            f"arm stays {ratio_text}. Its second half, that the model might "
             "predict better even so, is not borne out either, but the evidence for that is of "
             "two different strengths and they should not be run together.\n\n"
             "What the data supports. No fine-tuned arm's response features clear the band. The "
             "paired differences against the frozen model's own response features are small; "
-            "most include zero, and the two that do not are both in Jurkat, both from "
-            "trainable-table arms, both about two hundredths of a correlation point, and both "
-            "among thirty-six paired differences computed on this page, so neither is evidence "
+            f"most include zero, and the {len(exc_frozen)} that do not ({exc_text}) are a "
+            "few hundredths of a correlation point, point in opposite directions, and sit "
+            f"among the {n.get('n_paired_all_references', '?')} paired differences computed on "
+            "this page, so neither is evidence "
             "on its own. The model's predicted profile matches the measured effect when the "
             "reference is the measured control, and stops matching when the reference is the "
             "model's own unflagged output, which locates that agreement in a systematic offset "
@@ -422,7 +471,12 @@ def build(summary_dir: Path, out_dir: Path, alt_dir: Path | None = None) -> tupl
             "is not separated from the band, so the evaluation cannot resolve a co-expression"
             "-sized effect there. The result is a bound, not a zero: at the resolution these "
             "folds achieve, fine-tuning produces no detectable improvement in the queried "
-            "response features and leaves them far below the gene table.\n\n"
+            "response features and leaves them far below the gene table."
+            + own_text
+            + " That column's own shuffled draws are several times wider than the band and "
+            "uneven across arms, the other arms in the same cell line do not reproduce it, "
+            "and both readings stay three to four times below the gene table, so it is "
+            "reported as a noisy reading rather than as a signal.\n\n"
             "Scope and limits. One architecture and one recipe, run on the screen the question "
             "is about, which is the setting most favourable to installing the signal and "
             "therefore the setting in which a null is most informative; it does not speak to "

@@ -1,0 +1,510 @@
+{
+  "cell_line": "jurkat",
+  "arm": "own_trainable__upstream",
+  "n_perturbations_total": 705,
+  "n_scored": 282,
+  "n_groups_total": 452,
+  "n_groups_scored": 137,
+  "eval_folds": [
+    0,
+    1
+  ],
+  "fold_sizes": [
+    141,
+    141,
+    141,
+    141,
+    141
+  ],
+  "ceilings_restricted": {
+    "residual_weighted": 0.5664885966718883,
+    "residual_unweighted": 0.5000531465142553,
+    "raw_weighted": 0.612902468019627,
+    "raw_unweighted": 0.5510880327814518,
+    "centered_weighted": 0.44313273028914574,
+    "centered_unweighted": 0.36795946387179995
+  },
+  "ceilings_all_folds": {
+    "residual_weighted": 0.5071819396306455,
+    "residual_unweighted": 0.4428814204192859,
+    "raw_weighted": 0.5486063004849999,
+    "raw_unweighted": 0.4884926441851486,
+    "centered_weighted": 0.4437062127878906,
+    "centered_unweighted": 0.3738215662153465
+  },
+  "n_runs": 43,
+  "bundle_inventory": {
+    "cell_line": "jurkat",
+    "n_perturbations": 705,
+    "n_readout": 3247,
+    "embeddings": {
+      "ft_own_trainable-upstream": 512,
+      "ftq_own_trainable-upstream": 512,
+      "pre_own_trainable-upstream": 512,
+      "preq_own_trainable-upstream": 512,
+      "scgpt": 512
+    },
+    "features": {
+      "ft_own_trainable-upstream__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "ftq_own_trainable-upstream__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "pre_own_trainable-upstream__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "preq_own_trainable-upstream__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "scgpt__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      }
+    },
+    "coexpr_keys": [
+      "mi_bits",
+      "mi_bits_check",
+      "partial",
+      "partial_check",
+      "pearson",
+      "pearson_check",
+      "spearman",
+      "spearman_check"
+    ],
+    "node_features": [
+      "log1p_mean_cp10k",
+      "mean_log1p",
+      "sd_log1p",
+      "detection_rate",
+      "coexpr_degree_fraction",
+      "mean_abs_corr"
+    ],
+    "strata": [
+      "S3",
+      "S4_highest"
+    ],
+    "perturbed_genes_in_readout": 705,
+    "reference": {
+      "cell_line": "jurkat",
+      "n_perturbations": 705,
+      "n_readout_genes": 3247,
+      "reliability": {
+        "shrinkage_lambda": 0.977456157866983,
+        "median_weight": 0.45796316959654715,
+        "mean_weight": 0.4738740019103238,
+        "fraction_weight_below_0.1": 0.004003695719125347,
+        "fraction_weight_above_0.5": 0.42500769941484445,
+        "var_between_z": 0.061763548602478895,
+        "var_sampling_z": 0.0014245014245014246
+      },
+      "residual_ceiling": {
+        "median_half_split": 0.33456742618440344,
+        "median_spearman_brown": 0.5013870706269954,
+        "q25": 0.3283869021934749,
+        "q75": 0.6693574459125389,
+        "sd": 0.21055308230222256
+      },
+      "raw_effect_ceiling": {
+        "median_half_split": 0.38363781412965164,
+        "median_spearman_brown": 0.5545350238508348
+      },
+      "shared_response": {
+        "mean_effect_l2": 6.8818864822387695,
+        "median_residual_fraction_of_variance": 0.8693990127327664
+      },
+      "power": {
+        "n_held_out_perturbations": 705,
+        "sd_per_perturbation_used": 0.21055308230222256,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "min_resolvable_difference": {
+          "paired_rho_0.5": 0.022216256567043895,
+          "paired_rho_0.8": 0.014050794366906389
+        },
+        "note": "sd is the spread of the per-perturbation residual ceiling, used as the pre-run estimate of per-perturbation heterogeneity; the achieved resolution is recomputed from the actual paired differences"
+      }
+    }
+  },
+  "installed_blocks": [
+    {
+      "model_key": "pre_own_trainable-upstream",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "preq_own_trainable-upstream",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0
+      ]
+    },
+    {
+      "model_key": "ft_own_trainable-upstream",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "ftq_own_trainable-upstream",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0
+      ]
+    }
+  ],
+  "heldout_folds": [
+    0,
+    1
+  ],
+  "force_perturbed_gene_in_sequence": false,
+  "direct_prediction": {
+    "baseline": "unflagged_model_output",
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "raw",
+      "centered"
+    ],
+    "fold_mean_removed_before_scoring": true,
+    "residual_note": "not interpretable for this arm: the model's output is not on the measured log2 fold-change scale, so no single profile can be subtracted from both sides",
+    "residual_weighted": {
+      "cell_line": "jurkat",
+      "arm_label": "direct_prediction/own_trainable__upstream",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": 0.048213976893684285,
+      "attenuated_lo": -0.006454227316600652,
+      "attenuated_hi": 0.1489240633639686,
+      "disattenuated": 0.06405858915594162,
+      "disattenuated_lo": -0.008575287139346842,
+      "disattenuated_hi": 0.1978651421247008,
+      "ceiling": 0.5664885966718883,
+      "n_scored": 282,
+      "n_groups": 137,
+      "se": 0.03693234577191454,
+      "sd_single": 0.18547524821289052
+    },
+    "all_cells": [
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": 0.048213976893684285,
+        "attenuated_lo": -0.006454227316600652,
+        "attenuated_hi": 0.1489240633639686,
+        "disattenuated": 0.06405858915594162,
+        "disattenuated_lo": -0.008575287139346842,
+        "disattenuated_hi": 0.1978651421247008,
+        "ceiling": 0.5664885966718883,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.03693234577191454,
+        "sd_single": 0.18547524821289052
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": 0.04747761358219911,
+        "attenuated_lo": 0.006053080855008647,
+        "attenuated_hi": 0.1359019363231215,
+        "disattenuated": 0.06713991687932058,
+        "disattenuated_lo": 0.008559894122847427,
+        "disattenuated_hi": 0.19218414785477222,
+        "ceiling": 0.5000531465142553,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.03141719351384891,
+        "sd_single": 0.17529322925684035
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": -0.029112885363802715,
+        "attenuated_lo": -0.053387141955013484,
+        "attenuated_hi": 0.027952510438361795,
+        "disattenuated": -0.04373391292590658,
+        "disattenuated_lo": -0.08019914853670139,
+        "disattenuated_hi": 0.04199077632791979,
+        "ceiling": 0.44313273028914574,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.020321458859085338,
+        "sd_single": 0.13574674818088198
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": -0.022540607776710332,
+        "attenuated_lo": -0.03996521958723166,
+        "attenuated_hi": 0.02383213667958034,
+        "disattenuated": -0.03715913820885209,
+        "disattenuated_lo": -0.06588434229016168,
+        "disattenuated_hi": 0.039288277825577984,
+        "ceiling": 0.36795946387179995,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.017590824340506225,
+        "sd_single": 0.10784464784465322
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": -0.012369686605655147,
+        "attenuated_lo": -0.025374988261323728,
+        "attenuated_hi": 0.005011604020001767,
+        "disattenuated": -0.015800215543061512,
+        "disattenuated_lo": -0.032412323506100314,
+        "disattenuated_hi": 0.0064014898887009885,
+        "ceiling": 0.612902468019627,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.007285204099058647,
+        "sd_single": 0.1339718378588002
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": -0.0038893857732017253,
+        "attenuated_lo": -0.01773911870659839,
+        "attenuated_hi": 0.007515616301584229,
+        "disattenuated": -0.005239266999633601,
+        "disattenuated_lo": -0.02389579863289217,
+        "disattenuated_hi": 0.010124045997726826,
+        "ceiling": 0.5510880327814518,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.006186274630568676,
+        "sd_single": 0.11179736987696672
+      }
+    ]
+  },
+  "direct_prediction_control_mean": {
+    "baseline": "measured_control_mean",
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "raw",
+      "centered"
+    ],
+    "fold_mean_removed_before_scoring": true,
+    "residual_note": "not interpretable for this arm: the model's output is not on the measured log2 fold-change scale, so no single profile can be subtracted from both sides",
+    "residual_weighted": {
+      "cell_line": "jurkat",
+      "arm_label": "direct_prediction/own_trainable__upstream",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": -0.04385951119153081,
+      "attenuated_lo": -0.09949201775241276,
+      "attenuated_hi": 0.16076319979646667,
+      "disattenuated": -0.05827311060014906,
+      "disattenuated_lo": -0.13218818898825002,
+      "disattenuated_hi": 0.21359498698613721,
+      "ceiling": 0.5664885966718883,
+      "n_scored": 282,
+      "n_groups": 137,
+      "se": 0.07448179105942034,
+      "sd_single": 0.2159332962496915
+    },
+    "all_cells": [
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": -0.04385951119153081,
+        "attenuated_lo": -0.09949201775241276,
+        "attenuated_hi": 0.16076319979646667,
+        "disattenuated": -0.05827311060014906,
+        "disattenuated_lo": -0.13218818898825002,
+        "disattenuated_hi": 0.21359498698613721,
+        "ceiling": 0.5664885966718883,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.07448179105942034,
+        "sd_single": 0.2159332962496915
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": -0.008076005595124367,
+        "attenuated_lo": -0.05357539928701746,
+        "attenuated_hi": 0.14787673518876357,
+        "disattenuated": -0.01142058969402107,
+        "disattenuated_lo": -0.07576302984730077,
+        "disattenuated_hi": 0.20911817085687257,
+        "ceiling": 0.5000531465142553,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.05199483978065092,
+        "sd_single": 0.18905822573507167
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": -0.02911289293147151,
+        "attenuated_lo": -0.053387136682772264,
+        "attenuated_hi": 0.027952502103708414,
+        "disattenuated": -0.04373392429419811,
+        "disattenuated_lo": -0.08019914061664346,
+        "disattenuated_hi": 0.04199076380744988,
+        "ceiling": 0.44313273028914574,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.020321458895704754,
+        "sd_single": 0.13574674811479392
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": -0.02254062889257865,
+        "attenuated_lo": -0.039965213286794955,
+        "attenuated_hi": 0.023832141020137317,
+        "disattenuated": -0.03715917301924749,
+        "disattenuated_lo": -0.06588433190362727,
+        "disattenuated_hi": 0.03928828498116838,
+        "ceiling": 0.36795946387179995,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.017590825603102784,
+        "sd_single": 0.10784464742693319
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": 0.1655359669394136,
+        "attenuated_lo": 0.14872374692031226,
+        "attenuated_hi": 0.28443455386684996,
+        "disattenuated": 0.21144464214445732,
+        "disattenuated_lo": 0.18996982968334516,
+        "disattenuated_hi": 0.3633177947237688,
+        "ceiling": 0.612902468019627,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.0394211794227685,
+        "sd_single": 0.12683900934642822
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable__upstream",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": 0.19978778814469722,
+        "attenuated_lo": 0.18574407896094522,
+        "attenuated_hi": 0.2609004866957566,
+        "disattenuated": 0.2691277302880214,
+        "disattenuated_lo": 0.2502098994608896,
+        "disattenuated_hi": 0.35145068909124294,
+        "ceiling": 0.5510880327814518,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.021024027446132323,
+        "sd_single": 0.10701266279213932
+      }
+    ]
+  }
+}

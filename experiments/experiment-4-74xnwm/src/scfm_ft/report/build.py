@@ -285,10 +285,26 @@ def opening(r: Results) -> str:
         f"perturbations, sits at {P.num((emb_h or {}).get('score', nan()))} in HepG2 and "
         f"{P.num((emb_j or {}).get('score', nan()))} in Jurkat, at least {ratio:.0f} times "
         "higher than any of them, and fine-tuning does not move that either. The paired "
-        "differences are small and mostly indistinguishable from zero, with two exceptions in "
-        "Jurkat that are reported below; none of them is a change of the order that would be "
-        "needed to reach the gene table.</p>"
-        "<p>The same thing is visible on the model's own prediction head, with no translator "
+        "differences are small and mostly indistinguishable from zero, with "
+        f"{len(paired_exceptions(r))} exceptions reported below; none of them is a change of "
+        "the order that would be needed to reach the gene table.</p>"
+        + (
+            ""
+            if not (above := own_query_above(r))
+            else "<p>One reading is less clean, and it is a secondary one. Querying the same "
+            "checkpoints through the model's own perturbation-flag input, rather than "
+            "through the value substitution runs 2 and 3 use, is noisier: "
+            f"{len(above)} of those {len(rows)} readings sit above the band and above that "
+            "query's own shuffled draws, at "
+            + " and ".join(P.num(p["score"]) for p in above)
+            + ", both in "
+            + ", ".join(sorted({LINE[p["cell_line"]] for p in above}))
+            + ". They are still three to four times below the gene table, they are not "
+            "reproduced by the other arms in the same cell line, and that query's draws "
+            "are wide enough that this is a weak reading rather than a signal. The "
+            "Controls section gives the draws.</p>"
+        )
+        + "<p>The same thing is visible on the model's own prediction head, with no translator "
         "in the path. Its predicted profile correlates with the measured effect at "
         f"{P.num((direct_h or {}).get('raw', nan()))} in HepG2 and "
         f"{P.num((direct_j or {}).get('raw', nan()))} in Jurkat, which looks like a model "
@@ -461,6 +477,56 @@ def selection_provenance(p: dict) -> str:
     )
 
 
+def n_paired_all(r: Results) -> int:
+    """How many paired differences of a fine-tuned response arm the page computes.
+
+    Every fine-tuned run, both references, verdict cell. It is the multiple
+    comparison count a single nominal p-value has to be read against.
+    """
+    if r.contrasts.empty:
+        return 0
+    return int(len(r.contrasts[
+        (r.contrasts.translator == "mlp")
+        & (r.contrasts.target == VERDICT[0])
+        & (r.contrasts.weighting == VERDICT[1])
+        & (r.contrasts.arm.str.startswith("ft_"))
+        & (r.contrasts.arm.str.endswith("_resp"))
+    ]))
+
+
+def paired_exceptions(r: Results) -> list[dict]:
+    """Paired differences of the primary read-out whose interval excludes zero.
+
+    Both references, all five arms, both cell lines, in the verdict cell. The
+    prose that counts or names these reads them from here rather than restating
+    a count from a previous execution.
+    """
+    if r.contrasts.empty:
+        return []
+    c = r.contrasts[
+        (r.contrasts.translator == "mlp")
+        & (r.contrasts.target == VERDICT[0])
+        & (r.contrasts.weighting == VERDICT[1])
+        & (r.contrasts.arm.isin([f"ft_{a}_resp" for a in ARM_ORDER]))
+        & (r.contrasts.against.isin(("scgpt_resp", "coexp")))
+    ]
+    out = []
+    for x in c[~((c["lo"] <= 0) & (c["hi"] >= 0))].itertuples():
+        arm = str(x.arm)[len("ft_"): -len("_resp")]
+        out.append({
+            "cell_line": x.cell_line,
+            "arm": arm,
+            "against": x.against,
+            "difference": float(x.difference),
+            "lo": float(x.lo),
+            "hi": float(x.hi),
+            "label": f"{LINE[x.cell_line]} {ARM_LABEL.get(arm, arm)} against "
+                     + ("the frozen arm" if x.against == "scgpt_resp" else "co-expression")
+                     + f", {P.num(float(x.difference))}",
+        })
+    return sorted(out, key=lambda d: -abs(d["difference"]))
+
+
 def paired_note(r: Results) -> str:
     """The pre-registered paired comparison, both references, with its resolution.
 
@@ -508,15 +574,23 @@ def paired_note(r: Results) -> str:
         line: (min(v for k, v in resolvable if k == line), max(v for k, v in resolvable if k == line))
         for line, _ in resolvable
     }
+    exc = paired_exceptions(r)
     verdict = (
         "Every one of those differences includes zero: at this resolution fine-tuning "
         "neither improves the response features nor damages them."
-        if not pos and not neg
-        else "Most of those differences include zero. The exceptions are "
-             + "; ".join(sorted(set(pos)))
-             + ", where the interval sits entirely above zero."
-        if pos and not neg
-        else "Most of those differences include zero."
+        if not exc
+        else "Most of those differences include zero. The "
+             + ("exception is " if len(exc) == 1 else f"{len(exc)} exceptions are ")
+             + "; ".join(d["label"] for d in exc)
+             + ". "
+             + (
+                 "That interval sits entirely above zero."
+                 if all(d["difference"] > 0 for d in exc)
+                 else "Those intervals sit entirely below zero."
+                 if all(d["difference"] < 0 for d in exc)
+                 else "They point in opposite directions, which is what a set of small "
+                      "differences read against a multiple-comparison count looks like."
+             )
     )
     span = "; ".join(
         f"{LINE[line]} {P.num(lo)} to {P.num(hi)}" for line, (lo, hi) in floor.items()
@@ -538,8 +612,9 @@ def paired_note(r: Results) -> str:
             caption="Paired differences on the verdict cell, with 95% intervals over the same "
                     "2,000 resamples of the response groups and a two-sided p-value from the "
                     "resampled differences. Positive means the fine-tuned arm scored higher. "
-                    "Thirty-six such differences are computed across all arms and both "
-                    "references, so a single nominal p below 0.05 is not evidence on its own.",
+                    f"{n_paired_all(r)} such differences are computed across all runs and "
+                    "both references, so a single nominal p below 0.05 is not evidence on "
+                    "its own.",
         )
     )
 
@@ -732,15 +807,31 @@ def verdict_section(r: Results, chart: str) -> str:
     n_in = sum(1 for p in post if r.in_band(p["cell_line"], p))
     own_pts = r.all_feature_points("final__pert_flag_resp")
     n_out = sum(1 for p in own_pts if not r.in_band(p["cell_line"], p))
+    draws = {line: own_query_draws(r, line) for line in C.CELL_LINES}
+    above_own = [
+        p for p in own_pts
+        if (d := draws.get(p["cell_line"])) is not None and p["score"] > d[1]
+    ]
+    best_own = max((p["score"] for p in own_pts), default=nan())
+    embs = [e["score"] for line in C.CELL_LINES if (e := r.ref(line, "scgpt_emb"))]
+    own_ratio = min(embs) / best_own if embs and best_own and best_own > 0 else nan()
+    span = "; ".join(
+        f"{LINE[line]} {P.num(d[0])} to {P.num(d[1])}"
+        for line in C.CELL_LINES if (d := draws.get(line)) is not None
+    )
     own_note = (
         "Reading the features through the model's own perturbation-flag query, the query "
         "the fine-tuning objective is literally defined on, does not lift them either."
         if n_out == 0
         else "Reading the features through the model's own perturbation-flag query, the "
-             "query the fine-tuning objective is literally defined on, does not change the "
-             f"picture: {n_out} of those {len(own_pts)} readings sit above the band's top "
-             "edge, but that query's own shuffled draws are several times wider than the "
-             "band, so none of them is outside its own null. The Controls section gives "
+             "query the fine-tuning objective is literally defined on, gives a much noisier "
+             f"reading: {n_out} of those {len(own_pts)} sit above the band's top edge, the "
+             f"highest at {P.num(best_own)}. The band is the wrong null for that column. "
+             "The same query's own shuffled-label draws, over the models scored on the same "
+             f"folds, span {span}, several times the band's width, and "
+             f"{len(above_own)} of the {len(own_pts)} readings sit above the widest draw "
+             "their cell line produced. Every one of them is still at least "
+             f"{own_ratio:.0f} times below the gene-table arm. The Controls section gives "
              "those draws."
     )
     return P.section(
@@ -761,6 +852,36 @@ def verdict_section(r: Results, chart: str) -> str:
         + holdout_note(r),
         sources=[S_QUERY, S_SCORE],
     )
+
+
+def own_query_above(r: Results) -> list[dict]:
+    """Own-query readings above the widest shuffled draw of their cell line."""
+    out = []
+    for p in r.all_feature_points("final__pert_flag_resp"):
+        d = own_query_draws(r, p["cell_line"])
+        if d is not None and p["score"] > d[1]:
+            out.append(p)
+    return out
+
+
+def own_query_draws(r: Results, line: str) -> tuple[float, float] | None:
+    """The perturbation-flag query's shuffled draws, pooled over one cell line.
+
+    Five draws per arm is too few to bound one arm on its own, so the draws are
+    pooled across the arms scored on the same folds as the band. The two refits
+    are left out: they are read on other folds against another ceiling.
+    """
+    nc = r.null_check
+    if nc.empty or "draw_max" not in nc:
+        return None
+    sub = nc[
+        (nc.cell_line == line)
+        & (~nc["train_arm"].astype(str).str.endswith(REFIT_TAGS))
+        & (nc["family"].astype(str).str.startswith("pert_flag"))
+    ]
+    if sub.empty:
+        return None
+    return float(sub["draw_min"].min()), float(sub["draw_max"].max())
 
 
 def _cell(d: dict | None, prefix: str) -> str:
@@ -1108,6 +1229,47 @@ def controls_section(r: Results) -> str:
         if not own_q.empty:
             n_out, n_all = int((~own_q["inside_band"]).sum()), len(own_q)
             widest = float(own_q[["draw_min", "draw_max"]].abs().max().max())
+            pts = r.all_feature_points("final__pert_flag_resp")
+            above = [
+                f"{LINE[p['cell_line']]} {ARM_LABEL.get(p['arm'], p['arm'])} "
+                f"{P.num(p['score'])}"
+                for p in pts
+                if (d := own_query_draws(r, p["cell_line"])) is not None
+                and p["score"] > d[1]
+            ]
+            hi_line = sorted({p["cell_line"] for p in own_query_above(r)})
+            rest = [
+                p for p in pts
+                if p["cell_line"] in hi_line and p not in own_query_above(r)
+            ]
+            other_line = [line for line in C.CELL_LINES if line not in hi_line]
+            top_other = max(
+                (p for p in pts if p["cell_line"] in other_line),
+                key=lambda p: p["score"], default=None,
+            )
+            tail = (
+                "On that reading every one of them is inside the draws, which is the same "
+                "conclusion reached with less resolution."
+                if not above
+                else "On that reading " + str(len(above)) + " of the " + str(len(pts))
+                + " readings still sit above the widest draw their cell line produced ("
+                + "; ".join(above) + "), so this column is not a clean null result. "
+                + (
+                    "The other arms in the same cell line read "
+                    + ", ".join(P.num(p["score"]) for p in rest)
+                    + ". "
+                    if rest else ""
+                )
+                + (
+                    f"The largest reading in {LINE[top_other['cell_line']]}, "
+                    f"{P.num(top_other['score'])}, carries an interval from "
+                    f"{P.num(top_other['lo'])} to {P.num(top_other['hi'])}. "
+                    if top_other else ""
+                )
+                + "Both of the two also sit three to four times below the gene-table arm. "
+                "This is a noisier reading of the same quantity rather than a signal of the "
+                "size the experiment was looking for."
+            )
             parts.append(
                 "<p>The perturbation-flag query is the exception, and it is worth stating "
                 "plainly: its own shuffled draws are much wider than the band, reaching "
@@ -1116,8 +1278,7 @@ def controls_section(r: Results) -> str:
                 "flag it was fine-tuned to read, on genes it never saw perturbed, and the "
                 "resulting feature is noisy enough that shuffled labels alone can produce a "
                 "large score. Its column in the table above should therefore be read against "
-                "that wider null, not the band: on that reading it is indistinguishable from "
-                "zero, which is the same conclusion, reached with less resolution.</p>"
+                f"those draws rather than the band. {tail}</p>"
             )
 
     # variants of the primary arm: each is the same recipe with one choice
@@ -1217,12 +1378,13 @@ def limitations(r: Results) -> str:
             & (r.contrasts.arm.isin([f"ft_{a}_resp" for a in ARM_ORDER]))
         ]
         out = c[~((c["lo"] <= 0) & (c["hi"] >= 0))]
+        named = [d for d in paired_exceptions(r) if d["against"] == "scgpt_resp"]
         if not out.empty:
             excl = (
                 f"{len(out)} of the {len(c)} paired differences against the frozen arm exclude "
-                f"zero, the largest being {P.num(out['difference'].abs().max())}, both in "
-                "Jurkat, and 36 such differences are computed across all arms and both "
-                "references. "
+                "zero (" + "; ".join(d["label"] for d in named)
+                + f"), and {n_paired_all(r)} such differences are computed across all runs "
+                "and both references. "
             )
     return P.section(
         "Limitations",
@@ -1234,6 +1396,22 @@ def limitations(r: Results) -> str:
         "resolved here. What the design supports is that fine-tuning produces no detectable "
         "improvement in the queried response features and leaves them far below the gene "
         "table.</li>"
+        + (
+            ""
+            if not (above := own_query_above(r))
+            else "<li>One read-out is not a clean null. Querying the checkpoints through the "
+            "model's own perturbation-flag input rather than through the value substitution "
+            f"runs 2 and 3 use puts {len(above)} of 10 readings above both the band and that "
+            "query's own shuffled draws ("
+            + "; ".join(
+                f"{LINE[p['cell_line']]} {ARM_LABEL.get(p['arm'], p['arm'])} "
+                f"{P.num(p['score'])}" for p in above
+            )
+            + "). That query's draws are wide and uneven across arms, the other arms in the "
+            "same cell line do not reproduce it, and both readings are three to four times "
+            "below the gene table, so it is reported as an unexplained noisy reading rather "
+            "than as evidence either way.</li>"
+        ) +
         "<li>One setting of the recipe could not be reproduced: the tutorial's "
         "<code>use_fast_transformer=True</code> needs flash-attn 1.x, which will not build "
         "against this torch, so scGPT's own fallback attention path was used. Same attention "
