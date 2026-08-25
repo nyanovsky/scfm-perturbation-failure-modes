@@ -1,0 +1,371 @@
+{
+  "cell_line": "jurkat",
+  "arm": "esm2_frozen",
+  "n_perturbations_total": 705,
+  "n_scored": 282,
+  "n_groups_total": 452,
+  "n_groups_scored": 137,
+  "eval_folds": [
+    0,
+    1
+  ],
+  "fold_sizes": [
+    141,
+    141,
+    141,
+    141,
+    141
+  ],
+  "ceilings_restricted": {
+    "residual_weighted": 0.5664885966718883,
+    "residual_unweighted": 0.5000531465142553,
+    "raw_weighted": 0.612902468019627,
+    "raw_unweighted": 0.5510880327814518,
+    "centered_weighted": 0.44313273028914574,
+    "centered_unweighted": 0.36795946387179995
+  },
+  "ceilings_all_folds": {
+    "residual_weighted": 0.5071819396306455,
+    "residual_unweighted": 0.4428814204192859,
+    "raw_weighted": 0.5486063004849999,
+    "raw_unweighted": 0.4884926441851486,
+    "centered_weighted": 0.4437062127878906,
+    "centered_unweighted": 0.3738215662153465
+  },
+  "n_runs": 43,
+  "bundle_inventory": {
+    "cell_line": "jurkat",
+    "n_perturbations": 705,
+    "n_readout": 3247,
+    "embeddings": {
+      "ft_esm2_frozen": 512,
+      "ftq_esm2_frozen": 512,
+      "pre_esm2_frozen": 512,
+      "preq_esm2_frozen": 512,
+      "scgpt": 512
+    },
+    "features": {
+      "ft_esm2_frozen__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "ftq_esm2_frozen__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "pre_esm2_frozen__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "preq_esm2_frozen__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "scgpt__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      }
+    },
+    "coexpr_keys": [
+      "mi_bits",
+      "mi_bits_check",
+      "partial",
+      "partial_check",
+      "pearson",
+      "pearson_check",
+      "spearman",
+      "spearman_check"
+    ],
+    "node_features": [
+      "log1p_mean_cp10k",
+      "mean_log1p",
+      "sd_log1p",
+      "detection_rate",
+      "coexpr_degree_fraction",
+      "mean_abs_corr"
+    ],
+    "strata": [
+      "S3",
+      "S4_highest"
+    ],
+    "perturbed_genes_in_readout": 705,
+    "reference": {
+      "cell_line": "jurkat",
+      "n_perturbations": 705,
+      "n_readout_genes": 3247,
+      "reliability": {
+        "shrinkage_lambda": 0.977456157866983,
+        "median_weight": 0.45796316959654715,
+        "mean_weight": 0.4738740019103238,
+        "fraction_weight_below_0.1": 0.004003695719125347,
+        "fraction_weight_above_0.5": 0.42500769941484445,
+        "var_between_z": 0.061763548602478895,
+        "var_sampling_z": 0.0014245014245014246
+      },
+      "residual_ceiling": {
+        "median_half_split": 0.33456742618440344,
+        "median_spearman_brown": 0.5013870706269954,
+        "q25": 0.3283869021934749,
+        "q75": 0.6693574459125389,
+        "sd": 0.21055308230222256
+      },
+      "raw_effect_ceiling": {
+        "median_half_split": 0.38363781412965164,
+        "median_spearman_brown": 0.5545350238508348
+      },
+      "shared_response": {
+        "mean_effect_l2": 6.8818864822387695,
+        "median_residual_fraction_of_variance": 0.8693990127327664
+      },
+      "power": {
+        "n_held_out_perturbations": 705,
+        "sd_per_perturbation_used": 0.21055308230222256,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "min_resolvable_difference": {
+          "paired_rho_0.5": 0.022216256567043895,
+          "paired_rho_0.8": 0.014050794366906389
+        },
+        "note": "sd is the spread of the per-perturbation residual ceiling, used as the pre-run estimate of per-perturbation heterogeneity; the achieved resolution is recomputed from the actual paired differences"
+      }
+    }
+  },
+  "installed_blocks": [
+    {
+      "model_key": "pre_esm2_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "preq_esm2_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0
+      ]
+    },
+    {
+      "model_key": "ft_esm2_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "ftq_esm2_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0
+      ]
+    }
+  ],
+  "direct_prediction": {
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "residual",
+      "centered"
+    ],
+    "residual_weighted": {
+      "cell_line": "jurkat",
+      "arm_label": "direct_prediction/esm2_frozen",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": 0.04067418765869952,
+      "attenuated_lo": -0.022862489509519898,
+      "attenuated_hi": 0.06857161358507827,
+      "disattenuated": 0.05404099069084697,
+      "disattenuated_lo": -0.030375814585919488,
+      "disattenuated_hi": 0.0911063783867602,
+      "ceiling": 0.5664885966718883,
+      "n_scored": 282,
+      "n_groups": 137,
+      "se": 0.02489688585960008,
+      "sd_single": 0.12008088490171559
+    },
+    "all_cells": [
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": 0.04067418765869952,
+        "attenuated_lo": -0.022862489509519898,
+        "attenuated_hi": 0.06857161358507827,
+        "disattenuated": 0.05404099069084697,
+        "disattenuated_lo": -0.030375814585919488,
+        "disattenuated_hi": 0.0911063783867602,
+        "ceiling": 0.5664885966718883,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.02489688585960008,
+        "sd_single": 0.12008088490171559
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": 0.025491208153717783,
+        "attenuated_lo": -0.006122514369283271,
+        "attenuated_hi": 0.04272758722906693,
+        "disattenuated": 0.03604809651249529,
+        "disattenuated_lo": -0.008658082722174694,
+        "disattenuated_hi": 0.06042272217508951,
+        "ceiling": 0.5000531465142553,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.013394485804097094,
+        "sd_single": 0.08117186667622218
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": -0.0393200988043175,
+        "attenuated_lo": -0.05528126911075582,
+        "attenuated_hi": -0.029060425250602782,
+        "disattenuated": -0.05906737706885432,
+        "disattenuated_lo": -0.08304454125764502,
+        "disattenuated_hi": -0.04365510637705033,
+        "ceiling": 0.44313273028914574,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.007448925135620705,
+        "sd_single": 0.12637407256528901
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": -0.021215598715443477,
+        "attenuated_lo": -0.03409557576835807,
+        "attenuated_hi": -0.004324201029220268,
+        "disattenuated": -0.0349748051454611,
+        "disattenuated_lo": -0.05620798803818729,
+        "disattenuated_hi": -0.007128626933195641,
+        "ceiling": 0.36795946387179995,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.007328639352790867,
+        "sd_single": 0.0868392472425778
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": 0.3707660142168753,
+        "attenuated_lo": 0.29286717350192093,
+        "attenuated_hi": 0.4039392176680938,
+        "disattenuated": 0.4735918643234022,
+        "disattenuated_lo": 0.37408906258805413,
+        "disattenuated_hi": 0.5159651096199692,
+        "ceiling": 0.612902468019627,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.028006841489932943,
+        "sd_single": 0.13795401673070617
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": 0.35567554516559197,
+        "attenuated_lo": 0.28223198263263677,
+        "attenuated_hi": 0.3839950513555024,
+        "disattenuated": 0.4791191347493331,
+        "disattenuated_lo": 0.3801856640286642,
+        "disattenuated_hi": 0.5172674344754815,
+        "ceiling": 0.5510880327814518,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.02518305181851743,
+        "sd_single": 0.13283751264892107
+      }
+    ]
+  }
+}

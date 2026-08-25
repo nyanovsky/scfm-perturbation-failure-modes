@@ -23,6 +23,10 @@ from . import config as C
 #: diagnostic reported beside it everywhere
 VERDICT = ("residual", "weighted")
 DIAGNOSTIC = ("centered", "weighted")
+
+#: the two refits that withhold different folds, and so are scored on different
+#: perturbations against a different ceiling than every other reading
+REFIT_TAGS = ("__f23", "__f4")
 #: the model's own predicted response can be read against two reference points.
 #: ``measured_control_mean`` subtracts the control cells' measured profile, which
 #: is the comparison the published recipe is evaluated on; ``unflagged_model_output``
@@ -47,7 +51,15 @@ def _read_all(
     ]
     if not files:
         return pd.DataFrame()
-    frames = [pd.read_parquet(f) for f in files]
+    frames = []
+    for f in files:
+        frame = pd.read_parquet(f)
+        # Which reading wrote this table. The reference arms are recomputed in
+        # every job, so without this the rows are indistinguishable and a
+        # comparison across jobs cannot tell readings on different held-out
+        # folds apart from genuine disagreement on the same folds.
+        frame["source_run"] = f.name[len(stem) + 1 : -len(".parquet")]
+        frames.append(frame)
     # A column added to the scorer after some tables were written is filled in
     # with what those tables meant, rather than left absent: concatenating over
     # a missing column would put NaN there, and a groupby would then drop those
@@ -171,22 +183,31 @@ def build(scores: Path, out: Path, checkpoints: Path | None = None) -> dict:
     if restricted.empty:
         raise RuntimeError(f"no restricted_*.parquet under {scores}")
 
-    parts = restricted["arm"].map(arm_of)
-    restricted["stage"] = [p[0] for p in parts]
-    restricted["train_arm"] = [p[1] for p in parts]
-    restricted["family"] = [p[2] for p in parts]
     restricted["is_shuffled"] = restricted["arm"].str.contains(r"\+shuffled_labels_d")
     restricted["base_arm"] = restricted["arm"].str.replace(
         r"\+shuffled_labels_d\d+", "", regex=True
     )
+    # Parse the arm WITHOUT its shuffled-draw suffix. Parsing the raw name puts
+    # the whole tail into train_arm for every shuffled row, so those rows match
+    # no known arm and drop out of any filter keyed on the training arm.
+    parts = restricted["base_arm"].map(arm_of)
+    restricted["stage"] = [p[0] for p in parts]
+    restricted["train_arm"] = [p[1] for p in parts]
+    restricted["family"] = [p[2] for p in parts]
 
     # the fine-tuned arms are scored once per training job; the reference arms
     # are re-run inside every job, so they appear once per arm. They must agree.
+    # ...on the same rows. The two refits withhold folds 2+3 and fold 4, so
+    # their reference recomputations are scored on different perturbations
+    # against a different ceiling; comparing those with the folds 0+1 readings
+    # measures the fold difference, not the scoring path. Only readings that
+    # share the evaluation folds belong in this check.
     ref = restricted[
         (restricted.stage == "reference")
         & (~restricted.is_shuffled)
         & (restricted.target == VERDICT[0])
         & (restricted.weighting == VERDICT[1])
+        & (~restricted.source_run.str.endswith(REFIT_TAGS))
     ]
     agreement = (
         ref.groupby(["cell_line", "arm", "translator"])["disattenuated"]
@@ -194,15 +215,19 @@ def build(scores: Path, out: Path, checkpoints: Path | None = None) -> dict:
         .assign(spread=lambda d: d["max"] - d["min"])
         .reset_index()
     )
+    agreement = agreement[agreement["count"] > 0].reset_index(drop=True)
 
-    # The shuffled-label band is the pre-registered one: the five training arms
-    # and the reference arms they were read against. The tagged control runs
-    # (cross-fitted folds, upstream sampling, last epoch) draw their own
-    # shuffled nulls too, but folding those into the band after the fact would
-    # widen the interval the result is read against, and widening it is the
-    # direction that flatters this experiment's conclusion.
-    in_preregistered = restricted.is_shuffled & (
-        (restricted.stage == "reference") | restricted.train_arm.isin(C.ARMS_BY_NAME)
+    # The band is run 3's pre-registered null, unchanged: the co-expression arm
+    # re-scored against shuffled labels, recomputed inside every job. Every
+    # other arm's shuffled draws could be folded in as well, but each addition
+    # can only widen the interval the result is read against, and widening it is
+    # the direction that flatters this experiment's conclusion. The fine-tuned
+    # arms' own draws are reported separately by ``null_check`` instead, so the
+    # claim that they also sit inside this band is checkable rather than assumed.
+    in_preregistered = (
+        restricted.is_shuffled
+        & (restricted.stage == "reference")
+        & (restricted.base_arm == "coexp")
     )
     band = (
         restricted[in_preregistered]
@@ -212,6 +237,37 @@ def build(scores: Path, out: Path, checkpoints: Path | None = None) -> dict:
         .rename(columns={"mean": "null_mean", "std": "null_sd", "min": "null_min", "max": "null_max",
                          "count": "n_draws"})
     )
+
+    # Each fine-tuned arm also draws its own shuffled labels. Those draws do not
+    # define the band, but they say whether the band the result is read against
+    # is the right size for that arm: a draw outside it would mean the arm's own
+    # null is wider than co-expression's, and the band would be too tight.
+    own = restricted[
+        restricted.is_shuffled
+        & (restricted.stage == "final")
+        & (restricted.target == VERDICT[0])
+        & (restricted.weighting == VERDICT[1])
+        & (restricted.translator == "mlp")
+    ]
+    null_check = (
+        own.groupby(["cell_line", "base_arm", "train_arm", "family"])["disattenuated"]
+        .agg(["min", "max", "count"])
+        .reset_index()
+        .rename(columns={"min": "draw_min", "max": "draw_max", "count": "n_draws"})
+    )
+    if not null_check.empty and not band.empty:
+        mlp_band = band[
+            (band.translator == "mlp")
+            & (band.target == VERDICT[0])
+            & (band.weighting == VERDICT[1])
+        ].set_index("cell_line")
+        null_check["band_min"] = null_check["cell_line"].map(mlp_band["null_min"])
+        null_check["band_max"] = null_check["cell_line"].map(mlp_band["null_max"])
+        # two-sided: a draw below the band's floor also means the arm's own null
+        # is wider than the band it is judged against
+        null_check["inside_band"] = (null_check["draw_max"] <= null_check["band_max"]) & (
+            null_check["draw_min"] >= null_check["band_min"]
+        )
 
     verdict = restricted[
         (restricted.target == VERDICT[0]) & (restricted.weighting == VERDICT[1])
@@ -228,6 +284,7 @@ def build(scores: Path, out: Path, checkpoints: Path | None = None) -> dict:
         ("runs", runs),
         ("direct", direct),
         ("null_band", band),
+        ("null_check", null_check),
         ("reference_agreement", agreement),
         ("training_epochs", epochs),
         ("training_runs", training),

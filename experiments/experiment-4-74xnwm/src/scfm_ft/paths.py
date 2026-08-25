@@ -31,6 +31,11 @@ def ensure(p: Path) -> Path:
     return Path(p)
 
 
+def results_dir() -> Path:
+    """Small reviewable outputs that live in the worktree, not in artifacts."""
+    return ensure(repo_dir() / "results")
+
+
 def data_root() -> Path:
     for env in ("SCFM_FT_DATA_ROOT", "SILICO_EXPERIMENT_ARTIFACTS_DIR"):
         val = os.environ.get(env)

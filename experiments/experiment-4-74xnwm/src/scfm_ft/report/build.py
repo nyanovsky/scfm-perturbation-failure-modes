@@ -38,6 +38,8 @@ S_RUNARM = f"{SRC}/src/scfm_ft/run_arm.py"
 S_ANALYSIS = f"{SRC}/src/scfm_ft/analysis.py"
 S_FOLLOWUP = f"{SRC}/src/scfm_ft/followup.py"
 S_FIGS = f"{SRC}/src/scfm_ft/report/figures.py"
+S_CMP = f"{SRC}/src/scfm_ft/compare_run3.py"
+S_CMP_TBL = f"{SRC}/results/run3_comparison.parquet"
 
 LINE = {"hepg2": "HepG2", "jurkat": "Jurkat"}
 ARM_LABEL = {
@@ -51,6 +53,10 @@ ARM_ORDER = tuple(a.name for a in C.ARMS)
 
 VERDICT = ("residual", "weighted")
 DIAGNOSTIC = ("centered", "weighted")
+
+#: the refits withhold different folds, so the folds-0-and-1 shuffled band does
+#: not apply to them
+REFIT_TAGS = ("__f23", "__f4")
 
 
 def last_epoch_arm(arm: str, family: str = "ft", suffix: str = "resp") -> str:
@@ -90,9 +96,14 @@ class Results:
         self.epochs = self._opt("training_epochs")
         self.runs = self._opt("training_runs")
         self.agreement = self._opt("reference_agreement")
+        self.null_check = self._opt("null_check")
         self.spread = self._opt("prediction_spread")
         self.crossfit = self._crossfit()
         self.ingest = self._ingest()
+        # computed pod-side against run 3's published table rather than by the
+        # merge job, so it lives beside the summary rather than inside it
+        cmp_file = paths.results_dir() / "run3_comparison.parquet"
+        self.run3_cmp = pd.read_parquet(cmp_file) if cmp_file.exists() else pd.DataFrame()
 
     def _opt(self, stem: str) -> pd.DataFrame:
         f = self.dir / f"{stem}.parquet"
@@ -237,10 +248,15 @@ def opening(r: Results) -> str:
     rows = r.all_feature_points("final__value_substitution_resp")
     best = max((p["score"] for p in rows), default=nan())
     n_in = sum(1 for p in rows if r.in_band(p["cell_line"], p))
+    in_band = "every one leaves" if n_in == len(rows) else f"{n_in} leave"
     direct_h = r.arm("hepg2", "own_trainable").get("direct_prediction")
     direct_j = r.arm("jurkat", "own_trainable").get("direct_prediction")
     emb_h = r.ref("hepg2", "scgpt_emb")
     emb_j = r.ref("jurkat", "scgpt_emb")
+    # stated as a ratio against the strongest fine-tuned reading rather than a
+    # typical one, so the multiple is the smallest the table supports
+    embs = [e["score"] for e in (emb_h, emb_j) if e]
+    ratio = min(embs) / best if embs and best and best > 0 else nan()
     return P.section(
         "",
         "<p>Runs 2 and 3 found that when you ask a single-cell foundation model what happens "
@@ -252,12 +268,12 @@ def opening(r: Results) -> str:
         "perturbation prediction, holding out two of run 3's five folds so a fine-tuned model "
         "is only ever scored on perturbations it has not seen, and then pushed the fine-tuned "
         f"checkpoints through run 3's feature swap unchanged. Across the {len(rows)} fine-tuned "
-        f"models in two cell lines, {n_in} leave the response features inside the "
+        f"models in two cell lines, {in_band} the response features inside the "
         f"shuffled-label band; the highest any of them reaches is {P.num(best)}. The same "
         "model's static gene table, read through the same translator on the same held-out "
         f"perturbations, sits at {P.num((emb_h or {}).get('score', nan()))} in HepG2 and "
-        f"{P.num((emb_j or {}).get('score', nan()))} in Jurkat, roughly ten times higher, and "
-        "fine-tuning does not move that either.</p>"
+        f"{P.num((emb_j or {}).get('score', nan()))} in Jurkat, at least {ratio:.0f} times "
+        "higher than any of them, and fine-tuning does not move that either.</p>"
         "<p>The stronger result is that the fine-tuned model does not acquire the signal on "
         "its own prediction head. Its predicted perturbation response, scored with no "
         "translator in the path against the same measured effects, agrees well before the "
@@ -379,7 +395,7 @@ CROSSFIT_ARMS = (
 
 def holdout_note(r: Results) -> str:
     """The whole-screen reading, where the restricted evaluation runs out of power."""
-    rows, covered = [], []
+    rows, covered, resolved, overlaps, ratios = [], [], [], [], []
     for line in C.CELL_LINES:
         got = False
         for arm, label in CROSSFIT_ARMS:
@@ -393,6 +409,20 @@ def holdout_note(r: Results) -> str:
             if base:
                 covered.append(f"{LINE[line]} {base['n']} perturbations in "
                                f"{base['n_groups']} groups")
+            # Whether co-expression is resolved above zero, and whether it is
+            # separated from the response arms, are two different questions and
+            # the answer differs. Both are read off the intervals rather than
+            # asserted, so the sentence cannot drift from the table.
+            co = r.crossfit_row(line, "coexp")
+            resp = [r.crossfit_row(line, a) for a in ("ft_own_trainable_resp", "scgpt_resp")]
+            resp = [p for p in resp if p]
+            emb = r.crossfit_row(line, "scgpt_emb")
+            if emb and resp and max(p["score"] for p in resp) > 0:
+                ratios.append(emb["score"] / max(p["score"] for p in resp))
+            if co and co["lo"] > 0:
+                resolved.append(f"{LINE[line]} {civ(co)}")
+            if co and resp and any(co["lo"] <= p["hi"] for p in resp):
+                overlaps.append(LINE[line])
     if not rows:
         return ""
     return (
@@ -409,10 +439,73 @@ def holdout_note(r: Results) -> str:
                     "models fitted on complementary folds; every other arm is scored once "
                     "over the same perturbations, against the same whole-screen ceiling.",
         )
-        + "<p>At this sample size co-expression separates from both response arms, which the "
-        "restricted evaluation could not resolve. The response features sit where they sat "
-        "before fine-tuning, an order of magnitude below the gene table, and pooling does "
-        "not change that.</p>"
+        + "<p>The whole screen buys back the resolution the two-fold restriction cost: "
+        + (f"co-expression is now above zero on its own interval ({'; '.join(resolved)}), "
+           "which the restricted evaluation could not show. " if resolved else "")
+        + "Its point estimate is roughly twice either response arm's in both cell lines, "
+        + (("though the intervals still overlap in "
+            + ("both cell lines" if len(overlaps) == len(C.CELL_LINES)
+               else " and ".join(overlaps))
+            + ", so the ordering is consistent rather than separated at 95%. ")
+           if overlaps else "")
+        + "The response features sit where they sat before fine-tuning, "
+        + (f"{min(ratios):.0f} to {max(ratios):.0f} times below the gene table, "
+           if len(ratios) > 1 else "far below the gene table, ")
+        + "and pooling does not change that.</p>"
+        + "<p>Two cautions on reading this table. The intervals are bootstrap "
+        "resamples of the response groups, not shuffled-label draws: an interval that "
+        "excludes zero says the arm is not zero, which is a weaker statement than "
+        "clearing the pre-registered band, and no shuffled draw was computed at "
+        "whole-screen scope in this run. And the response-feature arms are read on the "
+        "residual target, where a prediction that barely varies between perturbations "
+        "can still correlate with the shared offset, exactly as the direct-prediction "
+        "section describes.</p>"
+        + run3_agreement(r)
+    )
+
+
+def run3_agreement(r: Results) -> str:
+    """Whether run 4's re-reading of run 3's arms lands on run 3's own numbers."""
+    if r.run3_cmp.empty:
+        return ""
+    frame = r.run3_cmp.dropna(subset=["run3", "run4"])
+    if frame.empty:
+        return ""
+    rows = [
+        [LINE[x.cell_line], x.label, P.num(x.run3), P.num(x.run4), P.num(x.difference),
+         "yes" if (x.run4_in_run3_interval and x.run3_in_run4_interval) else "no"]
+        for x in frame.itertuples()
+    ]
+    ok = frame[frame.run4_in_run3_interval & frame.run3_in_run4_interval]
+    worst = float(ok["difference"].abs().max()) if not ok.empty else nan()
+    dis = frame[~(frame.run4_in_run3_interval & frame.run3_in_run4_interval)]
+    note = ""
+    if not dis.empty:
+        names = ", ".join(sorted({f"{LINE[x.cell_line]} {x.label}" for x in dis.itertuples()}))
+        note = (
+            f" The exception is {names}: run 3 reads it above zero and run 4 reads it at "
+            "zero. It is the weakest arm in the table, it is the one arm no claim on this "
+            "page rests on, and a near-zero arm is where refitting the translator moves a "
+            "score most. Run 3's estimate still sits inside run 4's interval."
+        )
+    return (
+        "<p>Every arm in that table except the fine-tuned one is run 3's own, re-run here "
+        "through run 3's code on run 3's folds against run 3's effect matrices, so the "
+        "table is also a check that run 4 reproduces the run it extends. They do, to within the resolution two fits of the "
+        "same quantity have: the translator is an MLP refitted per held-out fold and "
+        "refitting it is not deterministic across processes, so the check is mutual "
+        f"containment rather than equality. The largest gap among the arms that agree is "
+        f"{P.num(worst)} correlation points.{note}</p>"
+        + P.table(
+            ["cell line", "arm", "run 3", "run 4", "difference", "each inside the other's "
+             "interval"],
+            rows,
+            sources=[S_CMP, S_CMP_TBL],
+            caption="Run 3's published whole-screen numbers beside run 4's re-reading of the "
+                    "same arms, both on the grouped folds with the MLP translator and the "
+                    "same ceiling. Jurkat's node arm is omitted: run 3 scores no "
+                    "perturbations there, so there is nothing to compare.",
+        )
     )
 
 
@@ -444,6 +537,19 @@ def verdict_section(r: Results, chart: str) -> str:
     )
     post = r.all_feature_points("final__value_substitution_resp")
     n_in = sum(1 for p in post if r.in_band(p["cell_line"], p))
+    own_pts = r.all_feature_points("final__pert_flag_resp")
+    n_out = sum(1 for p in own_pts if not r.in_band(p["cell_line"], p))
+    own_note = (
+        "Reading the features through the model's own perturbation-flag query, the query "
+        "the fine-tuning objective is literally defined on, does not lift them either."
+        if n_out == 0
+        else "Reading the features through the model's own perturbation-flag query, the "
+             "query the fine-tuning objective is literally defined on, does not change the "
+             f"picture: {n_out} of those {len(own_pts)} readings sit above the band's top "
+             "edge, but that query's own shuffled draws are several times wider than the "
+             "band, so none of them is outside its own null. The Controls section gives "
+             "those draws."
+    )
     return P.section(
         "The feature swap, before and after",
         "<p>The measurement is run 3's, unchanged: extract the model's predicted change in "
@@ -453,10 +559,10 @@ def verdict_section(r: Results, chart: str) -> str:
         "differs between the two columns below is which checkpoint answered the query.</p>"
         + chart
         + tbl
-        + f"<p>{n_in} of the {len(post)} fine-tuned models sit at or below the largest "
+        + f"<p>{'All ' + str(len(post)) if n_in == len(post) else f'{n_in} of the {len(post)}'} "
+        "fine-tuned models sit at or below the largest "
         "shuffled-label draw in their cell line, and none approaches the gene-table arm. "
-        "Reading the features through the model's own perturbation-flag query, the query the "
-        "fine-tuning objective is literally defined on, does not change that.</p>"
+        + own_note + "</p>"
         + resolution_note(r)
         + holdout_note(r),
         sources=[S_QUERY, S_SCORE],
@@ -547,10 +653,10 @@ def spread_note(r: Results) -> str:
         return ""
     return (
         "<p>The fourth column says the same thing without any scoring rule in the path. For "
-        "the measured effects, roughly three quarters of a perturbation's variance across "
-        "genes survives subtracting the average response: knocking down different genes "
-        "really does do different things. For the fine-tuned model's own prediction almost "
-        "none of it does. In the primary arm: " + "; ".join(bits) + ".</p>"
+        "the measured effects, most of a perturbation's variance across genes survives "
+        "subtracting the average response: knocking down different genes really does do "
+        "different things. For the fine-tuned model's own prediction almost none of it "
+        "does. In the primary arm: " + "; ".join(bits) + ".</p>"
     )
 
 
@@ -597,12 +703,18 @@ def controls_section(r: Results) -> str:
     parts = []
 
     # the gene-table arms, re-run inside the same jobs
-    ref_rows = []
+    ref_rows, unscored = [], []
     for line in C.CELL_LINES:
         for arm in ("scgpt_emb", "scgpt_resp", "coexp", "node", "null_randpair"):
             row = r.ref(line, arm)
-            if row:
-                ref_rows.append([LINE[line], arm, civ(row), str(row["n"]), str(row["n_groups"])])
+            if not row:
+                continue
+            # an arm with no scored perturbation in that cell line is named in
+            # the prose rather than printed as an empty row
+            if not row["n"] or row["score"] != row["score"]:
+                unscored.append(f"{LINE[line]} {arm}")
+                continue
+            ref_rows.append([LINE[line], arm, civ(row), str(row["n"]), str(row["n_groups"])])
     parts.append(P.table(
         ["cell line", "run 3 arm", "score on these folds", "perturbations", "groups"],
         ref_rows,
@@ -610,15 +722,68 @@ def controls_section(r: Results) -> str:
         caption="Run 3's arms re-run inside every run-4 job on the same restricted folds, so "
                 "the fine-tuned arms are compared against numbers from the same code path.",
     ))
+    if unscored:
+        parts.append(
+            f"<p>{', '.join(unscored)} is absent from that table because the node covariates "
+            "cover only a minority of Jurkat's genes, too few to score any perturbation on "
+            "these two folds. Over the whole screen the same arm reaches 58 of Jurkat's 705 "
+            "perturbations, which is why it appears there and not here.</p>"
+        )
 
     if not r.agreement.empty:
         spread = float(r.agreement["spread"].max())
-        parts.append(
-            f"<p>Those reference arms are recomputed independently inside each of the sixteen "
-            f"jobs. The largest disagreement between any two recomputations of the same arm is "
-            f"{P.num(spread)} correlation points, which is the reproducibility of the scoring "
-            "path itself.</p>"
+        n_read = int(r.agreement["count"].max())
+        found = (
+            "every recomputation of an arm returns the identical number"
+            if spread == 0.0
+            else f"the largest disagreement between any two recomputations of the same arm "
+                 f"is {P.num(spread)} correlation points"
         )
+        parts.append(
+            f"<p>Those reference arms are recomputed independently inside every job. Across "
+            f"the {n_read} readings per cell line that withhold the same two folds, {found}, "
+            "which is the reproducibility of the scoring path itself. The two refits withhold "
+            "different folds, so their recomputations are scored on different perturbations "
+            "against a different ceiling and are excluded from that comparison; including them "
+            "would measure the fold difference, not the code.</p>"
+        )
+    if not r.null_check.empty and "inside_band" in r.null_check:
+        # the band is drawn on folds 0 and 1, so only arms scored on those
+        # folds can be checked against it
+        nc = r.null_check[~r.null_check["train_arm"].astype(str).str.endswith(REFIT_TAGS)]
+        fam = nc["family"].astype(str)
+        sub = nc[fam.str.startswith("value_substitution")]
+        own_q = nc[fam.str.startswith("pert_flag")]
+        if not sub.empty:
+            n_ok, n_all = int(sub["inside_band"].sum()), len(sub)
+            verdict = (
+                f"all {n_all} of them fall inside it anyway, so the band is not too tight "
+                "for the arms it is used to judge"
+                if n_ok == n_all
+                else f"{n_all - n_ok} of {n_all} reach past it, so the band is tighter than "
+                     "those arms' own nulls and the comparison against it flatters them"
+            )
+            parts.append(
+                "<p>The shuffled-label band every score above is read against is run 3's "
+                "pre-registered null, unchanged: the co-expression arm re-scored against "
+                "shuffled labels, recomputed inside every job. Each fine-tuned arm also draws "
+                "its own shuffled labels; those draws are not folded into the band, because "
+                f"each addition could only widen it, and {verdict}.</p>"
+            )
+        if not own_q.empty:
+            n_out, n_all = int((~own_q["inside_band"]).sum()), len(own_q)
+            widest = float(own_q[["draw_min", "draw_max"]].abs().max().max())
+            parts.append(
+                "<p>The perturbation-flag query is the exception, and it is worth stating "
+                "plainly: its own shuffled draws are much wider than the band, reaching "
+                f"{P.num(widest)} in absolute value, and {n_out} of the {n_all} arms drawn "
+                "that way land outside it. That query asks the model for the effect of a "
+                "flag it was fine-tuned to read, on genes it never saw perturbed, and the "
+                "resulting feature is noisy enough that shuffled labels alone can produce a "
+                "large score. Its column in the table above should therefore be read against "
+                "that wider null, not the band: on that reading it is indistinguishable from "
+                "zero, which is the same conclusion, reached with less resolution.</p>"
+            )
 
     # variants of the primary arm: each is the same recipe with one choice
     # changed, and each is read in the same cell as the primary arm
@@ -637,11 +802,15 @@ def controls_section(r: Results) -> str:
             t = r.run_row(line, run.replace("__lastepoch", "")) or {}
             if row is None:
                 continue
+            # the band is drawn on folds 0 and 1. The two refits withhold other
+            # folds, so their scores have no band of their own and are not
+            # judged against this one.
+            refit = run.endswith(REFIT_TAGS)
             var_rows.append([
                 LINE[line], label,
                 "last" if run.endswith("__lastepoch") else str(t.get("selected_epoch", "n/a")),
                 civ(row), str(row["n"]),
-                "yes" if row["score"] <= band else "no",
+                "other folds, no band" if refit else ("yes" if row["score"] <= band else "no"),
             ])
     if var_rows:
         parts.append(
@@ -661,7 +830,9 @@ def controls_section(r: Results) -> str:
             sources=[S_RUNARM, S_FOLLOWUP],
             caption="Each variant scored in the same cell as the primary arm, on the folds "
                     "that variant withheld. The refits are read on folds 2-4, so their "
-                    "perturbation counts and their ceilings differ from the primary arm's.",
+                    "perturbation counts and their ceilings differ from the primary arm's "
+                    "and the folds-0-and-1 shuffled band does not apply to them; their "
+                    "contribution is the pooled whole-screen reading above.",
         ))
     return P.section("Controls", "".join(parts), sources=[S_SCORE, S_RUNARM])
 

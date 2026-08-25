@@ -43,8 +43,10 @@ sh jobs/crossfit.sh <cell_line>         # pool the complementary-fold models
 
 # 4. merge, figures, page (pod)
 sh jobs/summarise.sh
+PYTHONPATH=src apy -m scfm_ft.compare_run3          # run 4's re-read of run 3's arms vs run 3
 PYTHONPATH=src uv run --no-sync python -m scfm_ft.report.figures --summary results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_ft.report.build --summary results/summary --out "$SILICO_APP_DIR"
+PYTHONPATH=src uv run --no-sync python -m scfm_ft.report.contract
 ```
 
 The job image is `docker.io/library/python:3.11-slim` with `jobs/env_gpu.sh` installing run 2's
@@ -64,6 +66,10 @@ All durable outputs live under
 | `rescore/<line>/` | the tagged control runs re-read from saved weights after the naming fix, and the whole-screen `crossfit_` pooling | `pd.read_parquet` |
 | `followup/` | each model's own predicted response scored against both baselines, plus the training metadata | `pd.read_parquet` |
 | `summary.tar.gz` | the merged tables the report reads, unpacked locally to `results/summary` | `tar -xzf` |
+
+`results/run3_comparison.parquet` is not in the artifact store: it is computed pod-side by
+`src/scfm_ft/compare_run3.py` against run 3's own `results/summary/runs.parquet`, and holds run 3's
+published whole-screen scores beside run 4's re-reading of the same arms.
 
 Models and credentials: no external model API is used. Every number comes from `wanglab/scGPT-human`
 at the pinned revision, fine-tuned on this cluster, plus run 3's ESM2-3B gene tables.

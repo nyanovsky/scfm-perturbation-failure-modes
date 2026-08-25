@@ -2,7 +2,7 @@ experiment: 4
 eid: "exp_01m0trpxqyf0g8pq29k774xnwm"
 title: "Does fine-tuning for perturbation prediction install the regulatory signal?"
 date: "2026-08-24"
-status: in-progress
+status: complete
 
 data:
   screen:
@@ -40,7 +40,30 @@ outputs:
     local: "results/summary"
     what: "merged tables the report reads: restricted, contrasts, runs, direct, null_band, reference_agreement, prediction_spread, crossfit, headline.json"
 
-results: {}
+results:
+  answer: >-
+    Fine-tuning scGPT on the screen with its own published perturbation recipe teaches the
+    average knockdown response, not which gene was knocked down. All 10 fine-tuned models
+    (5 gene-table arms x 2 cell lines) leave the queried response features inside run 3's
+    shuffled-label band, and the model's own prediction head shows the same thing before any
+    feature swap.
+  verdict_cell: "residual target, reliability-weighted, ceiling-corrected, MLP translator, grouped folds 0 and 1"
+  response_features_restricted:
+    hepg2: {before: 0.024186, after: 0.024593, own_query: 0.020667, band: [-0.117399, 0.055049]}
+    jurkat: {before: 0.045986, after: 0.031260, own_query: 0.002614, band: [-0.033476, 0.055451]}
+  gene_table_restricted:
+    hepg2: {before: 0.227871, after: 0.224752}
+    jurkat: {before: 0.231806, after: 0.215233}
+  whole_screen_crossfit:
+    note: "primary arm refitted on complementary folds and pooled, so every perturbation is scored by a model that never saw it"
+    hepg2: {n: 524, groups: 226, ft_response: 0.021586, frozen_response: 0.020394, coexp: 0.051866, gene_table: 0.280110}
+    jurkat: {n: 705, groups: 452, ft_response: 0.021859, frozen_response: 0.019651, coexp: 0.045722, gene_table: 0.168784}
+  direct_prediction:
+    baseline: measured_control_mean
+    hepg2: {raw: 0.694384, fold_centred: 0.004675}
+    jurkat: {raw: 0.447069, fold_centred: -0.017560}
+  reproduces_run3: "6 of the 7 comparable whole-screen arms agree by mutual interval containment, largest gap 0.008241; HepG2's node arm does not (run 3 0.031725, run 4 -0.003095) and carries no claim"
+  report: "apps/index.html, built by src/scfm_ft/report/build.py from results/summary"
 
 slurm_jobs:
   - {job_id: "704848932631", name: "ingest_hepg2", gpus: 0}

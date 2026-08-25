@@ -1,0 +1,1 @@
+For each fine-tuned model, three scores on one axis: the model's own predicted perturbation response, and the response features read from it through its own query and through the value-substitution query, against the shuffled-label band.

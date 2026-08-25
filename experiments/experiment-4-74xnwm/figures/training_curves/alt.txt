@@ -1,0 +1,1 @@
+Validation loss per epoch for the ten fine-tuning runs, and beneath it the agreement between the predicted and the measured perturbation response on the same validation perturbations, which the recipe records but does not select on.

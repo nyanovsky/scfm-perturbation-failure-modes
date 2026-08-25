@@ -25,6 +25,8 @@ TRAIN_RUNS = "results/summary/training_runs.parquet"
 TRAIN_EPOCHS = "results/summary/training_epochs.parquet"
 CONTRASTS = "results/summary/contrasts.parquet"
 AGREE = "results/summary/reference_agreement.parquet"
+NULLCHECK = "results/summary/null_check.parquet"
+RUN3CMP = "results/run3_comparison.parquet"
 
 LINE = B.LINE
 ARM_LABEL = B.ARM_LABEL
@@ -187,9 +189,51 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
     if not r.agreement.empty:
         n["reference_reproducibility"] = claim(
             "largest disagreement between two independent recomputations of the same "
-            "reference arm across the sixteen jobs",
+            "reference arm, over the readings that withhold the same two folds (the two "
+            "refits are excluded because they score different perturbations)",
             float(r.agreement["spread"].max()), AGREE, key(column="spread", agg="max"),
         )
+        n["reference_readings_per_line"] = int(r.agreement["count"].max())
+
+    # whether the band the fine-tuned arms are read against is wide enough for
+    # their own nulls, and where it is not
+    if not r.null_check.empty and "inside_band" in r.null_check:
+        nc = r.null_check[~r.null_check["train_arm"].astype(str).str.endswith(B.REFIT_TAGS)]
+        for fam, tag in (("value_substitution", "value_substitution"), ("pert_flag", "pert_flag")):
+            sub = nc[nc["family"].astype(str).str.startswith(fam)]
+            if sub.empty:
+                continue
+            n[f"own_null_inside_band__{tag}"] = int(sub["inside_band"].sum())
+            n[f"own_null_arms__{tag}"] = int(len(sub))
+            claim(
+                f"widest own shuffled-label draw among the {tag} arms, in absolute value",
+                float(sub[["draw_min", "draw_max"]].abs().max().max()),
+                NULLCHECK, key(family=fam, columns="draw_min,draw_max", agg="max_abs"),
+            )
+
+    # whether run 4's re-reading of run 3's arms lands on run 3's own numbers
+    if not r.run3_cmp.empty:
+        cmp = r.run3_cmp.dropna(subset=["run3", "run4"])
+        both = cmp[cmp.run4_in_run3_interval & cmp.run3_in_run4_interval]
+        n["run3_arms_compared"] = int(len(cmp))
+        n["run3_arms_mutually_contained"] = int(len(both))
+        if not both.empty:
+            claim(
+                "largest difference between run 3's published whole-screen score and run 4's "
+                "re-reading of the same arm, among the arms whose intervals each contain the "
+                "other's estimate",
+                float(both["difference"].abs().max()), RUN3CMP,
+                key(column="difference", agg="max_abs", filter="mutually contained arms"),
+            )
+        for x in cmp.itertuples():
+            claim(
+                f"{LINE[x.cell_line]} {x.label}, run 3's published whole-screen score",
+                float(x.run3), RUN3CMP, key(cell_line=x.cell_line, arm=x.arm, column="run3"),
+            )
+            claim(
+                f"{LINE[x.cell_line]} {x.label}, run 4's re-reading of the same arm",
+                float(x.run4), RUN3CMP, key(cell_line=x.cell_line, arm=x.arm, column="run4"),
+            )
     return n, claims
 
 
@@ -220,7 +264,7 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
             "Fine-tuning scGPT on the CRISPRi screen it is evaluated on, with scGPT's own "
             "published perturbation recipe, does not install a gene-specific regulatory signal "
             f"in the model. Across the {n['n_models']} fine-tuned models (five gene-table arms "
-            f"in two cell lines), {n['n_models_in_band']} leave the queried response "
+            f"in two cell lines), {'every one leaves' if n['n_models_in_band'] == n['n_models'] else str(n['n_models_in_band']) + ' leave'} the queried response "
             "features inside the shuffled-label band, and the highest any reaches is "
             f"{n.get('best_response_feature_score', float('nan')):.4f}, against the same "
             f"model's static gene table at {h.get('scgpt_emb', float('nan')):.4f} in HepG2 and "
@@ -324,6 +368,9 @@ def build(summary_dir: Path, out_dir: Path) -> tuple[Path, Path]:
         ],
         "artifacts": [
             HEAD, RESTRICTED, BAND, DIRECT, TRAIN_RUNS, TRAIN_EPOCHS, CONTRASTS, AGREE,
+            NULLCHECK, RUN3CMP,
+            "src/scfm_ft/compare_run3.py",
+            "src/scfm_ft/analysis.py",
             "src/scfm_ft/config.py",
             "src/scfm_ft/scgpt_pert/train.py",
             "src/scfm_ft/scgpt_pert/query.py",

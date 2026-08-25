@@ -1,0 +1,238 @@
+{
+  "rows": [
+    {
+      "cell_line": "hepg2",
+      "arm": "own_trainable",
+      "entity": "scgpt",
+      "value_substitution": {
+        "score": 0.02459254770207243,
+        "lo": 0.018430396504445844,
+        "hi": 0.05865357354666881,
+        "n_groups": 54
+      },
+      "own_query": {
+        "score": 0.02066699014519103,
+        "lo": -0.12553535600035529,
+        "hi": 0.05374437414037659,
+        "n_groups": 54
+      },
+      "direct": {
+        "score": 0.28904587736499937,
+        "lo": -0.49989100699382105,
+        "hi": 0.3878726535823885,
+        "baseline": "measured_control_mean"
+      }
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "own_frozen",
+      "entity": "scgpt",
+      "value_substitution": {
+        "score": 0.003140116332896833,
+        "lo": -0.004486887344742494,
+        "hi": 0.03729507311543401,
+        "n_groups": 54
+      },
+      "own_query": {
+        "score": -0.16933866306528203,
+        "lo": -0.23458922670387944,
+        "hi": 0.3022957590319214,
+        "n_groups": 54
+      },
+      "direct": {
+        "score": 0.31103555470810634,
+        "lo": -0.501256219143182,
+        "hi": 0.4035974406365007,
+        "baseline": "measured_control_mean"
+      }
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_trainable",
+      "entity": "esm2",
+      "value_substitution": {
+        "score": 0.017833561483252425,
+        "lo": 0.010916102392325084,
+        "hi": 0.04276331333431504,
+        "n_groups": 54
+      },
+      "own_query": {
+        "score": -0.017832414074830213,
+        "lo": -0.03876129135033399,
+        "hi": -0.004537125137262101,
+        "n_groups": 54
+      },
+      "direct": {
+        "score": 0.2837571365581078,
+        "lo": -0.5468078858183459,
+        "hi": 0.403895556232501,
+        "baseline": "measured_control_mean"
+      }
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "esm2_frozen",
+      "entity": "esm2",
+      "value_substitution": {
+        "score": 0.006375092434554011,
+        "lo": -0.0029326722308208484,
+        "hi": 0.08746498201759309,
+        "n_groups": 54
+      },
+      "own_query": {
+        "score": 0.05835397273929295,
+        "lo": -0.05044932699803582,
+        "hi": 0.07972889380186432,
+        "n_groups": 54
+      },
+      "direct": {
+        "score": 0.25685242071080927,
+        "lo": -0.47010782776946985,
+        "hi": 0.30502121306196434,
+        "baseline": "measured_control_mean"
+      }
+    },
+    {
+      "cell_line": "hepg2",
+      "arm": "rand_frozen",
+      "entity": "null",
+      "value_substitution": {
+        "score": 0.0105133321002793,
+        "lo": -6.673214437643409e-05,
+        "hi": 0.020116823680992046,
+        "n_groups": 54
+      },
+      "own_query": {
+        "score": -0.011503628683941846,
+        "lo": -0.03358765949470675,
+        "hi": 0.10101691013376127,
+        "n_groups": 54
+      },
+      "direct": {
+        "score": 0.265384286225726,
+        "lo": -0.5224049545722411,
+        "hi": 0.3538479144514874,
+        "baseline": "measured_control_mean"
+      }
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "own_trainable",
+      "entity": "scgpt",
+      "value_substitution": {
+        "score": 0.031260224819995935,
+        "lo": 0.0081162972577253,
+        "hi": 0.04860554577823514,
+        "n_groups": 137
+      },
+      "own_query": {
+        "score": 0.0026142500338524172,
+        "lo": -0.012672258202019651,
+        "hi": 0.01862835930273691,
+        "n_groups": 124
+      },
+      "direct": {
+        "score": -0.06367954788658665,
+        "lo": -0.15365572036700378,
+        "hi": -0.02071537924991291,
+        "baseline": "measured_control_mean"
+      }
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "own_frozen",
+      "entity": "scgpt",
+      "value_substitution": {
+        "score": 0.01791821950973487,
+        "lo": -0.005278531915111887,
+        "hi": 0.039549648192012114,
+        "n_groups": 137
+      },
+      "own_query": {
+        "score": 0.046238060863017676,
+        "lo": 0.019683793148930664,
+        "hi": 0.0738219542134302,
+        "n_groups": 137
+      },
+      "direct": {
+        "score": 0.01428282021017684,
+        "lo": -0.12817581084647797,
+        "hi": 0.09067918019412961,
+        "baseline": "measured_control_mean"
+      }
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_trainable",
+      "entity": "esm2",
+      "value_substitution": {
+        "score": 0.037784526511974954,
+        "lo": 0.00766675315476805,
+        "hi": 0.060697373089353995,
+        "n_groups": 137
+      },
+      "own_query": {
+        "score": 0.04379437993449273,
+        "lo": -0.0036187182060907486,
+        "hi": 0.07842871935778942,
+        "n_groups": 137
+      },
+      "direct": {
+        "score": -0.029979293872748253,
+        "lo": -0.16417079079939367,
+        "hi": 0.0037250725366393222,
+        "baseline": "measured_control_mean"
+      }
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "esm2_frozen",
+      "entity": "esm2",
+      "value_substitution": {
+        "score": 0.01621489831066741,
+        "lo": 0.00383413241622656,
+        "hi": 0.02197889347232376,
+        "n_groups": 137
+      },
+      "own_query": {
+        "score": 0.038877704503455145,
+        "lo": 0.014895769844311636,
+        "hi": 0.045377814410060585,
+        "n_groups": 137
+      },
+      "direct": {
+        "score": -0.10204972448865386,
+        "lo": -0.14285690669786932,
+        "hi": -0.08743593225338345,
+        "baseline": "measured_control_mean"
+      }
+    },
+    {
+      "cell_line": "jurkat",
+      "arm": "rand_frozen",
+      "entity": "null",
+      "value_substitution": {
+        "score": 0.014067866436497342,
+        "lo": 0.0012650293367769958,
+        "hi": 0.02725309870685555,
+        "n_groups": 137
+      },
+      "own_query": {
+        "score": 0.059236945918811866,
+        "lo": 0.013240015799657874,
+        "hi": 0.07794519229999809,
+        "n_groups": 137
+      },
+      "direct": {
+        "score": -0.04434133304617454,
+        "lo": -0.12167882854820296,
+        "hi": -0.012869867117179442,
+        "baseline": "measured_control_mean"
+      }
+    }
+  ],
+  "metric": [
+    "residual",
+    "weighted"
+  ]
+}
