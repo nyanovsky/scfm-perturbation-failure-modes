@@ -33,21 +33,32 @@ Five fine-tuning arms per cell line, varying only the gene table and whether it 
 # 1. per-cell matrices and the fold assignment, one CPU job per cell line
 sh jobs/ingest.sh <hepg2|jurkat>
 
-# 2. one GPU job per (arm, cell line): fine-tune, extract both query families, score
-sh jobs/train_arm.sh <cell_line> <arm>
+# 2. one GPU job per (arm, cell line): fine-tune, extract both query families, score.
+#    SCFM_FT_RUN_SUFFIX names the execution and suffixes every output directory.
+SCFM_FT_RUN_SUFFIX=_pearson sh jobs/train_arm.sh <cell_line> <arm>
 
-# 3. each model's own prediction, the whole-screen pooling, the last-epoch reading
-sh jobs/followup.sh
-sh jobs/rescore.sh <cell_line>          # re-read a tagged run from its saved weights
-sh jobs/crossfit.sh <cell_line>         # pool the complementary-fold models
+# 3. merge the sixteen per-run archives, pool the complementary folds, write the tables
+SCFM_FT_RUN_SUFFIX=_pearson sh jobs/finalise.sh
 
-# 4. merge, figures, page (pod)
-sh jobs/summarise.sh
-PYTHONPATH=src apy -m scfm_ft.compare_run3          # run 4's re-read of run 3's arms vs run 3
+# 4. figures, page, claims contract (pod)
+PYTHONPATH=src apy -m scfm_ft.compare_run3 --summary results/summary
 PYTHONPATH=src uv run --no-sync python -m scfm_ft.report.figures --summary results/summary
-PYTHONPATH=src uv run --no-sync python -m scfm_ft.report.build --summary results/summary --out "$SILICO_APP_DIR"
-PYTHONPATH=src uv run --no-sync python -m scfm_ft.report.contract
+PYTHONPATH=src uv run --no-sync python -m scfm_ft.report.build --summary results/summary \
+    --alt-summary results/summary_masked_mse --out "$SILICO_APP_DIR"
+PYTHONPATH=src uv run --no-sync python -m scfm_ft.report.contract --summary results/summary \
+    --alt-summary results/summary_masked_mse
 ```
+
+### Two executions
+
+The sixteen arms were run twice. The reported execution selects checkpoints the way scGPT's
+tutorial does: the epoch with the highest mean Pearson correlation, across all genes, between
+each held-out perturbation's measured and predicted mean expression profile. Its outputs carry
+the `_pearson` suffix. An earlier execution selected on held-out masked MSE and predates the
+three faithfulness controls, so it differs in random initialisation as well as in the rule; its
+tables are kept at `results/summary_masked_mse` and read as an independent replicate. Every run
+of the reported execution also tracks the masked-MSE rule with its own patience counter, which
+is the clean within-run comparison.
 
 The job image is `docker.io/library/python:3.11-slim` with `jobs/env_gpu.sh` installing run 2's
 pinned stack (torch 2.5.1+cu121, numpy 1.26.4, scgpt 0.2.4 with `--no-deps`). The catalogue image
@@ -61,11 +72,11 @@ All durable outputs live under
 | prefix | what | how to load |
 |---|---|---|
 | `cells/` | per-cell-line training matrices and the fold assignment, built from GSE264667 | `np.load`, see `src/scfm_ft/ingest.py` |
-| `checkpoints/<line>__<run>/` | 16 fine-tuned models: `model_best.pt` and `model_final.pt` (bare state dicts for `scfm_ft.scgpt_pert.model.build_arm_model`), `gene_table_{init,final}.npz` (resolved table including any learned projection), `train_config.json`, `loss_history.json`, `direct_prediction.npz` | registered as `scfm-run4-ft-<line>-<arm>` |
-| `scores/` | per training run: `restricted_`, `contrasts_`, `runs_`, `direct_`, `per_pert_` tables and `summary_` json | `pd.read_parquet` |
-| `rescore/<line>/` | the tagged control runs re-read from saved weights after the naming fix, and the whole-screen `crossfit_` pooling | `pd.read_parquet` |
-| `followup/` | each model's own predicted response scored against both baselines, plus the training metadata | `pd.read_parquet` |
-| `summary.tar.gz` | the merged tables the report reads, unpacked locally to `results/summary` | `tar -xzf` |
+| `checkpoints_pearson/<line>__<run>/` | the 16 reported models: `model_best.pt` (the epoch the recipe's rule keeps), `model_best_masked_mse.pt` (the epoch the alternative rule keeps), `model_final.pt` — all bare state dicts for `scfm_ft.scgpt_pert.model.build_arm_model` — plus `gene_table_{init,final}.npz` (resolved table including any learned projection), `train_config.json`, `loss_history.json` (per-epoch scores under both rules and each rule's selected and stopping epoch), `provenance.json`, `direct_prediction.npz`, `prediction_spread.json`, `forward_pass_sample.json`, `query_summary_{init,final}.parquet` | registered as `scfm-run4-ft-<line>-<arm>-pearson` |
+| `packs_pearson/pack_<line>__<run>.tar.gz` | one archive per run: that run's score tables and its training metadata, which is what the merge job stages | `tar -xzf` |
+| `summary_pearson.tar.gz` | the merged tables the report reads, unpacked locally to `results/summary` | `tar -xzf` |
+| `checkpoints/<line>__<run>/` | the earlier masked-MSE execution's 16 models, same directory contract minus the second selected checkpoint | registered as `scfm-run4-ft-<line>-<arm>` |
+| `scores/`, `rescore/<line>/`, `followup/`, `summary.tar.gz` | the earlier execution's per-run tables, whole-screen pooling and merged summary, unpacked locally to `results/summary_masked_mse` | `pd.read_parquet`, `tar -xzf` |
 
 `results/run3_comparison.parquet` is not in the artifact store: it is computed pod-side by
 `src/scfm_ft/compare_run3.py` against run 3's own `results/summary/runs.parquet`, and holds run 3's

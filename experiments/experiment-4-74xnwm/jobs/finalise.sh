@@ -37,6 +37,13 @@ done
 echo "score tables: $(ls "$WORK/scores" | wc -l);  run directories: $(ls "$WORK/meta" | wc -l)"
 
 echo
+echo "=== the pre-registered shuffled-label band, from run 3's bundle alone ==="
+for LINE in hepg2 jurkat; do
+    python3 -m scfm_ft.coexp_band --cell-line "$LINE" --out "$WORK/scores" \
+        --work "$WORK/band" --device cuda
+done
+
+echo
 echo "=== every perturbation scored by a model that never saw it ==="
 for LINE in hepg2 jurkat; do
     echo "--- $LINE ---"
