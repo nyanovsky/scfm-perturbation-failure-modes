@@ -366,8 +366,11 @@ def rescore(
 # --------------------------------------------------------------------------- #
 # how much of the predicted response depends on which gene was knocked down
 # --------------------------------------------------------------------------- #
-def prediction_spread(ckpt_root: Path, out_file: Path | None = None) -> list[dict]:
-    """How perturbation-specific each fine-tuned model's own prediction is.
+def spread_row(
+    flagged: np.ndarray, unflagged: np.ndarray, control_mean: np.ndarray,
+    cell_line: str, run_name: str,
+) -> dict:
+    """How perturbation-specific one model's own prediction is.
 
     Run 3 reports, for the measured effects, the median over perturbations of
     the fraction of a perturbation's variance across genes that survives
@@ -376,42 +379,57 @@ def prediction_spread(ckpt_root: Path, out_file: Path | None = None) -> list[dic
     that predicts the same profile whatever gene is knocked down scores near
     zero however well it reproduces the average knockdown.
     """
+    row = {"run": f"{cell_line}__{run_name}", "cell_line": cell_line, "arm": run_name}
+    f = np.asarray(flagged, dtype=np.float64)
+    for label, pred in (
+        ("vs_measured_control_mean", f - np.asarray(control_mean, dtype=np.float64)[None, :]),
+        ("vs_unflagged_forward_pass", f - np.asarray(unflagged, dtype=np.float64).reshape(1, -1)),
+    ):
+        resid = pred - pred.mean(axis=0, keepdims=True)
+        frac = np.var(resid, axis=1) / np.maximum(np.var(pred, axis=1), 1e-12)
+        # how alike two perturbations' predicted profiles are, on a bounded
+        # subsample so the pairwise matrix stays small
+        rng = np.random.default_rng(C.SEED)
+        take = (
+            rng.choice(pred.shape[0], 100, replace=False)
+            if pred.shape[0] > 100
+            else np.arange(pred.shape[0])
+        )
+        sub = pred[take]
+        sub = sub - sub.mean(axis=1, keepdims=True)
+        norm = np.linalg.norm(sub, axis=1, keepdims=True)
+        cor = (sub / np.maximum(norm, 1e-12)) @ (sub / np.maximum(norm, 1e-12)).T
+        iu = np.triu_indices(cor.shape[0], k=1)
+        row[f"{label}__median_residual_fraction_of_variance"] = float(np.median(frac))
+        row[f"{label}__median_pairwise_profile_correlation"] = float(np.median(cor[iu]))
+    return row
+
+
+def prediction_spread(ckpt_root: Path, out_file: Path | None = None) -> list[dict]:
+    """``spread_row`` for every run under ``ckpt_root``.
+
+    Reads each run's saved prediction matrices where they are available and its
+    ``prediction_spread.json`` where only the metadata was staged, so the same
+    table can be built from a full checkpoint tree or from the training jobs'
+    small archives.
+    """
     rows = []
     for d in sorted(Path(ckpt_root).iterdir()):
-        npz = d / "direct_prediction.npz"
-        if not npz.exists():
-            continue
         line, _, run_name = d.name.partition("__")
         if line not in C.CELL_LINES:
             continue
-        z = np.load(npz, allow_pickle=False)
-        if "flagged" not in z or "control_mean_log1p" not in z:
-            continue
-        row = {"run": d.name, "cell_line": line, "arm": run_name}
-        for label, pred in (
-            ("vs_measured_control_mean",
-             z["flagged"].astype(np.float64)
-             - z["control_mean_log1p"].astype(np.float64)[None, :]),
-            ("vs_unflagged_forward_pass",
-             z["flagged"].astype(np.float64) - z["unflagged"].astype(np.float64)),
-        ):
-            resid = pred - pred.mean(axis=0, keepdims=True)
-            frac = np.var(resid, axis=1) / np.maximum(np.var(pred, axis=1), 1e-12)
-            # how alike two perturbations' predicted profiles are, on a bounded
-            # subsample so the pairwise matrix stays small
-            rng = np.random.default_rng(C.SEED)
-            take = (
-                rng.choice(pred.shape[0], 100, replace=False)
-                if pred.shape[0] > 100
-                else np.arange(pred.shape[0])
+        npz, pre = d / "direct_prediction.npz", d / "prediction_spread.json"
+        if npz.exists():
+            z = np.load(npz, allow_pickle=False)
+            if "flagged" not in z or "control_mean_log1p" not in z:
+                continue
+            row = spread_row(
+                z["flagged"], z["unflagged"], z["control_mean_log1p"], line, run_name
             )
-            sub = pred[take]
-            sub = sub - sub.mean(axis=1, keepdims=True)
-            norm = np.linalg.norm(sub, axis=1, keepdims=True)
-            cor = (sub / np.maximum(norm, 1e-12)) @ (sub / np.maximum(norm, 1e-12)).T
-            iu = np.triu_indices(cor.shape[0], k=1)
-            row[f"{label}__median_residual_fraction_of_variance"] = float(np.median(frac))
-            row[f"{label}__median_pairwise_profile_correlation"] = float(np.median(cor[iu]))
+        elif pre.exists():
+            row = json.loads(pre.read_text())
+        else:
+            continue
         rows.append(row)
         print(json.dumps(row), flush=True)
     if out_file is not None:

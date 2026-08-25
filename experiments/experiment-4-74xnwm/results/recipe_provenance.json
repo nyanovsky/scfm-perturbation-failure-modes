@@ -147,5 +147,26 @@
       "matches": null,
       "note": "the tutorial clips to 1.0 inline in its training loop"
     }
-  ]
+  ],
+  "selection": {
+    "tutorial": {
+      "val_score_expression": "val_metrics['pearson']",
+      "best_model_guard": "val_score > best_val_corr",
+      "higher_is_better": true,
+      "early_stopping_counter_reset_by_the_same_guard": true,
+      "metric_key": "pearson"
+    },
+    "ours": {
+      "metric_key": "pearson",
+      "higher_is_better": true,
+      "early_stopping_counter_reset_by_the_same_guard": true
+    },
+    "matches": true,
+    "per_key": {
+      "metric_key": true,
+      "higher_is_better": true,
+      "early_stopping_counter_reset_by_the_same_guard": true
+    },
+    "training_loop_cell": "best_val_loss = float(\"inf\")\nbest_val_corr = 0\nbest_model = None\npatience = 0\n\nfor epoch in range(1, epochs + 1):\n    epoch_start_time = time.time()\n    train_loader = pert_data.dataloader[\"train_loader\"]\n    valid_loader = pert_data.dataloader[\"val_loader\"]\n\n    train(\n        model,\n        train_loader,\n    )\n\n    val_res = eval_perturb(valid_loader, model, device)\n    val_metrics = compute_perturbation_metrics(\n        val_res, pert_data.adata[pert_data.adata.obs[\"condition\"] == \"ctrl\"]\n    )\n    logger.info(f\"val_metrics at epoch {epoch}: \")\n    logger.info(val_metrics)\n\n    elapsed = time.time() - epoch_start_time\n    logger.info(f\"| end of epoch {epoch:3d} | time: {elapsed:5.2f}s | \")\n\n    val_score = val_metrics[\"pearson\"]\n    if val_score > best_val_corr:\n        best_val_corr = val_score\n        best_model = copy.deepcopy(model)\n        logger.info(f\"Best model with score {val_score:5.4f}\")\n        patience = 0\n    else:\n        patience += 1\n        if patience >= early_stop:\n            logger.info(f\"Early stop at epoch {epoch}\")\n            break\n\n    # torch.save(\n    #     model.state_dict(),\n    #     save_dir / f\"model_{epoch}.pt\",\n    # )\n\n    scheduler.step()\n\n"
+  }
 }

@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 from . import config as C
+from . import paths
 
 #: the pre-registered cell of run 3's correlation grid, and the fold-centred
 #: diagnostic reported beside it everywhere
@@ -105,9 +106,9 @@ def arm_of(name: str) -> tuple[str, str, str]:
 
 
 #: where each training run's durable directory lives, for the summary to cite
-ARTIFACT_PREFIX = (
+ARTIFACT_ROOT = (
     "artifact://fundacion-instituto-leloir-553557/experiments/"
-    "exp_01m0trpxqyf0g8pq29k774xnwm/checkpoints"
+    "exp_01m0trpxqyf0g8pq29k774xnwm"
 )
 
 
@@ -137,6 +138,7 @@ def training_tables(ckpt_root: Path | None) -> tuple[pd.DataFrame, pd.DataFrame]
                 "val_loss": float(rec.get("val_loss", np.nan)),
                 "lr": float(rec["lr"]),
                 "seconds": float(rec["seconds"]),
+                "val_tutorial_pearson": float(rec.get("val_tutorial_pearson", np.nan)),
             }
             for k, v in (rec.get("val_delta_pearson") or {}).items():
                 row[f"delta_{k}"] = float(v)
@@ -146,8 +148,12 @@ def training_tables(ckpt_root: Path | None) -> tuple[pd.DataFrame, pd.DataFrame]
             {
                 "cell_line": line,
                 "arm": arm,
-                "selected_epoch": int(hist.get("best_epoch", 0)),
+                "selected_epoch": int(hist.get("selected_epoch", hist.get("best_epoch", 0))),
                 "epochs_run": len(hist["history"]),
+                "selected_val_pearson": float(hist.get("selected_val_pearson", np.nan)),
+                "mse_selected_epoch": hist.get("mse_selected_epoch"),
+                "pearson_rule_stopped_at_epoch": hist.get("pearson_rule_stopped_at_epoch"),
+                "mse_rule_stopped_at_epoch": hist.get("mse_rule_stopped_at_epoch"),
                 "best_val_loss": float(hist.get("best_val_loss", np.nan)),
                 "selection_rule": hist.get("selection_rule", ""),
                 "total_seconds": float(hist.get("total_seconds", np.nan)),
@@ -163,7 +169,7 @@ def training_tables(ckpt_root: Path | None) -> tuple[pd.DataFrame, pd.DataFrame]
                     if sub.get("rows")
                     else None
                 ),
-                "artifact": f"{ARTIFACT_PREFIX}/{d.name}/",
+                "artifact": f"{ARTIFACT_ROOT}/checkpoints{paths.run_suffix()}/{d.name}/",
                 **{
                     f"selected_delta_{k}": float(v)
                     for k, v in (hist.get("best_val_delta_pearson") or {}).items()

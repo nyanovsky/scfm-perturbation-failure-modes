@@ -143,10 +143,31 @@ def checkpoint_cache() -> Path:
     return ensure(repo_dir() / "scratch" / "_ckpt" / "scgpt")
 
 
+def run_suffix() -> str:
+    """Suffix separating one execution's durable outputs from another's.
+
+    The first execution of the sixteen arms selected its checkpoint on held-out
+    masked MSE; the published recipe selects on validation Pearson. Rather than
+    overwrite the first execution's weights and tables, the second writes
+    alongside them under ``checkpoints<suffix>`` and ``scores<suffix>``, so both
+    selection rules stay readable and comparable.
+    """
+    return os.environ.get("SCFM_FT_RUN_SUFFIX", "")
+
+
 def arm_dir(arm_name: str, cell_line: str) -> Path:
     """One training run's durable output directory."""
-    return ensure(data_root() / "checkpoints" / f"{cell_line}__{arm_name}")
+    return ensure(data_root() / f"checkpoints{run_suffix()}" / f"{cell_line}__{arm_name}")
 
 
 def scores_dir() -> Path:
-    return ensure(data_root() / "scores")
+    return ensure(data_root() / f"scores{run_suffix()}")
+
+
+def packs_dir() -> Path:
+    """One small archive per training run, so the merge job stages 16 files.
+
+    Staging is capped at 128 files and the per-run small outputs are ten times
+    that; each training job therefore packs its own tables and metadata.
+    """
+    return ensure(data_root() / f"packs{run_suffix()}")

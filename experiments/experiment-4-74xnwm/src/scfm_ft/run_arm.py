@@ -24,7 +24,7 @@ import pandas as pd
 import torch
 
 from . import config as C
-from . import paths, score
+from . import followup, paths, score
 from .ingest import training_split
 from .scgpt_pert import checkpoint as ckptmod
 from .scgpt_pert import data as datamod
@@ -177,6 +177,46 @@ def extract_stage(
     }
 
 
+def pack_run(cell_line: str, run_name: str, out_dir: Path) -> Path:
+    """One archive per training run, holding everything the merge job reads.
+
+    Staging into a job is capped at 128 files and sixteen runs produce ten times
+    that in small tables, so each run leaves a single archive: its score tables,
+    its training metadata, and its prediction-spread row. The weights and the
+    prediction matrices stay in the run's own directory.
+    """
+    import tarfile
+
+    scores = paths.scores_dir()
+    want = [
+        *sorted(scores.glob(f"restricted_{cell_line}__{run_name}.parquet")),
+        *sorted(scores.glob(f"contrasts_{cell_line}__{run_name}.parquet")),
+        *sorted(scores.glob(f"runs_{cell_line}__{run_name}.parquet")),
+        *sorted(scores.glob(f"per_pert_{cell_line}__{run_name}.parquet")),
+        *sorted(scores.glob(f"direct_{cell_line}__{run_name}.parquet")),
+        *sorted(scores.glob(f"direct_{cell_line}__{run_name}__*.parquet")),
+        *sorted(scores.glob(f"summary_{cell_line}__{run_name}.json")),
+    ]
+    meta = [
+        out_dir / name
+        for name in (
+            "train_config.json",
+            "loss_history.json",
+            "provenance.json",
+            "prediction_spread.json",
+            "forward_pass_sample.json",
+        )
+    ]
+    dest = paths.packs_dir() / f"pack_{cell_line}__{run_name}.tar.gz"
+    with tarfile.open(dest, "w:gz") as tf:
+        for f in want:
+            tf.add(f, arcname=f"scores/{f.name}")
+        for f in meta:
+            if f.exists():
+                tf.add(f, arcname=f"meta/{cell_line}__{run_name}/{f.name}")
+    return dest
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--cell-line", required=True, choices=list(C.CELL_LINES))
@@ -284,8 +324,11 @@ def main(argv: list[str] | None = None) -> int:
         model, cells, targets["effect"], out_dir, force_perturbed=force_perturbed
     )
     print(
-        f"training done in {history['total_seconds']}s; selected epoch {history['best_epoch']} "
-        f"at validation loss {history['best_val_loss']:.4f}; response agreement at that epoch "
+        f"training done in {history['total_seconds']}s; the recipe selects epoch "
+        f"{history['selected_epoch']} at validation Pearson "
+        f"{history['selected_val_pearson']:.5f}; the masked-MSE rule would select epoch "
+        f"{history['mse_selected_epoch']} at loss {history['best_val_loss']:.4f}; "
+        f"response agreement at the selected epoch "
         f"{json.dumps(history['best_val_delta_pearson'])}",
         flush=True,
     )
@@ -296,6 +339,10 @@ def main(argv: list[str] | None = None) -> int:
     # ---- durable model artifacts ---------------------------------------- #
     torch.save(history.pop("best_state"), out_dir / "model_best.pt")
     torch.save(history.pop("final_state"), out_dir / "model_final.pt")
+    mse_state = history.pop("mse_state")
+    if mse_state is not None:
+        torch.save(mse_state, out_dir / "model_best_masked_mse.pt")
+    del mse_state
     proj = getattr(model.encoder, "proj", None)
     np.savez_compressed(
         out_dir / "gene_table_final.npz",
@@ -314,8 +361,14 @@ def main(argv: list[str] | None = None) -> int:
             {
                 "history": history["history"],
                 "best_epoch": history["best_epoch"],
-                "best_val_loss": history["best_val_loss"],
+                "selected_epoch": history["selected_epoch"],
+                "selected_val_pearson": history["selected_val_pearson"],
                 "selection_rule": history["selection_rule"],
+                "pearson_rule_stopped_at_epoch": history["pearson_rule_stopped_at_epoch"],
+                "mse_selected_epoch": history["mse_selected_epoch"],
+                "mse_rule_stopped_at_epoch": history["mse_rule_stopped_at_epoch"],
+                "best_val_loss": history["best_val_loss"],
+                "alternative_rule": history["alternative_rule"],
                 "best_val_delta_pearson": history["best_val_delta_pearson"],
                 "total_seconds": history["total_seconds"],
                 "gene_subsampling": history["gene_subsampling"],
@@ -395,16 +448,24 @@ def main(argv: list[str] | None = None) -> int:
     all_rows = np.arange(targets["pert_target"].size)
     flagged, unflagged = trainmod.predict_profiles(model, cells, all_rows, 32, amp=False)
     direct = flagged - unflagged[None, :]
+    ctrl_mean_log1p = cells.x_ctrl.mean(dim=0).float().cpu().numpy()
     np.savez_compressed(
         out_dir / "direct_prediction.npz",
         delta=direct.astype(np.float32),
         flagged=flagged.astype(np.float32),
         unflagged=unflagged.astype(np.float32),
-        control_mean_log1p=cells.x_ctrl.mean(dim=0).float().cpu().numpy(),
+        control_mean_log1p=ctrl_mean_log1p,
         pert_target=targets["pert_target"],
         gene_id=targets["readout_gene_id"],
         fold=folds["fold"],
     )
+    # how perturbation-specific the prediction is, written here so the merge job
+    # does not have to stage sixteen prediction matrices to recompute it
+    spread = followup.spread_row(
+        flagged, unflagged, ctrl_mean_log1p.astype(np.float64), line, run_name
+    )
+    (out_dir / "prediction_spread.json").write_text(json.dumps(spread, indent=2))
+    print(json.dumps(spread), flush=True)
     del model
     torch.cuda.empty_cache()
 
@@ -455,6 +516,9 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(summary, indent=2, default=str)
     )
     print(json.dumps({k: v for k, v in summary.items() if k != "bundle_inventory"}, indent=2, default=str), flush=True)
+
+    pack = pack_run(line, run_name, out_dir)
+    print(f"packed {pack}", flush=True)
     return 0
 
 

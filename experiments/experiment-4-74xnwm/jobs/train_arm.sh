@@ -19,6 +19,7 @@ export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 export SCFM_FT_CKPT="$PWD/_ckpt/scgpt"
 
 echo "=== $LINE / $ARM ==="
+echo "run suffix      : ${SCFM_FT_RUN_SUFFIX:-none}"
 echo "input artifacts : ${SILICO_INPUT_ARTIFACTS_DIR:-unset}"
 echo "reused volume   : ${SILICO_REUSED_VOLUME_DIR:-unset}"
 echo "artifacts       : $SILICO_EXPERIMENT_ARTIFACTS_DIR"
@@ -26,6 +27,8 @@ find "${SILICO_REUSED_VOLUME_DIR:-/nonexistent}" -maxdepth 3 -name '*.npz' 2>/de
 
 python3 -m scfm_ft.run_arm --cell-line "$LINE" --arm "$ARM" --work "$PWD/_work" "$@"
 
+SUF="${SCFM_FT_RUN_SUFFIX:-}"
 echo "=== outputs ==="
-ls -la "$SILICO_EXPERIMENT_ARTIFACTS_DIR/checkpoints/${LINE}__${ARM}" || true
-ls -la "$SILICO_EXPERIMENT_ARTIFACTS_DIR/scores" || true
+ls -la "$SILICO_EXPERIMENT_ARTIFACTS_DIR/checkpoints$SUF" || true
+ls -la "$SILICO_EXPERIMENT_ARTIFACTS_DIR/scores$SUF" || true
+ls -la "$SILICO_EXPERIMENT_ARTIFACTS_DIR/packs$SUF" || true

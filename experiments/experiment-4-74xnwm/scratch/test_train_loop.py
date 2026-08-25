@@ -109,13 +109,42 @@ def main() -> int:
     flagged, base = trainmod.predict_profiles(model, cells, val_perts, 8)
     d = trainmod.predict_delta(model, cells, val_perts, 8)
     assert np.allclose(d, flagged - base[None, :]), "the two query paths disagree"
+    assert np.allclose(
+        trainmod.validation_score(
+            model, cells, effect, val_perts, 8, profiles=(flagged, base)
+        )["ctrlmean"]["mean"],
+        delta["ctrlmean"]["mean"],
+    ), "passing the forward passes in changes the answer"
+
+    # the tutorial's selection score, against a literal transcription of the
+    # upstream loop it restates
+    true_mean = trainmod.measured_mean_profiles(cells, val_perts)
+    for k, p in enumerate(val_perts):
+        sel = np.flatnonzero(cells.pert_of_cell.numpy() == p)
+        assert np.allclose(true_mean[k], cells.x_pert.numpy()[sel].mean(axis=0)), k
+    from scipy.stats import pearsonr
+
+    literal = float(
+        np.mean([pearsonr(true_mean[k], flagged[k])[0] for k in range(val_perts.size)])
+    )
+    tut = trainmod.tutorial_pearson(flagged, true_mean)
+    assert abs(tut["mean"] - literal) < 1e-12, (tut, literal)
+    assert tut["n"] == val_perts.size, tut
 
     with tempfile.TemporaryDirectory() as tmp:
         hist = trainmod.finetune(model, cells, effect, Path(tmp), n_val_control=8, log_every=0)
         sample = json.loads((Path(tmp) / "forward_pass_sample.json").read_text())
     losses = [h["val_loss"] for h in hist["history"]]
-    assert hist["best_epoch"] == int(np.argmin(losses)) + 1, (hist["best_epoch"], losses)
+    pears = [h["val_tutorial_pearson"] for h in hist["history"]]
+    # the recipe's rule: the epoch with the highest validation Pearson
+    assert hist["selected_epoch"] == int(np.argmax(pears)) + 1, (hist["selected_epoch"], pears)
+    assert hist["selected_val_pearson"] == max(pears)
+    assert hist["best_epoch"] == hist["selected_epoch"]
+    # and the alternative, tracked beside it on the same run
+    assert hist["mse_selected_epoch"] == int(np.argmin(losses)) + 1, (hist, losses)
     assert hist["best_val_loss"] == min(losses)
+    assert hist["mse_state"] is not None and hist["best_state"] is not None
+    assert "pearson" in hist["selection_rule"]
     assert set(hist["best_val_delta_pearson"]) == set(delta)
     counters = hist["gene_subsampling"]
     assert counters["rows"] >= counters["rows_that_would_lose_the_perturbed_gene"] > 0
@@ -123,7 +152,9 @@ def main() -> int:
 
     print(json.dumps({
         "val_loss_per_epoch": [round(x, 6) for x in losses],
-        "selected_epoch": hist["best_epoch"],
+        "val_tutorial_pearson_per_epoch": [round(x, 6) for x in pears],
+        "selected_epoch": hist["selected_epoch"],
+        "masked_mse_would_select": hist["mse_selected_epoch"],
         "selection_rule": hist["selection_rule"],
         "delta_pearson_at_selected": hist["best_val_delta_pearson"],
         "rows_that_would_lose_the_perturbed_gene": (
