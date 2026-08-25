@@ -85,9 +85,14 @@ def write_block(
 
 
 def arm_names(arm_name: str, with_coexp_shuffle: bool) -> dict:
-    """Which arms this job scores, and which get a shuffled-label null."""
-    ft, ftq = f"ft_{arm_name}", f"ftq_{arm_name}"
-    pre, preq = f"pre_{arm_name}", f"preq_{arm_name}"
+    """Which arms this job scores, and which get a shuffled-label null.
+
+    The arm name embeds the bundle model key, not the run name: a tagged run's
+    key has to survive run 3's ``split("__", 1)`` on the feature file name.
+    """
+    stem = C.model_stem(arm_name)
+    ft, ftq = f"ft_{stem}", f"ftq_{stem}"
+    pre, preq = f"pre_{stem}", f"preq_{stem}"
     main = [
         # run 3's arms, re-run in this job on the same restricted folds
         "mean_only",
@@ -398,6 +403,17 @@ def score_bundle(
         raise RuntimeError(
             f"an arm was scored more than once: {bad.to_dict()} against {n_rows} perturbations"
         )
+    # an arm whose feature block the bundle reader did not pick up is dropped
+    # silently, which would leave the run's headline arm missing from the table
+    # rather than wrong. The arms this job exists to produce are required.
+    scored = set(per_pert["arm"].unique())
+    required = {f"{names['models'][0]}_resp", f"{names['models'][1]}_resp"}
+    absent = sorted(required - scored)
+    if absent:
+        raise RuntimeError(
+            f"{cell_line}/{arm_name}: the fine-tuned response arms {absent} were not scored; "
+            f"the bundle reader resolved {sorted(a for a in scored if a.startswith(('ft', 'pre')))}"
+        )
 
     restricted, contrasts = [], []
     for (arm, translator), grp in per_pert.groupby(["arm", "translator"], sort=True):
@@ -407,10 +423,11 @@ def score_bundle(
                 grp, fold, groups, eval_folds, ceilings, cell_line, f"{arm}/{translator}"
             )
         ]
-    ft, ftq = f"ft_{arm_name}", f"ftq_{arm_name}"
+    stem = C.model_stem(arm_name)
+    ft, ftq = f"ft_{stem}", f"ftq_{stem}"
     interesting = [
         f"{ft}_resp", f"{ft}_full", f"{ft}_emb", f"{ftq}_resp", f"{ftq}_full",
-        f"pre_{arm_name}_resp", f"preq_{arm_name}_resp", "scgpt_resp", "scgpt_emb", "scgpt_full",
+        f"pre_{stem}_resp", f"preq_{stem}_resp", "scgpt_resp", "scgpt_emb", "scgpt_full",
     ]
     for translator in C.TRANSLATORS:
         for a in interesting:

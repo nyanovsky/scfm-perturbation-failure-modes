@@ -62,6 +62,10 @@ def arm_of(name: str) -> tuple[str, str, str]:
     ``ftq_<arm>_resp`` the fine-tuned model, its own perturbation query
     ``pre_``/``preq_`` the same before any gradient step
     anything else is a reference arm and keeps its own name.
+
+    A tagged run carries its tag in the arm name behind ``-`` rather than
+    ``__`` (see :func:`config.model_stem`); the run name is restored here so
+    every table downstream keys on ``own_trainable__f23`` as the run does.
     """
     for prefix, stage, family in (
         ("ftq_", "final", "pert_flag"),
@@ -73,8 +77,8 @@ def arm_of(name: str) -> tuple[str, str, str]:
             rest = name[len(prefix) :]
             for suffix in ("_resp", "_emb", "_full", "_hybrid"):
                 if rest.endswith(suffix):
-                    return stage, rest[: -len(suffix)], f"{family}{suffix}"
-            return stage, rest, family
+                    return stage, C.run_of_stem(rest[: -len(suffix)]), f"{family}{suffix}"
+            return stage, C.run_of_stem(rest), family
     return "reference", "", name
 
 
@@ -181,8 +185,17 @@ def build(scores: Path, out: Path, checkpoints: Path | None = None) -> dict:
         .reset_index()
     )
 
+    # The shuffled-label band is the pre-registered one: the five training arms
+    # and the reference arms they were read against. The tagged control runs
+    # (cross-fitted folds, upstream sampling, last epoch) draw their own
+    # shuffled nulls too, but folding those into the band after the fact would
+    # widen the interval the result is read against, and widening it is the
+    # direction that flatters this experiment's conclusion.
+    in_preregistered = restricted.is_shuffled & (
+        (restricted.stage == "reference") | restricted.train_arm.isin(C.ARMS_BY_NAME)
+    )
     band = (
-        restricted[restricted.is_shuffled]
+        restricted[in_preregistered]
         .groupby(["cell_line", "base_arm", "translator", "target", "weighting"])["disattenuated"]
         .agg(["mean", "std", "min", "max", "count"])
         .reset_index()

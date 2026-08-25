@@ -148,9 +148,10 @@ def extract_stage(
 
     table, table_note = q.gene_embeddings()
     prefix = "ft" if stage == "final" else "pre"
+    stem = C.model_stem(arm_name)
     return {
-        "value_key": f"{prefix}_{arm_name}",
-        "flag_key": f"{prefix}q_{arm_name}",
+        "value_key": f"{prefix}_{stem}",
+        "flag_key": f"{prefix}q_{stem}",
         "value_forms": value_forms,
         "flag_forms": {"zero_out": pf_forms[C.FEATURE_FORM_KEY]},
         "gene_table": table,

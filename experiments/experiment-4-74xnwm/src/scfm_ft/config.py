@@ -123,6 +123,24 @@ ARMS: tuple[Arm, ...] = (
 )
 ARMS_BY_NAME = {a.name: a for a in ARMS}
 
+
+#: A run name is ``<arm>`` or ``<arm>__<tag>``. Run 3's bundle reader splits a
+#: feature file name on the FIRST ``__`` to separate the model key from the
+#: anchor, so a model key containing ``__`` makes the block unreadable and the
+#: response arms silently vanish from the scored set. Model keys therefore carry
+#: the tag behind a character run 3 never splits on, and the run name is
+#: recovered from the key by the inverse.
+def model_stem(run_name: str) -> str:
+    """The run name as it may appear inside a bundle model key."""
+    if "-" in run_name:
+        raise ValueError(f"run name must not contain '-': {run_name}")
+    return run_name.replace("__", "-")
+
+
+def run_of_stem(stem: str) -> str:
+    """Inverse of :func:`model_stem`."""
+    return stem.replace("-", "__")
+
 #: the wide table the substitution arms start from, and where it comes from
 ESM2_TABLE = "esm2_3b"
 ESM2_TABLE_REF = (

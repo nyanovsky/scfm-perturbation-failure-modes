@@ -153,7 +153,7 @@ def collect(r: B.Results) -> tuple[dict, list[dict]]:
                 f"{L}, response features read off the LAST epoch rather than the selected one, "
                 "verdict cell",
                 le["score"], RESTRICTED,
-                rkey(cell_line=line, arm="ft_own_trainable__lastepoch_resp"),
+                rkey(cell_line=line, arm=B.last_epoch_arm("own_trainable")),
             )
         n["lines"][line] = e
 

@@ -53,6 +53,11 @@ VERDICT = ("residual", "weighted")
 DIAGNOSTIC = ("centered", "weighted")
 
 
+def last_epoch_arm(arm: str, family: str = "ft", suffix: str = "resp") -> str:
+    """The scored arm name of a run's last-epoch re-reading."""
+    return f"{family}_{C.model_stem(f'{arm}__lastepoch')}_{suffix}"
+
+
 def nan() -> float:
     return float("nan")
 
@@ -158,7 +163,7 @@ class Results:
         """The features read off the run's last epoch, if that control ran."""
         s = self.restricted[
             (self.restricted.cell_line == line)
-            & (self.restricted.arm == f"{family}_{arm}__lastepoch_{suffix}")
+            & (self.restricted.arm == last_epoch_arm(arm, family, suffix))
             & (self.restricted.target == VERDICT[0])
             & (self.restricted.weighting == VERDICT[1])
             & (self.restricted.translator == "mlp")
