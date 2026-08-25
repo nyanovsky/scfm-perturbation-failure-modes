@@ -1,0 +1,151 @@
+{
+  "source": "https://raw.githubusercontent.com/bowang-lab/scGPT/main/tutorials/Tutorial_Perturbation.ipynb",
+  "sha256": "a997191d88e4c05969103e777f1323ebf4263238e64520877ae3a0f6aed4bdbb",
+  "sha256_matches_recorded": true,
+  "settings_cell": "# settings for data prcocessing\npad_token = \"<pad>\"\nspecial_tokens = [pad_token, \"<cls>\", \"<eoc>\"]\npad_value = 0  # for padding values\npert_pad_id = 0\ninclude_zero_gene = \"all\"\nmax_seq_len = 1536\n\n# settings for training\nMLM = True  # whether to use masked language modeling, currently it is always on.\nCLS = False  # celltype classification objective\nCCE = False  # Contrastive cell embedding objective\nMVC = False  # Masked value prediction for cell embedding\nECS = False  # Elastic cell similarity objective\namp = True\nload_model = \"../save/scGPT_human\"\nload_param_prefixs = [\n    \"encoder\",\n    \"value_encoder\",\n    \"transformer_encoder\",\n]\n\n# settings for optimizer\nlr = 1e-4  # or 1e-4\nbatch_size = 64\neval_batch_size = 64\nepochs = 15\nschedule_interval = 1\nearly_stop = 10\n\n# settings for the model\nembsize = 512  # embedding dimension\nd_hid = 512  # dimension of the feedforward network model in nn.TransformerEncoder\nnlayers = 12  # number of nn.TransformerEncoderLayer in nn.TransformerEncoder\nnhead = 8  # number of heads in nn.MultiheadAttention\nn_layers_cls = 3\ndropout = 0  # dropout probability\nuse_fast_transformer = True  # whether to use fast transformer\n\n# logging\nlog_interval = 100\n\n# dataset and evaluation choices\ndata_name = \"adamson\"\nsplit = \"simulation\"\nif data_name == \"norman\":\n    perts_to_plot = [\"SAMD1+ZBTB1\"]\nelif data_name == \"adamson\":\n    perts_to_plot = [\"KCTD16+ctrl\"]\n\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\n",
+  "n_compared": 14,
+  "n_matching": 14,
+  "mismatches": [],
+  "not_named_in_the_cell": [
+    "schedule_gamma",
+    "grad_clip"
+  ],
+  "fields": [
+    {
+      "field": "lr",
+      "ours": 0.0001,
+      "tutorial_variable": "lr",
+      "tutorial": 0.0001,
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "batch_size",
+      "ours": 64,
+      "tutorial_variable": "batch_size",
+      "tutorial": 64,
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "eval_batch_size",
+      "ours": 64,
+      "tutorial_variable": "eval_batch_size",
+      "tutorial": 64,
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "epochs",
+      "ours": 15,
+      "tutorial_variable": "epochs",
+      "tutorial": 15,
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "schedule_interval",
+      "ours": 1,
+      "tutorial_variable": "schedule_interval",
+      "tutorial": 1,
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "early_stop",
+      "ours": 10,
+      "tutorial_variable": "early_stop",
+      "tutorial": 10,
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "dropout",
+      "ours": 0.0,
+      "tutorial_variable": "dropout",
+      "tutorial": 0,
+      "matches": true,
+      "note": "the class default is 0.5; the tutorial passes this"
+    },
+    {
+      "field": "pad_token",
+      "ours": "<pad>",
+      "tutorial_variable": "pad_token",
+      "tutorial": "<pad>",
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "pad_value",
+      "ours": 0,
+      "tutorial_variable": "pad_value",
+      "tutorial": 0,
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "pert_pad_id",
+      "ours": 0,
+      "tutorial_variable": "pert_pad_id",
+      "tutorial": 0,
+      "matches": true,
+      "note": "the class default is 2; the tutorial passes this"
+    },
+    {
+      "field": "include_zero_gene",
+      "ours": "all",
+      "tutorial_variable": "include_zero_gene",
+      "tutorial": "all",
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "max_seq_len",
+      "ours": 1536,
+      "tutorial_variable": "max_seq_len",
+      "tutorial": 1536,
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "amp",
+      "ours": true,
+      "tutorial_variable": "amp",
+      "tutorial": true,
+      "matches": true,
+      "note": ""
+    },
+    {
+      "field": "load_param_prefixes",
+      "ours": [
+        "encoder",
+        "value_encoder",
+        "transformer_encoder"
+      ],
+      "tutorial_variable": "load_param_prefixs",
+      "tutorial": [
+        "encoder",
+        "value_encoder",
+        "transformer_encoder"
+      ],
+      "matches": true,
+      "note": "spelled load_param_prefixs upstream"
+    },
+    {
+      "field": "schedule_gamma",
+      "ours": 0.9,
+      "tutorial_variable": null,
+      "tutorial": null,
+      "matches": null,
+      "note": "passed inline to StepLR(..., gamma=0.9), not a named variable"
+    },
+    {
+      "field": "grad_clip",
+      "ours": 1.0,
+      "tutorial_variable": null,
+      "tutorial": null,
+      "matches": null,
+      "note": "the tutorial clips to 1.0 inline in its training loop"
+    }
+  ]
+}

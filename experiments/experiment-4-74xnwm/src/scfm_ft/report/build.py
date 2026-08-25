@@ -40,6 +40,8 @@ S_FOLLOWUP = f"{SRC}/src/scfm_ft/followup.py"
 S_FIGS = f"{SRC}/src/scfm_ft/report/figures.py"
 S_CMP = f"{SRC}/src/scfm_ft/compare_run3.py"
 S_CMP_TBL = f"{SRC}/results/run3_comparison.parquet"
+S_PROV = f"{SRC}/src/scfm_ft/recipe_provenance.py"
+S_PROV_TBL = f"{SRC}/results/recipe_provenance.json"
 
 LINE = {"hepg2": "HepG2", "jurkat": "Jurkat"}
 ARM_LABEL = {
@@ -104,6 +106,8 @@ class Results:
         # merge job, so it lives beside the summary rather than inside it
         cmp_file = paths.results_dir() / "run3_comparison.parquet"
         self.run3_cmp = pd.read_parquet(cmp_file) if cmp_file.exists() else pd.DataFrame()
+        prov = paths.results_dir() / "recipe_provenance.json"
+        self.provenance = json.loads(prov.read_text()) if prov.exists() else {}
 
     def _opt(self, stem: str) -> pd.DataFrame:
         f = self.dir / f"{stem}.parquet"
@@ -333,12 +337,16 @@ def setup(r: Results) -> str:
     ])
     return P.section(
         "The recipe and the five arms",
-        "<p>scGPT ships a perturbation fine-tuning tutorial. We restated it rather than "
-        "importing it, because the run needs the model to be queryable the way runs 2 and 3 "
-        "query it, and checked the restatement against the installed library: the masked-MSE "
-        "loss is compared numerically against <code>scgpt/loss.py</code> at load time, and the "
-        "batch sampler reproduces the upstream one exactly under "
-        "<code>--upstream-sampling</code>.</p>"
+        "<p>scGPT publishes its perturbation recipe as a notebook, so there is no trainer to "
+        "import. The model is scGPT's own <code>TransformerGenerator</code> class, unmodified "
+        "and constructed with the notebook's settings; the training loop and batch sampler "
+        "around it are restated, because the run also needs the model to be queryable the way "
+        "runs 2 and 3 query it. Three checks hold the restatement to the original: the "
+        "masked-MSE loss is compared numerically against <code>scgpt/loss.py</code> at load "
+        "time, the batch sampler reproduces the upstream one exactly under "
+        "<code>--upstream-sampling</code> and that variant is scored beside the default, and "
+        "every setting is checked field by field against the notebook.</p>"
+        + recipe_provenance(r)
         + tbl
         + "<p>Five arms vary only the gene-identity table and whether it receives gradient. "
         "The scGPT arms start from the model's own learned table. The ESM2 arms replace it "
@@ -348,6 +356,146 @@ def setup(r: Results) -> str:
         "capacity-matched null for the two ESM2 arms.</p>"
         + sp,
         sources=[S_CONFIG, S_TRAIN, S_MODEL],
+    )
+
+
+def recipe_provenance(r: Results) -> str:
+    """Every recipe setting beside the tutorial's own value for it."""
+    p = r.provenance
+    if not p or not p.get("fields"):
+        return ""
+    compared = [f for f in p["fields"] if f.get("matches") is not None]
+    other = [f for f in p["fields"] if f.get("matches") is None]
+    rows = [
+        [f"<code>{P.esc(str(f['tutorial_variable']))}</code>",
+         f"<code>{P.esc(repr(f['tutorial']))}</code>",
+         f"<code>{P.esc(repr(f['ours']))}</code>",
+         "same" if f["matches"] else "DIFFERS",
+         f["note"] or ""]
+        for f in compared
+    ]
+    n_ok = sum(1 for f in compared if f["matches"])
+    verdict = (
+        f"All {len(compared)} settings the notebook names are the settings this run used"
+        if n_ok == len(compared)
+        else f"{len(compared) - n_ok} of {len(compared)} settings differ from the notebook"
+    )
+    tail = ""
+    if other:
+        tail = (
+            " The notebook fixes "
+            + " and ".join(f"<code>{P.esc(f['field'])}</code>" for f in other)
+            + " inline rather than as a named variable, so those two are compared by reading "
+            "its training loop: "
+            + "; ".join(f"{P.esc(f['field'])} {P.esc(repr(f['ours']))}, {f['note']}"
+                        for f in other)
+            + "."
+        )
+    return (
+        f"<p>{verdict}. Two of these are easy to get wrong, because the value in "
+        "<code>TransformerGenerator</code>'s signature is not the value the notebook passes: "
+        "the class defaults to dropout 0.5 and perturbation-pad id 2, and the notebook passes "
+        "0 and 0. The recipe follows the notebook." + tail + "</p>"
+        + P.table(
+            ["tutorial variable", "tutorial", "this run", "", "note"],
+            rows,
+            sources=[S_PROV, S_PROV_TBL],
+            caption="Read out of the tutorial notebook's own settings cell by parsing its "
+                    "literal assignments, against the recipe this run recorded. The notebook "
+                    "is not vendored here; its URL and the sha256 of the file compared "
+                    "against are in the source table, so the comparison can be repeated.",
+        )
+        + "<p>One thing does differ, and it is an environment constraint rather than a "
+        "choice. The notebook sets <code>use_fast_transformer=True</code>, which needs "
+        "scGPT's FlashMHA layers; their API exists only in flash-attn 1.x, which will not "
+        "build against the torch this run uses. scGPT handles that case itself by falling "
+        "back to <code>torch.nn.TransformerEncoder</code>, which is the path taken here, and "
+        "the checkpoint's fused attention tensors are remapped onto torch's packed "
+        "projection. The attention math is the same; the kernel and therefore the exact "
+        "numerics are not.</p>"
+    )
+
+
+def paired_note(r: Results) -> str:
+    """The pre-registered paired comparison, both references, with its resolution.
+
+    The verdict is a paired difference, not a pair of separately-read scores, so
+    the differences and their intervals belong on the page rather than being
+    left for a reader to subtract.
+    """
+    if r.contrasts.empty:
+        return ""
+    c = r.contrasts[
+        (r.contrasts.translator == "mlp")
+        & (r.contrasts.target == VERDICT[0])
+        & (r.contrasts.weighting == VERDICT[1])
+    ]
+    rows, resolvable = [], []
+    pos, neg = [], []
+    for line in C.CELL_LINES:
+        for arm in ARM_ORDER:
+            sub = c[(c.cell_line == line) & (c.arm == f"ft_{arm}_resp")]
+            if sub.empty:
+                continue
+            cells = {}
+            for against in ("scgpt_resp", "coexp"):
+                a = sub[sub.against == against]
+                if a.empty:
+                    cells[against] = "n/a"
+                    continue
+                x = a.iloc[0]
+                cells[against] = (
+                    f"{P.num(x['difference'])} ({P.num(x['lo'])} to {P.num(x['hi'])}), "
+                    f"p {P.num(x['p_two_sided'])}"
+                )
+                if x["lo"] > 0:
+                    pos.append(f"{LINE[line]} {ARM_LABEL[arm]} against "
+                               f"{'the frozen arm' if against == 'scgpt_resp' else 'co-expression'}")
+                elif x["hi"] < 0:
+                    neg.append(f"{LINE[line]} {ARM_LABEL[arm]}")
+            res = float(sub.iloc[0]["min_resolvable_difference__rho_0.8"])
+            resolvable.append((line, res))
+            rows.append([LINE[line], ARM_LABEL[arm], cells["scgpt_resp"], cells["coexp"],
+                         P.num(res)])
+    if not rows:
+        return ""
+    floor = {
+        line: (min(v for k, v in resolvable if k == line), max(v for k, v in resolvable if k == line))
+        for line, _ in resolvable
+    }
+    verdict = (
+        "Every one of those differences includes zero: at this resolution fine-tuning "
+        "neither improves the response features nor damages them."
+        if not pos and not neg
+        else "Most of those differences include zero. The exceptions are "
+             + "; ".join(sorted(set(pos)))
+             + ", where the interval sits entirely above zero."
+        if pos and not neg
+        else "Most of those differences include zero."
+    )
+    span = "; ".join(
+        f"{LINE[line]} {P.num(lo)} to {P.num(hi)}" for line, (lo, hi) in floor.items()
+    )
+    return (
+        "<p>The pre-registered test is a paired difference, so it is worth stating as one "
+        "rather than leaving a reader to subtract two columns. Each fine-tuned model's "
+        "response features are compared, on the same held-out perturbations, with two "
+        "references: the frozen model's response features as run 3 scored them, and "
+        "co-expression. " + verdict + " The last column is the smallest difference the "
+        "pairing could have resolved at 95% given the correlation between the two arms' "
+        "per-perturbation scores, so a difference smaller than it would not have been seen "
+        f"here: {span}.</p>"
+        + P.table(
+            ["cell line", "arm", "minus the frozen model's response features",
+             "minus co-expression", "smallest resolvable difference"],
+            rows,
+            sources=[S_SCORE, S_ANALYSIS],
+            caption="Paired differences on the verdict cell, with 95% intervals over the same "
+                    "2,000 resamples of the response groups and a two-sided p-value from the "
+                    "resampled differences. Positive means the fine-tuned arm scored higher. "
+                    "Thirty-six such differences are computed across all arms and both "
+                    "references, so a single nominal p below 0.05 is not evidence on its own.",
+        )
     )
 
 
@@ -563,6 +711,7 @@ def verdict_section(r: Results, chart: str) -> str:
         "fine-tuned models sit at or below the largest "
         "shuffled-label draw in their cell line, and none approaches the gene-table arm. "
         + own_note + "</p>"
+        + paired_note(r)
         + resolution_note(r)
         + holdout_note(r),
         sources=[S_QUERY, S_SCORE],
