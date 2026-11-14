@@ -1,0 +1,18 @@
+# A local stand-in for the platform's silico-figures package, so runs 2 and 3
+# can rebuild their reports off-platform. See src/silico_figures/__init__.py for
+# what is reconstructed and what is not guaranteed to match.
+[project]
+name = "silico-figures"
+version = "0.0.0+local"
+requires-python = ">=3.11"
+dependencies = ["plotly>=6"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+silico_figures = ["_theme.json"]

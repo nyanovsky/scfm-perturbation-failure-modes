@@ -1,0 +1,5 @@
+# Python build noise from tools/ -- never a deliverable. The experiment
+# directories carry their own copies of these rules; this covers the repo root.
+__pycache__/
+*.pyc
+*.egg-info/
