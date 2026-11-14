@@ -4,367 +4,643 @@
       "claim": "best foundation-model arm in hepg2 scores this on the fold-centred cell",
       "value": 0.108878,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, arm=scgpt_emb, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_emb, column=centered__weighted__disattenuated"
     },
     {
-      "claim": "the same arm on the pre-registered cell in hepg2",
+      "claim": "the same arm on the pre-registered cell in hepg2, which the verdict is read from",
       "value": 0.271869,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, arm=scgpt_emb, column=residual__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_emb, column=residual__weighted__disattenuated"
     },
     {
       "claim": "co-expression in hepg2 on the fold-centred cell",
       "value": 0.005176,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, arm=coexp, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=coexp, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "co-expression in hepg2 on the pre-registered cell",
+      "value": 0.048793,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=coexp, column=residual__weighted__disattenuated"
     },
     {
       "claim": "largest shuffled-label draw in hepg2, fold-centred, MLP",
       "value": 0.028602,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, arm=*+shuffled_labels_d*, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=*+shuffled_labels_d*, column=centered__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "largest shuffled-label draw in hepg2, pre-registered, MLP",
-      "value": 0.026616,
+      "value": 0.027644,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, arm=*+shuffled_labels_d*, column=residual__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=*+shuffled_labels_d*, column=residual__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "largest response-only arm in hepg2",
       "value": 0.012122,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, arm=*_resp, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=*_resp, column=centered__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "free network on node statistics in hepg2",
       "value": 0.036564,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, arm=node_pairmlp, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=node_pairmlp, column=centered__weighted__disattenuated"
     },
     {
       "claim": "reliability-weighted split-half ceiling the pre-registered score in hepg2 divides by",
       "value": 0.684713,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, column=residual__weighted__ceiling"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, column=residual__weighted__ceiling, statistic=max"
     },
     {
       "claim": "reliability-weighted split-half ceiling the fold-centred score in hepg2 divides by",
       "value": 0.57444,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, column=centered__weighted__ceiling"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, column=centered__weighted__ceiling, statistic=max"
     },
     {
       "claim": "best foundation-model arm in jurkat scores this on the fold-centred cell",
-      "value": 0.172603,
+      "value": 0.165869,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, arm=transcriptformer_emb, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=transcriptformer_full, column=centered__weighted__disattenuated"
     },
     {
-      "claim": "the same arm on the pre-registered cell in jurkat",
-      "value": 0.231353,
+      "claim": "the same arm on the pre-registered cell in jurkat, which the verdict is read from",
+      "value": 0.237078,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, arm=transcriptformer_emb, column=residual__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=transcriptformer_full, column=residual__weighted__disattenuated"
     },
     {
       "claim": "co-expression in jurkat on the fold-centred cell",
       "value": 0.033636,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, arm=coexp, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=coexp, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "co-expression in jurkat on the pre-registered cell",
+      "value": 0.044622,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=coexp, column=residual__weighted__disattenuated"
     },
     {
       "claim": "largest shuffled-label draw in jurkat, fold-centred, MLP",
       "value": 0.020402,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, arm=*+shuffled_labels_d*, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=*+shuffled_labels_d*, column=centered__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "largest shuffled-label draw in jurkat, pre-registered, MLP",
       "value": 0.023511,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, arm=*+shuffled_labels_d*, column=residual__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=*+shuffled_labels_d*, column=residual__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "largest response-only arm in jurkat",
       "value": 0.034381,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, arm=*_resp, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=*_resp, column=centered__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "free network on node statistics in jurkat",
       "value": 0.018928,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, arm=node_pairmlp, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=node_pairmlp, column=centered__weighted__disattenuated"
     },
     {
       "claim": "reliability-weighted split-half ceiling the pre-registered score in jurkat divides by",
       "value": 0.507182,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, column=residual__weighted__ceiling"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, column=residual__weighted__ceiling, statistic=max"
     },
     {
       "claim": "reliability-weighted split-half ceiling the fold-centred score in jurkat divides by",
       "value": 0.443706,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, column=centered__weighted__ceiling"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, column=centered__weighted__ceiling, statistic=max"
     },
     {
-      "claim": "paired difference of scgpt_emb against co-expression in hepg2",
-      "value": 0.038621,
+      "claim": "paired difference of scgpt_emb against co-expression in hepg2 on the preregistered target",
+      "value": 0.184589,
       "source": "results/summary/contrasts.parquet",
-      "key": "cell_line=hepg2, arm=scgpt_emb, metric=centered_weighted"
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, reference=coexp, metric=residual_weighted, column=median_difference"
     },
     {
-      "claim": "smallest paired difference this design can resolve for scgpt_emb in hepg2",
-      "value": 0.031075,
+      "claim": "smallest paired difference this design resolves for scgpt_emb in hepg2 on the preregistered target",
+      "value": 0.059416,
       "source": "results/summary/contrasts.parquet",
-      "key": "cell_line=hepg2, arm=scgpt_emb, metric=centered_weighted, column=min_resolvable_difference_achieved"
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
     },
     {
-      "claim": "paired difference of transcriptformer_emb against co-expression in jurkat",
-      "value": 0.074661,
+      "claim": "paired difference of scprint_emb against co-expression in hepg2 on the preregistered target",
+      "value": 0.157766,
       "source": "results/summary/contrasts.parquet",
-      "key": "cell_line=jurkat, arm=transcriptformer_emb, metric=centered_weighted"
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scprint_emb, reference=coexp, metric=residual_weighted, column=median_difference"
     },
     {
-      "claim": "smallest paired difference this design can resolve for transcriptformer_emb in jurkat",
-      "value": 0.029195,
+      "claim": "smallest paired difference this design resolves for scprint_emb in hepg2 on the preregistered target",
+      "value": 0.103675,
       "source": "results/summary/contrasts.parquet",
-      "key": "cell_line=jurkat, arm=transcriptformer_emb, metric=centered_weighted, column=min_resolvable_difference_achieved"
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scprint_emb, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of transcriptformer_emb against co-expression in hepg2 on the preregistered target",
+      "value": 0.134589,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, reference=coexp, metric=residual_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for transcriptformer_emb in hepg2 on the preregistered target",
+      "value": 0.182608,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of esm2_3b_emb against co-expression in hepg2 on the preregistered target",
+      "value": 0.152518,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, reference=coexp, metric=residual_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for esm2_3b_emb in hepg2 on the preregistered target",
+      "value": 0.173373,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of esm2_650m_emb against co-expression in hepg2 on the preregistered target",
+      "value": 0.126391,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_650m_emb, reference=coexp, metric=residual_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for esm2_650m_emb in hepg2 on the preregistered target",
+      "value": 0.169476,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_650m_emb, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of transcriptformer_full against co-expression in jurkat on the preregistered target",
+      "value": 0.137061,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_full, reference=coexp, metric=residual_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for transcriptformer_full in jurkat on the preregistered target",
+      "value": 0.05874,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_full, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of scgpt_emb against co-expression in jurkat on the preregistered target",
+      "value": 0.091623,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, reference=coexp, metric=residual_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for scgpt_emb in jurkat on the preregistered target",
+      "value": 0.044848,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of scprint_emb against co-expression in jurkat on the preregistered target",
+      "value": 0.132559,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scprint_emb, reference=coexp, metric=residual_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for scprint_emb in jurkat on the preregistered target",
+      "value": 0.063434,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scprint_emb, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of transcriptformer_emb against co-expression in jurkat on the preregistered target",
+      "value": 0.132984,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, reference=coexp, metric=residual_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for transcriptformer_emb in jurkat on the preregistered target",
+      "value": 0.063741,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of esm2_3b_emb against co-expression in jurkat on the preregistered target",
+      "value": 0.156359,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, reference=coexp, metric=residual_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for esm2_3b_emb in jurkat on the preregistered target",
+      "value": 0.067598,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of esm2_650m_emb against co-expression in jurkat on the preregistered target",
+      "value": 0.130753,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_650m_emb, reference=coexp, metric=residual_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for esm2_650m_emb in jurkat on the preregistered target",
+      "value": 0.053138,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_650m_emb, reference=coexp, metric=residual_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of scgpt_emb against co-expression in hepg2 on the fold_centred target",
+      "value": 0.078598,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for scgpt_emb in hepg2 on the fold_centred target",
+      "value": 0.046092,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of scprint_emb against co-expression in hepg2 on the fold_centred target",
+      "value": 0.060196,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scprint_emb, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for scprint_emb in hepg2 on the fold_centred target",
+      "value": 0.049155,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scprint_emb, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of transcriptformer_emb against co-expression in hepg2 on the fold_centred target",
+      "value": 0.060347,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for transcriptformer_emb in hepg2 on the fold_centred target",
+      "value": 0.075958,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of esm2_3b_emb against co-expression in hepg2 on the fold_centred target",
+      "value": 0.077467,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for esm2_3b_emb in hepg2 on the fold_centred target",
+      "value": 0.075215,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of esm2_650m_emb against co-expression in hepg2 on the fold_centred target",
+      "value": 0.055442,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_650m_emb, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for esm2_650m_emb in hepg2 on the fold_centred target",
+      "value": 0.10217,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_650m_emb, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of transcriptformer_full against co-expression in jurkat on the fold_centred target",
+      "value": 0.088081,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_full, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for transcriptformer_full in jurkat on the fold_centred target",
+      "value": 0.048053,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_full, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of scgpt_emb against co-expression in jurkat on the fold_centred target",
+      "value": 0.052584,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for scgpt_emb in jurkat on the fold_centred target",
+      "value": 0.037163,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of scprint_emb against co-expression in jurkat on the fold_centred target",
+      "value": 0.083335,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scprint_emb, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for scprint_emb in jurkat on the fold_centred target",
+      "value": 0.051955,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scprint_emb, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of transcriptformer_emb against co-expression in jurkat on the fold_centred target",
+      "value": 0.092567,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for transcriptformer_emb in jurkat on the fold_centred target",
+      "value": 0.056576,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of esm2_3b_emb against co-expression in jurkat on the fold_centred target",
+      "value": 0.096415,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for esm2_3b_emb in jurkat on the fold_centred target",
+      "value": 0.055109,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
+    },
+    {
+      "claim": "paired difference of esm2_650m_emb against co-expression in jurkat on the fold_centred target",
+      "value": 0.082962,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_650m_emb, reference=coexp, metric=centered_weighted, column=median_difference"
+    },
+    {
+      "claim": "smallest paired difference this design resolves for esm2_650m_emb in jurkat on the fold_centred target",
+      "value": 0.053955,
+      "source": "results/summary/contrasts.parquet",
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=esm2_650m_emb, reference=coexp, metric=centered_weighted, column=min_resolvable_difference_achieved"
     },
     {
       "claim": "best model arm on transfer_full|hepg2->jurkat",
       "value": 0.289647,
       "source": "results/summary/transfer_runs.parquet",
-      "key": "scope=transfer_full, cell_line=hepg2->jurkat, arm=transcriptformer_emb, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
+      "key": "scope=transfer_full, cell_line=hepg2->jurkat, arm=transcriptformer_emb, translator=mlp, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
     },
     {
       "claim": "fixed random vector per gene on transfer_full|hepg2->jurkat",
       "value": 0.251659,
       "source": "results/summary/transfer_runs.parquet",
-      "key": "scope=transfer_full, cell_line=hepg2->jurkat, arm=null_randgene_d5120, column=centered__weighted__disattenuated"
+      "key": "scope=transfer_full, cell_line=hepg2->jurkat, arm=null_randgene_d5120, translator=mlp, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
     },
     {
       "claim": "best model arm on transfer_full|jurkat->hepg2",
       "value": 0.254764,
       "source": "results/summary/transfer_runs.parquet",
-      "key": "scope=transfer_full, cell_line=jurkat->hepg2, arm=transcriptformer_emb, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
+      "key": "scope=transfer_full, cell_line=jurkat->hepg2, arm=transcriptformer_emb, translator=mlp, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
     },
     {
       "claim": "fixed random vector per gene on transfer_full|jurkat->hepg2",
       "value": 0.236444,
       "source": "results/summary/transfer_runs.parquet",
-      "key": "scope=transfer_full, cell_line=jurkat->hepg2, arm=null_randgene_d5120, column=centered__weighted__disattenuated"
+      "key": "scope=transfer_full, cell_line=jurkat->hepg2, arm=null_randgene_d5120, translator=mlp, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
     },
     {
       "claim": "best model arm on transfer_unseen|hepg2->jurkat",
       "value": 0.084965,
       "source": "results/summary/transfer_runs.parquet",
-      "key": "scope=transfer_unseen, cell_line=hepg2->jurkat, arm=transcriptformer_full, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
+      "key": "scope=transfer_unseen, cell_line=hepg2->jurkat, arm=transcriptformer_full, translator=mlp, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
     },
     {
       "claim": "fixed random vector per gene on transfer_unseen|hepg2->jurkat",
       "value": 0.003236,
       "source": "results/summary/transfer_runs.parquet",
-      "key": "scope=transfer_unseen, cell_line=hepg2->jurkat, arm=null_randgene_d5120, column=centered__weighted__disattenuated"
+      "key": "scope=transfer_unseen, cell_line=hepg2->jurkat, arm=null_randgene_d5120, translator=mlp, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
     },
     {
       "claim": "best model arm on transfer_unseen|jurkat->hepg2",
       "value": 0.093924,
       "source": "results/summary/transfer_runs.parquet",
-      "key": "scope=transfer_unseen, cell_line=jurkat->hepg2, arm=transcriptformer_emb, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
+      "key": "scope=transfer_unseen, cell_line=jurkat->hepg2, arm=transcriptformer_emb, translator=mlp, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
     },
     {
       "claim": "fixed random vector per gene on transfer_unseen|jurkat->hepg2",
       "value": -0.015069,
       "source": "results/summary/transfer_runs.parquet",
-      "key": "scope=transfer_unseen, cell_line=jurkat->hepg2, arm=null_randgene_d5120, column=centered__weighted__disattenuated"
+      "key": "scope=transfer_unseen, cell_line=jurkat->hepg2, arm=null_randgene_d5120, translator=mlp, split=cross_line__dest_reference, column=centered__weighted__disattenuated"
     },
     {
       "claim": "rank correlation of the centered target's ordering against the pre-registered cell",
       "value": 0.824694,
       "source": "results/summary/ordering_agreement.parquet",
-      "key": "target=centered, statistic=min"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell=centered__*, column=spearman_vs_primary, statistic=min"
     },
     {
       "claim": "rank correlation of the raw target's ordering against the pre-registered cell",
       "value": -0.131924,
       "source": "results/summary/ordering_agreement.parquet",
-      "key": "target=raw, statistic=min"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell=raw__*, column=spearman_vs_primary, statistic=min"
     },
     {
       "claim": "rank correlation of the residual target's ordering against the pre-registered cell",
       "value": 0.981758,
       "source": "results/summary/ordering_agreement.parquet",
-      "key": "target=residual, statistic=min"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell=residual__*, column=spearman_vs_primary, statistic=min"
     },
     {
       "claim": "best scgpt arm on the 250-gene common scope in hepg2",
       "value": 0.085415,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, scope=common, split=grouped, arm=scgpt_hybrid, column=centered__weighted__disattenuated"
+      "key": "cell_line=hepg2, scope=common, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scgpt_hybrid, column=centered__weighted__disattenuated"
     },
     {
       "claim": "best scprint arm on the 250-gene common scope in hepg2",
       "value": 0.030159,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, scope=common, split=grouped, arm=scprint_full, column=centered__weighted__disattenuated"
+      "key": "cell_line=hepg2, scope=common, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scprint_full, column=centered__weighted__disattenuated"
     },
     {
       "claim": "best transcriptformer arm on the 250-gene common scope in hepg2",
       "value": 0.078835,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, scope=common, split=grouped, arm=transcriptformer_emb, column=centered__weighted__disattenuated"
+      "key": "cell_line=hepg2, scope=common, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, column=centered__weighted__disattenuated"
     },
     {
       "claim": "best aido_cell arm on the 250-gene common scope in hepg2",
       "value": -0.00055,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, scope=common, split=grouped, arm=aido_cell_hybrid, column=centered__weighted__disattenuated"
+      "key": "cell_line=hepg2, scope=common, split=grouped, translator=mlp, target_source=run1_all_controls, arm=aido_cell_hybrid, column=centered__weighted__disattenuated"
     },
     {
       "claim": "best scgpt arm on the 250-gene common scope in jurkat",
       "value": 0.0854,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, scope=common, split=grouped, arm=scgpt_hybrid, column=centered__weighted__disattenuated"
+      "key": "cell_line=jurkat, scope=common, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scgpt_hybrid, column=centered__weighted__disattenuated"
     },
     {
       "claim": "best scprint arm on the 250-gene common scope in jurkat",
       "value": 0.109955,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, scope=common, split=grouped, arm=scprint_emb, column=centered__weighted__disattenuated"
+      "key": "cell_line=jurkat, scope=common, split=grouped, translator=mlp, target_source=run1_all_controls, arm=scprint_emb, column=centered__weighted__disattenuated"
     },
     {
       "claim": "best transcriptformer arm on the 250-gene common scope in jurkat",
       "value": 0.078994,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, scope=common, split=grouped, arm=transcriptformer_full, column=centered__weighted__disattenuated"
+      "key": "cell_line=jurkat, scope=common, split=grouped, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_full, column=centered__weighted__disattenuated"
     },
     {
       "claim": "best aido_cell arm on the 250-gene common scope in jurkat",
       "value": 0.018099,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, scope=common, split=grouped, arm=aido_cell_hybrid, column=centered__weighted__disattenuated"
+      "key": "cell_line=jurkat, scope=common, split=grouped, translator=mlp, target_source=run1_all_controls, arm=aido_cell_hybrid, column=centered__weighted__disattenuated"
     },
     {
       "claim": "largest change in a plain co-expression arm's score between a target built from the control half it uses and one built from the other half",
       "value": 0.023972,
       "source": "results/summary/control_cell_overlap.parquet",
-      "key": "arms=coexp, coexp_check, statistic=max|ctrl1-ctrl0|"
+      "key": "derived=|score(coexp_check in jurkat, ctrl1) - score(same arm, ctrl0)| in control_cell_overlap.parquet"
+    },
+    {
+      "claim": "coexp_check in jurkat scored against the ctrl0 target",
+      "value": 0.02072,
+      "source": "results/summary/control_cell_overlap.parquet",
+      "key": "cell_line=jurkat, arm=coexp_check, translator=mlp, variant=ctrl0, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp_check in jurkat scored against the ctrl1 target",
+      "value": 0.044692,
+      "source": "results/summary/control_cell_overlap.parquet",
+      "key": "cell_line=jurkat, arm=coexp_check, translator=mlp, variant=ctrl1, column=centered__weighted__disattenuated"
     },
     {
       "claim": "the same change for the embedding arms, which touch no control cell",
       "value": 0.019152,
       "source": "results/summary/control_cell_overlap.parquet",
-      "key": "arms=scgpt_emb, transcriptformer_emb, statistic=max|ctrl1-ctrl0|"
+      "key": "derived=|score(scgpt_emb in jurkat, ctrl1) - score(same arm, ctrl0)| in control_cell_overlap.parquet"
+    },
+    {
+      "claim": "scgpt_emb in jurkat scored against the ctrl0 target",
+      "value": 0.097917,
+      "source": "results/summary/control_cell_overlap.parquet",
+      "key": "cell_line=jurkat, arm=scgpt_emb, translator=mlp, variant=ctrl0, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb in jurkat scored against the ctrl1 target",
+      "value": 0.117069,
+      "source": "results/summary/control_cell_overlap.parquet",
+      "key": "cell_line=jurkat, arm=scgpt_emb, translator=mlp, variant=ctrl1, column=centered__weighted__disattenuated"
     },
     {
       "claim": "median per-perturbation correlation between the recomputed effect for hepg2 and the effect matrix run 1 shipped",
       "value": 0.771241,
       "source": "results/recompute_report.json",
-      "key": "line=hepg2, target=ctrlall, field=median_agreement_with_run1_effect"
+      "key": "field=lines.hepg2.targets.ctrlall.median_agreement_with_run1_effect"
     },
     {
       "claim": "median reliability weight of the recomputed hepg2 target",
       "value": 0.276896,
       "source": "results/recompute_report.json",
-      "key": "line=hepg2, target=ctrlall, field=median_reliability_weight"
+      "key": "field=lines.hepg2.targets.ctrlall.median_reliability_weight"
     },
     {
       "claim": "median per-perturbation correlation between the recomputed effect for jurkat and the effect matrix run 1 shipped",
       "value": 0.716054,
       "source": "results/recompute_report.json",
-      "key": "line=jurkat, target=ctrlall, field=median_agreement_with_run1_effect"
+      "key": "field=lines.jurkat.targets.ctrlall.median_agreement_with_run1_effect"
     },
     {
       "claim": "median reliability weight of the recomputed jurkat target",
       "value": 0.156905,
       "source": "results/recompute_report.json",
-      "key": "line=jurkat, target=ctrlall, field=median_reliability_weight"
+      "key": "field=lines.jurkat.targets.ctrlall.median_reliability_weight"
     },
     {
       "claim": "largest shuffled-label draw in hepg2 on the pre-registered cell, ridge",
       "value": 0.041234,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, translator=ridge, arm=*+shuffled_labels_d*, column=residual__weighted__disattenuated"
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=ridge, target_source=run1_all_controls, arm=*+shuffled_labels_d*, column=residual__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "the same draws in hepg2 on the fold-centred cell, ridge",
       "value": 0.011431,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, translator=ridge, arm=*+shuffled_labels_d*, column=centered__weighted__disattenuated"
+      "key": "cell_line=hepg2, scope=full, split=grouped, translator=ridge, target_source=run1_all_controls, arm=*+shuffled_labels_d*, column=centered__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "co-expression's own pre-registered score in hepg2",
       "value": 0.048793,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, arm=coexp, column=residual__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=coexp, column=residual__weighted__disattenuated"
     },
     {
       "claim": "foundation-model arms clearing the shuffled-label null in hepg2",
       "value": "9 of 12",
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, scope=full, split=grouped, translator=mlp, column=centered__weighted__disattenuated, rule=score > max shuffled-label draw"
+      "key": "derived=count over the twelve hepg2 foundation-model arms on the primary cell of runs.parquet of score > the largest shuffled-label draw in that cell"
     },
     {
       "claim": "largest shuffled-label draw in jurkat on the pre-registered cell, ridge",
       "value": 0.0444,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, translator=ridge, arm=*+shuffled_labels_d*, column=residual__weighted__disattenuated"
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=ridge, target_source=run1_all_controls, arm=*+shuffled_labels_d*, column=residual__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "the same draws in jurkat on the fold-centred cell, ridge",
       "value": 0.017822,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, translator=ridge, arm=*+shuffled_labels_d*, column=centered__weighted__disattenuated"
+      "key": "cell_line=jurkat, scope=full, split=grouped, translator=ridge, target_source=run1_all_controls, arm=*+shuffled_labels_d*, column=centered__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "co-expression's own pre-registered score in jurkat",
       "value": 0.044622,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, arm=coexp, column=residual__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=coexp, column=residual__weighted__disattenuated"
     },
     {
       "claim": "foundation-model arms clearing the shuffled-label null in jurkat",
       "value": "11 of 12",
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=jurkat, scope=full, split=grouped, translator=mlp, column=centered__weighted__disattenuated, rule=score > max shuffled-label draw"
+      "key": "derived=count over the twelve jurkat foundation-model arms on the primary cell of runs.parquet of score > the largest shuffled-label draw in that cell"
     },
     {
       "claim": "largest response-only score in either cell line",
       "value": 0.034381,
       "source": "results/summary/runs.parquet",
-      "key": "arm=*_resp, statistic=max|score|, column=centered__weighted__disattenuated"
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, arm=*_resp, column=centered__weighted__disattenuated, statistic=max"
     },
     {
       "claim": "largest change from adding the response features to the embedding",
       "value": 0.020104,
       "source": "results/summary/runs.parquet",
-      "key": "arms=*_full minus *_emb, statistic=max|d|, column=centered__weighted__disattenuated"
+      "key": "derived=max over model and cell line of |score(<model>_full) - score(<model>_emb)| on the primary cell of runs.parquet"
     },
     {
       "claim": "largest change from adding co-expression to the embedding",
       "value": 0.029539,
       "source": "results/summary/runs.parquet",
-      "key": "arms=*_hybrid minus *_emb, statistic=max|d|, column=centered__weighted__disattenuated"
+      "key": "derived=max over model and cell line of |score(<model>_hybrid) - score(<model>_emb)| on the primary cell of runs.parquet"
     },
     {
       "claim": "free node-statistics network in hepg2 under the random split",
       "value": 0.202155,
       "source": "results/summary/runs.parquet",
-      "key": "cell_line=hepg2, split=random, arm=node_pairmlp, column=centered__weighted__disattenuated"
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=node_pairmlp, column=centered__weighted__disattenuated"
     },
     {
       "claim": "largest change in a transfer arm's score from using the source-line mean or all destination cells instead of held-out destination cells as the reference",
       "value": 0.075271,
       "source": "results/summary/transfer_runs.parquet",
-      "key": "statistic=max|other - dest_reference|"
+      "key": "derived=max over arm, direction and scope of |score under dest_all or source_only - score under dest_reference| in transfer_runs.parquet"
     },
     {
       "claim": "lowest rank correlation between the reported mode and either other mode, within one direction and scope",
-      "value": 0.775268,
+      "value": 0.821538,
       "source": "results/summary/transfer_runs.parquet",
-      "key": "statistic=min rank correlation"
+      "key": "derived=min over direction and scope of the Spearman rank correlation between the arm ordering under dest_reference and under each other reference choice in transfer_runs.parquet"
     },
     {
       "claim": "perturbation discrimination of coexp in hepg2, cell-eval on effect profiles",
@@ -460,7 +736,7 @@
       "claim": "saved prediction matrices where cell-eval 0.5.18 and 0.5.21 agree exactly",
       "value": "6 of 6",
       "source": "results/discrimination_versions.json",
-      "key": "field=per_file[*].values"
+      "key": "derived=count over the six saved prediction files of whether per_file[*].values['0.5.18'] equals ['0.5.21']"
     },
     {
       "claim": "discrimination of the hepg2_scgpt_full predictions under cell-eval 0.5.18",
@@ -514,7 +790,7 @@
       "claim": "the model arm scores below co-expression under 0.5.18/0.5.21 and above it under 0.8.2, in both cell lines",
       "value": true,
       "source": "results/discrimination_versions.json",
-      "key": "field=per_file[*].values"
+      "key": "derived=sign of (model arm minus co-expression) under each version in per_file[*].values, compared between 0.5.21 and 0.8.2"
     },
     {
       "claim": "response-only score for scgpt at the mean_control anchor, HepG2",
@@ -825,10 +1101,10 @@
         ]
       },
       "source": "results/verification/no_op_correction.json",
-      "key": "field=blocks[*].values_the_whole_dose_rule_deleted"
+      "key": "derived=per-model grouping of blocks[*].values_the_whole_dose_rule_deleted"
     },
     {
-      "claim": "AUPRC reproduced here on STRING/hHEP",
+      "claim": "AUPRC of the dropped re-implementation on STRING/hHEP",
       "value": 0.823758,
       "source": "results/beeline_reproduction.json",
       "key": "row=STRING_hHEP, field=auprc"
@@ -840,25 +1116,13 @@
       "key": "row=STRING_hHEP, field=paper_baseline_emb_auprc"
     },
     {
-      "claim": "AUPRC with gene embeddings permuted between genes on STRING/hHEP",
-      "value": 0.723776,
+      "claim": "pairs scored on STRING/hHEP",
+      "value": 14288.0,
       "source": "results/beeline_reproduction.json",
-      "key": "row=STRING_hHEP, field=auprc_shuffled_embedding"
+      "key": "row=STRING_hHEP, field=n_pairs_kept"
     },
     {
-      "claim": "AUPRC on pairs whose genes never appear in training, STRING/hHEP",
-      "value": 0.591984,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=STRING_hHEP, field=auprc_unseen_genes"
-    },
-    {
-      "claim": "chance AUPRC on that unseen-gene slice (its positive fraction), STRING/hHEP",
-      "value": 0.398709,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=STRING_hHEP, field=positive_fraction_unseen"
-    },
-    {
-      "claim": "AUPRC reproduced here on Non-Specific/hHEP",
+      "claim": "AUPRC of the dropped re-implementation on Non-Specific/hHEP",
       "value": 0.662573,
       "source": "results/beeline_reproduction.json",
       "key": "row=Non-Specific_hHEP, field=auprc"
@@ -870,25 +1134,13 @@
       "key": "row=Non-Specific_hHEP, field=paper_baseline_emb_auprc"
     },
     {
-      "claim": "AUPRC with gene embeddings permuted between genes on Non-Specific/hHEP",
-      "value": 0.633114,
+      "claim": "pairs scored on Non-Specific/hHEP",
+      "value": 7951.0,
       "source": "results/beeline_reproduction.json",
-      "key": "row=Non-Specific_hHEP, field=auprc_shuffled_embedding"
+      "key": "row=Non-Specific_hHEP, field=n_pairs_kept"
     },
     {
-      "claim": "AUPRC on pairs whose genes never appear in training, Non-Specific/hHEP",
-      "value": 0.545943,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=Non-Specific_hHEP, field=auprc_unseen_genes"
-    },
-    {
-      "claim": "chance AUPRC on that unseen-gene slice (its positive fraction), Non-Specific/hHEP",
-      "value": 0.488788,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=Non-Specific_hHEP, field=positive_fraction_unseen"
-    },
-    {
-      "claim": "AUPRC reproduced here on Specific/hHEP",
+      "claim": "AUPRC of the dropped re-implementation on Specific/hHEP",
       "value": 0.530761,
       "source": "results/beeline_reproduction.json",
       "key": "row=Specific_hHEP, field=auprc"
@@ -900,70 +1152,1264 @@
       "key": "row=Specific_hHEP, field=paper_baseline_emb_auprc"
     },
     {
-      "claim": "AUPRC with gene embeddings permuted between genes on Specific/hHEP",
-      "value": 0.524305,
+      "claim": "pairs scored on Specific/hHEP",
+      "value": 19191.0,
       "source": "results/beeline_reproduction.json",
-      "key": "row=Specific_hHEP, field=auprc_shuffled_embedding"
+      "key": "row=Specific_hHEP, field=n_pairs_kept"
     },
     {
-      "claim": "AUPRC on pairs whose genes never appear in training, Specific/hHEP",
-      "value": 0.601481,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=Specific_hHEP, field=auprc_unseen_genes"
-    },
-    {
-      "claim": "chance AUPRC on that unseen-gene slice (its positive fraction), Specific/hHEP",
-      "value": 0.596175,
-      "source": "results/beeline_reproduction.json",
-      "key": "row=Specific_hHEP, field=positive_fraction_unseen"
-    },
-    {
-      "claim": "BEELINE reproduction, mean auprc",
+      "claim": "dropped BEELINE arm, mean auprc",
       "value": 0.672364,
       "source": "results/beeline_reproduction.json",
       "key": "field=summary.mean_auprc"
     },
     {
-      "claim": "BEELINE reproduction, paper mean auprc",
+      "claim": "dropped BEELINE arm, paper mean auprc",
       "value": 0.624667,
       "source": "results/beeline_reproduction.json",
       "key": "field=summary.paper_mean_auprc"
     },
     {
-      "claim": "BEELINE reproduction, mean difference",
+      "claim": "dropped BEELINE arm, mean difference",
       "value": 0.047697,
       "source": "results/beeline_reproduction.json",
       "key": "field=summary.mean_difference"
     },
     {
-      "claim": "BEELINE reproduction, max abs difference",
+      "claim": "dropped BEELINE arm, max abs difference",
       "value": 0.091758,
       "source": "results/beeline_reproduction.json",
       "key": "field=summary.max_abs_difference"
     },
     {
-      "claim": "BEELINE reproduction, shuffled embedding mean auprc",
-      "value": 0.627065,
-      "source": "results/beeline_reproduction.json",
-      "key": "field=summary.shuffled_embedding_mean_auprc"
+      "claim": "largest absolute difference between TranscriptFormer's 23,823 gene rows and the ESM2 file shipped beside its weights",
+      "value": 0.0,
+      "source": "results/provenance/audit_tables.json",
+      "key": "field=transcriptformer.weights_vs_shipped_genes_only.max_abs_diff"
     },
     {
-      "claim": "BEELINE reproduction, mean auprc unseen genes",
-      "value": 0.579803,
-      "source": "results/beeline_reproduction.json",
-      "key": "field=summary.mean_auprc_unseen_genes"
+      "claim": "largest absolute difference on the 7 special-token rows, which are regenerated from a seeded random draw rather than read from the file",
+      "value": 2.9801522583028373e-08,
+      "source": "results/provenance/audit_tables.json",
+      "key": "field=transcriptformer.special_token_rows.max_abs_diff"
     },
     {
-      "claim": "BEELINE reproduction, shuffled embedding mean auprc unseen genes",
-      "value": 0.511906,
-      "source": "results/beeline_reproduction.json",
-      "key": "field=summary.shuffled_embedding_mean_auprc_unseen_genes"
+      "claim": "read-out genes routed to a protein",
+      "value": 3755,
+      "source": "results/protein/gene_to_protein_report.json",
+      "key": "field=n_genes"
     },
     {
-      "claim": "BEELINE reproduction, mean fraction pairs unseen genes",
-      "value": 0.398173,
-      "source": "results/beeline_reproduction.json",
-      "key": "field=summary.mean_fraction_pairs_unseen_genes"
+      "claim": "genes mapped through the Ensembl cross-reference",
+      "value": 3740,
+      "source": "results/protein/gene_to_protein_report.json",
+      "key": "field=routes.ensembl"
+    },
+    {
+      "claim": "genes mapped by gene symbol",
+      "value": 15,
+      "source": "results/protein/gene_to_protein_report.json",
+      "key": "field=routes.symbol"
+    },
+    {
+      "claim": "genes with no reviewed human protein",
+      "value": 0,
+      "source": "results/protein/gene_to_protein_report.json",
+      "key": "field=unmapped_genes, statistic=count"
+    },
+    {
+      "claim": "genes with more than one reviewed candidate, resolved by the tie-break rule",
+      "value": 13,
+      "source": "results/protein/gene_to_protein_report.json",
+      "key": "field=multi_candidate_genes"
+    },
+    {
+      "claim": "proteins longer than ESM2's 1,022-residue context",
+      "value": 437,
+      "source": "results/protein/gene_to_protein_report.json",
+      "key": "field=length.over_esm2_context"
+    },
+    {
+      "claim": "read-out genes left without a protein vector in either installed table",
+      "value": 0,
+      "source": "results/protein/install_report.json",
+      "key": "field=installed[*].lines[*].zero_rows, statistic=sum"
+    },
+    {
+      "claim": "esm2_3b_emb held-out fold-centred score in hepg2, full scope, grouped split",
+      "value": 0.107387,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=esm2_3b_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb held-out pre-registered score in hepg2, full scope, grouped split",
+      "value": 0.233111,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_650m_emb held-out fold-centred score in hepg2, full scope, grouped split",
+      "value": 0.078327,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=esm2_650m_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_650m_emb held-out pre-registered score in hepg2, full scope, grouped split",
+      "value": 0.201537,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=esm2_650m_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "transcriptformer_emb held-out fold-centred score in hepg2, full scope, grouped split",
+      "value": 0.084798,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=transcriptformer_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "transcriptformer_emb held-out pre-registered score in hepg2, full scope, grouped split",
+      "value": 0.211443,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=transcriptformer_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scprint_emb held-out fold-centred score in hepg2, full scope, grouped split",
+      "value": 0.084599,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scprint_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "scprint_emb held-out pre-registered score in hepg2, full scope, grouped split",
+      "value": 0.239453,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scprint_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb held-out fold-centred score in hepg2, full scope, grouped split",
+      "value": 0.108878,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb held-out pre-registered score in hepg2, full scope, grouped split",
+      "value": 0.271869,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp held-out fold-centred score in hepg2, full scope, grouped split",
+      "value": 0.005176,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=coexp, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp held-out pre-registered score in hepg2, full scope, grouped split",
+      "value": 0.048793,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d2560 held-out fold-centred score in hepg2, full scope, grouped split",
+      "value": 0.006805,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d2560, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d2560 held-out pre-registered score in hepg2, full scope, grouped split",
+      "value": 0.030191,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d2560, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 held-out fold-centred score in hepg2, full scope, grouped split",
+      "value": -0.014816,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d5120, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 held-out pre-registered score in hepg2, full scope, grouped split",
+      "value": -0.024659,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d5120, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb held-out fold-centred score in hepg2 under the random split",
+      "value": 0.482026,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb held-out pre-registered score in hepg2 under the random split",
+      "value": 0.483416,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "transcriptformer_emb held-out fold-centred score in hepg2 under the random split",
+      "value": 0.464652,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "transcriptformer_emb held-out pre-registered score in hepg2 under the random split",
+      "value": 0.461112,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb held-out fold-centred score in hepg2 under the random split",
+      "value": 0.351753,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb held-out pre-registered score in hepg2 under the random split",
+      "value": 0.349582,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp held-out fold-centred score in hepg2 under the random split",
+      "value": 0.046967,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=coexp, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp held-out pre-registered score in hepg2 under the random split",
+      "value": 0.052598,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d2560 held-out fold-centred score in hepg2 under the random split",
+      "value": 0.025751,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=null_randgene_d2560, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d2560 held-out pre-registered score in hepg2 under the random split",
+      "value": 0.005883,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=hepg2, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=null_randgene_d2560, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "largest shuffled-label draw of the ESM2 arms in hepg2",
+      "value": 0.009831,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.largest_protein_shuffled_draw"
+    },
+    {
+      "claim": "esm2_3b_emb held-out fold-centred score in jurkat, full scope, grouped split",
+      "value": 0.178379,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=esm2_3b_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb held-out pre-registered score in jurkat, full scope, grouped split",
+      "value": 0.264176,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_650m_emb held-out fold-centred score in jurkat, full scope, grouped split",
+      "value": 0.158183,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=esm2_650m_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_650m_emb held-out pre-registered score in jurkat, full scope, grouped split",
+      "value": 0.228221,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=esm2_650m_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "transcriptformer_emb held-out fold-centred score in jurkat, full scope, grouped split",
+      "value": 0.172603,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=transcriptformer_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "transcriptformer_emb held-out pre-registered score in jurkat, full scope, grouped split",
+      "value": 0.231353,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=transcriptformer_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scprint_emb held-out fold-centred score in jurkat, full scope, grouped split",
+      "value": 0.158743,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scprint_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "scprint_emb held-out pre-registered score in jurkat, full scope, grouped split",
+      "value": 0.230757,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scprint_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb held-out fold-centred score in jurkat, full scope, grouped split",
+      "value": 0.112577,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scgpt_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb held-out pre-registered score in jurkat, full scope, grouped split",
+      "value": 0.173276,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp held-out fold-centred score in jurkat, full scope, grouped split",
+      "value": 0.033636,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=coexp, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp held-out pre-registered score in jurkat, full scope, grouped split",
+      "value": 0.044622,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d2560 held-out fold-centred score in jurkat, full scope, grouped split",
+      "value": 0.008337,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d2560, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d2560 held-out pre-registered score in jurkat, full scope, grouped split",
+      "value": 0.017313,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d2560, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 held-out fold-centred score in jurkat, full scope, grouped split",
+      "value": -0.009526,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d5120, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 held-out pre-registered score in jurkat, full scope, grouped split",
+      "value": 0.025441,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d5120, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb held-out fold-centred score in jurkat under the random split",
+      "value": 0.276811,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb held-out pre-registered score in jurkat under the random split",
+      "value": 0.272434,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "transcriptformer_emb held-out fold-centred score in jurkat under the random split",
+      "value": 0.247336,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "transcriptformer_emb held-out pre-registered score in jurkat under the random split",
+      "value": 0.262114,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=transcriptformer_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb held-out fold-centred score in jurkat under the random split",
+      "value": 0.178123,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb held-out pre-registered score in jurkat under the random split",
+      "value": 0.186171,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp held-out fold-centred score in jurkat under the random split",
+      "value": 0.053483,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=coexp, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp held-out pre-registered score in jurkat under the random split",
+      "value": 0.049353,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d2560 held-out fold-centred score in jurkat under the random split",
+      "value": -0.009485,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=null_randgene_d2560, column=centered__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d2560 held-out pre-registered score in jurkat under the random split",
+      "value": -0.010847,
+      "source": "results/summary/runs.parquet",
+      "key": "cell_line=jurkat, scope=full, split=random, translator=mlp, target_source=run1_all_controls, arm=null_randgene_d2560, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "largest shuffled-label draw of the ESM2 arms in jurkat",
+      "value": 0.01047,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.largest_protein_shuffled_draw"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and coexp on the same held-out perturbations in hepg2 (paired_differences)",
+      "value": 0.077467,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences, arm=esm2_3b_emb, reference=coexp, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and coexp on the same held-out perturbations in hepg2 (paired_differences)",
+      "value": 0.055442,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences, arm=esm2_650m_emb, reference=coexp, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and transcriptformer_emb on the same held-out perturbations in hepg2 (paired_differences)",
+      "value": 0.01712,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences, arm=esm2_3b_emb, reference=transcriptformer_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and transcriptformer_emb on the same held-out perturbations in hepg2 (paired_differences)",
+      "value": -0.004905,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences, arm=esm2_650m_emb, reference=transcriptformer_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and scprint_emb on the same held-out perturbations in hepg2 (paired_differences)",
+      "value": 0.017271,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences, arm=esm2_3b_emb, reference=scprint_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and scprint_emb on the same held-out perturbations in hepg2 (paired_differences)",
+      "value": -0.004754,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences, arm=esm2_650m_emb, reference=scprint_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and scgpt_emb on the same held-out perturbations in hepg2 (paired_differences)",
+      "value": -0.001131,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences, arm=esm2_3b_emb, reference=scgpt_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and scgpt_emb on the same held-out perturbations in hepg2 (paired_differences)",
+      "value": -0.023156,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences, arm=esm2_650m_emb, reference=scgpt_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and coexp on the same held-out perturbations in jurkat (paired_differences)",
+      "value": 0.096415,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences, arm=esm2_3b_emb, reference=coexp, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and coexp on the same held-out perturbations in jurkat (paired_differences)",
+      "value": 0.082962,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences, arm=esm2_650m_emb, reference=coexp, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and transcriptformer_emb on the same held-out perturbations in jurkat (paired_differences)",
+      "value": 0.003847,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences, arm=esm2_3b_emb, reference=transcriptformer_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and transcriptformer_emb on the same held-out perturbations in jurkat (paired_differences)",
+      "value": -0.009605,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences, arm=esm2_650m_emb, reference=transcriptformer_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and scprint_emb on the same held-out perturbations in jurkat (paired_differences)",
+      "value": 0.01308,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences, arm=esm2_3b_emb, reference=scprint_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and scprint_emb on the same held-out perturbations in jurkat (paired_differences)",
+      "value": -0.000373,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences, arm=esm2_650m_emb, reference=scprint_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and scgpt_emb on the same held-out perturbations in jurkat (paired_differences)",
+      "value": 0.043831,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences, arm=esm2_3b_emb, reference=scgpt_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and scgpt_emb on the same held-out perturbations in jurkat (paired_differences)",
+      "value": 0.030378,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences, arm=esm2_650m_emb, reference=scgpt_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and coexp on the same held-out perturbations in hepg2 (paired_differences_preregistered)",
+      "value": 0.152518,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences_preregistered, arm=esm2_3b_emb, reference=coexp, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and coexp on the same held-out perturbations in hepg2 (paired_differences_preregistered)",
+      "value": 0.126391,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences_preregistered, arm=esm2_650m_emb, reference=coexp, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and transcriptformer_emb on the same held-out perturbations in hepg2 (paired_differences_preregistered)",
+      "value": 0.01793,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences_preregistered, arm=esm2_3b_emb, reference=transcriptformer_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and transcriptformer_emb on the same held-out perturbations in hepg2 (paired_differences_preregistered)",
+      "value": -0.008197,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences_preregistered, arm=esm2_650m_emb, reference=transcriptformer_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and scprint_emb on the same held-out perturbations in hepg2 (paired_differences_preregistered)",
+      "value": -0.005247,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences_preregistered, arm=esm2_3b_emb, reference=scprint_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and scprint_emb on the same held-out perturbations in hepg2 (paired_differences_preregistered)",
+      "value": -0.031375,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences_preregistered, arm=esm2_650m_emb, reference=scprint_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and scgpt_emb on the same held-out perturbations in hepg2 (paired_differences_preregistered)",
+      "value": -0.032071,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences_preregistered, arm=esm2_3b_emb, reference=scgpt_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and scgpt_emb on the same held-out perturbations in hepg2 (paired_differences_preregistered)",
+      "value": -0.058198,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.hepg2.paired_differences_preregistered, arm=esm2_650m_emb, reference=scgpt_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and coexp on the same held-out perturbations in jurkat (paired_differences_preregistered)",
+      "value": 0.156359,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences_preregistered, arm=esm2_3b_emb, reference=coexp, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and coexp on the same held-out perturbations in jurkat (paired_differences_preregistered)",
+      "value": 0.130753,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences_preregistered, arm=esm2_650m_emb, reference=coexp, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and transcriptformer_emb on the same held-out perturbations in jurkat (paired_differences_preregistered)",
+      "value": 0.023375,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences_preregistered, arm=esm2_3b_emb, reference=transcriptformer_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and transcriptformer_emb on the same held-out perturbations in jurkat (paired_differences_preregistered)",
+      "value": -0.002231,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences_preregistered, arm=esm2_650m_emb, reference=transcriptformer_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and scprint_emb on the same held-out perturbations in jurkat (paired_differences_preregistered)",
+      "value": 0.0238,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences_preregistered, arm=esm2_3b_emb, reference=scprint_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and scprint_emb on the same held-out perturbations in jurkat (paired_differences_preregistered)",
+      "value": -0.001806,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences_preregistered, arm=esm2_650m_emb, reference=scprint_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_3b_emb and scgpt_emb on the same held-out perturbations in jurkat (paired_differences_preregistered)",
+      "value": 0.064736,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences_preregistered, arm=esm2_3b_emb, reference=scgpt_emb, statistic=median_difference"
+    },
+    {
+      "claim": "paired difference between esm2_650m_emb and scgpt_emb on the same held-out perturbations in jurkat (paired_differences_preregistered)",
+      "value": 0.03913,
+      "source": "results/summary/headline.json",
+      "key": "field=protein.lines.jurkat.paired_differences_preregistered, arm=esm2_650m_emb, reference=scgpt_emb, statistic=median_difference"
+    },
+    {
+      "claim": "largest absolute difference between an arm the protein job re-ran and the same arm in the main sweep, over all 44 re-runs",
+      "value": 0.0,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_reference_check[*].difference, statistic=max_abs"
+    },
+    {
+      "claim": "rank similarity between the esm2_3b and esm2_650m gene tables in HepG2",
+      "value": 0.850557,
+      "source": "results/protein/identity.json",
+      "key": "field=lines.hepg2.pairs.esm2_3b|esm2_650m.rsa_spearman"
+    },
+    {
+      "claim": "rank similarity between the transcriptformer and esm2_3b gene tables in HepG2",
+      "value": 0.396024,
+      "source": "results/protein/identity.json",
+      "key": "field=lines.hepg2.pairs.esm2_3b|transcriptformer.rsa_spearman"
+    },
+    {
+      "claim": "rank similarity between the scprint and esm2_650m gene tables in HepG2",
+      "value": 0.272706,
+      "source": "results/protein/identity.json",
+      "key": "field=lines.hepg2.pairs.esm2_650m|scprint.rsa_spearman"
+    },
+    {
+      "claim": "rank similarity between the scprint and esm2_3b gene tables in HepG2",
+      "value": 0.237232,
+      "source": "results/protein/identity.json",
+      "key": "field=lines.hepg2.pairs.esm2_3b|scprint.rsa_spearman"
+    },
+    {
+      "claim": "rank similarity between the scgpt and scprint gene tables in HepG2",
+      "value": 0.303713,
+      "source": "results/protein/identity.json",
+      "key": "field=lines.hepg2.pairs.scgpt|scprint.rsa_spearman"
+    },
+    {
+      "claim": "rank similarity between the scgpt and esm2_3b gene tables in HepG2",
+      "value": -0.015785,
+      "source": "results/protein/identity.json",
+      "key": "field=lines.hepg2.pairs.esm2_3b|scgpt.rsa_spearman"
+    },
+    {
+      "claim": "rank similarity between the aido_cell and esm2_3b gene tables in HepG2",
+      "value": -0.000522,
+      "source": "results/protein/identity.json",
+      "key": "field=lines.hepg2.pairs.aido_cell|esm2_3b.rsa_spearman"
+    },
+    {
+      "claim": "esm2_650m_emb on the unseen-gene cross-line slice, hepg2->jurkat, held-out reference cells, pre-registered rule",
+      "value": 0.071464,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.hepg2->jurkat|transfer_unseen|cross_line__dest_reference, arm=esm2_650m_emb, statistic=preregistered"
+    },
+    {
+      "claim": "transcriptformer_emb on the unseen-gene cross-line slice, hepg2->jurkat, held-out reference cells, pre-registered rule",
+      "value": 0.093759,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.hepg2->jurkat|transfer_unseen|cross_line__dest_reference, arm=transcriptformer_emb, statistic=preregistered"
+    },
+    {
+      "claim": "esm2_3b_emb on the unseen-gene cross-line slice, hepg2->jurkat, held-out reference cells, pre-registered rule",
+      "value": 0.09111,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.hepg2->jurkat|transfer_unseen|cross_line__dest_reference, arm=esm2_3b_emb, statistic=preregistered"
+    },
+    {
+      "claim": "scprint_emb on the unseen-gene cross-line slice, hepg2->jurkat, held-out reference cells, pre-registered rule",
+      "value": 0.077295,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.hepg2->jurkat|transfer_unseen|cross_line__dest_reference, arm=scprint_emb, statistic=preregistered"
+    },
+    {
+      "claim": "scgpt_emb on the unseen-gene cross-line slice, hepg2->jurkat, held-out reference cells, pre-registered rule",
+      "value": 0.040423,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.hepg2->jurkat|transfer_unseen|cross_line__dest_reference, arm=scgpt_emb, statistic=preregistered"
+    },
+    {
+      "claim": "null_randgene_d5120 on the unseen-gene cross-line slice, hepg2->jurkat, held-out reference cells, pre-registered rule",
+      "value": -0.00149,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.hepg2->jurkat|transfer_unseen|cross_line__dest_reference, arm=null_randgene_d5120, statistic=preregistered"
+    },
+    {
+      "claim": "null_randgene_d2560 on the unseen-gene cross-line slice, hepg2->jurkat, held-out reference cells, pre-registered rule",
+      "value": -0.000846,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.hepg2->jurkat|transfer_unseen|cross_line__dest_reference, arm=null_randgene_d2560, statistic=preregistered"
+    },
+    {
+      "claim": "coexp on the unseen-gene cross-line slice, hepg2->jurkat, held-out reference cells, pre-registered rule",
+      "value": 0.009051,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.hepg2->jurkat|transfer_unseen|cross_line__dest_reference, arm=coexp, statistic=preregistered"
+    },
+    {
+      "claim": "transcriptformer_emb on the unseen-gene cross-line slice, jurkat->hepg2, held-out reference cells, pre-registered rule",
+      "value": 0.126221,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.jurkat->hepg2|transfer_unseen|cross_line__dest_reference, arm=transcriptformer_emb, statistic=preregistered"
+    },
+    {
+      "claim": "scprint_emb on the unseen-gene cross-line slice, jurkat->hepg2, held-out reference cells, pre-registered rule",
+      "value": 0.117869,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.jurkat->hepg2|transfer_unseen|cross_line__dest_reference, arm=scprint_emb, statistic=preregistered"
+    },
+    {
+      "claim": "esm2_650m_emb on the unseen-gene cross-line slice, jurkat->hepg2, held-out reference cells, pre-registered rule",
+      "value": 0.142451,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.jurkat->hepg2|transfer_unseen|cross_line__dest_reference, arm=esm2_650m_emb, statistic=preregistered"
+    },
+    {
+      "claim": "esm2_3b_emb on the unseen-gene cross-line slice, jurkat->hepg2, held-out reference cells, pre-registered rule",
+      "value": 0.130078,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.jurkat->hepg2|transfer_unseen|cross_line__dest_reference, arm=esm2_3b_emb, statistic=preregistered"
+    },
+    {
+      "claim": "coexp on the unseen-gene cross-line slice, jurkat->hepg2, held-out reference cells, pre-registered rule",
+      "value": -0.012152,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.jurkat->hepg2|transfer_unseen|cross_line__dest_reference, arm=coexp, statistic=preregistered"
+    },
+    {
+      "claim": "scgpt_emb on the unseen-gene cross-line slice, jurkat->hepg2, held-out reference cells, pre-registered rule",
+      "value": 0.03184,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.jurkat->hepg2|transfer_unseen|cross_line__dest_reference, arm=scgpt_emb, statistic=preregistered"
+    },
+    {
+      "claim": "null_randgene_d5120 on the unseen-gene cross-line slice, jurkat->hepg2, held-out reference cells, pre-registered rule",
+      "value": 0.027283,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.jurkat->hepg2|transfer_unseen|cross_line__dest_reference, arm=null_randgene_d5120, statistic=preregistered"
+    },
+    {
+      "claim": "null_randgene_d2560 on the unseen-gene cross-line slice, jurkat->hepg2, held-out reference cells, pre-registered rule",
+      "value": -0.012775,
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.blocks.jurkat->hepg2|transfer_unseen|cross_line__dest_reference, arm=null_randgene_d2560, statistic=preregistered"
+    },
+    {
+      "claim": "unseen-gene cross-line cells where the group-resampled interval excludes zero on the pre-registered rule, protein_derived arms, dest_all reference mode (156-177 perturbations scored)",
+      "value": "7 of 8",
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.unseen_gene_clearance.dest_all.protein_derived"
+    },
+    {
+      "claim": "unseen-gene cross-line cells where the group-resampled interval excludes zero on the pre-registered rule, scgpt arms, dest_all reference mode (156-177 perturbations scored)",
+      "value": "1 of 2",
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.unseen_gene_clearance.dest_all.scgpt"
+    },
+    {
+      "claim": "unseen-gene cross-line cells where the group-resampled interval excludes zero on the pre-registered rule, coexpression_and_nulls arms, dest_all reference mode (156-177 perturbations scored)",
+      "value": "0 of 6",
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.unseen_gene_clearance.dest_all.coexpression_and_nulls"
+    },
+    {
+      "claim": "unseen-gene cross-line cells where the group-resampled interval excludes zero on the pre-registered rule, protein_derived arms, dest_reference reference mode (78-89 perturbations scored)",
+      "value": "8 of 8",
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.unseen_gene_clearance.dest_reference.protein_derived"
+    },
+    {
+      "claim": "unseen-gene cross-line cells where the group-resampled interval excludes zero on the pre-registered rule, scgpt arms, dest_reference reference mode (78-89 perturbations scored)",
+      "value": "0 of 2",
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.unseen_gene_clearance.dest_reference.scgpt"
+    },
+    {
+      "claim": "unseen-gene cross-line cells where the group-resampled interval excludes zero on the pre-registered rule, coexpression_and_nulls arms, dest_reference reference mode (78-89 perturbations scored)",
+      "value": "0 of 6",
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.unseen_gene_clearance.dest_reference.coexpression_and_nulls"
+    },
+    {
+      "claim": "unseen-gene cross-line cells where the group-resampled interval excludes zero on the pre-registered rule, protein_derived arms, source_only reference mode (156-177 perturbations scored)",
+      "value": "8 of 8",
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.unseen_gene_clearance.source_only.protein_derived"
+    },
+    {
+      "claim": "unseen-gene cross-line cells where the group-resampled interval excludes zero on the pre-registered rule, scgpt arms, source_only reference mode (156-177 perturbations scored)",
+      "value": "2 of 2",
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.unseen_gene_clearance.source_only.scgpt"
+    },
+    {
+      "claim": "unseen-gene cross-line cells where the group-resampled interval excludes zero on the pre-registered rule, coexpression_and_nulls arms, source_only reference mode (156-177 perturbations scored)",
+      "value": "2 of 6",
+      "source": "results/summary/headline.json",
+      "key": "field=protein_transfer.unseen_gene_clearance.source_only.coexpression_and_nulls"
+    },
+    {
+      "claim": "scgpt_esm2_3b_emb in hepg2, grouped split, pre-registered rule",
+      "value": 0.29886,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb in hepg2, grouped split, pre-registered rule",
+      "value": 0.271869,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb in hepg2, grouped split, pre-registered rule",
+      "value": 0.233111,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d6144 in hepg2, grouped split, pre-registered rule",
+      "value": 0.008123,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d6144, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d1024 in hepg2, grouped split, pre-registered rule",
+      "value": -0.001722,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d1024, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 in hepg2, grouped split, pre-registered rule",
+      "value": -0.024659,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d5120, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp in hepg2, grouped split, pre-registered rule",
+      "value": 0.048793,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, preregistered in hepg2, grouped split",
+      "value": 0.022335,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in hepg2, grouped split",
+      "value": 0.136595,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, fold_centred in hepg2, grouped split",
+      "value": 0.009885,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in hepg2, grouped split",
+      "value": 0.079791,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, preregistered in hepg2, grouped split",
+      "value": 0.054405,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in hepg2, grouped split",
+      "value": 0.054511,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, fold_centred in hepg2, grouped split",
+      "value": 0.011015,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in hepg2, grouped split",
+      "value": 0.044147,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in hepg2, grouped split",
+      "value": 0.250329,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.parts_spearman"
+    },
+    {
+      "claim": "Spearman correlation between the esm2_650m_emb and esm2_3b_emb arms' per-perturbation scores in hepg2, grouped split",
+      "value": 0.681623,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.agreement.esm2_650m_emb__esm2_3b_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and transcriptformer_emb arms' per-perturbation scores in hepg2, grouped split",
+      "value": 0.270791,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.agreement.scgpt_emb__transcriptformer_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and coexp arms' per-perturbation scores in hepg2, grouped split",
+      "value": 0.284282,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|grouped.agreement.scgpt_emb__coexp__residual_weighted.spearman"
+    },
+    {
+      "claim": "scgpt_esm2_3b_emb in hepg2, random split, pre-registered rule",
+      "value": 0.509875,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb in hepg2, random split, pre-registered rule",
+      "value": 0.349582,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb in hepg2, random split, pre-registered rule",
+      "value": 0.483416,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d6144 in hepg2, random split, pre-registered rule",
+      "value": 0.00927,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d6144, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d1024 in hepg2, random split, pre-registered rule",
+      "value": 0.011294,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d1024, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 in hepg2, random split, pre-registered rule",
+      "value": 0.042741,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=null_randgene_d5120, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp in hepg2, random split, pre-registered rule",
+      "value": 0.052598,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=hepg2, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, preregistered in hepg2, random split",
+      "value": 0.129261,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in hepg2, random split",
+      "value": 0.062228,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, fold_centred in hepg2, random split",
+      "value": 0.113176,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in hepg2, random split",
+      "value": 0.076806,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, preregistered in hepg2, random split",
+      "value": 0.021337,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in hepg2, random split",
+      "value": 0.046883,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, fold_centred in hepg2, random split",
+      "value": 0.007658,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in hepg2, random split",
+      "value": 0.040279,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in hepg2, random split",
+      "value": 0.35064,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.parts_spearman"
+    },
+    {
+      "claim": "Spearman correlation between the esm2_650m_emb and esm2_3b_emb arms' per-perturbation scores in hepg2, random split",
+      "value": 0.707066,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.agreement.esm2_650m_emb__esm2_3b_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and transcriptformer_emb arms' per-perturbation scores in hepg2, random split",
+      "value": 0.322281,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.agreement.scgpt_emb__transcriptformer_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and coexp arms' per-perturbation scores in hepg2, random split",
+      "value": 0.313396,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.hepg2|random.agreement.scgpt_emb__coexp__residual_weighted.spearman"
+    },
+    {
+      "claim": "scgpt_esm2_3b_emb in jurkat, grouped split, pre-registered rule",
+      "value": 0.270302,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scgpt_esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb in jurkat, grouped split, pre-registered rule",
+      "value": 0.173276,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb in jurkat, grouped split, pre-registered rule",
+      "value": 0.264176,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d6144 in jurkat, grouped split, pre-registered rule",
+      "value": 0.020705,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d6144, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d1024 in jurkat, grouped split, pre-registered rule",
+      "value": 0.024551,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d1024, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 in jurkat, grouped split, pre-registered rule",
+      "value": 0.025441,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d5120, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp in jurkat, grouped split, pre-registered rule",
+      "value": 0.044622,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=grouped, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, preregistered in jurkat, grouped split",
+      "value": 0.069099,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in jurkat, grouped split",
+      "value": 0.039802,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, fold_centred in jurkat, grouped split",
+      "value": 0.067194,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in jurkat, grouped split",
+      "value": 0.037472,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, preregistered in jurkat, grouped split",
+      "value": 0.004363,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in jurkat, grouped split",
+      "value": 0.026196,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, fold_centred in jurkat, grouped split",
+      "value": 0.023363,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in jurkat, grouped split",
+      "value": 0.023235,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in jurkat, grouped split",
+      "value": 0.2394,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.parts_spearman"
+    },
+    {
+      "claim": "Spearman correlation between the esm2_650m_emb and esm2_3b_emb arms' per-perturbation scores in jurkat, grouped split",
+      "value": 0.672694,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.agreement.esm2_650m_emb__esm2_3b_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and transcriptformer_emb arms' per-perturbation scores in jurkat, grouped split",
+      "value": 0.26512,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.agreement.scgpt_emb__transcriptformer_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and coexp arms' per-perturbation scores in jurkat, grouped split",
+      "value": 0.229515,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|grouped.agreement.scgpt_emb__coexp__residual_weighted.spearman"
+    },
+    {
+      "claim": "scgpt_esm2_3b_emb in jurkat, random split, pre-registered rule",
+      "value": 0.294067,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scgpt_esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "scgpt_emb in jurkat, random split, pre-registered rule",
+      "value": 0.186171,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=scgpt_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "esm2_3b_emb in jurkat, random split, pre-registered rule",
+      "value": 0.272434,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=esm2_3b_emb, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d6144 in jurkat, random split, pre-registered rule",
+      "value": -0.012657,
+      "source": "results/summary/concat_runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d6144, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d1024 in jurkat, random split, pre-registered rule",
+      "value": 0.00588,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d1024, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "null_randgene_d5120 in jurkat, random split, pre-registered rule",
+      "value": -0.012687,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=null_randgene_d5120, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "coexp in jurkat, random split, pre-registered rule",
+      "value": 0.049353,
+      "source": "results/summary/runs.parquet",
+      "key": "scope=full, split=random, translator=mlp, target_source=run1_all_controls, cell_line=jurkat, arm=coexp, column=residual__weighted__disattenuated"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, preregistered in jurkat, random split",
+      "value": 0.076242,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, preregistered can resolve in jurkat, random split",
+      "value": 0.049795,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus scgpt_emb, fold_centred in jurkat, random split",
+      "value": 0.082346,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against scgpt_emb, fold_centred can resolve in jurkat, random split",
+      "value": 0.054802,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.scgpt_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, preregistered in jurkat, random split",
+      "value": 0.015287,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__preregistered.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, preregistered can resolve in jurkat, random split",
+      "value": 0.033639,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__preregistered.min_resolvable_difference"
+    },
+    {
+      "claim": "two-table arm minus esm2_3b_emb, fold_centred in jurkat, random split",
+      "value": 0.012409,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__fold_centred.difference"
+    },
+    {
+      "claim": "smallest difference the two-table comparison against esm2_3b_emb, fold_centred can resolve in jurkat, random split",
+      "value": 0.038727,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.paired_against_parts.esm2_3b_emb__fold_centred.min_resolvable_difference"
+    },
+    {
+      "claim": "Spearman correlation between the scGPT-table arm's and the ESM2-3B-table arm's per-perturbation scores in jurkat, random split",
+      "value": 0.284609,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.parts_spearman"
+    },
+    {
+      "claim": "Spearman correlation between the esm2_650m_emb and esm2_3b_emb arms' per-perturbation scores in jurkat, random split",
+      "value": 0.726671,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.agreement.esm2_650m_emb__esm2_3b_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and transcriptformer_emb arms' per-perturbation scores in jurkat, random split",
+      "value": 0.264493,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.agreement.scgpt_emb__transcriptformer_emb__residual_weighted.spearman"
+    },
+    {
+      "claim": "Spearman correlation between the scgpt_emb and coexp arms' per-perturbation scores in jurkat, random split",
+      "value": 0.209885,
+      "source": "results/summary/headline.json",
+      "key": "field=concat.lines.jurkat|random.agreement.scgpt_emb__coexp__residual_weighted.spearman"
+    },
+    {
+      "claim": "largest absolute difference between an arm the two-table job re-ran and the same arm in the main sweep",
+      "value": 0.0,
+      "source": "results/summary/headline.json",
+      "key": "field=concat_reference_check[*].difference, statistic=max_abs"
     }
   ]
 }

@@ -1,0 +1,371 @@
+{
+  "cell_line": "hepg2",
+  "arm": "own_trainable",
+  "n_perturbations_total": 524,
+  "n_scored": 243,
+  "n_groups_total": 226,
+  "n_groups_scored": 54,
+  "eval_folds": [
+    0,
+    1
+  ],
+  "fold_sizes": [
+    149,
+    94,
+    94,
+    94,
+    93
+  ],
+  "ceilings_restricted": {
+    "residual_weighted": 0.7632134402640142,
+    "residual_unweighted": 0.7325602886897388,
+    "raw_weighted": 0.8504610525358257,
+    "raw_unweighted": 0.8261454743830965,
+    "centered_weighted": 0.6079052362596387,
+    "centered_unweighted": 0.5691417782016369
+  },
+  "ceilings_all_folds": {
+    "residual_weighted": 0.6847125460703934,
+    "residual_unweighted": 0.6480816460587595,
+    "raw_weighted": 0.7476372159536739,
+    "raw_unweighted": 0.7150876608854085,
+    "centered_weighted": 0.5744401635887746,
+    "centered_unweighted": 0.5394138464315211
+  },
+  "n_runs": 48,
+  "bundle_inventory": {
+    "cell_line": "hepg2",
+    "n_perturbations": 524,
+    "n_readout": 2721,
+    "embeddings": {
+      "ft_own_trainable": 512,
+      "ftq_own_trainable": 512,
+      "pre_own_trainable": 512,
+      "preq_own_trainable": 512,
+      "scgpt": 512
+    },
+    "features": {
+      "ft_own_trainable__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "ftq_own_trainable__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "pre_own_trainable__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "preq_own_trainable__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "scgpt__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      }
+    },
+    "coexpr_keys": [
+      "mi_bits",
+      "mi_bits_check",
+      "partial",
+      "partial_check",
+      "pearson",
+      "pearson_check",
+      "spearman",
+      "spearman_check"
+    ],
+    "node_features": [
+      "log1p_mean_cp10k",
+      "mean_log1p",
+      "sd_log1p",
+      "detection_rate",
+      "coexpr_degree_fraction",
+      "mean_abs_corr"
+    ],
+    "strata": [
+      "S3",
+      "S4_highest"
+    ],
+    "perturbed_genes_in_readout": 524,
+    "reference": {
+      "cell_line": "hepg2",
+      "n_perturbations": 524,
+      "n_readout_genes": 2721,
+      "reliability": {
+        "shrinkage_lambda": 0.9779701865651215,
+        "median_weight": 0.6365889289188426,
+        "mean_weight": 0.631341617795463,
+        "fraction_weight_below_0.1": 0.0,
+        "fraction_weight_above_0.5": 0.7680999632488056,
+        "var_between_z": 0.08520735280334922,
+        "var_sampling_z": 0.0019193857965451055
+      },
+      "residual_ceiling": {
+        "median_half_split": 0.4865466606616985,
+        "median_spearman_brown": 0.654599714269554,
+        "q25": 0.516463906738253,
+        "q75": 0.774487753669816,
+        "sd": 0.17714481246605918
+      },
+      "raw_effect_ceiling": {
+        "median_half_split": 0.6011743317820577,
+        "median_spearman_brown": 0.7509098238167695
+      },
+      "shared_response": {
+        "mean_effect_l2": 12.660398483276367,
+        "median_residual_fraction_of_variance": 0.7444034880736327
+      },
+      "power": {
+        "n_held_out_perturbations": 524,
+        "sd_per_perturbation_used": 0.17714481246605918,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "min_resolvable_difference": {
+          "paired_rho_0.5": 0.02168036715761371,
+          "paired_rho_0.8": 0.01371186814535401
+        },
+        "note": "sd is the spread of the per-perturbation residual ceiling, used as the pre-run estimate of per-perturbation heterogeneity; the achieved resolution is recomputed from the actual paired differences"
+      }
+    }
+  },
+  "installed_blocks": [
+    {
+      "model_key": "pre_own_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "preq_own_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0
+      ]
+    },
+    {
+      "model_key": "ft_own_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "ftq_own_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0
+      ]
+    }
+  ],
+  "direct_prediction": {
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "residual",
+      "centered"
+    ],
+    "residual_weighted": {
+      "cell_line": "hepg2",
+      "arm_label": "direct_prediction/own_trainable",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": 0.0012688876185913195,
+      "attenuated_lo": -0.1577910127307403,
+      "attenuated_hi": 0.04328136866646487,
+      "disattenuated": 0.0014524465349444397,
+      "disattenuated_lo": -0.18061726375781786,
+      "disattenuated_hi": 0.049542507174157244,
+      "ceiling": 0.7632134402640142,
+      "n_scored": 243,
+      "n_groups": 54,
+      "se": 0.05466638507321753,
+      "sd_single": 0.16933363716031402
+    },
+    "all_cells": [
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": 0.0012688876185913195,
+        "attenuated_lo": -0.1577910127307403,
+        "attenuated_hi": 0.04328136866646487,
+        "disattenuated": 0.0014524465349444397,
+        "disattenuated_lo": -0.18061726375781786,
+        "disattenuated_hi": 0.049542507174157244,
+        "ceiling": 0.7632134402640142,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.05466638507321753,
+        "sd_single": 0.16933363716031402
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": 0.0060394883328999255,
+        "attenuated_lo": -0.15922300879000692,
+        "attenuated_hi": 0.047169922744752096,
+        "disattenuated": 0.0070563231341493945,
+        "disattenuated_lo": -0.18603049438698455,
+        "disattenuated_hi": 0.05511165826526471,
+        "ceiling": 0.7325602886897388,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.052815128154069614,
+        "sd_single": 0.15590479956770298
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": 0.0036448741413308934,
+        "attenuated_lo": -0.019695635499850365,
+        "attenuated_hi": 0.14841183250099838,
+        "disattenuated": 0.004674816782326658,
+        "disattenuated_lo": -0.02526108825795268,
+        "disattenuated_hi": 0.19034899378396258,
+        "ceiling": 0.6079052362596387,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.05122467367161613,
+        "sd_single": 0.1668724295676615
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": 0.0070594931184408145,
+        "attenuated_lo": -0.017341328791334414,
+        "attenuated_hi": 0.13570920357498045,
+        "disattenuated": 0.009357574340100585,
+        "disattenuated_lo": -0.02298646242704725,
+        "disattenuated_hi": 0.17988670571424828,
+        "ceiling": 0.5691417782016369,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.04621670571317852,
+        "sd_single": 0.15461072561049868
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": 0.6315089854970942,
+        "attenuated_lo": 0.24760395310392988,
+        "attenuated_hi": 0.6503440247242059,
+        "disattenuated": 0.6847819739586756,
+        "disattenuated_lo": 0.26849138755011526,
+        "disattenuated_hi": 0.7052059040020114,
+        "ceiling": 0.8504610525358257,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.12339146343107509,
+        "sd_single": 0.19307969013254422
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": 0.6258410274948524,
+        "attenuated_lo": 0.23109979271212833,
+        "attenuated_hi": 0.6435411754373664,
+        "disattenuated": 0.6885504495666764,
+        "disattenuated_lo": 0.2542560477437068,
+        "disattenuated_hi": 0.708024156606944,
+        "ceiling": 0.8261454743830965,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.1266086741260946,
+        "sd_single": 0.19186440382997905
+      }
+    ]
+  }
+}

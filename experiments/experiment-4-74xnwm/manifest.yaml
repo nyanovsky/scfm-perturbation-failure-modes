@@ -1,0 +1,234 @@
+experiment: 4
+eid: exp_01m0trpxqyf0g8pq29k774xnwm
+title: Does fine-tuning for perturbation prediction install the regulatory signal?
+date: '2026-08-24'
+status: complete
+data:
+  screen:
+    source: GEO GSE264667 (Nadig et al. genome-scale CRISPRi screen)
+    cell_lines:
+    - hepg2
+    - jurkat
+    built_by: src/scfm_ft/ingest.py, one streaming pass per cell line
+    artifact: artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/cells/
+  evaluation_bundle:
+    from: exp_01m0emwktvfe892x6ebqyga5ws (run 3)
+    artifact: artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/bundle/
+    what: effect matrices, reliability weights, co-expression, frozen-model gene tables and response features, the
+      fold assignment and the translator
+  esm2_gene_tables:
+    from: exp_01m0emwktvfe892x6ebqyga5ws (run 3)
+    artifact: artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0emwktvfe892x6ebqyga5ws/protein/esm2_3b.npz
+  base_model:
+    id: wanglab/scGPT-human
+    revision: a24c237737a40f3720f75abb555489e9fe753be6
+outputs:
+  checkpoints:
+    artifact: artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/checkpoints_pearson/
+    what: '16 fine-tuned models of the reported execution, one directory per (cell line, run): model_best.pt (the
+      epoch the recipe keeps, on validation Pearson), model_best_masked_mse.pt, model_final.pt, gene_table_{init,final}.npz,
+      train_config.json, loss_history.json, provenance.json, direct_prediction.npz, prediction_spread.json, forward_pass_sample.json,
+      query_summary_{init,final}.parquet'
+    registered_as: scfm-run4-ft-<line>-<arm>-pearson
+  checkpoints_earlier_execution:
+    artifact: artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/checkpoints/
+    what: the earlier execution of the same 16 arms, selected on held-out masked MSE throughout and predating the
+      three faithfulness controls; read on the report as a replicate
+    registered_as: scfm-run4-ft-<line>-<arm>
+  packs:
+    artifact: artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/packs_pearson/
+    what: one small archive per training run holding its score tables, training metadata and prediction-spread row,
+      so the merge job stages 16 files rather than 160
+  summary:
+    artifact: artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/summary_pearson.tar.gz
+    local: results/summary
+    what: 'merged tables the report reads: restricted, contrasts, runs, direct, null_band, null_check, reference_agreement,
+      prediction_spread, crossfit, training_epochs, training_runs, headline.json'
+  summary_earlier_execution:
+    artifact: artifact://fundacion-instituto-leloir-553557/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/summary.tar.gz
+    local: results/summary_masked_mse
+    what: the same tables for the earlier masked-MSE execution, read by the report as the replicate column of its
+      selection-rule section
+  report:
+    local: apps/index.html
+    built_by: src/scfm_ft/report/build.py
+results:
+  answer: 'Fine-tuning scGPT on the screen with its own published perturbation recipe leaves the queried response
+    features inside run 3''s shuffled-label band in all 10 fine-tuned models (5 gene-table arms x 2 cell lines)
+    and 5 to 43 times below the model''s own gene table. The prediction it installs is nearly the same profile for
+    every knockdown, so a read-out asking which gene was perturbed has little to recover. Reading the same checkpoints
+    through the model''s own perturbation-flag query instead is noisier and not a clean null: 2 of those 10 readings,
+    both in Jurkat, sit above the band and above that query''s own shuffled draws. This is a bound at the achieved
+    resolution, not a demonstration that fine-tuning cannot install the signal.'
+  verdict_cell: residual target, reliability-weighted, ceiling-corrected, MLP translator, grouped folds 0 and 1
+  checkpoint_selection: the tutorial's own rule, validation Pearson over held-out perturbations. The masked-MSE
+    rule is tracked in parallel inside every run with its own patience counter; the two keep the same epoch in 6
+    of the 16 runs
+  models_in_band: 10 of 10
+  best_response_feature_score: 0.045629
+  response_features_restricted:
+    hepg2:
+      before: 0.026516
+      after: 0.012132
+      own_query: 0.049769
+      band:
+      - -0.117399
+      - 0.055049
+      own_query_shuffled_draws:
+      - -0.127758
+      - 0.107856
+      own_query_readings_above_draws: 0
+    jurkat:
+      before: 0.043639
+      after: 0.022639
+      own_query: 0.056482
+      band:
+      - -0.033476
+      - 0.055451
+      own_query_shuffled_draws:
+      - -0.052098
+      - 0.030205
+      own_query_readings_above_draws: 2
+  gene_table_restricted:
+    hepg2:
+      before: 0.227871
+      after: 0.19996
+    jurkat:
+      before: 0.231806
+      after: 0.21808
+  whole_screen_crossfit:
+    note: primary arm refitted on complementary folds and pooled, so every perturbation is scored by a model that
+      never saw it
+    hepg2:
+      n: 524
+      groups: 226
+      ft_response: 0.023249
+      frozen_response: 0.020394
+      coexp: 0.051866
+      gene_table: 0.28011
+    jurkat:
+      n: 705
+      groups: 452
+      ft_response: 0.022026
+      frozen_response: 0.019651
+      coexp: 0.045722
+      gene_table: 0.168784
+  direct_prediction:
+    note: fold mean removed before scoring; raw and fold-centred are the interpretable cells
+    hepg2:
+      profile_vs_measured: 0.545115
+      flag_change_vs_measured: 0.081793
+      fold_centred: -0.033805
+      prediction_spread: 0.120229
+      measured_spread: 0.744403
+    jurkat:
+      profile_vs_measured: 0.344712
+      flag_change_vs_measured: 0.001952
+      fold_centred: 0.018996
+      prediction_spread: 0.055233
+      measured_spread: 0.869399
+  paired_against_frozen_arm:
+    n: 10
+    include_zero: 8
+    excluding_zero:
+    - cell_line: hepg2
+      arm: ft_esm2_frozen_resp
+      difference: -0.012219
+      lo: -0.051083
+      hi: -0.002931
+      p_two_sided: 0.013
+    - cell_line: jurkat
+      arm: ft_esm2_trainable_resp
+      difference: 0.031299
+      lo: 0.002182
+      hi: 0.063592
+      p_two_sided: 0.036
+    n_paired_all_references: 32
+  reproduces_run3: 6 of the 7 comparable whole-screen arms agree by mutual interval containment, largest gap 0.008241;
+    HepG2's node arm does not (run 3 0.031725, run 4 -0.003095) and carries no claim
+  recipe_provenance: all 14 settings scGPT's Tutorial_Perturbation.ipynb names match this run; the one difference
+    is use_fast_transformer, unavailable because flash-attn 1.x will not build against torch 2.5.1, so scGPT's own
+    fallback attention path was used
+  report: apps/index.html, built by src/scfm_ft/report/build.py from results/summary
+slurm_jobs:
+- job_id: '704848932631'
+  name: ingest_hepg2
+  gpus: 0
+- job_id: '970289442098'
+  name: ingest_jurkat + first training probe
+  gpus: 1
+- job_id: '588611846164'
+  name: hepg2/own_trainable
+  gpus: 1
+- job_id: '390529995626'
+  name: hepg2/own_frozen
+  gpus: 1
+- job_id: '225426946490'
+  name: hepg2/esm2_trainable
+  gpus: 1
+- job_id: '623460393612'
+  name: hepg2/esm2_frozen
+  gpus: 1
+- job_id: '491240861877'
+  name: hepg2/rand_frozen
+  gpus: 1
+- job_id: '620386816255'
+  name: jurkat/own_trainable
+  gpus: 1
+- job_id: '920992759170'
+  name: jurkat/own_frozen
+  gpus: 1
+- job_id: '495937933745'
+  name: jurkat/esm2_trainable
+  gpus: 1
+- job_id: '560515707301'
+  name: jurkat/esm2_frozen
+  gpus: 1
+- job_id: '203104786951'
+  name: jurkat/rand_frozen
+  gpus: 1
+- job_id: '659777476862'
+  name: hepg2/own_trainable folds 2,3
+  gpus: 1
+- job_id: '249416621603'
+  name: hepg2/own_trainable fold 4
+  gpus: 1
+- job_id: '430030221595'
+  name: hepg2/own_trainable upstream sampling
+  gpus: 1
+- job_id: '497731760165'
+  name: jurkat/own_trainable folds 2,3
+  gpus: 1
+- job_id: '643418130092'
+  name: jurkat/own_trainable fold 4
+  gpus: 1
+- job_id: '691565390412'
+  name: jurkat/own_trainable upstream sampling
+  gpus: 1
+- job_id: '473092290031'
+  name: 'followup: direct prediction, cross-fit, last epoch'
+  gpus: 1
+- job_id: '262498648980'
+  name: rescore-hepg2 (tagged runs re-read + cross-fit)
+  gpus: 1
+- job_id: '526921943279'
+  name: rescore-jurkat (hit the 2h wall after two re-reads)
+  gpus: 1
+- job_id: '293492613878'
+  name: crossfit-jurkat
+  gpus: 1
+- job_id: '166435995187'
+  name: rescore-tail-jurkat
+  gpus: 1
+- job_id: '274074610068'
+  name: direct_fix (rescore with fold-mean correction)
+  gpus: 1
+- job_id: '991554850808'
+  name: summarise (merge with corrected direct tables)
+  gpus: 0
+- job_id: '144991425075'
+  name: merge, Pearson-selected execution (first pass)
+  gpus: 1
+- job_id: '359555633305'
+  name: merge, Pearson-selected execution (with the shuffled-label band step)
+  gpus: 1

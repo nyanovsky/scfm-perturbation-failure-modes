@@ -1,0 +1,194 @@
+{
+  "cell_line": "jurkat",
+  "arm": "own_trainable__upstream",
+  "n_perturbations_total": 705,
+  "n_scored": 282,
+  "n_groups_total": 452,
+  "n_groups_scored": 137,
+  "eval_folds": [
+    0,
+    1
+  ],
+  "fold_sizes": [
+    141,
+    141,
+    141,
+    141,
+    141
+  ],
+  "ceilings_restricted": {
+    "residual_weighted": 0.5664885966718883,
+    "residual_unweighted": 0.5000531465142553,
+    "raw_weighted": 0.612902468019627,
+    "raw_unweighted": 0.5510880327814518,
+    "centered_weighted": 0.44313273028914574,
+    "centered_unweighted": 0.36795946387179995
+  },
+  "ceilings_all_folds": {
+    "residual_weighted": 0.5071819396306455,
+    "residual_unweighted": 0.4428814204192859,
+    "raw_weighted": 0.5486063004849999,
+    "raw_unweighted": 0.4884926441851486,
+    "centered_weighted": 0.4437062127878906,
+    "centered_unweighted": 0.3738215662153465
+  },
+  "n_runs": 37,
+  "bundle_inventory": {
+    "cell_line": "jurkat",
+    "n_perturbations": 705,
+    "n_readout": 3247,
+    "embeddings": {
+      "ft_own_trainable-upstream": 512,
+      "ftq_own_trainable-upstream": 512,
+      "scgpt": 512
+    },
+    "features": {
+      "ft_own_trainable-upstream__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "ftq_own_trainable-upstream__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "scgpt__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      }
+    },
+    "coexpr_keys": [
+      "mi_bits",
+      "mi_bits_check",
+      "partial",
+      "partial_check",
+      "pearson",
+      "pearson_check",
+      "spearman",
+      "spearman_check"
+    ],
+    "node_features": [
+      "log1p_mean_cp10k",
+      "mean_log1p",
+      "sd_log1p",
+      "detection_rate",
+      "coexpr_degree_fraction",
+      "mean_abs_corr"
+    ],
+    "strata": [
+      "S3",
+      "S4_highest"
+    ],
+    "perturbed_genes_in_readout": 705,
+    "reference": {
+      "cell_line": "jurkat",
+      "n_perturbations": 705,
+      "n_readout_genes": 3247,
+      "reliability": {
+        "shrinkage_lambda": 0.977456157866983,
+        "median_weight": 0.45796316959654715,
+        "mean_weight": 0.4738740019103238,
+        "fraction_weight_below_0.1": 0.004003695719125347,
+        "fraction_weight_above_0.5": 0.42500769941484445,
+        "var_between_z": 0.061763548602478895,
+        "var_sampling_z": 0.0014245014245014246
+      },
+      "residual_ceiling": {
+        "median_half_split": 0.33456742618440344,
+        "median_spearman_brown": 0.5013870706269954,
+        "q25": 0.3283869021934749,
+        "q75": 0.6693574459125389,
+        "sd": 0.21055308230222256
+      },
+      "raw_effect_ceiling": {
+        "median_half_split": 0.38363781412965164,
+        "median_spearman_brown": 0.5545350238508348
+      },
+      "shared_response": {
+        "mean_effect_l2": 6.8818864822387695,
+        "median_residual_fraction_of_variance": 0.8693990127327664
+      },
+      "power": {
+        "n_held_out_perturbations": 705,
+        "sd_per_perturbation_used": 0.21055308230222256,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "min_resolvable_difference": {
+          "paired_rho_0.5": 0.022216256567043895,
+          "paired_rho_0.8": 0.014050794366906389
+        },
+        "note": "sd is the spread of the per-perturbation residual ceiling, used as the pre-run estimate of per-perturbation heterogeneity; the achieved resolution is recomputed from the actual paired differences"
+      }
+    }
+  },
+  "installed_blocks": [
+    {
+      "model_key": "ft_own_trainable-upstream",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "ftq_own_trainable-upstream",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0
+      ]
+    }
+  ],
+  "heldout_folds": [
+    0,
+    1
+  ],
+  "read_from": "/silico-workspace/inputs/experiments/exp_01m0trpxqyf0g8pq29k774xnwm/checkpoints/jurkat__own_trainable__upstream/model_best.pt",
+  "source_run": "own_trainable__upstream",
+  "epochs_run": 15,
+  "selected_epoch": 14,
+  "note": "features re-read from the selected epoch's saved weights"
+}

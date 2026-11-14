@@ -1,0 +1,510 @@
+{
+  "cell_line": "hepg2",
+  "arm": "esm2_frozen",
+  "n_perturbations_total": 524,
+  "n_scored": 243,
+  "n_groups_total": 226,
+  "n_groups_scored": 54,
+  "eval_folds": [
+    0,
+    1
+  ],
+  "fold_sizes": [
+    149,
+    94,
+    94,
+    94,
+    93
+  ],
+  "ceilings_restricted": {
+    "residual_weighted": 0.7632134402640142,
+    "residual_unweighted": 0.7325602886897388,
+    "raw_weighted": 0.8504610525358257,
+    "raw_unweighted": 0.8261454743830965,
+    "centered_weighted": 0.6079052362596387,
+    "centered_unweighted": 0.5691417782016369
+  },
+  "ceilings_all_folds": {
+    "residual_weighted": 0.6847125460703934,
+    "residual_unweighted": 0.6480816460587595,
+    "raw_weighted": 0.7476372159536739,
+    "raw_unweighted": 0.7150876608854085,
+    "centered_weighted": 0.5744401635887746,
+    "centered_unweighted": 0.5394138464315211
+  },
+  "n_runs": 43,
+  "bundle_inventory": {
+    "cell_line": "hepg2",
+    "n_perturbations": 524,
+    "n_readout": 2721,
+    "embeddings": {
+      "ft_esm2_frozen": 512,
+      "ftq_esm2_frozen": 512,
+      "pre_esm2_frozen": 512,
+      "preq_esm2_frozen": 512,
+      "scgpt": 512
+    },
+    "features": {
+      "ft_esm2_frozen__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "ftq_esm2_frozen__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "pre_esm2_frozen__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "preq_esm2_frozen__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "scgpt__mean_control": {
+        "n_perturbed": 524,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      }
+    },
+    "coexpr_keys": [
+      "mi_bits",
+      "mi_bits_check",
+      "partial",
+      "partial_check",
+      "pearson",
+      "pearson_check",
+      "spearman",
+      "spearman_check"
+    ],
+    "node_features": [
+      "log1p_mean_cp10k",
+      "mean_log1p",
+      "sd_log1p",
+      "detection_rate",
+      "coexpr_degree_fraction",
+      "mean_abs_corr"
+    ],
+    "strata": [
+      "S3",
+      "S4_highest"
+    ],
+    "perturbed_genes_in_readout": 524,
+    "reference": {
+      "cell_line": "hepg2",
+      "n_perturbations": 524,
+      "n_readout_genes": 2721,
+      "reliability": {
+        "shrinkage_lambda": 0.9779701865651215,
+        "median_weight": 0.6365889289188426,
+        "mean_weight": 0.631341617795463,
+        "fraction_weight_below_0.1": 0.0,
+        "fraction_weight_above_0.5": 0.7680999632488056,
+        "var_between_z": 0.08520735280334922,
+        "var_sampling_z": 0.0019193857965451055
+      },
+      "residual_ceiling": {
+        "median_half_split": 0.4865466606616985,
+        "median_spearman_brown": 0.654599714269554,
+        "q25": 0.516463906738253,
+        "q75": 0.774487753669816,
+        "sd": 0.17714481246605918
+      },
+      "raw_effect_ceiling": {
+        "median_half_split": 0.6011743317820577,
+        "median_spearman_brown": 0.7509098238167695
+      },
+      "shared_response": {
+        "mean_effect_l2": 12.660398483276367,
+        "median_residual_fraction_of_variance": 0.7444034880736327
+      },
+      "power": {
+        "n_held_out_perturbations": 524,
+        "sd_per_perturbation_used": 0.17714481246605918,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "min_resolvable_difference": {
+          "paired_rho_0.5": 0.02168036715761371,
+          "paired_rho_0.8": 0.01371186814535401
+        },
+        "note": "sd is the spread of the per-perturbation residual ceiling, used as the pre-run estimate of per-perturbation heterogeneity; the achieved resolution is recomputed from the actual paired differences"
+      }
+    }
+  },
+  "installed_blocks": [
+    {
+      "model_key": "pre_esm2_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "preq_esm2_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0
+      ]
+    },
+    {
+      "model_key": "ft_esm2_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "ftq_esm2_frozen",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 524,
+      "values": [
+        0.0
+      ]
+    }
+  ],
+  "heldout_folds": [
+    0,
+    1
+  ],
+  "force_perturbed_gene_in_sequence": true,
+  "direct_prediction": {
+    "baseline": "unflagged_model_output",
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "raw",
+      "centered"
+    ],
+    "fold_mean_removed_before_scoring": true,
+    "residual_note": "not interpretable for this arm: the model's output is not on the measured log2 fold-change scale, so no single profile can be subtracted from both sides",
+    "residual_weighted": {
+      "cell_line": "hepg2",
+      "arm_label": "direct_prediction/esm2_frozen",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": -0.24958171740796783,
+      "attenuated_lo": -0.36735856763553437,
+      "attenuated_hi": 0.5896278936194042,
+      "disattenuated": -0.2856865299364543,
+      "disattenuated_lo": -0.42050113093288455,
+      "disattenuated_hi": 0.6749242237424027,
+      "ceiling": 0.7632134402640142,
+      "n_scored": 243,
+      "n_groups": 54,
+      "se": 0.3440774349085355,
+      "sd_single": 0.40440542751701475
+    },
+    "all_cells": [
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": -0.24958171740796783,
+        "attenuated_lo": -0.36735856763553437,
+        "attenuated_hi": 0.5896278936194042,
+        "disattenuated": -0.2856865299364543,
+        "disattenuated_lo": -0.42050113093288455,
+        "disattenuated_hi": 0.6749242237424027,
+        "ceiling": 0.7632134402640142,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.3440774349085355,
+        "sd_single": 0.40440542751701475
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": -0.25396241571976064,
+        "attenuated_lo": -0.37359453068532944,
+        "attenuated_hi": 0.5498533817873811,
+        "disattenuated": -0.29672064427804684,
+        "disattenuated_lo": -0.4364945479414105,
+        "disattenuated_hi": 0.6424291139301829,
+        "ceiling": 0.7325602886897388,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.3321021073226441,
+        "sd_single": 0.39006286446345595
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": 0.028300554280020585,
+        "attenuated_lo": 0.012129865989864992,
+        "attenuated_hi": 0.1294852031412867,
+        "disattenuated": 0.03629752385608537,
+        "disattenuated_lo": 0.015557437348464641,
+        "disattenuated_hi": 0.16607421195806682,
+        "ceiling": 0.6079052362596387,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.029276848647593945,
+        "sd_single": 0.16367178416900027
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": 0.03489478373368299,
+        "attenuated_lo": 0.00961950139206838,
+        "attenuated_hi": 0.11330123908572158,
+        "disattenuated": 0.04625410456406676,
+        "disattenuated_lo": 0.012750943712352823,
+        "disattenuated_hi": 0.15018426249338349,
+        "ceiling": 0.5691417782016369,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.024432680122548716,
+        "sd_single": 0.1514536773215036
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": 0.2775031428417264,
+        "attenuated_lo": 0.11766969098621746,
+        "attenuated_hi": 0.29206408662622974,
+        "disattenuated": 0.30091282040161577,
+        "disattenuated_lo": 0.12759609937334793,
+        "disattenuated_hi": 0.31670209982034764,
+        "ceiling": 0.8504610525358257,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.05613183686121191,
+        "sd_single": 0.10375482125018076
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": 0.27227556314363427,
+        "attenuated_lo": 0.10097999263964495,
+        "attenuated_hi": 0.2875474055843077,
+        "disattenuated": 0.2995576403148344,
+        "disattenuated_lo": 0.11109821228497056,
+        "disattenuated_hi": 0.31635972505563326,
+        "ceiling": 0.8261454743830965,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.05851038771797074,
+        "sd_single": 0.10021951371932915
+      }
+    ]
+  },
+  "direct_prediction_control_mean": {
+    "baseline": "measured_control_mean",
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "raw",
+      "centered"
+    ],
+    "fold_mean_removed_before_scoring": true,
+    "residual_note": "not interpretable for this arm: the model's output is not on the measured log2 fold-change scale, so no single profile can be subtracted from both sides",
+    "residual_weighted": {
+      "cell_line": "hepg2",
+      "arm_label": "direct_prediction/esm2_frozen",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": -0.2354761087123858,
+      "attenuated_lo": -0.34076319830280144,
+      "attenuated_hi": 0.5793994386472365,
+      "disattenuated": -0.26954038572872296,
+      "disattenuated_lo": -0.3900584412360778,
+      "disattenuated_hi": 0.6632161073068014,
+      "ceiling": 0.7632134402640142,
+      "n_scored": 243,
+      "n_groups": 54,
+      "se": 0.3398392537015272,
+      "sd_single": 0.3938809546405687
+    },
+    "all_cells": [
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": -0.2354761087123858,
+        "attenuated_lo": -0.34076319830280144,
+        "attenuated_hi": 0.5793994386472365,
+        "disattenuated": -0.26954038572872296,
+        "disattenuated_lo": -0.3900584412360778,
+        "disattenuated_hi": 0.6632161073068014,
+        "ceiling": 0.7632134402640142,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.3398392537015272,
+        "sd_single": 0.3938809546405687
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": -0.23174499888927805,
+        "attenuated_lo": -0.340431969789161,
+        "attenuated_hi": 0.5516050314805044,
+        "disattenuated": -0.2707626054971857,
+        "disattenuated_lo": -0.3977485925324842,
+        "disattenuated_hi": 0.6444756790647126,
+        "ceiling": 0.7325602886897388,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.3262687744391179,
+        "sd_single": 0.3795325376582775
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": 0.028300560456775734,
+        "attenuated_lo": 0.01212986459328938,
+        "attenuated_hi": 0.12948518967986886,
+        "disattenuated": 0.036297531778224104,
+        "disattenuated_lo": 0.015557435557254615,
+        "disattenuated_hi": 0.16607419469281717,
+        "ceiling": 0.6079052362596387,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.029276845185905866,
+        "sd_single": 0.1636717825760491
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": 0.034894789559989974,
+        "attenuated_lo": 0.009619498563687082,
+        "attenuated_hi": 0.11330121013378508,
+        "disattenuated": 0.04625411228701512,
+        "disattenuated_lo": 0.012750939963246787,
+        "disattenuated_hi": 0.15018422411670496,
+        "ceiling": 0.5691417782016369,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.024432678282293643,
+        "sd_single": 0.15145367609336285
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": 0.49915480446950433,
+        "attenuated_lo": 0.23129386472755065,
+        "attenuated_hi": 0.5155640517413393,
+        "disattenuated": 0.5412626267645667,
+        "disattenuated_lo": 0.2508054087749663,
+        "disattenuated_hi": 0.5590561293053709,
+        "ceiling": 0.8504610525358257,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.08397205948586772,
+        "sd_single": 0.15122063852032014
+      },
+      {
+        "cell_line": "hepg2",
+        "arm_label": "direct_prediction/esm2_frozen",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": 0.4941138981639325,
+        "attenuated_lo": 0.2091823328188215,
+        "attenuated_hi": 0.5145755170159793,
+        "disattenuated": 0.5436242300696994,
+        "disattenuated_lo": 0.23014245307685646,
+        "disattenuated_hi": 0.5661361080714251,
+        "ceiling": 0.8261454743830965,
+        "n_scored": 243,
+        "n_groups": 54,
+        "se": 0.09024775151453857,
+        "sd_single": 0.15047566723043648
+      }
+    ]
+  }
+}

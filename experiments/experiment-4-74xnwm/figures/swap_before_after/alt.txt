@@ -1,0 +1,1 @@
+Two panels, HepG2 and Jurkat. For each of five training arms, the score of the response features read off the model before and after fine-tuning, against the shuffled-label band and the co-expression and gene-table reference lines.

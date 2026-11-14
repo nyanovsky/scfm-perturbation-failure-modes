@@ -1,0 +1,18 @@
+{
+  "records": [
+    {
+      "cell_line": "hepg2",
+      "spearman": 0.25032888440358547,
+      "pearson": 0.23392813725480868,
+      "n_perturbations": 524
+    },
+    {
+      "cell_line": "jurkat",
+      "spearman": 0.23940019506742435,
+      "pearson": 0.20476862320627323,
+      "n_perturbations": 705
+    }
+  ],
+  "metric": "residual_weighted",
+  "cell": "full scope, grouped split, MLP translator"
+}

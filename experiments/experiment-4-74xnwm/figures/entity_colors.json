@@ -1,0 +1,12 @@
+{
+  "_note": "Worker-owned entity colours for run 4, continuing run 3's mapping unchanged (experiments/experiment-3-yga5ws/figures/entity_colors.json). The entities here are the thing the gene table is made of, not the training arm: every arm built on scGPT's own table is scGPT, every arm built on the ESM2 protein table is ESM2, the random-table arm and the shuffled-label draws are the null, and co-expression keeps its colour from runs 2 and 3. Trainable and frozen versions of one entity are separated by marker symbol and opacity, never by colour, so a reader comparing panels across runs 2, 3 and 4 sees the same thing in the same colour.",
+  "scgpt": "#C4650D",
+  "coexp": "#4E728A",
+  "null": "#2E6E4E",
+  "mean_only": "#988453",
+  "scprint": "#B9605B",
+  "transcriptformer": "#7495AB",
+  "aido_cell": "#84713A",
+  "node": "#31362E",
+  "esm2": "#5A5FA3"
+}

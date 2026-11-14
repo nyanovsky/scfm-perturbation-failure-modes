@@ -1,0 +1,510 @@
+{
+  "cell_line": "jurkat",
+  "arm": "own_trainable",
+  "n_perturbations_total": 705,
+  "n_scored": 282,
+  "n_groups_total": 452,
+  "n_groups_scored": 137,
+  "eval_folds": [
+    0,
+    1
+  ],
+  "fold_sizes": [
+    141,
+    141,
+    141,
+    141,
+    141
+  ],
+  "ceilings_restricted": {
+    "residual_weighted": 0.5664885966718883,
+    "residual_unweighted": 0.5000531465142553,
+    "raw_weighted": 0.612902468019627,
+    "raw_unweighted": 0.5510880327814518,
+    "centered_weighted": 0.44313273028914574,
+    "centered_unweighted": 0.36795946387179995
+  },
+  "ceilings_all_folds": {
+    "residual_weighted": 0.5071819396306455,
+    "residual_unweighted": 0.4428814204192859,
+    "raw_weighted": 0.5486063004849999,
+    "raw_unweighted": 0.4884926441851486,
+    "centered_weighted": 0.4437062127878906,
+    "centered_unweighted": 0.3738215662153465
+  },
+  "n_runs": 43,
+  "bundle_inventory": {
+    "cell_line": "jurkat",
+    "n_perturbations": 705,
+    "n_readout": 3247,
+    "embeddings": {
+      "ft_own_trainable": 512,
+      "ftq_own_trainable": 512,
+      "pre_own_trainable": 512,
+      "preq_own_trainable": 512,
+      "scgpt": 512
+    },
+    "features": {
+      "ft_own_trainable__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "ftq_own_trainable__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "pre_own_trainable__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "preq_own_trainable__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0
+        ],
+        "forms": [
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      },
+      "scgpt__mean_control": {
+        "n_perturbed": 705,
+        "values": [
+          0.0,
+          1.0,
+          4.0,
+          16.0,
+          64.0
+        ],
+        "forms": [
+          "gdt",
+          "vvp",
+          "zero_out"
+        ],
+        "gdt_rank_only": false
+      }
+    },
+    "coexpr_keys": [
+      "mi_bits",
+      "mi_bits_check",
+      "partial",
+      "partial_check",
+      "pearson",
+      "pearson_check",
+      "spearman",
+      "spearman_check"
+    ],
+    "node_features": [
+      "log1p_mean_cp10k",
+      "mean_log1p",
+      "sd_log1p",
+      "detection_rate",
+      "coexpr_degree_fraction",
+      "mean_abs_corr"
+    ],
+    "strata": [
+      "S3",
+      "S4_highest"
+    ],
+    "perturbed_genes_in_readout": 705,
+    "reference": {
+      "cell_line": "jurkat",
+      "n_perturbations": 705,
+      "n_readout_genes": 3247,
+      "reliability": {
+        "shrinkage_lambda": 0.977456157866983,
+        "median_weight": 0.45796316959654715,
+        "mean_weight": 0.4738740019103238,
+        "fraction_weight_below_0.1": 0.004003695719125347,
+        "fraction_weight_above_0.5": 0.42500769941484445,
+        "var_between_z": 0.061763548602478895,
+        "var_sampling_z": 0.0014245014245014246
+      },
+      "residual_ceiling": {
+        "median_half_split": 0.33456742618440344,
+        "median_spearman_brown": 0.5013870706269954,
+        "q25": 0.3283869021934749,
+        "q75": 0.6693574459125389,
+        "sd": 0.21055308230222256
+      },
+      "raw_effect_ceiling": {
+        "median_half_split": 0.38363781412965164,
+        "median_spearman_brown": 0.5545350238508348
+      },
+      "shared_response": {
+        "mean_effect_l2": 6.8818864822387695,
+        "median_residual_fraction_of_variance": 0.8693990127327664
+      },
+      "power": {
+        "n_held_out_perturbations": 705,
+        "sd_per_perturbation_used": 0.21055308230222256,
+        "alpha": 0.05,
+        "target_power": 0.8,
+        "min_resolvable_difference": {
+          "paired_rho_0.5": 0.022216256567043895,
+          "paired_rho_0.8": 0.014050794366906389
+        },
+        "note": "sd is the spread of the per-perturbation residual ceiling, used as the pre-run estimate of per-perturbation heterogeneity; the achieved resolution is recomputed from the actual paired differences"
+      }
+    }
+  },
+  "installed_blocks": [
+    {
+      "model_key": "pre_own_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "preq_own_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0
+      ]
+    },
+    {
+      "model_key": "ft_own_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "gdt",
+        "vvp",
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0,
+        1.0,
+        4.0,
+        16.0,
+        64.0
+      ]
+    },
+    {
+      "model_key": "ftq_own_trainable",
+      "anchor": "mean_control",
+      "forms": [
+        "zero_out"
+      ],
+      "embedding_dim": 512,
+      "n_perturbed": 705,
+      "values": [
+        0.0
+      ]
+    }
+  ],
+  "heldout_folds": [
+    0,
+    1
+  ],
+  "force_perturbed_gene_in_sequence": true,
+  "direct_prediction": {
+    "baseline": "unflagged_model_output",
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "raw",
+      "centered"
+    ],
+    "fold_mean_removed_before_scoring": true,
+    "residual_note": "not interpretable for this arm: the model's output is not on the measured log2 fold-change scale, so no single profile can be subtracted from both sides",
+    "residual_weighted": {
+      "cell_line": "jurkat",
+      "arm_label": "direct_prediction/own_trainable",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": 0.05163021659976938,
+      "attenuated_lo": 0.017851015622509542,
+      "attenuated_hi": 0.13750319699000815,
+      "disattenuated": 0.06859751147452318,
+      "disattenuated_lo": 0.023717414522767287,
+      "disattenuated_hi": 0.18269102387123898,
+      "ceiling": 0.5664885966718883,
+      "n_scored": 282,
+      "n_groups": 137,
+      "se": 0.028591599565811286,
+      "sd_single": 0.16742377414473972
+    },
+    "all_cells": [
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": 0.05163021659976938,
+        "attenuated_lo": 0.017851015622509542,
+        "attenuated_hi": 0.13750319699000815,
+        "disattenuated": 0.06859751147452318,
+        "disattenuated_lo": 0.023717414522767287,
+        "disattenuated_hi": 0.18269102387123898,
+        "ceiling": 0.5664885966718883,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.028591599565811286,
+        "sd_single": 0.16742377414473972
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": 0.05338705277522289,
+        "attenuated_lo": 0.014553203024462606,
+        "attenuated_hi": 0.12755882348629508,
+        "disattenuated": 0.07549668181098879,
+        "disattenuated_lo": 0.02058024335403081,
+        "disattenuated_hi": 0.18038583155124724,
+        "ceiling": 0.5000531465142553,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.027797038731828025,
+        "sd_single": 0.16492327865838421
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": 0.01264546956962061,
+        "attenuated_lo": -0.0035215823470198964,
+        "attenuated_hi": 0.025456239507648904,
+        "disattenuated": 0.018996257435637147,
+        "disattenuated_lo": -0.005290185902269524,
+        "disattenuated_hi": 0.038240832131079476,
+        "ceiling": 0.44313273028914574,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.007229984666799456,
+        "sd_single": 0.10736396207491476
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": 0.012733685641753804,
+        "attenuated_lo": 9.316647839752241e-05,
+        "attenuated_hi": 0.019038607539730436,
+        "disattenuated": 0.02099201535989203,
+        "disattenuated_lo": 0.00015358885090856338,
+        "disattenuated_hi": 0.03138594379890257,
+        "ceiling": 0.36795946387179995,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.004274234184645439,
+        "sd_single": 0.07583042579627233
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": 0.0015284304389287552,
+        "attenuated_lo": -0.07978473558306103,
+        "attenuated_hi": 0.02888750535478166,
+        "disattenuated": 0.0019523154585508913,
+        "disattenuated_lo": -0.1019117184975574,
+        "disattenuated_hi": 0.03689897938871181,
+        "ceiling": 0.612902468019627,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.03125509517930946,
+        "sd_single": 0.0868168225458898
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": -0.027427322320337483,
+        "attenuated_lo": -0.06333517675330917,
+        "attenuated_hi": -0.012594742873851535,
+        "disattenuated": -0.03694646741173371,
+        "disattenuated_lo": -0.0853167880043982,
+        "disattenuated_hi": -0.016965974720867152,
+        "ceiling": 0.5510880327814518,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.01175125949480144,
+        "sd_single": 0.05131076349923743
+      }
+    ]
+  },
+  "direct_prediction_control_mean": {
+    "baseline": "measured_control_mean",
+    "note": "no translator: the model's own predicted response against the measured one",
+    "meaningful_cells": [
+      "raw",
+      "centered"
+    ],
+    "fold_mean_removed_before_scoring": true,
+    "residual_note": "not interpretable for this arm: the model's output is not on the measured log2 fold-change scale, so no single profile can be subtracted from both sides",
+    "residual_weighted": {
+      "cell_line": "jurkat",
+      "arm_label": "direct_prediction/own_trainable",
+      "target": "residual",
+      "weighting": "weighted",
+      "attenuated": 0.008081415831087756,
+      "attenuated_lo": -0.04172093550732776,
+      "attenuated_hi": 0.14373885845035003,
+      "disattenuated": 0.010737220405267714,
+      "disattenuated_lo": -0.055431732436399296,
+      "disattenuated_hi": 0.19097591761656088,
+      "ceiling": 0.5664885966718883,
+      "n_scored": 282,
+      "n_groups": 137,
+      "se": 0.049499446417079956,
+      "sd_single": 0.17685780222972425
+    },
+    "all_cells": [
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "residual",
+        "weighting": "weighted",
+        "attenuated": 0.008081415831087756,
+        "attenuated_lo": -0.04172093550732776,
+        "attenuated_hi": 0.14373885845035003,
+        "disattenuated": 0.010737220405267714,
+        "disattenuated_lo": -0.055431732436399296,
+        "disattenuated_hi": 0.19097591761656088,
+        "ceiling": 0.5664885966718883,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.049499446417079956,
+        "sd_single": 0.17685780222972425
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "residual",
+        "weighting": "unweighted",
+        "attenuated": 0.025069760514312263,
+        "attenuated_lo": -0.0195074665672794,
+        "attenuated_hi": 0.1399664416073203,
+        "disattenuated": 0.03545211121871714,
+        "disattenuated_lo": -0.02758625771250483,
+        "disattenuated_hi": 0.19793192088603895,
+        "ceiling": 0.5000531465142553,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.04064722928141857,
+        "sd_single": 0.16705861403055547
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "centered",
+        "weighting": "weighted",
+        "attenuated": 0.012645455508457871,
+        "attenuated_lo": -0.003521565782080342,
+        "attenuated_hi": 0.025456233836250952,
+        "disattenuated": 0.018996236312699342,
+        "disattenuated_lo": -0.005290161018112044,
+        "disattenuated_hi": 0.03824082361140095,
+        "ceiling": 0.44313273028914574,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.00722998338979107,
+        "sd_single": 0.10736396243892177
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "centered",
+        "weighting": "unweighted",
+        "attenuated": 0.012733700554607602,
+        "attenuated_lo": 9.31649327920211e-05,
+        "attenuated_hi": 0.01903855621371411,
+        "disattenuated": 0.02099203994435758,
+        "disattenuated_lo": 0.00015358630291300763,
+        "disattenuated_hi": 0.03138585918580991,
+        "ceiling": 0.36795946387179995,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.004274235303355968,
+        "sd_single": 0.07583042599729722
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "raw",
+        "weighting": "weighted",
+        "attenuated": 0.2698687127184629,
+        "attenuated_lo": 0.24714342903895245,
+        "attenuated_hi": 0.29040204244860185,
+        "disattenuated": 0.3447123573309335,
+        "disattenuated_lo": 0.3156845903502142,
+        "disattenuated_hi": 0.3709402680206535,
+        "ceiling": 0.612902468019627,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.01424666289864834,
+        "sd_single": 0.11236651283225096
+      },
+      {
+        "cell_line": "jurkat",
+        "arm_label": "direct_prediction/own_trainable",
+        "target": "raw",
+        "weighting": "unweighted",
+        "attenuated": 0.264557306439969,
+        "attenuated_lo": 0.23313398824085235,
+        "attenuated_hi": 0.28693436823227936,
+        "disattenuated": 0.35637667384222044,
+        "disattenuated_lo": 0.31404732837230814,
+        "disattenuated_hi": 0.3865200970544421,
+        "ceiling": 0.5510880327814518,
+        "n_scored": 282,
+        "n_groups": 137,
+        "se": 0.01501102557782009,
+        "sd_single": 0.10912961672664605
+      }
+    ]
+  }
+}

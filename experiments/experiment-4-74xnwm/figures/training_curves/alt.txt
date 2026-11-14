@@ -1,0 +1,1 @@
+Per epoch for the ten fine-tuning runs: the recipe's own checkpoint-selection score, the masked MSE on the same held-out cells, and the agreement between the predicted and the measured perturbation response, which the recipe records but does not select on. A star marks the epoch each rule keeps.

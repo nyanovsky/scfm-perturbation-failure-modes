@@ -1,0 +1,34 @@
+{
+  "what": "the first fine-tuning run, jurkat / own_trainable, superseded",
+  "why_kept": "the evidence that the checkpoint selection rule was wrong: the quantity it selected on falls monotonically while the training loss falls, so it picked epoch 1 and early-stopped at 11",
+  "recipe": "scGPT Tutorial_Perturbation, Adam 1e-4, batch 64, StepLR 0.9, clip 1.0, amp, 15 epochs, early stop 10",
+  "selection_rule_used": "mean per-perturbation Pearson between the model's own flag-on-minus-flag-off response and the measured response over 41 validation perturbations",
+  "selection_rule_correct": "lowest masked-MSE on held-out validation cells (what the tutorial selects on)",
+  "selected_epoch": 1,
+  "epochs_run": 11,
+  "seconds_per_epoch": 113.8,
+  "history": [
+    {"epoch": 1, "train_loss": 0.3016879298492028, "val_pearson": -0.022380883013840166},
+    {"epoch": 2, "train_loss": 0.288210954087669, "val_pearson": -0.03260342012948117},
+    {"epoch": 3, "train_loss": 0.2877074021037079, "val_pearson": -0.06092440643182979},
+    {"epoch": 4, "train_loss": 0.28672753490168035, "val_pearson": -0.1380834281553223},
+    {"epoch": 5, "train_loss": 0.28507704417603263, "val_pearson": -0.17291471890028803},
+    {"epoch": 6, "train_loss": 0.2844043164326742, "val_pearson": -0.16857786585529558},
+    {"epoch": 7, "train_loss": 0.2839525319615893, "val_pearson": -0.15179979254059778},
+    {"epoch": 8, "train_loss": 0.28342596631267436, "val_pearson": -0.17609224140151994},
+    {"epoch": 9, "train_loss": 0.28290281638543024, "val_pearson": -0.15551003363555513},
+    {"epoch": 10, "train_loss": 0.28290038218287294, "val_pearson": -0.16385217537148522},
+    {"epoch": 11, "train_loss": 0.28279905872114863, "val_pearson": -0.15502029833688807}
+  ],
+  "forward_pass_sample": {
+    "batch_shape": [64, 1536],
+    "gene_set_size": 3247,
+    "n_rows_with_exactly_one_flag": 64,
+    "n_rows_with_no_flag": 0,
+    "flag_on_the_perturbed_gene_in_every_sampled_row": true,
+    "input": "a randomly drawn non-targeting control cell, log1p CP10K over the sampled genes",
+    "target": "the perturbed cell's own expression, log1p CP10K over the same genes",
+    "input_value_mean": 0.7964811325073242,
+    "target_value_mean": 0.7943045496940613
+  }
+}

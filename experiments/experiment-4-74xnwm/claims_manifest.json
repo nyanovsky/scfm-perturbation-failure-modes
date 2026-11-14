@@ -1,0 +1,1066 @@
+{
+  "claims": [
+    {
+      "claim": "largest shuffled-label draw in HepG2 on the verdict cell",
+      "value": 0.055049,
+      "source": "results/summary/null_band.parquet",
+      "key": "cell_line=hepg2, target=residual, weighting=weighted, translator=mlp, column=null_max, over=all base arms"
+    },
+    {
+      "claim": "lowest shuffled-label draw of the perturbation-flag query in HepG2, pooled over the arms scored on the band's folds",
+      "value": -0.127758,
+      "source": "results/summary/null_check.parquet",
+      "key": "cell_line=hepg2, family=pert_flag, column=draw_min, agg=min"
+    },
+    {
+      "claim": "highest shuffled-label draw of the perturbation-flag query in HepG2, pooled over the arms scored on the band's folds",
+      "value": 0.107856,
+      "source": "results/summary/null_check.parquet",
+      "key": "cell_line=hepg2, family=pert_flag, column=draw_max, agg=max"
+    },
+    {
+      "claim": "coexp scored on HepG2's held-out folds, verdict cell",
+      "value": 0.007216,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=coexp"
+    },
+    {
+      "claim": "scgpt_emb scored on HepG2's held-out folds, verdict cell",
+      "value": 0.227871,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=scgpt_emb"
+    },
+    {
+      "claim": "scgpt_resp scored on HepG2's held-out folds, verdict cell",
+      "value": 0.017507,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=scgpt_resp"
+    },
+    {
+      "claim": "null_randpair scored on HepG2's held-out folds, verdict cell",
+      "value": -0.001151,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=null_randpair"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, response before, verdict cell",
+      "value": 0.026516,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=pre_own_trainable_resp"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, response after, verdict cell",
+      "value": 0.012132,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_own_trainable_resp"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, response after own query, verdict cell",
+      "value": 0.049769,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ftq_own_trainable_resp"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, gene table before, verdict cell",
+      "value": 0.227871,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=pre_own_trainable_emb"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, gene table after, verdict cell",
+      "value": 0.19996,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_own_trainable_emb"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.545115,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
+      "value": -0.033805,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_trainable, target=centered, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.081793,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_trainable, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.033805,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_trainable, target=centered, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, lowest masked MSE on held-out validation cells",
+      "value": 0.216901,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=own_trainable"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, validation response agreement (ctrlmean) at the selected epoch",
+      "value": 0.343075,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=own_trainable, column=selected_delta_ctrlmean"
+    },
+    {
+      "claim": "scGPT table, trainable in HepG2, validation response agreement (ctrlmean_centered) at the selected epoch",
+      "value": 0.029505,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=own_trainable, column=selected_delta_ctrlmean_centered"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, response before, verdict cell",
+      "value": 0.034809,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=pre_own_frozen_resp"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, response after, verdict cell",
+      "value": 0.009627,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_own_frozen_resp"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, response after own query, verdict cell",
+      "value": 0.047426,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ftq_own_frozen_resp"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, gene table before, verdict cell",
+      "value": 0.227871,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=pre_own_frozen_emb"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, gene table after, verdict cell",
+      "value": 0.227871,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_own_frozen_emb"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.565185,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
+      "value": 0.008059,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.04528,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.00806,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/own_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, lowest masked MSE on held-out validation cells",
+      "value": 0.216924,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=own_frozen"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, validation response agreement (ctrlmean) at the selected epoch",
+      "value": 0.344632,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=own_frozen, column=selected_delta_ctrlmean"
+    },
+    {
+      "claim": "scGPT table, frozen in HepG2, validation response agreement (ctrlmean_centered) at the selected epoch",
+      "value": -0.011959,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=own_frozen, column=selected_delta_ctrlmean_centered"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, response before, verdict cell",
+      "value": 0.044727,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=pre_esm2_trainable_resp"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, response after, verdict cell",
+      "value": 0.023424,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_esm2_trainable_resp"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, response after own query, verdict cell",
+      "value": 0.012807,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ftq_esm2_trainable_resp"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, gene table before, verdict cell",
+      "value": 0.06503,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=pre_esm2_trainable_emb"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, gene table after, verdict cell",
+      "value": 0.160255,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_esm2_trainable_emb"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.546503,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
+      "value": 0.109502,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_trainable, target=centered, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.213297,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_trainable, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.109502,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_trainable, target=centered, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, lowest masked MSE on held-out validation cells",
+      "value": 0.216042,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=esm2_trainable"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, validation response agreement (ctrlmean) at the selected epoch",
+      "value": 0.360146,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=esm2_trainable, column=selected_delta_ctrlmean"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in HepG2, validation response agreement (ctrlmean_centered) at the selected epoch",
+      "value": 0.065877,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=esm2_trainable, column=selected_delta_ctrlmean_centered"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, response before, verdict cell",
+      "value": 0.037879,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=pre_esm2_frozen_resp"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, response after, verdict cell",
+      "value": 0.005289,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_esm2_frozen_resp"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, response after own query, verdict cell",
+      "value": 0.077533,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ftq_esm2_frozen_resp"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, gene table before, verdict cell",
+      "value": 0.031323,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=pre_esm2_frozen_emb"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, gene table after, verdict cell",
+      "value": 0.098714,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_esm2_frozen_emb"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.541263,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
+      "value": 0.036298,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.300913,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.036298,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/esm2_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, lowest masked MSE on held-out validation cells",
+      "value": 0.217347,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=esm2_frozen"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, validation response agreement (ctrlmean) at the selected epoch",
+      "value": 0.329965,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=esm2_frozen, column=selected_delta_ctrlmean"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in HepG2, validation response agreement (ctrlmean_centered) at the selected epoch",
+      "value": 0.046662,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=esm2_frozen, column=selected_delta_ctrlmean_centered"
+    },
+    {
+      "claim": "random table, frozen in HepG2, response before, verdict cell",
+      "value": 0.003243,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=pre_rand_frozen_resp"
+    },
+    {
+      "claim": "random table, frozen in HepG2, response after, verdict cell",
+      "value": 0.015599,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_rand_frozen_resp"
+    },
+    {
+      "claim": "random table, frozen in HepG2, response after own query, verdict cell",
+      "value": -0.040019,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ftq_rand_frozen_resp"
+    },
+    {
+      "claim": "random table, frozen in HepG2, gene table before, verdict cell",
+      "value": 0.031241,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=pre_rand_frozen_emb"
+    },
+    {
+      "claim": "random table, frozen in HepG2, gene table after, verdict cell",
+      "value": 0.005183,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_rand_frozen_emb"
+    },
+    {
+      "claim": "random table, frozen in HepG2, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.578821,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/rand_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "random table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
+      "value": 0.032797,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/rand_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "random table, frozen in HepG2, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.128296,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/rand_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "random table, frozen in HepG2, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.032797,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=hepg2, arm_label=direct_prediction/rand_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "random table, frozen in HepG2, lowest masked MSE on held-out validation cells",
+      "value": 0.216358,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=rand_frozen"
+    },
+    {
+      "claim": "random table, frozen in HepG2, validation response agreement (ctrlmean) at the selected epoch",
+      "value": 0.357078,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=rand_frozen, column=selected_delta_ctrlmean"
+    },
+    {
+      "claim": "random table, frozen in HepG2, validation response agreement (ctrlmean_centered) at the selected epoch",
+      "value": 0.031718,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=hepg2, arm=rand_frozen, column=selected_delta_ctrlmean_centered"
+    },
+    {
+      "claim": "HepG2, response features, after fine-tuning, scored over the whole screen, verdict cell",
+      "value": 0.023249,
+      "source": "results/summary/crossfit_hepg2__own_trainable.parquet",
+      "key": "cell_line=hepg2, arm=ft_own_trainable_resp, target=residual, weighting=weighted"
+    },
+    {
+      "claim": "HepG2, response features, before fine-tuning, scored over the whole screen, verdict cell",
+      "value": 0.020394,
+      "source": "results/summary/crossfit_hepg2__own_trainable.parquet",
+      "key": "cell_line=hepg2, arm=scgpt_resp, target=residual, weighting=weighted"
+    },
+    {
+      "claim": "HepG2, co-expression, scored over the whole screen, verdict cell",
+      "value": 0.051866,
+      "source": "results/summary/crossfit_hepg2__own_trainable.parquet",
+      "key": "cell_line=hepg2, arm=coexp, target=residual, weighting=weighted"
+    },
+    {
+      "claim": "HepG2, gene table, before fine-tuning, scored over the whole screen, verdict cell",
+      "value": 0.28011,
+      "source": "results/summary/crossfit_hepg2__own_trainable.parquet",
+      "key": "cell_line=hepg2, arm=scgpt_emb, target=residual, weighting=weighted"
+    },
+    {
+      "claim": "HepG2, node covariates, scored over the whole screen, verdict cell",
+      "value": -0.003095,
+      "source": "results/summary/crossfit_hepg2__own_trainable.parquet",
+      "key": "cell_line=hepg2, arm=node, target=residual, weighting=weighted"
+    },
+    {
+      "claim": "HepG2, fraction of the primary arm's predicted profile variance that survives subtracting the mean prediction",
+      "value": 0.120229,
+      "source": "results/summary/prediction_spread.parquet",
+      "key": "cell_line=hepg2, arm=own_trainable, column=vs_measured_control_mean__median_residual_fraction_of_variance"
+    },
+    {
+      "claim": "largest shuffled-label draw in Jurkat on the verdict cell",
+      "value": 0.055451,
+      "source": "results/summary/null_band.parquet",
+      "key": "cell_line=jurkat, target=residual, weighting=weighted, translator=mlp, column=null_max, over=all base arms"
+    },
+    {
+      "claim": "lowest shuffled-label draw of the perturbation-flag query in Jurkat, pooled over the arms scored on the band's folds",
+      "value": -0.052098,
+      "source": "results/summary/null_check.parquet",
+      "key": "cell_line=jurkat, family=pert_flag, column=draw_min, agg=min"
+    },
+    {
+      "claim": "highest shuffled-label draw of the perturbation-flag query in Jurkat, pooled over the arms scored on the band's folds",
+      "value": 0.030205,
+      "source": "results/summary/null_check.parquet",
+      "key": "cell_line=jurkat, family=pert_flag, column=draw_max, agg=max"
+    },
+    {
+      "claim": "coexp scored on Jurkat's held-out folds, verdict cell",
+      "value": 0.025862,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=coexp"
+    },
+    {
+      "claim": "scgpt_emb scored on Jurkat's held-out folds, verdict cell",
+      "value": 0.231806,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=scgpt_emb"
+    },
+    {
+      "claim": "scgpt_resp scored on Jurkat's held-out folds, verdict cell",
+      "value": 0.01433,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=scgpt_resp"
+    },
+    {
+      "claim": "null_randpair scored on Jurkat's held-out folds, verdict cell",
+      "value": -0.000406,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=null_randpair"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, response before, verdict cell",
+      "value": 0.043639,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=pre_own_trainable_resp"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, response after, verdict cell",
+      "value": 0.022639,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_own_trainable_resp"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, response after own query, verdict cell",
+      "value": 0.056482,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ftq_own_trainable_resp"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, gene table before, verdict cell",
+      "value": 0.231806,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=pre_own_trainable_emb"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, gene table after, verdict cell",
+      "value": 0.21808,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_own_trainable_emb"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.344712,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
+      "value": 0.018996,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_trainable, target=centered, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.001952,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_trainable, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.018996,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_trainable, target=centered, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, lowest masked MSE on held-out validation cells",
+      "value": 0.29333,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=own_trainable"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, validation response agreement (ctrlmean) at the selected epoch",
+      "value": 0.26373,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=own_trainable, column=selected_delta_ctrlmean"
+    },
+    {
+      "claim": "scGPT table, trainable in Jurkat, validation response agreement (ctrlmean_centered) at the selected epoch",
+      "value": 0.011517,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=own_trainable, column=selected_delta_ctrlmean_centered"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, response before, verdict cell",
+      "value": 0.040736,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=pre_own_frozen_resp"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, response after, verdict cell",
+      "value": 0.02515,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_own_frozen_resp"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, response after own query, verdict cell",
+      "value": 0.002779,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ftq_own_frozen_resp"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, gene table before, verdict cell",
+      "value": 0.231806,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=pre_own_frozen_emb"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, gene table after, verdict cell",
+      "value": 0.231806,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_own_frozen_emb"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.36197,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
+      "value": 0.000904,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.010954,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.000904,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/own_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, lowest masked MSE on held-out validation cells",
+      "value": 0.293383,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=own_frozen"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, validation response agreement (ctrlmean) at the selected epoch",
+      "value": 0.235485,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=own_frozen, column=selected_delta_ctrlmean"
+    },
+    {
+      "claim": "scGPT table, frozen in Jurkat, validation response agreement (ctrlmean_centered) at the selected epoch",
+      "value": 0.01931,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=own_frozen, column=selected_delta_ctrlmean_centered"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, response before, verdict cell",
+      "value": 0.028057,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=pre_esm2_trainable_resp"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, response after, verdict cell",
+      "value": 0.045629,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_esm2_trainable_resp"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, response after own query, verdict cell",
+      "value": -0.029735,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ftq_esm2_trainable_resp"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, gene table before, verdict cell",
+      "value": 0.254277,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=pre_esm2_trainable_emb"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, gene table after, verdict cell",
+      "value": 0.241068,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_esm2_trainable_emb"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.364861,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_trainable, target=raw, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
+      "value": 0.03815,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_trainable, target=centered, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.063087,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_trainable, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.03815,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_trainable, target=centered, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, lowest masked MSE on held-out validation cells",
+      "value": 0.292771,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=esm2_trainable"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, validation response agreement (ctrlmean) at the selected epoch",
+      "value": 0.213246,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=esm2_trainable, column=selected_delta_ctrlmean"
+    },
+    {
+      "claim": "ESM2-3B table, trainable in Jurkat, validation response agreement (ctrlmean_centered) at the selected epoch",
+      "value": 0.037429,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=esm2_trainable, column=selected_delta_ctrlmean_centered"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, response before, verdict cell",
+      "value": 0.048305,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=pre_esm2_frozen_resp"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, response after, verdict cell",
+      "value": 0.006555,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_esm2_frozen_resp"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, response after own query, verdict cell",
+      "value": 0.075084,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ftq_esm2_frozen_resp"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, gene table before, verdict cell",
+      "value": 0.241034,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=pre_esm2_frozen_emb"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, gene table after, verdict cell",
+      "value": 0.267066,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_esm2_frozen_emb"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.365581,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
+      "value": 0.016672,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.084778,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.016672,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/esm2_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, lowest masked MSE on held-out validation cells",
+      "value": 0.293329,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=esm2_frozen"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, validation response agreement (ctrlmean) at the selected epoch",
+      "value": 0.248135,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=esm2_frozen, column=selected_delta_ctrlmean"
+    },
+    {
+      "claim": "ESM2-3B table, frozen in Jurkat, validation response agreement (ctrlmean_centered) at the selected epoch",
+      "value": 0.012885,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=esm2_frozen, column=selected_delta_ctrlmean_centered"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, response before, verdict cell",
+      "value": 0.018471,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=pre_rand_frozen_resp"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, response after, verdict cell",
+      "value": 0.011827,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_rand_frozen_resp"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, response after own query, verdict cell",
+      "value": 0.029347,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ftq_rand_frozen_resp"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, gene table before, verdict cell",
+      "value": 0.001544,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=pre_rand_frozen_emb"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, gene table after, verdict cell",
+      "value": 0.046986,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_rand_frozen_emb"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, its own predicted response versus the measured effect, against the measured control profile, so the whole predicted profile",
+      "value": 0.343322,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/rand_frozen, target=raw, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the measured control profile, so the whole predicted profile",
+      "value": 0.00791,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/rand_frozen, target=centered, weighting=weighted, baseline=measured_control_mean"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, its own predicted response versus the measured effect, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": -0.179755,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/rand_frozen, target=raw, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, the same with the held-out fold's mean removed from both sides, against the model's own unflagged output, so only what the perturbation flag changes",
+      "value": 0.00791,
+      "source": "results/summary/direct.parquet",
+      "key": "cell_line=jurkat, arm_label=direct_prediction/rand_frozen, target=centered, weighting=weighted, baseline=unflagged_model_output"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, lowest masked MSE on held-out validation cells",
+      "value": 0.292965,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=rand_frozen"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, validation response agreement (ctrlmean) at the selected epoch",
+      "value": 0.268554,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=rand_frozen, column=selected_delta_ctrlmean"
+    },
+    {
+      "claim": "random table, frozen in Jurkat, validation response agreement (ctrlmean_centered) at the selected epoch",
+      "value": -0.009578,
+      "source": "results/summary/training_runs.parquet",
+      "key": "cell_line=jurkat, arm=rand_frozen, column=selected_delta_ctrlmean_centered"
+    },
+    {
+      "claim": "Jurkat, response features, after fine-tuning, scored over the whole screen, verdict cell",
+      "value": 0.022026,
+      "source": "results/summary/crossfit_jurkat__own_trainable.parquet",
+      "key": "cell_line=jurkat, arm=ft_own_trainable_resp, target=residual, weighting=weighted"
+    },
+    {
+      "claim": "Jurkat, response features, before fine-tuning, scored over the whole screen, verdict cell",
+      "value": 0.019651,
+      "source": "results/summary/crossfit_jurkat__own_trainable.parquet",
+      "key": "cell_line=jurkat, arm=scgpt_resp, target=residual, weighting=weighted"
+    },
+    {
+      "claim": "Jurkat, co-expression, scored over the whole screen, verdict cell",
+      "value": 0.045722,
+      "source": "results/summary/crossfit_jurkat__own_trainable.parquet",
+      "key": "cell_line=jurkat, arm=coexp, target=residual, weighting=weighted"
+    },
+    {
+      "claim": "Jurkat, gene table, before fine-tuning, scored over the whole screen, verdict cell",
+      "value": 0.168784,
+      "source": "results/summary/crossfit_jurkat__own_trainable.parquet",
+      "key": "cell_line=jurkat, arm=scgpt_emb, target=residual, weighting=weighted"
+    },
+    {
+      "claim": "Jurkat, node covariates, scored over the whole screen, verdict cell",
+      "value": 0.000436,
+      "source": "results/summary/crossfit_jurkat__own_trainable.parquet",
+      "key": "cell_line=jurkat, arm=node, target=residual, weighting=weighted"
+    },
+    {
+      "claim": "Jurkat, fraction of the primary arm's predicted profile variance that survives subtracting the mean prediction",
+      "value": 0.055233,
+      "source": "results/summary/prediction_spread.parquet",
+      "key": "cell_line=jurkat, arm=own_trainable, column=vs_measured_control_mean__median_residual_fraction_of_variance"
+    },
+    {
+      "claim": "highest response-feature score reached by any fine-tuned model, verdict cell",
+      "value": 0.045629,
+      "source": "results/summary/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, arm=ft_<arm>_resp, over=all arms and both cell lines"
+    },
+    {
+      "claim": "largest disagreement between two independent recomputations of the same reference arm, over the readings that withhold the same two folds (the two refits are excluded because they score different perturbations)",
+      "value": 0.0,
+      "source": "results/summary/reference_agreement.parquet",
+      "key": "column=spread, agg=max"
+    },
+    {
+      "claim": "widest own shuffled-label draw among the value_substitution arms, in absolute value",
+      "value": 0.028271,
+      "source": "results/summary/null_check.parquet",
+      "key": "family=value_substitution, columns=draw_min,draw_max, agg=max_abs"
+    },
+    {
+      "claim": "widest own shuffled-label draw among the pert_flag arms, in absolute value",
+      "value": 0.127758,
+      "source": "results/summary/null_check.parquet",
+      "key": "family=pert_flag, columns=draw_min,draw_max, agg=max_abs"
+    },
+    {
+      "claim": "lowest uncentred validation response agreement over every epoch of every run",
+      "value": 0.060104,
+      "source": "results/summary/training_epochs.parquet",
+      "key": "column=delta_ctrlmean, agg=min"
+    },
+    {
+      "claim": "largest absolute centred validation response agreement over every epoch of every run",
+      "value": 0.081306,
+      "source": "results/summary/training_epochs.parquet",
+      "key": "column=delta_ctrlmean_centered, agg=max_abs"
+    },
+    {
+      "claim": "largest difference between run 3's published whole-screen score and run 4's re-reading of the same arm, among the arms whose intervals each contain the other's estimate",
+      "value": 0.008241,
+      "source": "results/run3_comparison.parquet",
+      "key": "column=difference, agg=max_abs, filter=mutually contained arms"
+    },
+    {
+      "claim": "HepG2 response features, before fine-tuning, run 3's published whole-screen score",
+      "value": 0.026315,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=hepg2, arm=scgpt_resp, column=run3"
+    },
+    {
+      "claim": "HepG2 response features, before fine-tuning, run 4's re-reading of the same arm",
+      "value": 0.020394,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=hepg2, arm=scgpt_resp, column=run4"
+    },
+    {
+      "claim": "HepG2 co-expression, run 3's published whole-screen score",
+      "value": 0.048793,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=hepg2, arm=coexp, column=run3"
+    },
+    {
+      "claim": "HepG2 co-expression, run 4's re-reading of the same arm",
+      "value": 0.051866,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=hepg2, arm=coexp, column=run4"
+    },
+    {
+      "claim": "HepG2 gene table, before fine-tuning, run 3's published whole-screen score",
+      "value": 0.271869,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=hepg2, arm=scgpt_emb, column=run3"
+    },
+    {
+      "claim": "HepG2 gene table, before fine-tuning, run 4's re-reading of the same arm",
+      "value": 0.28011,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=hepg2, arm=scgpt_emb, column=run4"
+    },
+    {
+      "claim": "HepG2 node covariates, run 3's published whole-screen score",
+      "value": 0.031725,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=hepg2, arm=node, column=run3"
+    },
+    {
+      "claim": "HepG2 node covariates, run 4's re-reading of the same arm",
+      "value": -0.003095,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=hepg2, arm=node, column=run4"
+    },
+    {
+      "claim": "Jurkat response features, before fine-tuning, run 3's published whole-screen score",
+      "value": 0.018528,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=jurkat, arm=scgpt_resp, column=run3"
+    },
+    {
+      "claim": "Jurkat response features, before fine-tuning, run 4's re-reading of the same arm",
+      "value": 0.019651,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=jurkat, arm=scgpt_resp, column=run4"
+    },
+    {
+      "claim": "Jurkat co-expression, run 3's published whole-screen score",
+      "value": 0.044622,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=jurkat, arm=coexp, column=run3"
+    },
+    {
+      "claim": "Jurkat co-expression, run 4's re-reading of the same arm",
+      "value": 0.045722,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=jurkat, arm=coexp, column=run4"
+    },
+    {
+      "claim": "Jurkat gene table, before fine-tuning, run 3's published whole-screen score",
+      "value": 0.173276,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=jurkat, arm=scgpt_emb, column=run3"
+    },
+    {
+      "claim": "Jurkat gene table, before fine-tuning, run 4's re-reading of the same arm",
+      "value": 0.168784,
+      "source": "results/run3_comparison.parquet",
+      "key": "cell_line=jurkat, arm=scgpt_emb, column=run4"
+    },
+    {
+      "claim": "hepg2 own_trainable: response features in the earlier masked-MSE execution",
+      "value": 0.024593,
+      "source": "results/summary_masked_mse/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_own_trainable_resp"
+    },
+    {
+      "claim": "hepg2 own_frozen: response features in the earlier masked-MSE execution",
+      "value": 0.00314,
+      "source": "results/summary_masked_mse/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_own_frozen_resp"
+    },
+    {
+      "claim": "hepg2 esm2_trainable: response features in the earlier masked-MSE execution",
+      "value": 0.017834,
+      "source": "results/summary_masked_mse/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_esm2_trainable_resp"
+    },
+    {
+      "claim": "hepg2 esm2_frozen: response features in the earlier masked-MSE execution",
+      "value": 0.006375,
+      "source": "results/summary_masked_mse/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_esm2_frozen_resp"
+    },
+    {
+      "claim": "hepg2 rand_frozen: response features in the earlier masked-MSE execution",
+      "value": 0.010513,
+      "source": "results/summary_masked_mse/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=hepg2, arm=ft_rand_frozen_resp"
+    },
+    {
+      "claim": "jurkat own_trainable: response features in the earlier masked-MSE execution",
+      "value": 0.03126,
+      "source": "results/summary_masked_mse/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_own_trainable_resp"
+    },
+    {
+      "claim": "jurkat own_frozen: response features in the earlier masked-MSE execution",
+      "value": 0.017918,
+      "source": "results/summary_masked_mse/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_own_frozen_resp"
+    },
+    {
+      "claim": "jurkat esm2_trainable: response features in the earlier masked-MSE execution",
+      "value": 0.037785,
+      "source": "results/summary_masked_mse/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_esm2_trainable_resp"
+    },
+    {
+      "claim": "jurkat esm2_frozen: response features in the earlier masked-MSE execution",
+      "value": 0.016215,
+      "source": "results/summary_masked_mse/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_esm2_frozen_resp"
+    },
+    {
+      "claim": "jurkat rand_frozen: response features in the earlier masked-MSE execution",
+      "value": 0.014068,
+      "source": "results/summary_masked_mse/restricted.parquet",
+      "key": "target=residual, weighting=weighted, translator=mlp, is_shuffled=False, cell_line=jurkat, arm=ft_rand_frozen_resp"
+    }
+  ]
+}
