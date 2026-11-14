@@ -1,0 +1,770 @@
+[
+  {
+    "section": "basis:hepg2",
+    "check": "leakage",
+    "ok": true,
+    "detail": "0 of 64 basis genes are also scored perturbations; no scored perturbation may shape the basis it is scored through"
+  },
+  {
+    "section": "basis:hepg2",
+    "check": "pool_size",
+    "ok": true,
+    "detail": "365 screened perturbations whose target is a read-out gene but whose stratum excludes them from scoring; 64 drawn"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer1_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer1_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer1_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9619 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer4_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer4_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer4_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9397 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer7_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer7_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer7_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9333 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer10_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer10_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer10_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9388 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer12_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer12_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt",
+    "check": "layer12_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9242 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer1_shape",
+    "ok": true,
+    "detail": "W is (256, 64), expected (256, 64)"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer1_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer1_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9998 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer4_shape",
+    "ok": true,
+    "detail": "W is (256, 64), expected (256, 64)"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer4_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer4_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9964 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer7_shape",
+    "ok": true,
+    "detail": "W is (256, 64), expected (256, 64)"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer7_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer7_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9962 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer8_shape",
+    "ok": true,
+    "detail": "W is (256, 64), expected (256, 64)"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer8_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scprint",
+    "check": "layer8_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9851 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:transcriptformer",
+    "check": "layer1_present",
+    "ok": false,
+    "detail": "no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=1.npz; a missing file fails, it never skips"
+  },
+  {
+    "section": "basis:hepg2:transcriptformer",
+    "check": "layer4_present",
+    "ok": false,
+    "detail": "no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=4.npz; a missing file fails, it never skips"
+  },
+  {
+    "section": "basis:hepg2:transcriptformer",
+    "check": "layer7_present",
+    "ok": false,
+    "detail": "no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=7.npz; a missing file fails, it never skips"
+  },
+  {
+    "section": "basis:hepg2:transcriptformer",
+    "check": "layer10_present",
+    "ok": false,
+    "detail": "no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=10.npz; a missing file fails, it never skips"
+  },
+  {
+    "section": "basis:hepg2:transcriptformer",
+    "check": "layer12_present",
+    "ok": false,
+    "detail": "no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=12.npz; a missing file fails, it never skips"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer1_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer1_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer1_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9894 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer4_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer4_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer4_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9904 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer7_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer7_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer7_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9853 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer10_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer10_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer10_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9884 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer12_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer12_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft",
+    "check": "layer12_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9809 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer1_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer1_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer1_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9319 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer4_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer4_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer4_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9479 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer7_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer7_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer7_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9758 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer10_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer10_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer10_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9952 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer12_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer12_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:hepg2:scgpt_ft_frozen",
+    "check": "layer12_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9900 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat",
+    "check": "leakage",
+    "ok": true,
+    "detail": "0 of 64 basis genes are also scored perturbations; no scored perturbation may shape the basis it is scored through"
+  },
+  {
+    "section": "basis:jurkat",
+    "check": "pool_size",
+    "ok": true,
+    "detail": "512 screened perturbations whose target is a read-out gene but whose stratum excludes them from scoring; 64 drawn"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer1_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer1_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer1_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9215 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer4_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer4_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer4_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9377 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer7_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer7_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer7_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9260 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer10_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer10_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer10_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9473 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer12_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer12_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt",
+    "check": "layer12_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9470 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer1_shape",
+    "ok": true,
+    "detail": "W is (256, 64), expected (256, 64)"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer1_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer1_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9997 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer4_shape",
+    "ok": true,
+    "detail": "W is (256, 64), expected (256, 64)"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer4_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer4_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9910 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer7_shape",
+    "ok": true,
+    "detail": "W is (256, 64), expected (256, 64)"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer7_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer7_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9923 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer8_shape",
+    "ok": true,
+    "detail": "W is (256, 64), expected (256, 64)"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer8_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scprint",
+    "check": "layer8_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9740 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:transcriptformer",
+    "check": "layer1_present",
+    "ok": false,
+    "detail": "no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=1.npz; a missing file fails, it never skips"
+  },
+  {
+    "section": "basis:jurkat:transcriptformer",
+    "check": "layer4_present",
+    "ok": false,
+    "detail": "no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=4.npz; a missing file fails, it never skips"
+  },
+  {
+    "section": "basis:jurkat:transcriptformer",
+    "check": "layer7_present",
+    "ok": false,
+    "detail": "no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=7.npz; a missing file fails, it never skips"
+  },
+  {
+    "section": "basis:jurkat:transcriptformer",
+    "check": "layer10_present",
+    "ok": false,
+    "detail": "no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=10.npz; a missing file fails, it never skips"
+  },
+  {
+    "section": "basis:jurkat:transcriptformer",
+    "check": "layer12_present",
+    "ok": false,
+    "detail": "no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=12.npz; a missing file fails, it never skips"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer1_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer1_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer1_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9066 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer4_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer4_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer4_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9345 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer7_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer7_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer7_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9836 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer10_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer10_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer10_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9920 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer12_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer12_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft",
+    "check": "layer12_captured_energy",
+    "ok": true,
+    "detail": "the basis spans 0.9814 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer1_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer1_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer1_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.8737 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer4_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer4_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer4_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9052 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer7_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer7_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer7_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9235 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer10_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer10_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer10_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.9081 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer12_shape",
+    "ok": true,
+    "detail": "W is (512, 64), expected (512, 64)"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer12_draw_size",
+    "ok": true,
+    "detail": "the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart"
+  },
+  {
+    "section": "basis:jurkat:scgpt_ft_frozen",
+    "check": "layer12_captured_energy",
+    "ok": false,
+    "detail": "the basis spans 0.8590 of what the best k=64 basis captures of the SCORED perturbations' energy (target 0.95); below it the arm is downward-biased by that much and the limitation is read BEFORE any score"
+  }
+]

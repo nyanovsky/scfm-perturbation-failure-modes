@@ -1,0 +1,222 @@
+experiment: 6
+eid: null                      # authored off-platform, like run 5
+title: >
+  The hidden-state response arm: rebuild run 2's vvp/gdt from per-pair hidden-state
+  deltas instead of the decoder head's scalar, and score them through run 3's
+  translator and metric unchanged.
+date: 2026-09-02
+status: scored                 # stage 1 complete for 4 of 5 models, both lines;
+                               # TranscriptFormer deferred. README.md is the design record
+
+question: >
+  Runs 2-3 found the queried response adds nothing over a static gene table; run 5
+  found the perturbed gene's identity is recoverable from the other genes' hidden
+  states, which is a prerequisite only -- it never tested per-gene resolution. Run 6
+  asks whether the hidden state resolves the response per gene pair, in run 3's own
+  metric. A positive says the failure is the readout; a negative says the information
+  is identity-level only, which is a stronger negative than run 3's.
+
+scope: scored_arm               # unlike run 5, this feeds run 3's scoring rule
+
+inputs:
+  run1: experiment-1-30499z     # effect matrices, split-half vectors (local)
+  run2: experiment-2-nygwcv     # query adapters, scope tables, response blocks (fetch)
+  run3: experiment-3-yga5ws     # the translator, metric, splits, bundle format
+  run4: experiment-4-74xnwm     # the fine-tuned checkpoints and the fold restriction
+  run5: experiment-5-hidprb     # the hidden-state adapters and reassembly maps
+  imported_not_edited: true     # run 6 writes bundle files and calls run 3's runner
+
+data:
+  cell_lines: [hepg2, jurkat]
+  readout_genes: {hepg2: 2721, jurkat: 3247}
+  perturbations_in_scope: {hepg2: 524, jurkat: 705}
+  anchor: mean_control          # the anchor every scored arm in the paper was read at
+  screens: /biodata/nyanovsky/datasets/Nadig
+
+models:
+  scgpt: {d_model: 512, n_layers: 12, env: scgpt}
+  scprint: {d_model: 256, n_layers: 8, env: scprint_env}
+  transcriptformer: {d_model: 2048, n_layers: 12, env: transcriptformer_env}
+  scgpt_ft:
+    source: run 4 own_trainable, _pearson execution
+    checkpoints: /biodata/nyanovsky/models/checkpoints_pearson  # see its PROVENANCE.md
+    query: perturbation flag SET IN BOTH PASSES; only the dose moves
+    scored_on: folds (0, 1) only -- it trained on folds 2-4
+    env: verify run 5's scgpt env before assuming it covers run 4's torch pin
+  scgpt_ft_frozen:
+    source: run 4 own_frozen, _pearson execution -- local as of 2026-08-31
+    isolates: whether a gain is the readout or the table
+    same_treatment_as: scgpt_ft
+  aido_cell: excluded           # not local, scored at zero, ~40x scGPT per forward
+
+design:
+  slots: 10                     # 5 vvp + 5 gdt; run 2's zero_out dropped as a duplicate
+  input_rows_per_gene: 16        # run 2's, not run 5's 6 -- gdt needs lo/hi per dose
+  value_grid_cp10k: [0.0, 1.0, 4.0, 16.0, 64.0]
+  gdt: central_finite_difference # every model, incl. scPRINT where run 2 used exact JVP
+  reduction: pca_on_model_dimension_only
+  k_store: 64
+  k_primary: 64                 # re-registered from 16 on 2026-08-31, after the
+                                # captured-energy diagnostic and BEFORE any arm was
+                                # scored. Weaker than the original pre-registration:
+                                # the k = 16 rung must be quoted beside it and is NOT
+                                # YET RUN (jobs/stage1_k16.sh)
+  k_ladder: [1, 4, 16, 64]      # a column prefix of the stored block; free
+  basis:
+    n_genes: 64
+    pool: screened perturbations whose target is a read-out gene but whose stratum
+           excludes them from run 3's scoring set
+    pool_size: {hepg2: 365, jurkat: 512}
+    stratified_on: [pooled_control_cp10k decile, measured effect size]
+    centred: false              # a centred variant is a sensitivity arm
+    whitened: false             # run 3's Standardizer absorbs it
+    shared_across_slots: true   # so the dose axis is a comparison of like coordinates
+  layer_sweep:
+    scgpt: [1, 4, 7, 10, 12]
+    scprint: [1, 4, 7, 8]
+    transcriptformer: [1, 4, 7, 10, 12]
+    control_layer: 0            # C2: off-target delta-h must be exactly 0.0
+  nulls: [hidrand, hidperm, hidrp, run3_shuffled_labels]
+  scopes: [full]                # 'common' omitted: installing a block would redefine it
+  splits: [grouped, random]
+  translators: [mlp, ridge]
+  primary_metric: residual__weighted__disattenuated
+  ordering_metric: centered__weighted__disattenuated
+
+integration:
+  mechanism: >
+    Features install as a synthetic run-2-shaped block of a pseudo-model
+    (features/<key>__mean_control.npz, vvp/gdt of shape (n_pert, 5k, n_readout), no
+    zero_out) and run 3's UNMODIFIED resp arm reads them at dim 10k. LineBundle does
+    not validate the value-axis length. The nulls install the same way, which is how
+    they get width-matched -- run 3's randpair is hardcoded to 11.
+  run3_edits: none
+  key_naming: hyphens only      # a key containing '__' makes the block vanish silently
+
+emits: hidden_states_only        # NEVER a decoder-head reading; runs 2-4 settled those
+head_comparison: post_hoc       # against runs 2-4 as published: no in-job paired interval,
+                                # and it crosses the raw-vs-standardised boundary (README 5b)
+
+blocking: none                  # every input is on local disk as of 2026-08-31
+dependencies:
+  dropped:
+    - >
+      Run 2's response blocks. Not fetched and not needed: run 6 has no <model>_resp
+      arm. The TranscriptFormer self-pair and no-op questions are answerable from
+      local code instead.
+  resolved:
+    - >
+      Run 4's fine-tuned checkpoints, 2026-08-31. All four (own_trainable and
+      own_frozen x hepg2/jurkat) at /biodata/nyanovsky/models/checkpoints_pearson/,
+      each loading with 176 tensors; md5s in that directory's PROVENANCE.md. The
+      2026-08-25 fetch had silently written a 134-byte HTML 301 body as
+      jurkat__own_trainable/model_best.pt; repaired. own_frozen is now available, so
+      run 6 takes that control -- it splits any gain between readout and table.
+  note: >
+    Stage 0 (the per-pair magnitude arm off run 5's existing norms.npz) needs no fetch
+    at all and no GPU, and is the first thing to run.
+
+compute:
+  gpu: 1 x RTX 3090 24GB
+  scheduler: none
+  extraction_estimate_hours: ~9   # ~8 h main pass + ~1 h basis pass; pilot before committing
+  storage_estimate_gb: ~190       # projected only, K_STORE=64, 4 models x 2 lines
+  note: TranscriptFormer dominates; run 2 measured 4621/6232 s per model-line on an H100
+
+outputs:
+  heavy: /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm
+  summary: results/summary/
+  verification: results/verification/
+  claims: results/claims_manifest.json
+
+results:
+  wave:
+    date: 2026-09-01
+    scored: 4 models x 2 cell lines x every sweep layer x 4 variants x 2 translators
+    models: [scgpt, scgpt_ft, scgpt_ft_frozen, scprint]
+    deferred: [transcriptformer]     # also blocked by the nulls.hidperm defect, README 7
+    units: 38                        # one per (cell line, model, layer); 0 failures
+    split: grouped                   # 'random' not run
+    k: 64
+    arm_dim: 640                     # 10 slots x k
+    runs: 378                        # 304 scored rows + 24 reference + 50 shuffled draws
+
+  H1_any_pair_specific_signal:
+    verdict: cleared
+    # Every one of the 38 (line, model, layer) cells clears its own machinery null and
+    # its own width null, in its own cell: hidperm spans -0.0055..0.0094 and hidrand
+    # -0.0053..0.0026 across all 38, against arms of 0.046..0.170. At each model's
+    # primary layer the arm also clears its OWN five shuffled-label draws (8 of 8).
+
+  H3_against_coexpression_and_the_static_table:
+    hepg2: {best_hid: 0.1701, coexp: 0.0601, coexp_node: 0.1361, scgpt_emb: 0.2695}
+    jurkat: {best_hid: 0.1067, coexp: 0.0543, coexp_node: 0.0613, scgpt_emb: 0.1657}
+    reading: >
+      The hidden arm beats plain co-expression in both lines and reaches 63% (HepG2)
+      to 64% (Jurkat) of the static scGPT gene table. It does NOT beat the static
+      table anywhere. The two lines disagree on the ranking against coexp_node --
+      HepG2's node control is 0.1361 and Jurkat's 0.0613 -- so neither line's ordering
+      may be quoted alone.
+    caveat: best_hid for hepg2 is a fine-tuned 5-fold row and is not quotable; see H5.
+
+  H4_depth_profile:
+    verdict: rises_then_flat_within_resolution
+    # Every model's maximum is mid-stack (l4-l10) and every scGPT-family model is
+    # lowest at the last block. NOT "rising then collapsing": no interval was computed
+    # for these rows, and adjacent-layer differences of 0.02-0.03 are inside what 226
+    # (HepG2) / 452 (Jurkat) response groups resolve.
+
+  H5_finetuned_vs_frozen:
+    verdict: no_gain_from_fine_tuning__as_a_bound
+    eval_folds: [0, 1]
+    hepg2: {n_scored: 243, n_groups: 54}
+    jurkat: {n_scored: 282, n_groups: 137}
+    fold_vector_check: {hepg2: "524 of 524 agree with run 4", jurkat: "705 of 705"}
+    reading: >
+      The fine-tuned arm's apparent advantage is entirely a training-fold artefact. On
+      five folds scgpt_ft reaches 0.1701 in HepG2; restricted to the two folds it did
+      not train on it is -0.0180..0.0278 and does not separate from its own shuffled
+      draws (-0.0357..-0.0039). Frozen scGPT on the SAME folds is higher at every
+      depth in both lines (HepG2 0.0610..0.0946; Jurkat 0.0675..0.1427 against
+      scgpt_ft's 0.0514..0.1051). So fine-tuning did not put a response into the
+      weights that the hidden states expose.
+    limit: >
+      A BOUND at the achieved resolution, not a demonstrated null. The group-bootstrap
+      intervals overlap throughout -- HepG2 especially, where 54 response groups give
+      intervals like 0.0176 [-0.0077, 0.3082]. On folds 0 and 1 co-expression itself is
+      not separated from the band, exactly as run 4 reported.
+
+  basis_is_not_load_bearing:
+    verdict: the_fitted_basis_does_no_work
+    hidrp_minus_hid: {mean: -0.0005, range: [-0.0305, +0.0400], hidrp_ge_hid: 20 of 38}
+    reading: >
+      Real delta-h through a FROZEN RANDOM orthonormal basis scores the same as through
+      the fitted PCA basis, in all 38 cells. So the fitted basis is doing no work, and
+      the uneven captured energy (0.8590..0.9998 at k = 64, 20 of 38 cells at or above
+      the 0.95 target) cannot be what drives any arm-to-arm difference. This is the
+      measurement README 2 asked for, and it settles the coverage concern empirically
+      rather than by argument -- it does NOT retire the declared target.
+
+  translator:
+    verdict: mlp_much_greater_than_ridge
+    # e.g. scGPT/HepG2/l12: 0.1213 (mlp) vs 0.0584 (ridge). At 640 dims the translator
+    # contrast is doing real work, which is why the k = 64 re-registration required
+    # reading both and why mlp alone would under-report.
+
+  not_yet_run:
+    - k = 16 rung (jobs/stage1_k16.sh) -- REQUIRED beside the k = 64 verdict
+    - TranscriptFormer: ~9 h extraction AND the nulls.hidperm fix (README 7)
+    - the 'random' split; the k = 1 / 4 rungs; the centred-basis sensitivity arm
+    - claims_manifest.json; verify --section stage1; verify --all since the wave
+    - H2 (hidden vs head) -- a post-hoc comparison against runs 2-4 as published
+
+limits:
+  - The PCA basis pool is weaker-effect than the scored set, so the top-k PCs may
+    under-span it. The error runs one way only -- a false null, never a false positive
+    -- and is quantified by the captured-energy diagnostic and bracketed by hidrp.
+  - The fine-tuned arm is read on two folds where co-expression itself is not separated
+    from the band, so H5 is a bound at the achieved resolution, as run 4's headline is.
+  - Fine-tuned vs frozen scGPT is native-regime vs only-regime, not a weights contrast.
+  - TranscriptFormer's dose axis has four distinct doses, not five (COUNT_CLIP = 30),
+    and its intervention is an attention score modifier rather than a residual-stream
+    input, so its results are not the same operation as the other models'.

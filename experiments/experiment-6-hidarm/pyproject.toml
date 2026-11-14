@@ -1,0 +1,24 @@
+# Run 6 imports four sibling packages and declares none of their stacks. The GPU
+# work runs inside the per-model conda envs that already carry each checkpoint's
+# pinned stack (`envs/README.md`), so declaring a fifth torch here would only
+# invite a version no adapter was ever verified against — the trap run 5 recorded
+# and run 4's `--no-deps` install exists to avoid.
+# requires-python is 3.10 for the same reason run 5's is: the conda envs are
+# python 3.10 (scGPT) and 3.11 (TranscriptFormer, scPRINT), and a floor above
+# those would make `uv run` build an interpreter no adapter was verified on.
+[project]
+name = "experiment-6-hidarm"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["pyyaml"]
+
+[dependency-groups]
+dev = [
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "pytest>=8",
+    "silico-figures",
+]
+
+[tool.uv.sources]
+silico-figures = { path = "../../tools/silico-figures-local", editable = true }

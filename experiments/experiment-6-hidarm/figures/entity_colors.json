@@ -1,0 +1,13 @@
+{
+  "_note": "Worker-owned entity colors for run 3. Entities are the thing being compared: the four single-cell foundation models, the statistical baseline, the node-only control, the mean-effect baseline, and the null draws. It extends figures/checkpoint-renders/entity_colors.json: scGPT keeps the ember it had as scgpt_full, co-expression keeps #4E728A, the shuffled-label null keeps #2E6E4E, and mean_only keeps #988453. Arm-level keys from that file collapse into their model (scgpt_emb is scGPT), and the remaining EDITORIAL_8 slots go to the other three models and the node control.",
+  "scgpt": "#C4650D",
+  "coexp": "#4E728A",
+  "null": "#2E6E4E",
+  "mean_only": "#988453",
+  "scprint": "#B9605B",
+  "transcriptformer": "#7495AB",
+  "aido_cell": "#84713A",
+  "node": "#31362E",
+  "_note_esm2": "EDITORIAL_8 was exhausted by the eight entities above before the protein-model control existed. ESM2 is a ninth entity, so its colour is chosen rather than taken from the palette in order: a muted indigo that no editorial slot occupies. Its smallest deuteranope deltaE against the eight is 22.1 (co-expression), well above the package's threshold of 10 and above the existing worst pair, mean effect against scPRINT at 7.5.",
+  "esm2": "#5A5FA3"
+}

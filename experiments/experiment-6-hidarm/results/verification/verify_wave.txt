@@ -1,0 +1,761 @@
+[PASS] prereg/primary_metric_is_run3s: run 6 reads 'residual__weighted__disattenuated'; run 3 pre-registered 'residual__weighted__disattenuated'
+[PASS] prereg/ordering_metric_is_secondary: arms are ORDERED by 'centered__weighted__disattenuated' and the verdict is read at 'residual__weighted__disattenuated'; the two roles reversed at cp-23 and neither confirms the other
+[PASS] prereg/value_grid_is_run2s: [0.0, 1.0, 4.0, 16.0, 64.0] CP10K, 5 doses, unchanged from run 2
+[PASS] prereg/scopes_full_only: scopes ['full']: installing a block redefines scope_rows('common') for every arm in the bundle, and run 6 has no AIDO.Cell arm for it to serve
+[PASS] prereg/ladder_is_a_prefix: k ladder [1, 4, 16, 64] within K_STORE=64, primary k=16; components are eigenvalue-ordered so every rung is a column prefix
+[PASS] prereg/ft_execution_recorded: SCFM_FT_RUN_SUFFIX='_pearson': the validation-Pearson execution run 4 reports; unset would silently read the earlier masked-MSE tree
+[PASS] prereg/no_key_contains_double_underscore: 0 of 138 run-6 model keys contain '__'; one that did would make its block unreadable and its arm vanish from the scored set with no error at all
+[PASS] prereg/keys_round_trip: all 138 keys survive model_stem -> run_of_stem -> model_stem
+[PASS] ft/hepg2:scgpt_ft:checkpoint_readable: 176 tensors, 88772974 bytes --- not an existence check and not a size threshold: the 2026-08-25 fetch wrote a 134-byte HTML 301 body under a .pt name and both would have passed it
+[PASS] ft/hepg2:scgpt_ft_frozen:checkpoint_readable: 176 tensors, 88772974 bytes --- not an existence check and not a size threshold: the 2026-08-25 fetch wrote a 134-byte HTML 301 body under a .pt name and both would have passed it
+[PASS] ft/jurkat:scgpt_ft:checkpoint_readable: 176 tensors, 89850222 bytes --- not an existence check and not a size threshold: the 2026-08-25 fetch wrote a 134-byte HTML 301 body under a .pt name and both would have passed it
+[PASS] ft/jurkat:scgpt_ft_frozen:checkpoint_readable: 176 tensors, 89850222 bytes --- not an existence check and not a size threshold: the 2026-08-25 fetch wrote a 134-byte HTML 301 body under a .pt name and both would have passed it
+[PASS] ft/flag_recorded: the manifest records the flag as set on the perturbed gene in BOTH passes, contradicting run 4's inherited configure note and naming the estimator as neither of run 4's two families
+[PASS] ft/amp_off: amp=False: a response is a difference between two passes agreeing to ~1e-4, which in half precision is below the representable gap
+[PASS] ft/hepg2:fold_vector: 524 of 524 agree between run 6's grouped folds and run 4's
+[PASS] ft/hepg2:no_missing_self_col: 0 of 524 perturbations have no read-out column of their own; a -1 there silently zeroes the LAST column in every weighted cell instead of the intended one
+[PASS] ft/jurkat:fold_vector: 705 of 705 agree between run 6's grouped folds and run 4's
+[PASS] ft/jurkat:no_missing_self_col: 0 of 705 perturbations have no read-out column of their own; a -1 there silently zeroes the LAST column in every weighted cell instead of the intended one
+[PASS] ft/heldout_folds_match_run4: run 6 restricts to folds [0, 1] and run 4 held out [0, 1]
+[PASS] basis:hepg2/leakage: 0 of 64 basis genes are also scored perturbations; no scored perturbation may shape the basis it is scored through
+[PASS] basis:hepg2/pool_size: 365 screened perturbations whose target is a read-out gene but whose stratum excludes them from scoring; 64 drawn
+[PASS] basis:hepg2:scgpt/layer1_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt/layer1_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt/layer1_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt/layer4_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt/layer4_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt/layer4_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt/layer7_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt/layer7_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt/layer7_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt/layer10_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt/layer10_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt/layer10_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt/layer12_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt/layer12_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt/layer12_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scprint/layer1_shape: W is (256, 64), expected (256, 64)
+[PASS] basis:hepg2:scprint/layer1_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scprint/layer1_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scprint/layer4_shape: W is (256, 64), expected (256, 64)
+[PASS] basis:hepg2:scprint/layer4_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scprint/layer4_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scprint/layer7_shape: W is (256, 64), expected (256, 64)
+[PASS] basis:hepg2:scprint/layer7_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scprint/layer7_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scprint/layer8_shape: W is (256, 64), expected (256, 64)
+[PASS] basis:hepg2:scprint/layer8_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scprint/layer8_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[FAIL] basis:hepg2:transcriptformer/layer1_present: no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=1.npz; a missing file fails, it never skips
+[FAIL] basis:hepg2:transcriptformer/layer4_present: no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=4.npz; a missing file fails, it never skips
+[FAIL] basis:hepg2:transcriptformer/layer7_present: no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=7.npz; a missing file fails, it never skips
+[FAIL] basis:hepg2:transcriptformer/layer10_present: no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=10.npz; a missing file fails, it never skips
+[FAIL] basis:hepg2:transcriptformer/layer12_present: no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=12.npz; a missing file fails, it never skips
+[PASS] basis:hepg2:scgpt_ft/layer1_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt_ft/layer1_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt_ft/layer1_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt_ft/layer4_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt_ft/layer4_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt_ft/layer4_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt_ft/layer7_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt_ft/layer7_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt_ft/layer7_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt_ft/layer10_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt_ft/layer10_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt_ft/layer10_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt_ft/layer12_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt_ft/layer12_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt_ft/layer12_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt_ft_frozen/layer1_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt_ft_frozen/layer1_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt_ft_frozen/layer1_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt_ft_frozen/layer4_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt_ft_frozen/layer4_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt_ft_frozen/layer4_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt_ft_frozen/layer7_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt_ft_frozen/layer7_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt_ft_frozen/layer7_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt_ft_frozen/layer10_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt_ft_frozen/layer10_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt_ft_frozen/layer10_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:hepg2:scgpt_ft_frozen/layer12_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:hepg2:scgpt_ft_frozen/layer12_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:hepg2:scgpt_ft_frozen/layer12_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat/leakage: 0 of 64 basis genes are also scored perturbations; no scored perturbation may shape the basis it is scored through
+[PASS] basis:jurkat/pool_size: 512 screened perturbations whose target is a read-out gene but whose stratum excludes them from scoring; 64 drawn
+[PASS] basis:jurkat:scgpt/layer1_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt/layer1_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt/layer1_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt/layer4_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt/layer4_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt/layer4_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt/layer7_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt/layer7_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt/layer7_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt/layer10_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt/layer10_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt/layer10_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt/layer12_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt/layer12_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt/layer12_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scprint/layer1_shape: W is (256, 64), expected (256, 64)
+[PASS] basis:jurkat:scprint/layer1_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scprint/layer1_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scprint/layer4_shape: W is (256, 64), expected (256, 64)
+[PASS] basis:jurkat:scprint/layer4_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scprint/layer4_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scprint/layer7_shape: W is (256, 64), expected (256, 64)
+[PASS] basis:jurkat:scprint/layer7_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scprint/layer7_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scprint/layer8_shape: W is (256, 64), expected (256, 64)
+[PASS] basis:jurkat:scprint/layer8_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scprint/layer8_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[FAIL] basis:jurkat:transcriptformer/layer1_present: no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=1.npz; a missing file fails, it never skips
+[FAIL] basis:jurkat:transcriptformer/layer4_present: no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=4.npz; a missing file fails, it never skips
+[FAIL] basis:jurkat:transcriptformer/layer7_present: no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=7.npz; a missing file fails, it never skips
+[FAIL] basis:jurkat:transcriptformer/layer10_present: no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=10.npz; a missing file fails, it never skips
+[FAIL] basis:jurkat:transcriptformer/layer12_present: no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=12.npz; a missing file fails, it never skips
+[PASS] basis:jurkat:scgpt_ft/layer1_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt_ft/layer1_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt_ft/layer1_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt_ft/layer4_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt_ft/layer4_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt_ft/layer4_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt_ft/layer7_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt_ft/layer7_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt_ft/layer7_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt_ft/layer10_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt_ft/layer10_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt_ft/layer10_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt_ft/layer12_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt_ft/layer12_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt_ft/layer12_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt_ft_frozen/layer1_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt_ft_frozen/layer1_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt_ft_frozen/layer1_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt_ft_frozen/layer4_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt_ft_frozen/layer4_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt_ft_frozen/layer4_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt_ft_frozen/layer7_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt_ft_frozen/layer7_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt_ft_frozen/layer7_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt_ft_frozen/layer10_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt_ft_frozen/layer10_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt_ft_frozen/layer10_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] basis:jurkat:scgpt_ft_frozen/layer12_shape: W is (512, 64), expected (512, 64)
+[PASS] basis:jurkat:scgpt_ft_frozen/layer12_draw_size: the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+[ABSENT] basis:jurkat:scgpt_ft_frozen/layer12_captured_energy: the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+[PASS] block:scgpt:hepg2/scgpt-hid-l1-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt:hepg2/scgpt-hid-l1-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt:hepg2/scgpt-hid-l1-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt:hepg2/scgpt-hid-l1-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt:hepg2/scgpt-hid-l1-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt:hepg2/scgpt-hid-l1-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt:hepg2/scgpt-hid-l10-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt:hepg2/scgpt-hid-l10-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt:hepg2/scgpt-hid-l10-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt:hepg2/scgpt-hid-l10-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt:hepg2/scgpt-hid-l10-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt:hepg2/scgpt-hid-l10-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt:hepg2/scgpt-hid-l12-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt:hepg2/scgpt-hid-l12-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt:hepg2/scgpt-hid-l12-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt:hepg2/scgpt-hid-l12-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt:hepg2/scgpt-hid-l12-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt:hepg2/scgpt-hid-l12-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt:hepg2/scgpt-hid-l4-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt:hepg2/scgpt-hid-l4-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt:hepg2/scgpt-hid-l4-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt:hepg2/scgpt-hid-l4-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt:hepg2/scgpt-hid-l4-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt:hepg2/scgpt-hid-l4-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt:hepg2/scgpt-hid-l7-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt:hepg2/scgpt-hid-l7-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt:hepg2/scgpt-hid-l7-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt:hepg2/scgpt-hid-l7-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt:hepg2/scgpt-hid-l7-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt:hepg2/scgpt-hid-l7-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scprint:hepg2/scprint-hid-l1-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scprint:hepg2/scprint-hid-l1-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scprint:hepg2/scprint-hid-l1-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scprint:hepg2/scprint-hid-l1-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scprint:hepg2/scprint-hid-l1-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scprint:hepg2/scprint-hid-l1-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scprint:hepg2/scprint-hid-l4-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scprint:hepg2/scprint-hid-l4-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scprint:hepg2/scprint-hid-l4-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scprint:hepg2/scprint-hid-l4-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scprint:hepg2/scprint-hid-l4-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scprint:hepg2/scprint-hid-l4-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scprint:hepg2/scprint-hid-l7-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scprint:hepg2/scprint-hid-l7-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scprint:hepg2/scprint-hid-l7-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scprint:hepg2/scprint-hid-l7-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scprint:hepg2/scprint-hid-l7-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scprint:hepg2/scprint-hid-l7-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scprint:hepg2/scprint-hid-l8-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scprint:hepg2/scprint-hid-l8-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scprint:hepg2/scprint-hid-l8-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scprint:hepg2/scprint-hid-l8-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scprint:hepg2/scprint-hid-l8-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scprint:hepg2/scprint-hid-l8-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[ABSENT] block:transcriptformer:hepg2/present: no projected blocks under /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/blocks/transcriptformer/hepg2; the extraction pass has not run for this (model, cell line)
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_identity: 524 perturbed and 2721 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_coverage: pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_C1: the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+[PASS] block:scgpt:jurkat/scgpt-hid-l1-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt:jurkat/scgpt-hid-l1-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt:jurkat/scgpt-hid-l1-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt:jurkat/scgpt-hid-l1-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt:jurkat/scgpt-hid-l1-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt:jurkat/scgpt-hid-l1-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt:jurkat/scgpt-hid-l10-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt:jurkat/scgpt-hid-l10-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt:jurkat/scgpt-hid-l10-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt:jurkat/scgpt-hid-l10-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt:jurkat/scgpt-hid-l10-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt:jurkat/scgpt-hid-l10-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt:jurkat/scgpt-hid-l12-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt:jurkat/scgpt-hid-l12-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt:jurkat/scgpt-hid-l12-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt:jurkat/scgpt-hid-l12-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt:jurkat/scgpt-hid-l12-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt:jurkat/scgpt-hid-l12-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt:jurkat/scgpt-hid-l4-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt:jurkat/scgpt-hid-l4-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt:jurkat/scgpt-hid-l4-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt:jurkat/scgpt-hid-l4-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt:jurkat/scgpt-hid-l4-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt:jurkat/scgpt-hid-l4-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt:jurkat/scgpt-hid-l7-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt:jurkat/scgpt-hid-l7-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt:jurkat/scgpt-hid-l7-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt:jurkat/scgpt-hid-l7-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt:jurkat/scgpt-hid-l7-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt:jurkat/scgpt-hid-l7-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scprint:jurkat/scprint-hid-l1-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scprint:jurkat/scprint-hid-l1-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scprint:jurkat/scprint-hid-l1-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scprint:jurkat/scprint-hid-l1-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scprint:jurkat/scprint-hid-l1-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scprint:jurkat/scprint-hid-l1-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scprint:jurkat/scprint-hid-l4-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scprint:jurkat/scprint-hid-l4-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scprint:jurkat/scprint-hid-l4-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scprint:jurkat/scprint-hid-l4-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scprint:jurkat/scprint-hid-l4-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scprint:jurkat/scprint-hid-l4-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scprint:jurkat/scprint-hid-l7-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scprint:jurkat/scprint-hid-l7-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scprint:jurkat/scprint-hid-l7-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scprint:jurkat/scprint-hid-l7-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scprint:jurkat/scprint-hid-l7-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scprint:jurkat/scprint-hid-l7-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scprint:jurkat/scprint-hid-l8-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scprint:jurkat/scprint-hid-l8-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scprint:jurkat/scprint-hid-l8-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scprint:jurkat/scprint-hid-l8-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scprint:jurkat/scprint-hid-l8-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scprint:jurkat/scprint-hid-l8-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[ABSENT] block:transcriptformer:jurkat/present: no projected blocks under /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/blocks/transcriptformer/jurkat; the extraction pass has not run for this (model, cell line)
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_identity: 705 perturbed and 3247 read-out ids match targets.npz row for row
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_coverage: pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_no_zero_out: zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_C2: max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+[ABSENT] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_C3: no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+[PASS] block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_C1: the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+[PASS] ladder/prefix: max abs diff 0 between the k=16 column subset and the stored k=64 block, over 38 blocks
+[PASS] emits/no_head_derived_array: 0 of 152 npz files under ['/biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/blocks', '/biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis'] carry a decoder-head key ['y_pert', 'y_base', 'zero_out', 'mlm_output', 'decoder', 'response']
+
+  PASS    prereg/primary_metric_is_run3s                                        run 6 reads 'residual__weighted__disattenuated'; run 3 pre-registered 'residual__weighted__disattenuated'
+  PASS    prereg/ordering_metric_is_secondary                                   arms are ORDERED by 'centered__weighted__disattenuated' and the verdict is read at 'residual__weighted__disattenuated'; the two roles reversed at cp-23 and neither confirms the other
+  PASS    prereg/value_grid_is_run2s                                            [0.0, 1.0, 4.0, 16.0, 64.0] CP10K, 5 doses, unchanged from run 2
+  PASS    prereg/scopes_full_only                                               scopes ['full']: installing a block redefines scope_rows('common') for every arm in the bundle, and run 6 has no AIDO.Cell arm for it to serve
+  PASS    prereg/ladder_is_a_prefix                                             k ladder [1, 4, 16, 64] within K_STORE=64, primary k=16; components are eigenvalue-ordered so every rung is a column prefix
+  PASS    prereg/ft_execution_recorded                                          SCFM_FT_RUN_SUFFIX='_pearson': the validation-Pearson execution run 4 reports; unset would silently read the earlier masked-MSE tree
+  PASS    prereg/no_key_contains_double_underscore                              0 of 138 run-6 model keys contain '__'; one that did would make its block unreadable and its arm vanish from the scored set with no error at all
+  PASS    prereg/keys_round_trip                                                all 138 keys survive model_stem -> run_of_stem -> model_stem
+  PASS    ft/hepg2:scgpt_ft:checkpoint_readable                                 176 tensors, 88772974 bytes --- not an existence check and not a size threshold: the 2026-08-25 fetch wrote a 134-byte HTML 301 body under a .pt name and both would have passed it
+  PASS    ft/hepg2:scgpt_ft_frozen:checkpoint_readable                          176 tensors, 88772974 bytes --- not an existence check and not a size threshold: the 2026-08-25 fetch wrote a 134-byte HTML 301 body under a .pt name and both would have passed it
+  PASS    ft/jurkat:scgpt_ft:checkpoint_readable                                176 tensors, 89850222 bytes --- not an existence check and not a size threshold: the 2026-08-25 fetch wrote a 134-byte HTML 301 body under a .pt name and both would have passed it
+  PASS    ft/jurkat:scgpt_ft_frozen:checkpoint_readable                         176 tensors, 89850222 bytes --- not an existence check and not a size threshold: the 2026-08-25 fetch wrote a 134-byte HTML 301 body under a .pt name and both would have passed it
+  PASS    ft/flag_recorded                                                      the manifest records the flag as set on the perturbed gene in BOTH passes, contradicting run 4's inherited configure note and naming the estimator as neither of run 4's two families
+  PASS    ft/amp_off                                                            amp=False: a response is a difference between two passes agreeing to ~1e-4, which in half precision is below the representable gap
+  PASS    ft/hepg2:fold_vector                                                  524 of 524 agree between run 6's grouped folds and run 4's
+  PASS    ft/hepg2:no_missing_self_col                                          0 of 524 perturbations have no read-out column of their own; a -1 there silently zeroes the LAST column in every weighted cell instead of the intended one
+  PASS    ft/jurkat:fold_vector                                                 705 of 705 agree between run 6's grouped folds and run 4's
+  PASS    ft/jurkat:no_missing_self_col                                         0 of 705 perturbations have no read-out column of their own; a -1 there silently zeroes the LAST column in every weighted cell instead of the intended one
+  PASS    ft/heldout_folds_match_run4                                           run 6 restricts to folds [0, 1] and run 4 held out [0, 1]
+  PASS    basis:hepg2/leakage                                                   0 of 64 basis genes are also scored perturbations; no scored perturbation may shape the basis it is scored through
+  PASS    basis:hepg2/pool_size                                                 365 screened perturbations whose target is a read-out gene but whose stratum excludes them from scoring; 64 drawn
+  PASS    basis:hepg2:scgpt/layer1_shape                                        W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt/layer1_draw_size                                    the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt/layer1_captured_energy                              the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt/layer4_shape                                        W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt/layer4_draw_size                                    the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt/layer4_captured_energy                              the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt/layer7_shape                                        W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt/layer7_draw_size                                    the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt/layer7_captured_energy                              the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt/layer10_shape                                       W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt/layer10_draw_size                                   the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt/layer10_captured_energy                             the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt/layer12_shape                                       W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt/layer12_draw_size                                   the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt/layer12_captured_energy                             the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scprint/layer1_shape                                      W is (256, 64), expected (256, 64)
+  PASS    basis:hepg2:scprint/layer1_draw_size                                  the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scprint/layer1_captured_energy                            the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scprint/layer4_shape                                      W is (256, 64), expected (256, 64)
+  PASS    basis:hepg2:scprint/layer4_draw_size                                  the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scprint/layer4_captured_energy                            the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scprint/layer7_shape                                      W is (256, 64), expected (256, 64)
+  PASS    basis:hepg2:scprint/layer7_draw_size                                  the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scprint/layer7_captured_energy                            the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scprint/layer8_shape                                      W is (256, 64), expected (256, 64)
+  PASS    basis:hepg2:scprint/layer8_draw_size                                  the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scprint/layer8_captured_energy                            the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  FAIL    basis:hepg2:transcriptformer/layer1_present                           no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=1.npz; a missing file fails, it never skips
+  FAIL    basis:hepg2:transcriptformer/layer4_present                           no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=4.npz; a missing file fails, it never skips
+  FAIL    basis:hepg2:transcriptformer/layer7_present                           no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=7.npz; a missing file fails, it never skips
+  FAIL    basis:hepg2:transcriptformer/layer10_present                          no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=10.npz; a missing file fails, it never skips
+  FAIL    basis:hepg2:transcriptformer/layer12_present                          no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/hepg2/layer=12.npz; a missing file fails, it never skips
+  PASS    basis:hepg2:scgpt_ft/layer1_shape                                     W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt_ft/layer1_draw_size                                 the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt_ft/layer1_captured_energy                           the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt_ft/layer4_shape                                     W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt_ft/layer4_draw_size                                 the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt_ft/layer4_captured_energy                           the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt_ft/layer7_shape                                     W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt_ft/layer7_draw_size                                 the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt_ft/layer7_captured_energy                           the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt_ft/layer10_shape                                    W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt_ft/layer10_draw_size                                the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt_ft/layer10_captured_energy                          the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt_ft/layer12_shape                                    W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt_ft/layer12_draw_size                                the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt_ft/layer12_captured_energy                          the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt_ft_frozen/layer1_shape                              W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt_ft_frozen/layer1_draw_size                          the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt_ft_frozen/layer1_captured_energy                    the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt_ft_frozen/layer4_shape                              W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt_ft_frozen/layer4_draw_size                          the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt_ft_frozen/layer4_captured_energy                    the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt_ft_frozen/layer7_shape                              W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt_ft_frozen/layer7_draw_size                          the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt_ft_frozen/layer7_captured_energy                    the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt_ft_frozen/layer10_shape                             W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt_ft_frozen/layer10_draw_size                         the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt_ft_frozen/layer10_captured_energy                   the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:hepg2:scgpt_ft_frozen/layer12_shape                             W is (512, 64), expected (512, 64)
+  PASS    basis:hepg2:scgpt_ft_frozen/layer12_draw_size                         the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:hepg2:scgpt_ft_frozen/layer12_captured_energy                   the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat/leakage                                                  0 of 64 basis genes are also scored perturbations; no scored perturbation may shape the basis it is scored through
+  PASS    basis:jurkat/pool_size                                                512 screened perturbations whose target is a read-out gene but whose stratum excludes them from scoring; 64 drawn
+  PASS    basis:jurkat:scgpt/layer1_shape                                       W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt/layer1_draw_size                                   the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt/layer1_captured_energy                             the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt/layer4_shape                                       W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt/layer4_draw_size                                   the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt/layer4_captured_energy                             the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt/layer7_shape                                       W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt/layer7_draw_size                                   the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt/layer7_captured_energy                             the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt/layer10_shape                                      W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt/layer10_draw_size                                  the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt/layer10_captured_energy                            the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt/layer12_shape                                      W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt/layer12_draw_size                                  the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt/layer12_captured_energy                            the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scprint/layer1_shape                                     W is (256, 64), expected (256, 64)
+  PASS    basis:jurkat:scprint/layer1_draw_size                                 the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scprint/layer1_captured_energy                           the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scprint/layer4_shape                                     W is (256, 64), expected (256, 64)
+  PASS    basis:jurkat:scprint/layer4_draw_size                                 the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scprint/layer4_captured_energy                           the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scprint/layer7_shape                                     W is (256, 64), expected (256, 64)
+  PASS    basis:jurkat:scprint/layer7_draw_size                                 the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scprint/layer7_captured_energy                           the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scprint/layer8_shape                                     W is (256, 64), expected (256, 64)
+  PASS    basis:jurkat:scprint/layer8_draw_size                                 the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scprint/layer8_captured_energy                           the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  FAIL    basis:jurkat:transcriptformer/layer1_present                          no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=1.npz; a missing file fails, it never skips
+  FAIL    basis:jurkat:transcriptformer/layer4_present                          no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=4.npz; a missing file fails, it never skips
+  FAIL    basis:jurkat:transcriptformer/layer7_present                          no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=7.npz; a missing file fails, it never skips
+  FAIL    basis:jurkat:transcriptformer/layer10_present                         no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=10.npz; a missing file fails, it never skips
+  FAIL    basis:jurkat:transcriptformer/layer12_present                         no basis at /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis/transcriptformer/jurkat/layer=12.npz; a missing file fails, it never skips
+  PASS    basis:jurkat:scgpt_ft/layer1_shape                                    W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt_ft/layer1_draw_size                                the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt_ft/layer1_captured_energy                          the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt_ft/layer4_shape                                    W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt_ft/layer4_draw_size                                the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt_ft/layer4_captured_energy                          the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt_ft/layer7_shape                                    W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt_ft/layer7_draw_size                                the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt_ft/layer7_captured_energy                          the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt_ft/layer10_shape                                   W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt_ft/layer10_draw_size                               the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt_ft/layer10_captured_energy                         the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt_ft/layer12_shape                                   W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt_ft/layer12_draw_size                               the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt_ft/layer12_captured_energy                         the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt_ft_frozen/layer1_shape                             W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt_ft_frozen/layer1_draw_size                         the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt_ft_frozen/layer1_captured_energy                   the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt_ft_frozen/layer4_shape                             W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt_ft_frozen/layer4_draw_size                         the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt_ft_frozen/layer4_captured_energy                   the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt_ft_frozen/layer7_shape                             W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt_ft_frozen/layer7_draw_size                         the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt_ft_frozen/layer7_captured_energy                   the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt_ft_frozen/layer10_shape                            W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt_ft_frozen/layer10_draw_size                        the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt_ft_frozen/layer10_captured_energy                  the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    basis:jurkat:scgpt_ft_frozen/layer12_shape                            W is (512, 64), expected (512, 64)
+  PASS    basis:jurkat:scgpt_ft_frozen/layer12_draw_size                        the basis was fitted on 64 genes and config.N_BASIS_GENES is 64; a smoke basis has the same shape as a production one and is written to the same path, so shape alone cannot tell them apart
+  ABSENT  basis:jurkat:scgpt_ft_frozen/layer12_captured_energy                  the diagnostic is written by the main extraction pass, which has not run for this (model, layer); it is not a pass
+  PASS    block:scgpt:hepg2/scgpt-hid-l1-k64_identity                           524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt:hepg2/scgpt-hid-l1-k64_coverage                           pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt:hepg2/scgpt-hid-l1-k64_no_zero_out                        zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt:hepg2/scgpt-hid-l1-k64_C2                                 max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt:hepg2/scgpt-hid-l1-k64_C3                                 no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt:hepg2/scgpt-hid-l1-k64_C1                                 the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt:hepg2/scgpt-hid-l10-k64_identity                          524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt:hepg2/scgpt-hid-l10-k64_coverage                          pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt:hepg2/scgpt-hid-l10-k64_no_zero_out                       zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt:hepg2/scgpt-hid-l10-k64_C2                                max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt:hepg2/scgpt-hid-l10-k64_C3                                no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt:hepg2/scgpt-hid-l10-k64_C1                                the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt:hepg2/scgpt-hid-l12-k64_identity                          524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt:hepg2/scgpt-hid-l12-k64_coverage                          pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt:hepg2/scgpt-hid-l12-k64_no_zero_out                       zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt:hepg2/scgpt-hid-l12-k64_C2                                max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt:hepg2/scgpt-hid-l12-k64_C3                                no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt:hepg2/scgpt-hid-l12-k64_C1                                the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt:hepg2/scgpt-hid-l4-k64_identity                           524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt:hepg2/scgpt-hid-l4-k64_coverage                           pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt:hepg2/scgpt-hid-l4-k64_no_zero_out                        zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt:hepg2/scgpt-hid-l4-k64_C2                                 max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt:hepg2/scgpt-hid-l4-k64_C3                                 no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt:hepg2/scgpt-hid-l4-k64_C1                                 the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt:hepg2/scgpt-hid-l7-k64_identity                           524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt:hepg2/scgpt-hid-l7-k64_coverage                           pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt:hepg2/scgpt-hid-l7-k64_no_zero_out                        zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt:hepg2/scgpt-hid-l7-k64_C2                                 max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt:hepg2/scgpt-hid-l7-k64_C3                                 no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt:hepg2/scgpt-hid-l7-k64_C1                                 the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scprint:hepg2/scprint-hid-l1-k64_identity                       524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scprint:hepg2/scprint-hid-l1-k64_coverage                       pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scprint:hepg2/scprint-hid-l1-k64_no_zero_out                    zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scprint:hepg2/scprint-hid-l1-k64_C2                             max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scprint:hepg2/scprint-hid-l1-k64_C3                             no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scprint:hepg2/scprint-hid-l1-k64_C1                             the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scprint:hepg2/scprint-hid-l4-k64_identity                       524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scprint:hepg2/scprint-hid-l4-k64_coverage                       pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scprint:hepg2/scprint-hid-l4-k64_no_zero_out                    zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scprint:hepg2/scprint-hid-l4-k64_C2                             max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scprint:hepg2/scprint-hid-l4-k64_C3                             no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scprint:hepg2/scprint-hid-l4-k64_C1                             the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scprint:hepg2/scprint-hid-l7-k64_identity                       524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scprint:hepg2/scprint-hid-l7-k64_coverage                       pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scprint:hepg2/scprint-hid-l7-k64_no_zero_out                    zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scprint:hepg2/scprint-hid-l7-k64_C2                             max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scprint:hepg2/scprint-hid-l7-k64_C3                             no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scprint:hepg2/scprint-hid-l7-k64_C1                             the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scprint:hepg2/scprint-hid-l8-k64_identity                       524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scprint:hepg2/scprint-hid-l8-k64_coverage                       pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scprint:hepg2/scprint-hid-l8-k64_no_zero_out                    zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scprint:hepg2/scprint-hid-l8-k64_C2                             max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scprint:hepg2/scprint-hid-l8-k64_C3                             no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scprint:hepg2/scprint-hid-l8-k64_C1                             the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  ABSENT  block:transcriptformer:hepg2/present                                  no projected blocks under /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/blocks/transcriptformer/hepg2; the extraction pass has not run for this (model, cell line)
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_identity                     524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_coverage                     pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_no_zero_out                  zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_C2                           max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_C3                           no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l1-k64_C1                           the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_identity                    524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_coverage                    pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_no_zero_out                 zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_C2                          max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_C3                          no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l10-k64_C1                          the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_identity                    524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_coverage                    pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_no_zero_out                 zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_C2                          max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_C3                          no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l12-k64_C1                          the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_identity                     524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_coverage                     pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_no_zero_out                  zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_C2                           max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_C3                           no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l4-k64_C1                           the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_identity                     524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_coverage                     pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_no_zero_out                  zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_C2                           max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_C3                           no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft:hepg2/scgpt-ft-hid-l7-k64_C1                           the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_identity       524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_coverage       pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_no_zero_out    zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_C2             max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_C3             no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l1-k64_C1             the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_identity      524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_coverage      pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_no_zero_out   zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_C2            max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_C3            no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l10-k64_C1            the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_identity      524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_coverage      pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_no_zero_out   zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_C2            max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_C3            no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l12-k64_C1            the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_identity       524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_coverage       pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_no_zero_out    zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_C2             max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_C3             no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l4-k64_C1             the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_identity       524 perturbed and 2721 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_coverage       pert_index covers all 524 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_no_zero_out    zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_C2             max off-target |delta_h| at the post-embedding layer is 0 over 524 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_C3             no query was a no-op, so the exactly-zero comparison never executed; 2620 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft_frozen:hepg2/scgpt-ft-frozen-hid-l7-k64_C1             the perturbed gene's own delta_h is finite for 2620 of 2620 (gene, dose) queries
+  PASS    block:scgpt:jurkat/scgpt-hid-l1-k64_identity                          705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt:jurkat/scgpt-hid-l1-k64_coverage                          pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt:jurkat/scgpt-hid-l1-k64_no_zero_out                       zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt:jurkat/scgpt-hid-l1-k64_C2                                max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt:jurkat/scgpt-hid-l1-k64_C3                                no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt:jurkat/scgpt-hid-l1-k64_C1                                the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt:jurkat/scgpt-hid-l10-k64_identity                         705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt:jurkat/scgpt-hid-l10-k64_coverage                         pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt:jurkat/scgpt-hid-l10-k64_no_zero_out                      zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt:jurkat/scgpt-hid-l10-k64_C2                               max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt:jurkat/scgpt-hid-l10-k64_C3                               no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt:jurkat/scgpt-hid-l10-k64_C1                               the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt:jurkat/scgpt-hid-l12-k64_identity                         705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt:jurkat/scgpt-hid-l12-k64_coverage                         pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt:jurkat/scgpt-hid-l12-k64_no_zero_out                      zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt:jurkat/scgpt-hid-l12-k64_C2                               max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt:jurkat/scgpt-hid-l12-k64_C3                               no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt:jurkat/scgpt-hid-l12-k64_C1                               the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt:jurkat/scgpt-hid-l4-k64_identity                          705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt:jurkat/scgpt-hid-l4-k64_coverage                          pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt:jurkat/scgpt-hid-l4-k64_no_zero_out                       zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt:jurkat/scgpt-hid-l4-k64_C2                                max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt:jurkat/scgpt-hid-l4-k64_C3                                no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt:jurkat/scgpt-hid-l4-k64_C1                                the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt:jurkat/scgpt-hid-l7-k64_identity                          705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt:jurkat/scgpt-hid-l7-k64_coverage                          pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt:jurkat/scgpt-hid-l7-k64_no_zero_out                       zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt:jurkat/scgpt-hid-l7-k64_C2                                max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt:jurkat/scgpt-hid-l7-k64_C3                                no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt:jurkat/scgpt-hid-l7-k64_C1                                the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scprint:jurkat/scprint-hid-l1-k64_identity                      705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scprint:jurkat/scprint-hid-l1-k64_coverage                      pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scprint:jurkat/scprint-hid-l1-k64_no_zero_out                   zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scprint:jurkat/scprint-hid-l1-k64_C2                            max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scprint:jurkat/scprint-hid-l1-k64_C3                            no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scprint:jurkat/scprint-hid-l1-k64_C1                            the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scprint:jurkat/scprint-hid-l4-k64_identity                      705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scprint:jurkat/scprint-hid-l4-k64_coverage                      pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scprint:jurkat/scprint-hid-l4-k64_no_zero_out                   zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scprint:jurkat/scprint-hid-l4-k64_C2                            max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scprint:jurkat/scprint-hid-l4-k64_C3                            no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scprint:jurkat/scprint-hid-l4-k64_C1                            the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scprint:jurkat/scprint-hid-l7-k64_identity                      705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scprint:jurkat/scprint-hid-l7-k64_coverage                      pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scprint:jurkat/scprint-hid-l7-k64_no_zero_out                   zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scprint:jurkat/scprint-hid-l7-k64_C2                            max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scprint:jurkat/scprint-hid-l7-k64_C3                            no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scprint:jurkat/scprint-hid-l7-k64_C1                            the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scprint:jurkat/scprint-hid-l8-k64_identity                      705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scprint:jurkat/scprint-hid-l8-k64_coverage                      pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scprint:jurkat/scprint-hid-l8-k64_no_zero_out                   zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scprint:jurkat/scprint-hid-l8-k64_C2                            max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scprint:jurkat/scprint-hid-l8-k64_C3                            no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scprint:jurkat/scprint-hid-l8-k64_C1                            the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  ABSENT  block:transcriptformer:jurkat/present                                 no projected blocks under /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/blocks/transcriptformer/jurkat; the extraction pass has not run for this (model, cell line)
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_identity                    705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_coverage                    pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_no_zero_out                 zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_C2                          max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_C3                          no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l1-k64_C1                          the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_identity                   705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_coverage                   pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_no_zero_out                zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_C2                         max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_C3                         no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l10-k64_C1                         the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_identity                   705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_coverage                   pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_no_zero_out                zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_C2                         max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_C3                         no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l12-k64_C1                         the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_identity                    705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_coverage                    pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_no_zero_out                 zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_C2                          max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_C3                          no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l4-k64_C1                          the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_identity                    705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_coverage                    pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_no_zero_out                 zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_C2                          max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_C3                          no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft:jurkat/scgpt-ft-hid-l7-k64_C1                          the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_identity      705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_coverage      pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_no_zero_out   zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_C2            max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_C3            no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l1-k64_C1            the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_identity     705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_coverage     pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_no_zero_out  zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_C2           max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_C3           no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l10-k64_C1           the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_identity     705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_coverage     pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_no_zero_out  zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_C2           max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_C3           no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l12-k64_C1           the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_identity      705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_coverage      pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_no_zero_out   zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_C2            max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_C3            no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l4-k64_C1            the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_identity      705 perturbed and 3247 read-out ids match targets.npz row for row
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_coverage      pert_index covers all 705 scope rows with no -1; a -1 in row_map makes run 3 skip the model silently
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_no_zero_out   zero_out absent, so the arm dim is exactly 640; with no per-query normalisation applied, the hidden-state zero_out slot is bit-identical to the vvp slot at dose 0.0 CP10K; keeping both would put one column in the feature vector twice
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_C2            max off-target |delta_h| at the post-embedding layer is 0 over 705 genes x 5 doses; an edit cannot have reached another gene's token before the first block
+  ABSENT  block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_C3            no query was a no-op, so the exactly-zero comparison never executed; 3525 queries were checked for no-op status. Expected at mean_control, where every read-out gene sits above run 1's 0.5 CP10K floor
+  PASS    block:scgpt_ft_frozen:jurkat/scgpt-ft-frozen-hid-l7-k64_C1            the perturbed gene's own delta_h is finite for 3525 of 3525 (gene, dose) queries
+  PASS    ladder/prefix                                                         max abs diff 0 between the k=16 column subset and the stored k=64 block, over 38 blocks
+  PASS    emits/no_head_derived_array                                           0 of 152 npz files under ['/biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/blocks', '/biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-6-hidarm/basis'] carry a decoder-head key ['y_pert', 'y_base', 'zero_out', 'mlm_output', 'decoder', 'response']
+
+291 passed, 10 failed, 78 absent, 379 checks

@@ -1,0 +1,54 @@
+{
+  "sweep": "stage1",
+  "source": "sweep/<sweep>/restricted/restricted_<cell_line>.parquet",
+  "reduced_not_recomputed": true,
+  "primary_metric": "residual__weighted__disattenuated",
+  "ordering_metric": "centered__weighted__disattenuated",
+  "eval_folds": [
+    0,
+    1
+  ],
+  "frozen_counterpart": "scgpt",
+  "n_rows": 270,
+  "intervals": "group bootstrap over response groups, copied from the restricted parquet",
+  "cell_lines": {
+    "hepg2": {
+      "eval_folds": [
+        0,
+        1
+      ],
+      "n_units": 30,
+      "n_rows": 810,
+      "fold_vector_check": {
+        "ok": true,
+        "n": 524,
+        "n_agree": 524,
+        "same_perturbation_order": true,
+        "detail": "524 of 524 agree between run 6's grouped folds and run 4's"
+      },
+      "n_scored": 243,
+      "n_groups_scored": 54,
+      "bound_note": "on folds 0 and 1 co-expression itself is not separated from the band, so any fine-tuned result read here is a bound at the achieved resolution, exactly as run 4's headline is",
+      "contrast_note": "fine-tuned against frozen scGPT is the fine-tuned model in its native regime against the frozen model in the only regime it has, never a weights contrast"
+    },
+    "jurkat": {
+      "eval_folds": [
+        0,
+        1
+      ],
+      "n_units": 60,
+      "n_rows": 810,
+      "fold_vector_check": {
+        "ok": true,
+        "n": 705,
+        "n_agree": 705,
+        "same_perturbation_order": true,
+        "detail": "705 of 705 agree between run 6's grouped folds and run 4's"
+      },
+      "n_scored": 282,
+      "n_groups_scored": 137,
+      "bound_note": "on folds 0 and 1 co-expression itself is not separated from the band, so any fine-tuned result read here is a bound at the achieved resolution, exactly as run 4's headline is",
+      "contrast_note": "fine-tuned against frozen scGPT is the fine-tuned model in its native regime against the frozen model in the only regime it has, never a weights contrast"
+    }
+  }
+}

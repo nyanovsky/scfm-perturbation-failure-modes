@@ -1,0 +1,9 @@
+[PASS] ladder/prefix_k1: max abs diff 0 between the k=1 column subset and the stored k=64 block, over 38 blocks; reading a lower rung is a column slice and never a re-projection
+[PASS] ladder/prefix_k4: max abs diff 0 between the k=4 column subset and the stored k=64 block, over 38 blocks; reading a lower rung is a column slice and never a re-projection
+[PASS] ladder/prefix_k16: max abs diff 0 between the k=16 column subset and the stored k=64 block, over 38 blocks; reading a lower rung is a column slice and never a re-projection
+
+  PASS    ladder/prefix_k1   max abs diff 0 between the k=1 column subset and the stored k=64 block, over 38 blocks; reading a lower rung is a column slice and never a re-projection
+  PASS    ladder/prefix_k4   max abs diff 0 between the k=4 column subset and the stored k=64 block, over 38 blocks; reading a lower rung is a column slice and never a re-projection
+  PASS    ladder/prefix_k16  max abs diff 0 between the k=16 column subset and the stored k=64 block, over 38 blocks; reading a lower rung is a column slice and never a re-projection
+
+3 passed, 0 failed, 0 absent, 3 checks

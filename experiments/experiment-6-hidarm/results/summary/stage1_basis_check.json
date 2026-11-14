@@ -1,0 +1,12 @@
+{
+  "metric": "residual__weighted__disattenuated",
+  "translator": "mlp",
+  "n_cells": 38,
+  "mean_delta": -0.0004595373729299161,
+  "min_delta": -0.030505298847161647,
+  "max_delta": 0.03997103282254175,
+  "n_random_at_least_fitted": 20,
+  "captured_energy_min": 0.8590123997286441,
+  "captured_energy_max": 0.9997870953890445,
+  "note": "hidrp is real hidden-state deltas through a frozen random orthonormal basis of the same width; agreement bounds what the captured-energy shortfall can explain and does not retire the declared target"
+}

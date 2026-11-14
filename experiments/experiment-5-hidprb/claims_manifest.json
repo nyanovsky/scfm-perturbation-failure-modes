@@ -1,0 +1,132 @@
+{
+  "written_by": "src/scfm_probe/claims.py",
+  "what": "every number run 5's prose states, with the row of summary.parquet it came from. A value of null is a measured absence, not a missing claim: the detail string says why it could not be computed.",
+  "claims": [
+    {
+      "claim": "split-half retrieval of the perturbed gene from other genes' last-layer hidden states, scGPT, HepG2, zero-out dose",
+      "value": 1.0,
+      "null_max": 0.0057251908396946565,
+      "interval": [
+        1.0,
+        1.0
+      ],
+      "n_perturbations": 524,
+      "n_undefined": 0,
+      "detail": "coverage=full 524/524; chance top1 0.001908, median rank 1, run-3 normalised rank 1, 0 of 524 pooled signatures exactly zero (ranked by random tie-break); 226 response groups over 524 perturbations, largest 149, run 3 linkage cut 0.5",
+      "source": "results/probe/summary.parquet",
+      "key": "model=scgpt, cell_line=hepg2, layer=12, value_cp10k=0.0, statistic=retrieval_top1, split=split_half"
+    },
+    {
+      "claim": "the same at the first block, which is what makes it a depth statement rather than a last-layer one",
+      "value": 1.0,
+      "null_max": 0.003816793893129771,
+      "interval": [
+        1.0,
+        1.0
+      ],
+      "n_perturbations": 524,
+      "n_undefined": 0,
+      "detail": "coverage=full 524/524; chance top1 0.001908, median rank 1, run-3 normalised rank 1, 0 of 524 pooled signatures exactly zero (ranked by random tie-break); 226 response groups over 524 perturbations, largest 149, run 3 linkage cut 0.5",
+      "source": "results/probe/summary.parquet",
+      "key": "model=scgpt, cell_line=hepg2, layer=1, value_cp10k=0.0, statistic=retrieval_top1, split=split_half"
+    },
+    {
+      "claim": "the post-embedding control: no edit can have reached another gene's token before the first block, so this must sit at its own null",
+      "value": 0.0057251908396946565,
+      "null_max": 0.0019083969465648854,
+      "interval": [
+        0.0,
+        0.015290909941958431
+      ],
+      "n_perturbations": 524,
+      "n_undefined": 524,
+      "detail": "coverage=full 524/524; chance top1 0.001908, median rank 278.5, run-3 normalised rank 0.4799, 524 of 524 pooled signatures exactly zero (ranked by random tie-break); 226 response groups over 524 perturbations, largest 149, run 3 linkage cut 0.5",
+      "source": "results/probe/summary.parquet",
+      "key": "model=scgpt, cell_line=hepg2, layer=0, value_cp10k=0.0, statistic=retrieval_top1, split=split_half"
+    },
+    {
+      "claim": "scPRINT, HepG2, last block: the second model's version of the same number",
+      "value": 1.0,
+      "null_max": 0.0019083969465648854,
+      "interval": [
+        1.0,
+        1.0
+      ],
+      "n_perturbations": 524,
+      "n_undefined": 0,
+      "detail": "coverage=full 524/524; chance top1 0.001908, median rank 1, run-3 normalised rank 1, 0 of 524 pooled signatures exactly zero (ranked by random tie-break); 226 response groups over 524 perturbations, largest 149, run 3 linkage cut 0.5",
+      "source": "results/probe/summary.parquet",
+      "key": "model=scprint, cell_line=hepg2, layer=8, value_cp10k=0.0, statistic=retrieval_top1, split=split_half"
+    },
+    {
+      "claim": "the magnitude control: identity decoded from the scalar norm alone, which is what would show the result is response size rather than direction",
+      "value": 0.1049618320610687,
+      "null_max": 0.0019083969465648854,
+      "interval": [
+        0.06936082703423743,
+        0.13020151705816554
+      ],
+      "n_perturbations": 524,
+      "n_undefined": 0,
+      "detail": "coverage=full 524/524; the signature is the SCALAR ||delta_h|| alone, matched by |a-b| and ranked by retrieval.rank_of_own; chance 0.001908. unit_normalized_top1=1 (null_max=0.005725, 0 degenerate) --- the direction-only half of C6, carried here because the summary's statistic vocabulary was frozen before this module was written",
+      "source": "results/probe/summary.parquet",
+      "key": "model=scgpt, cell_line=hepg2, layer=12, value_cp10k=0.0, statistic=norm_only_top1, split=split_half"
+    },
+    {
+      "claim": "the static-table control: how much of the hidden signature is the gene table echoed down the residual stream",
+      "value": 0.5342848382001671,
+      "null_max": 0.036132448185643984,
+      "interval": [
+        0.2220737814343899,
+        0.6865667657879583
+      ],
+      "n_perturbations": 524,
+      "n_undefined": 0,
+      "detail": "coverage=full 524/524; linear CKA between the mean-of-halves pooled signature (512-wide) and run 2's static gene table (512-wide) over 524 perturbations, Gram form. Table: /biodata/nyanovsky/projects/scfm-pert-fail-modes/artifacts/exp_01m0c7ecnnf3fvxskxj5nygwcv/features_full_scope/scgpt/hepg2/gene_embeddings.npz. static_table_retrieval_top1=0.005725 (null_max=0.005725, chance 0.001908)",
+      "source": "results/probe/summary.parquet",
+      "key": "model=scgpt, cell_line=hepg2, layer=12, value_cp10k=0.0, statistic=cka_static_table, split=split_half"
+    },
+    {
+      "claim": "the response-group control, reported beside the strict score and never instead of it",
+      "value": 1.0,
+      "null_max": 0.1049618320610687,
+      "interval": [
+        1.0,
+        1.0
+      ],
+      "n_perturbations": 524,
+      "n_undefined": 0,
+      "detail": "coverage=full 524/524; chance top1 0.001908, median rank 1, run-3 normalised rank 1, 0 of 524 pooled signatures exactly zero (ranked by random tie-break); 226 response groups over 524 perturbations, largest 149, run 3 linkage cut 0.5. Reported BESIDE strict top-1 (1), never instead of it: a hit here only means the retrieved gene shares a measured response group with the true one",
+      "source": "results/probe/summary.parquet",
+      "key": "model=scgpt, cell_line=hepg2, layer=12, value_cp10k=0.0, statistic=group_collapsed_top1, split=split_half"
+    },
+    {
+      "claim": "propagation at the last block: how much of the edit left the perturbed gene's own token",
+      "value": 0.9375801784974722,
+      "null_max": null,
+      "interval": [
+        0.782747802190212,
+        1.0853103644860707
+      ],
+      "n_perturbations": 524,
+      "n_undefined": 0,
+      "detail": "coverage=full 524/524; median over perturbations of ||delta_h off-target|| / ||delta_h at the perturbed gene's own position||, 524 of 524 defined; 226 response groups over 524 perturbations, largest 149, run 3 linkage cut 0.5. No shuffled-label null exists for a label-free per-perturbation ratio; its control is C2 (layer 0 exactly 0.0), checked by the driver",
+      "source": "results/probe/summary.parquet",
+      "key": "model=scgpt, cell_line=hepg2, layer=12, value_cp10k=0.0, statistic=propagation_ratio, split=self_position"
+    },
+    {
+      "claim": "TranscriptFormer's substitute for that ratio, which has no denominator because the model never reads a gene's count at its own position",
+      "value": 33.533321682458805,
+      "null_max": null,
+      "interval": [
+        28.652445987033843,
+        39.147494820704466
+      ],
+      "n_perturbations": 524,
+      "n_undefined": 0,
+      "detail": "coverage=full 524/524; median over perturbations of the Frobenius norm of delta_h over the 2720 off-target read-out positions, in this model's own hidden-state units. NOT comparable across models or across layers of different width --- only its depth profile within one model is; the scale-free form is propagation_ratio. 226 response groups over 524 perturbations, largest 149, run 3 linkage cut 0.5",
+      "source": "results/probe/summary.parquet",
+      "key": "model=transcriptformer, cell_line=hepg2, layer=12, value_cp10k=0.0, statistic=propagation_off_target_norm, split=self_position"
+    }
+  ]
+}

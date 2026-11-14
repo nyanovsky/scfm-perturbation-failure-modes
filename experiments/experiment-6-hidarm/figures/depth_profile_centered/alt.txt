@@ -1,0 +1,1 @@
+Held-out centered__weighted__disattenuated against transformer block, one curve per model and translator, one panel per cell line, at k = 64 (arm dimension 640). Each model's hidperm null is a shaded floor beneath its curve. Point estimates only.

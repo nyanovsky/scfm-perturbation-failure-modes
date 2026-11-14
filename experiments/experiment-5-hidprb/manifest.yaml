@@ -1,0 +1,178 @@
+experiment: 5
+eid: null            # authored off-platform; no Silico experiment id exists for this run
+title: >-
+  Does an input intervention propagate? Decoding the perturbed gene from
+  hidden-state differences in three single-cell foundation models
+date: 2026-08-29
+status: complete
+
+question: >-
+  Runs 2-3 showed a static gene table beats every queried-response feature and that scGPT's
+  queried response does not clear the shuffled-label band. Neither says why. This run tests the
+  weakest precondition of the "present but not decodable" hypothesis: after an input
+  intervention on gene i, do the OTHER genes' hidden states carry any trace of which gene was
+  intervened on. Both outcomes are informative, because every head in the thread is a shared
+  per-gene-token function of the last hidden state, so the response scalar is a strict lossy
+  projection of the hidden-state difference.
+
+scope: diagnostic_only   # no per-pair delta-h is persisted at arm width; nothing feeds run 3
+
+inputs:
+  run1: experiment-1-30499z    # measured effects, response groups, control cells
+  run2: experiment-2-nygwcv    # model adapters, anchors, in-scope perturbations, gene tables
+  run3: experiment-3-yga5ws    # response-group clustering, folds, ridge machinery
+  imported_not_edited: true    # run 2's shipped blocks are cited by the paper
+
+data:
+  cell_lines: [hepg2, jurkat]
+  readout_genes: {hepg2: 2721, jurkat: 3247}
+  perturbations_in_scope: {hepg2: 524, jurkat: 705}
+  expression_floor_cp10k: 0.5
+  screens: /biodata/nyanovsky/datasets/Nadig   # GEO GSE264667
+
+models:
+  scgpt:            {checkpoint: scGPT_human,   n_layers: 12, d_model: 512,  env: scgpt}
+  scprint:          {checkpoint: medium-v1.5,   n_layers: 8,  d_model: 256,  env: scprint_env}
+  transcriptformer: {checkpoint: tf_sapiens,    n_layers: 12, d_model: 2048, env: transcriptformer_env}
+  aido_cell:        excluded   # not local, scored at zero in run 3, ~40x scGPT per forward
+
+design:
+  anchors: {primary: mean_control, secondary: individual_cells}
+  n_anchor_cells: 24           # kept UNAVERAGED, unlike run 2's four averaged cells
+  value_grid_cp10k: [0.0, 1.0, 4.0, 16.0, 64.0]
+  layer_definition: >-
+    layer l is the output of transformer block l, 1-based; layer 0 is the post-embedding state
+    and is control C2, not a sweep point
+  layer_stride: 3
+  layer_sweep:
+    scgpt: [1, 4, 7, 10, 12]
+    scprint: [1, 4, 7, 8]
+    transcriptformer: [1, 4, 7, 10, 12]
+  self_position_excluded: true   # decoding i from h_i is trivial; kept only as control C1
+  input_rows_per_gene: 6         # 1 shared baseline + 5 values, vs run 2's 16
+
+findings:
+  transcriptformer_count_clip: >-
+    `to_native` clips at the model's own training-time COUNT_CLIP = 30, so the 16 and 64 CP10K
+    grid points both saturate to 30: TranscriptFormer's effective dose axis is (0, 1, 4, 30, 30)
+    and its top two grid columns are duplicates. For any gene whose mean-control level is
+    already above the clip the 64 CP10K query is bit-identical to the baseline, so this model
+    has genuine no-ops at the PRIMARY anchor, not only at individual_cells. The value_cp10k
+    column records the requested dose; layout.notes.count_clip records what was received.
+    Discovered 2026-08-29 when it aborted a 524-gene sweep at gene ~300.
+  transcriptformer_intervention_differs: >-
+    Established 2026-08-29 by direct probe and not recorded elsewhere in the tree.
+    TranscriptFormer right-shifts both gene tokens and counts, and turns counts into an
+    ATTENTION SCORE MODIFIER (log1p of the right-shifted counts) rather than an input
+    embedding. Editing any gene's count moves NO position at the input to block 0, measured
+    max|delta| = 0. For scGPT and scPRINT the value is part of the input embedding. These are
+    different interventions wearing the same name, and the thread's TranscriptFormer results
+    have to be read accordingly.
+  consequences:
+    - a gene's own count is never an input at its own position, which is the mechanism behind
+      run 2's recorded self_response_defined = False
+    - control C1 is unavailable for transcriptformer BY CONSTRUCTION, recorded as an absence,
+      never as a failure and never as a zero
+    - the S1 propagation ratio has no denominator for transcriptformer; its depth profile is
+      read from the absolute off-target norm instead
+    - the auxiliary token LEADS the sequence, taken from the checkpoint's own
+      transformer_output[:, num_aux_tokens:, :] rather than guessed
+
+smoke_checks:                    # 8 genes, layers 0/1/last, hepg2, mean_control
+  c2_layer0_off_target_exactly_zero: {scgpt: 0.0, scprint: 0.0, transcriptformer: 0.0}
+  c1_self_position_moved:
+    scgpt: {median_norm: 6.88865, zero_of_40: 0}
+    scprint: {median_norm: 1.04875, zero_of_40: 0}
+    transcriptformer: absent_by_construction
+  c3_no_op_queries:
+    counts: {scgpt: 0, scprint: 0, transcriptformer: 0}
+    status: absent      # zero no-ops means the exactly-zero comparison never executed;
+                        # recorded as an absence, never as a pass. It fires first at
+                        # the individual_cells anchor, where no-ops are common.
+  s1_propagation_ratio:
+    scgpt: {layer1: 0.0639791, layer12: 1.99088}
+    scprint: {layer1: 0.144071, layer8: 0.930914}
+    transcriptformer:
+      ratio: undefined_no_denominator
+      max_single_position_off_target_norm: {layer1: 2.38, layer12: 20.89}
+      units_note: >-
+        NOT comparable with the scgpt/scprint entries above: those are medians of a
+        dimensionless ratio, this is a maximum over single positions in the model's own
+        2048-dimensional hidden units.
+  note: >-
+    smoke numbers establish that the intervention lands and that the controls can fire.
+    Nothing may be read from them.
+
+status_note: >-
+  Both conditions complete as of 2026-08-31. mean_control on the full grid, three models x two
+  cell lines. individual_cells (S3) at 16 control cells per line (8 train / 8 test), scGPT and
+  scPRINT only; TranscriptFormer excluded on cost (~24x its mean-control time), which is a
+  scope decision and NOT a result. 2264 checks pass, 0 fail, 26 recorded absences.
+  WARNING for anyone quoting this run: the headline split_half top1 = 1.000 comes from an
+  estimator that reads both halves inside ONE anchor profile. The held-out-cell condition is
+  what speaks to transfer between cells, and at the knockdown dose it is 0.457 (scgpt/hepg2
+  layer 12), 0.409 (scgpt/jurkat), 0.189 and 0.164 (scprint). Still 240x chance and ~127x its
+  own null, so the direction of the finding holds; the word "perfect" does not survive S3.
+
+results:
+  anchor: mean_control
+  coverage: full            # 524 hepg2, 705 jurkat, both cell lines, all three models
+  summary_rows: 2590   # 2150 mean_control + 440 individual_cells/heldout_cell
+  dose: 0.0                 # zero-out; every number below is at this dose
+
+  # S2, the primary: split-half retrieval of WHICH gene was perturbed, from the hidden
+  # states of the OTHER genes' tokens. The perturbed gene's own position is excluded.
+  split_half_retrieval_top1:
+    hepg2:
+      chance: 0.0019
+      null_max: 0.0057
+      scgpt: {layer1: 1.000, last: 1.000}
+      scprint: {layer1: 0.998, last: 1.000}
+      transcriptformer: {layer1: 1.000, last: 1.000}
+    jurkat:
+      chance: 0.0014
+      null_max: 0.0057
+      scgpt: {layer1: 1.000, last: 1.000}
+      scprint: {layer1: 1.000, last: 1.000}
+      transcriptformer: {layer1: 1.000, last: 1.000}
+    layer0: at_chance_all_signatures_degenerate   # the mis-attributed-hook control
+
+  controls:
+    c6_norm_only_top1: {range: [0.027, 0.380], against: 1.000,
+                        reading: direction_not_magnitude}
+    c4_cka_static_table: {range: [0.23, 0.53],
+                          reading: shares_geometry_with_the_gene_table_but_is_not_it}
+    c7_group_collapsed_top1: {value: 1.000, reading: consistent_with_the_strict_score}
+    rank_structure: {broadcast_energy_fraction: [0.05, 0.34],
+                     reading: about_80_percent_is_differentiated_across_readout_genes}
+
+  verdict: >-
+    The bottleneck branch of the pre-registered reading. The intervention propagates and the
+    perturbed gene's identity is perfectly and richly encoded in every other gene's hidden
+    state, at every depth, in all three models and both cell lines --- and the decoder head
+    exposes almost none of it. Runs 2-3's result is therefore a statement about the READOUT,
+    not about the weights: "the queried response adds nothing over a static gene table"
+    stands as measured, and its explanation is not that these models failed to encode the
+    perturbation.
+  limits: >-
+    A claim about the mean_control anchor only. S3 (held-out cell) is unmeasured, so nothing
+    here licenses the word "generalizes" across cells. And decodability of identity is not
+    the same quantity as a CORRECT response: this shows the information is present, not that
+    the model's implied response matches the measured one.
+
+outputs:
+  heavy: /biodata/nyanovsky/projects/scfm-pert-fail-modes/experiment-5-hidprb
+  checkpoint_cache: /biodata/nyanovsky/projects/scfm-pert-fail-modes/ckpt_cache
+  summary: results/probe/summary.parquet
+  verification: results/verification/
+
+verification:
+  software_tests: {passed: 86, total: 86}
+  mutation_check: >-
+    substituting an optimistic index tie-break and removing self-exclusion fails 20 tests,
+    including every null control, so the suite is not a restatement of the implementation
+
+compute:
+  gpu: 1 x RTX 3090 24GB
+  scheduler: none
+  scgpt_hepg2_mean_control_seconds: 440.8   # 524 genes, 6 layers, full coverage

@@ -1,0 +1,29 @@
+# Run 5 is the first experiment in this thread authored off-platform, so the two
+# path dependencies the Silico scaffold supplied are replaced rather than pinned:
+# `silico-figures` comes from `tools/silico-figures-local` (a reconstruction of
+# the house Plotly style, not the original package — read its README before
+# trusting a figure), and there is no GPU-less serving pod to keep torch on CPU,
+# so the pytorch-cpu index pin is dropped. torch is not declared here at all:
+# the GPU work runs inside the per-model conda envs that already carry each
+# checkpoint's pinned stack, and declaring a fifth torch would only invite a
+# version that no adapter was verified against.
+# requires-python is 3.10, not the scaffold's 3.12: the GPU work runs inside the
+# per-model conda envs, which are python 3.10 (scGPT) and 3.11 (TranscriptFormer,
+# scPRINT). A floor above those would make `uv run` build an interpreter no
+# adapter was ever verified on.
+[project]
+name = "experiment-5-hidprb"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["pyyaml"]
+
+[dependency-groups]
+dev = [
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "pytest>=8",
+    "silico-figures",
+]
+
+[tool.uv.sources]
+silico-figures = { path = "../../tools/silico-figures-local", editable = true }
