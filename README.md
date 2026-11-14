@@ -1,122 +1,280 @@
-# Do single-cell foundation models know how a cell responds to a knockdown?
+# When perturbation queries fail
 
-Three runs against the Replogle-Nadig CRISPRi Perturb-seq screens (GEO GSE264667, HepG2 and
-Jurkat). Run 1 builds the measurement, run 2 extracts what four models say about it, run 3 asks
-whether any of that beats ordinary co-expression. Each run is a self-contained directory with its
-own `README.md`, `manifest.yaml`, `src/`, `results/` and `pyproject.toml`; later runs read earlier
-ones through files, never a shared process.
+Code, small result tables and reports for **"When perturbation queries fail: static gene and
+protein embeddings outperform simulated scFM perturbation responses"** (Nicolas Yanovsky and
+Ariel Chernomoretz).
 
-**Directory names are referenced by build scripts and manifests. Do not rename or move them.**
+**The question.** Earlier work extracts regulatory structure from a pretrained single-cell
+foundation model (scFM) by changing one gene's input expression and reading how the model's
+output changes. Here we ask whether those *perturbation queries* carry information about what
+actually happens when that gene is knocked down in a real cell.
 
-## The three runs
+**The answer, in short.** We tested scGPT, scPRINT and TranscriptFormer on two genome-scale
+CRISPRi Perturb-seq screens (HepG2 and Jurkat). Their simulated responses to perturbation
+predict the measured knockdown response barely better than plain co-expression. The same
+models' static gene embedding tables do much better. A table built from protein sequence alone
+(ESM2) does as well as the single-cell tables. Fine-tuning scGPT on the screen itself does not
+change this. Inside the models, the identity of the perturbed gene can be read from the
+hidden states, and responses read from the hidden states beat responses read from the output
+head. They still fall short of a static gene table.
 
-### Run 1 — `experiments/experiment-1-30499z` (`exp_01m09d588jez38j6trqk30499z`)
+---
 
-*What is the measurement, and how reproducible is it?* Effect matrices for both screens
-(per-perturbation log2 fold changes against batch-matched non-targeting controls), a harmonized
-7444-gene universe with per-model vocabularies, and a demonstrated response vector plus Jacobian
-column for each of the four models on one real control cell.
+## Contents
 
-Key outputs: `effects/` and `gene_universe/` in the artifact store; `results/ceiling_grid/`,
-`results/crosscheck/` and `results/provenance.json` in the repository.
+1. [What each experiment does](#1-what-each-experiment-does)
+2. [Main results](#2-main-results)
+3. [Data sources](#3-data-sources)
+4. [Models](#4-models)
+5. [Reproducing the work](#5-reproducing-the-work)
+6. [Pitfalls](#6-pitfalls)
+7. [Known gaps](#7-known-gaps)
+8. [Citation](#8-citation)
 
-Report: **committed** at `results/data_preparation_report.html`.
+---
 
-Headline: 1982 HepG2 and 2201 Jurkat perturbations retained, median on-target knockdown 0.8976 and
-0.8866, pooled Spearman 0.9251 against the published differential-expression reference, 102 of 102
-checks passed. The replicate-split noise ceiling computed here is the scale every later score is
-read against, so a correlation of 1.0 is the measurement's own reproducibility, not perfection.
+## 1. What each experiment does
 
-### Run 2 — `experiments/experiment-2-nygwcv` (`exp_01m0c7ecnnf3fvxskxj5nygwcv`)
+The work is six runs. Each run is a self-contained directory under `experiments/` with its own
+`README.md` (purpose, design, commands, outputs), `manifest.yaml` (headline numbers in
+machine-readable form), `src/`, `results/` and `pyproject.toml`. Each run reads the earlier
+runs' outputs through files, never a shared process.
 
-*What does each model predict when you ask it to change one gene?* Response features for scGPT,
-AIDO.Cell, scPRINT and TranscriptFormer across both cell lines, at three query anchors plus a
-masked variant for the three bidirectional models: eight feature blocks, each with a zero-out
-response, a five-value virtual-value profile and a gradient trajectory, plus the model's static
-gene embedding.
+| run | directory | question | package |
+|---|---|---|---|
+| 1 | [`experiment-1-30499z`](experiments/experiment-1-30499z/) | What is the measured knockdown response, and how reproducible is it? Builds effect matrices, noise ceilings and a gene universe shared by all models. | `scfm_pfm` |
+| 2 | [`experiment-2-nygwcv`](experiments/experiment-2-nygwcv/) | What does each model predict when you change one gene's input? Extracts zero-out, virtual-value and gradient-trajectory features, plus each model's static gene table. | `scfm_pfm` |
+| 3 | [`experiment-3-yga5ws`](experiments/experiment-3-yga5ws/) | Do those features beat co-expression? One fixed translator scores every representation on held-out perturbation groups. Also has the ESM2 protein control and the checkpoint provenance audit. | `scfm_pfm` |
+| 4 | [`experiment-4-74xnwm`](experiments/experiment-4-74xnwm/) | Does fine-tuning scGPT on the screen, with its own published recipe, change the answer? | `scfm_ft` |
+| 5 | [`experiment-5-hidprb`](experiments/experiment-5-hidprb/) | Does the input intervention reach the hidden states at all? Decodes the perturbed gene's identity from the other genes' hidden states. | `scfm_probe` |
+| 6 | [`experiment-6-hidarm`](experiments/experiment-6-hidarm/) | Do responses read from the hidden states, instead of the output head, predict the measured response? | `scfm_hidarm` |
 
-Key outputs: `features/` and `features_full_scope/` in the artifact store, indexed by
-`feature_index/blocks.json`; verification bundles under `results/report/bundles/`.
+How the runs connect:
 
-Rebuild the report (verified from tracked files only, CPU, no artifact-store fetch):
-
-```sh
-cd experiments/experiment-2-nygwcv
-uv sync
-PYTHONPATH=src uv run python -m scfm_pfm.report.build --bundles results/report/bundles --out OUT
+```
+run 1 (measurement) ──► run 2 (model queries) ──► run 3 (scoring: translator, folds, metric)
+                                   │                         │
+                                   ├──────────► run 4 (fine-tuned scGPT, scored by run 3)
+                                   └──────────► run 5 (hidden-state probe)
+                                                run 6 (hidden-state arm: run 5's hooks, run 4's checkpoints, run 3's scoring)
 ```
 
-Headline: 328 of 352 block-level checks passed. Masking a read-out gene is not the same as giving
-it an uninformative value, in any of the six bidirectional blocks. Raw feature scales differ
-1,900-fold between models, so downstream work must use the standardized arrays.
+Runs 1–3 each copied the previous run's code instead of importing it. Runs 4–6 **import**
+earlier runs unmodified, through each run's `sibling.py`, so that they are scored by run 3's
+actual rule and queried by run 2's actual model adapters, not by copies that could drift.
+Because of this, a change to run 2's or run 3's code also changes runs 4–6.
 
-### Run 3 — `experiments/experiment-3-yga5ws` (`exp_01m0emwktvfe892x6ebqyga5ws`)
+AIDO.Cell was queried in runs 1–3 but left out of the paper: it was run on a restricted
+perturbation scope and cost about 40 times scGPT per forward pass.
 
-*Do those response features beat co-expression at predicting the perturbation-specific response?*
-One fixed translator maps a gene-pair feature to the residual log2 fold change of a read-out gene;
-only the input feature changes between arms. Held-out perturbations on grouped and random splits,
-both cell lines, plus HepG2-to-Jurkat transfer, a control-cell overlap test, a query-anchor sweep
-and a reproduction of the source paper's own BEELINE baseline.
+## 2. Main results
 
-Key outputs: `bundle/`, `sweep/`, `transfer2/` and the other job shards in the artifact store;
-merged tables in `results/summary/`; `report_summary.json` and `claims_manifest.json`.
+Every score is a weighted, disattenuated Pearson correlation on held-out perturbation groups,
+so **1.0 means the measurement's own replicate reproducibility**, not perfection. All of them
+use run 3's **pre-registered** metric (`residual__weighted__disattenuated`). Each run also
+reports a fold-centred version as a post-hoc diagnostic. Intervals are bootstraps over
+response groups, not over individual perturbations.
 
-Rebuild the report (verified from tracked files only, CPU, no artifact-store fetch):
+| finding | HepG2 | Jurkat | source |
+|---|---|---|---|
+| Best scFM static gene table | 0.2719 (scGPT) | 0.2371 (TranscriptFormer) | `experiment-3-yga5ws/manifest.yaml` |
+| Raw ESM2-3B protein table | 0.2331 | 0.2642 | same |
+| Control-cell co-expression | 0.04879 | 0.04462 | same |
+| Shuffled-label ceiling | 0.02764 | 0.02351 | same |
+| Fine-tuned scGPT, queried response (all 10 checkpoints) | inside the shuffled-label band | inside the band | `experiment-4-74xnwm/manifest.yaml` |
+| Perturbed-gene identity from other genes' hidden states, held-out cells, knockdown dose, last layer | 0.457 (scGPT), 0.189 (scPRINT) | 0.409, 0.164 | `experiment-5-hidprb/README.md` |
+| Best hidden-state response arm | 0.1440 | 0.1067 | `experiment-6-hidarm/results/summary/` |
+
+Things these numbers do **not** show:
+
+- **Run 4 is a bound, not a null.** On the two folds that fine-tuning never saw, co-expression
+  itself is not separated from the band either.
+- **Run 5's split-half score is 1.000** at every block layer, in all three models and both cell
+  lines. That estimator reads both halves inside one anchor profile. The held-out-cell numbers
+  in the table are the ones that test transfer between cells. Decodable identity is also not
+  the same thing as a correct response.
+- **Run 6 covers scGPT, scPRINT and two fine-tuned scGPT checkpoints.** TranscriptFormer and
+  the `k = 16` rung are not yet run. Within the same job, the hidden-state arm reaches about
+  53% (HepG2) to 64% (Jurkat) of the static scGPT table, and it beats the static table nowhere.
+
+Each run's `README.md` has the full findings, the caveats that go with them, and what is
+still open. Runs 3 and 4 also have a `claims_manifest.json` that maps every number in their
+report to a file and a row.
+
+## 3. Data sources
+
+| what | source | used by |
+|---|---|---|
+| **HepG2 and Jurkat CRISPRi Perturb-seq screens** (Nadig et al. 2025) | GEO [**GSE264667**](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE264667). Files: [`GSE264667_hepg2_raw_singlecell_01.h5ad`](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE264nnn/GSE264667/suppl/GSE264667_hepg2_raw_singlecell_01.h5ad) (5,614,460,941 bytes, md5 `dfc676e4186b8c8c173ff14e1194cc8a`) and [`GSE264667_jurkat_raw_singlecell_01.h5ad`](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE264nnn/GSE264667/suppl/GSE264667_jurkat_raw_singlecell_01.h5ad) (about 8.8 GB) | run 1, then every run through run 1's outputs |
+| Paper describing the screens | Nadig, Replogle et al., *Transcriptome-wide analysis of differential expression in perturbation atlases*, Nature Genetics 57, 1228–1237 (2025), [doi:10.1038/s41588-025-02169-3](https://doi.org/10.1038/s41588-025-02169-3) | — |
+| Published differential-expression reference, used as an external cross-check | Hugging Face dataset [`tahoebio/replogle-nadig-de-rhaister`](https://huggingface.co/datasets/tahoebio/replogle-nadig-de-rhaister) (`pdex/all_pdex.parquet`, `cell_eval/all_delta.parquet`) | run 1 (`data/crosscheck.py`) |
+| Gene-identifier map | [HGNC complete set](https://storage.googleapis.com/public-download-files/hgnc/tsv/tsv/hgnc_complete_set.txt) | run 1 (`genes/universe.py`) |
+| Protein sequences for the ESM2 control | [UniProt REST API](https://rest.uniprot.org/uniprotkb/search), reviewed human entries (release 2026_02, 20,431 entries) | run 3 (`protein/uniprot.py`) |
+
+The downloader in `experiment-1-30499z/src/scfm_pfm/data/sources.py` fetches the h5ads and
+checks them against GEO's md5 table. Both files are dense float32 in the legacy AnnData layout
+and are read in chunks by `data/h5ad_io.py`. Loading a whole file takes about 5 GB (HepG2) or
+9 GB (Jurkat) of memory.
+
+## 4. Models
+
+Revisions are pinned in `experiment-2-nygwcv/src/scfm_pfm/models/sources.py` (single-cell
+models) and `experiment-3-yga5ws/src/scfm_pfm/protein/sources.py` (ESM2).
+
+| model | source | pinned revision | used in |
+|---|---|---|---|
+| scGPT (whole-human) | [`wanglab/scGPT-human`](https://huggingface.co/wanglab/scGPT-human) (`best_model.pt`, `vocab.json`, `args.json`) | `a24c237737a40f3720f75abb555489e9fe753be6` | runs 1–6 |
+| scPRINT `medium-v1.5` | [`jkobject/scPRINT`](https://huggingface.co/jkobject/scPRINT) (`medium-v1.5.ckpt`) | `8e1ad1a1bc40c1fc2f4f1700fe27923eea9a2bed` | runs 1–3, 5, 6 |
+| TranscriptFormer `tf_sapiens` | [`tf_sapiens.tar.gz`](https://czi-transcriptformer.s3.amazonaws.com/weights/tf_sapiens.tar.gz) on CZI's public S3 bucket | unversioned; 1,819,975,447 bytes is the only handle | runs 1–3, 5 |
+| AIDO.Cell-100M (now `GB.Cell-100M`) | [`genbio-ai/GB.Cell-100M`](https://huggingface.co/genbio-ai/GB.Cell-100M), with the gene order from the `modelgenerator 0.1.3.post0` sdist | `a983b388e1025860f2c413ecef60e76078253c24` | runs 1–3 only; not in the paper |
+| ESM2 650M | [`facebook/esm2_t33_650M_UR50D`](https://huggingface.co/facebook/esm2_t33_650M_UR50D) | — | run 3 (protein control) |
+| ESM2 3B | [`facebook/esm2_t36_3B_UR50D`](https://huggingface.co/facebook/esm2_t36_3B_UR50D) | — | runs 3, 4 |
+
+## 5. Reproducing the work
+
+There are three levels, and each needs much more compute than the one before.
+
+### 5.1 Read the results (no setup)
+
+Everything a claim rests on is committed:
+
+- **Reports.** Runs 1, 3 and 4 each have a self-contained HTML page:
+  `experiment-1-30499z/results/data_preparation_report.html`, and
+  `results/report/index.html` in runs 3 and 4. Run 2's page is not committed because it
+  inlines about 5 MB of plotly.js; rebuild it with the command in §5.2.
+- **Tables.** Each run has `results/summary/` (runs 3, 4, 6) or `results/probe/` (run 5), and
+  a `manifest.yaml` with the headline numbers.
+- **Checks.** Each run's `verify` harness prints every check and the number it checked.
+  The captured output is committed under each run's `results/` (for example
+  `results/verify_all.txt` in run 1 and `results/verification/verify_all.txt` in runs 2, 5 and 6).
+
+### 5.2 Rebuild reports and run the tests (CPU only, tracked files only)
+
+Runs 1–4 pin their dependencies with `uv`; Python ≥ 3.12. The packages are not installed, so
+put `src/` on the path:
 
 ```sh
 cd experiments/experiment-3-yga5ws
 uv sync
-PYTHONPATH=src uv run python -m scfm_pfm.report.build --summary results/summary --out OUT
+PYTHONPATH=src uv run python -m scfm_pfm.report.build --summary results/summary --out /tmp/run3_report
+PYTHONPATH=src uv run pytest tests -q
 ```
 
-Headline, on the pre-registered scoring rule: the static gene embedding beats co-expression in both
-lines — 0.2719 against 0.04879 in HepG2 (shuffled-label ceiling 0.02764) and 0.2371 against 0.04462
-in Jurkat (ceiling 0.02351) — and the harvested response features add nothing on top of it. Three
-caveats travel with those numbers. The pre-registered score gives an arm credit for the part of a
-held-out group's response its members share, so a fold-centred version that removes it is reported
-beside it everywhere; that version uses held-out outcomes and is a diagnostic, not a second
-verdict. Every interval resamples response groups, not perturbations, because correlated
-perturbations are held out together. And the second pre-registered axis, perturbation
-discrimination, is version-dependent and inconclusive. Absolute scores stay under 0.30 on a scale
-where 1.0 is the measurement's reproducibility limit.
+Run 2: `python -m scfm_pfm.report.build --bundles results/report/bundles --out OUT`.
+Run 4: `python -m scfm_ft.report.build --summary results/summary --alt-summary results/summary_masked_mse --out OUT`.
 
-## What the thread found, and what is still open
+The report builders import a house figure-style package, `silico_figures`, from the platform
+runs 1–4 were executed on. `tools/silico-figures-local/` reconstructs it. Put
+`tools/silico-figures-local/src` on `PYTHONPATH` (or install it), and read its `README.md`
+before trusting a rebuilt figure. Pin `plotly` to 6.x: plotly 7 emits a plotly.js 4.x CDN
+reference, and the original pages used 3.6.0.
 
-A single-cell foundation model does carry usable information about which genes respond to a
-knockdown, but it sits in the static gene-identity embedding rather than in the model's simulated
-reaction to a perturbation. Querying the model — the mechanism the source paper proposes — adds
-nothing beyond the null band on this task.
+Tests exist for runs 2, 3, 5 and 6 (`PYTHONPATH=src pytest tests -q` inside each run). They
+are torch-free wherever the logic allows. They include toy models with hand-computable
+responses, no-op checks, and null controls that can fail.
 
-**Settled: half the winning gene tables were not learned from cells.** Reading the four released
-checkpoints shows where each gene-identity table came from. TranscriptFormer's is an ESM2 protein
-embedding passed through unchanged: its 23,823 gene rows are bitwise the ESM2 file shipped beside
-the weights, and the loader hard-codes `freeze=True`. scPRINT's was initialised from a
-protein-derived table and then trained, which the checkpoint proves by carrying two Adam moment
-tensors of exactly the gene table's shape. scGPT's and AIDO.Cell's are learned from expression with
-no protein model anywhere in the path.
+### 5.3 Regenerate from raw data (GPU)
 
-Building the missing control settles what protein sequence alone can do. Every read-out gene was
-mapped to its canonical reviewed human protein and embedded with two public ESM2 checkpoints, and
-that table was pushed through the identical translator, folds, weights, scoring and nulls. On the
-pre-registered rule it scores 0.2331 in HepG2 and 0.2642 in Jurkat, and paired on the same held-out
-perturbations it beats co-expression in both lines (+0.1525 and +0.1564) and ties the single-cell
-tables in seven of the eight comparisons, beating scGPT's in Jurkat. Protein sequence alone
-therefore supplies a gene table that does this job as well as the single-cell models' tables do.
-The sharpest version is the cross-line evaluation on genes never perturbed in the training screen,
-where the four protein-derived tables clear zero in 8 of 8 cells against scGPT's 0 of 2, on the
-78 to 89 destination perturbations the non-transductive reference leaves to score.
+Follow the runs in order. Each run's `README.md` has the full command list. Outline:
 
-What that does not settle: it shows where the signal can come from, not where each model's signal
-does come from. scGPT's table carries no measurable protein-space structure and still scores as
-well, so this does not identify its source. It does not decompose scGPT's or AIDO.Cell's learned
-table into a protein-like part and a cell-specific part, and one protein model at two sizes with
-one pooling rule stands in for protein space.
+| run | what to run | compute |
+|---|---|---|
+| 1 | `data.prepare --cell-line all`, `data.ceilings_grid`, `data.crosscheck`, `genes.universe`, `models.demo --model <m>`, then `verify --all` | CPU with high memory; one short GPU job per model |
+| 2 | `models.prefetch`, then `features.extract --model <m> --cell-line <line>` for each model and line, then `verify_features` | GPU. Per (model, line) on one H100: scGPT 6–11 min, scPRINT 12–20 min, TranscriptFormer 77–104 min |
+| 3 | `ingest.build` (builds one bundle from runs 1 and 2), then `translate.runner` shards, then `analysis`, `report.contract`, `report.build` | CPU for the sweep; GPU for the ESM2 embeddings |
+| 4 | `jobs/ingest.sh <line>`, `SCFM_FT_RUN_SUFFIX=_pearson jobs/train_arm.sh <line> <arm>` for 5 arms × 2 lines, then `jobs/finalise.sh` | one H100 per (arm, line) |
+| 5 | `jobs/smoke.sh` first, then `jobs/sweep_mean_control.sh` and `jobs/sweep_individual_cells.sh` | one RTX 3090 (24 GB) |
+| 6 | `jobs/smoke.sh`, `stage0.sh`, `fit_basis.sh`, `extract.sh`, `stage1.sh`, `restrict.sh` | one RTX 3090 (24 GB) |
 
+**Where outputs go.** The heavy outputs are not in this repository: effect matrices, feature
+blocks, sweep shards, hidden-state blocks and fine-tuned checkpoints. Every run resolves paths
+in its `paths.py`, in this order: an explicit environment variable, then a platform variable,
+then a local fallback. Set the variable to a data directory:
 
-## Rebuilding, in general
+| run | variables |
+|---|---|
+| 1 | `SCFM_PFM_DATA_ROOT` (write root), `SCFM_PFM_RAW_DIR` (raw h5ads, ~15 GB), `SCFM_PFM_INPUT_ROOT` |
+| 2 | `SCFM_PFM_DATA_ROOT`, `SCFM_PFM_CKPT_DIR` (checkpoint cache), `SCFM_PFM_HANDOFF_ROOT` |
+| 3 | `SCFM_PFM3_DATA_ROOT`, `SCFM_PFM3_BUNDLE` (the bundle `ingest.build` writes) |
+| 4 | `SCFM_FT_DATA_ROOT`, `SCFM_FT_BUNDLE`, `SCFM_FT_CELLS`, `SCFM_FT_CKPT`, `SCFM_FT_ESM2`, `SCFM_FT_RUN_SUFFIX` |
+| 5 | `SCFM_PFM5_DATA_ROOT`, `SCFM_PFM5_BUNDLE`, `SCFM_PFM3_BUNDLE`, `SCFM_PFM5_R2_FEATURES`, `SCFM_PFM_CKPT_DIR` |
+| 6 | `SCFM_PFM6_DATA_ROOT`, `SCFM_PFM6_BUNDLE`, `SCFM_PFM3_BUNDLE`, `SCFM_PFM6_RUN5_PROBE`, `SCFM_PFM6_FT_CKPT`, `SCFM_PFM_CKPT_DIR` |
 
-Each run pins its own dependencies in its own `pyproject.toml` and `uv.lock`; run `uv sync` inside
-the run directory. The house figure-style package is a local path dependency supplied by the
-platform, so a clone taken off-platform needs that package made available before the report
-builders will run. Regenerating the underlying results — not the reports — needs GPU jobs and the
-artifact store; each run's `README.md` gives those commands.
+**Where runs 1–4 were executed.** They ran on a hosted compute platform: on-demand H100 jobs
+and a private artifact store. Their job scripts and some defaults assume that platform's
+environment variables (`SILICO_*`). With those unset, the `paths.py` fallbacks and the
+variables above apply. Run 3's `ingest.build` pulls run 1's and run 2's outputs through a
+manifest of download links (`--urls`). It was written for presigned HTTPS links, so off the
+platform you supply a manifest that points at your own copies. Runs 5 and 6 were written and
+run off-platform, on a single workstation.
+
+**Environments for runs 5 and 6.** Each model runs in its own conda environment, because the
+three checkpoints were verified against three different torch builds:
+
+| model | python | torch | package |
+|---|---|---|---|
+| scGPT | 3.10 | 2.9.1+cu128 | `scgpt 0.2.4` |
+| TranscriptFormer | 3.11 | 2.5.1+cu124 | `transcriptformer 0.6.1` |
+| scPRINT | 3.11 | 2.5.1+cu124 | `scprint 2.3.8`, installed with `--no-deps`, plus `simpler-flash==1.0.7` |
+
+`experiment-5-hidprb/envs/README.md` has the details and the import check to run.
+
+## 6. Pitfalls
+
+None of these raises an error. Each one silently changes a number.
+
+- **scPRINT loading.** Install `scprint==2.3.8` with `--no-deps`: its metadata pins
+  `torch==2.2.0` and would downgrade the CUDA build. Set `precpt_gene_emb=None`, because the
+  checkpoints point at a stale path that is not needed. Keep the
+  `gene_encoder.0.embedding.weight → …embeddings.weight` rename: **skipping it leaves a randomly
+  initialised gene embedding, and every response is noise that looks like a result.** Do not
+  test the install with `import scprint`; run 2 imports only `scprint.model.model`. Runs 1–6
+  all used `medium-v1.5`. Run 2's manifest labels it "large", which is a documentation error.
+- **scGPT's `args.json`** embeds the authors' cluster paths. Override `vocab_path` with the
+  local `vocab.json`.
+- **TranscriptFormer's intervention is a different operation.** Gene counts enter as an
+  attention-score modifier, not through the residual stream. Counts are also clipped at a
+  training-time 30 CP10K, so the 16 and 64 CP10K grid points both saturate, and its effective
+  dose axis is `(0, 1, 4, 30, 30)`. See `experiment-5-hidprb/README.md`.
+- **Model keys must not contain `__`.** Run 3's bundle reader splits feature file names on the
+  first `__`. A key containing it makes a block unreadable, and its arms drop out of the scored
+  set without an error. Use `scfm_ft.config.model_stem` / `run_of_stem`.
+- **Build reports from a `git archive` export, not in place.** Run 2's report builder writes
+  figures to `<run>/figures` with no flag to redirect it, and would overwrite the committed
+  figure bundles.
+- **Run 4 needs `SCFM_FT_RUN_SUFFIX=_pearson`.** Without it, run 4 writes into the earlier
+  masked-MSE execution's tree. The reported execution selects checkpoints on validation
+  Pearson, as scGPT's tutorial does. The masked-MSE execution is kept as an independent
+  replicate in `results/summary_masked_mse/`.
+- **Directory names are load-bearing.** Build scripts, manifests and `sibling.py` refer to
+  them. Do not rename or move a run.
+- **Name the metric cell.** The verdict is on the pre-registered
+  `residual__weighted__disattenuated`. The fold-centred cell is a post-hoc secondary used to
+  order arms. Quote both, and do not let either confirm the other.
+
+## 7. Known gaps
+
+- Run 6: TranscriptFormer, the `k = 16` rung, the random split and a `claims_manifest.json`
+  are not yet done (see run 6's README, §0).
+- Run 4 ships no `tests/`.
+- The READMEs for runs 5 and 6 refer in places to internal working notes (`docs/INDEX.md`,
+  `docs/METRICS.md`, `PROGRESS.md`) that are not part of this repository. The facts those
+  pointers lead to that you need for reproduction are repeated in §4–§6 above.
+- The heavy intermediate outputs of runs 1–4 live in the original platform's private store and
+  are not public. Everything needed to regenerate them from the public data and checkpoints is
+  in this repository.
+
+## 8. Citation
+
+```bibtex
+@misc{yanovsky2026perturbationqueries,
+  title  = {When perturbation queries fail: static gene and protein embeddings outperform
+            simulated {scFM} perturbation responses},
+  author = {Yanovsky, Nicolas and Chernomoretz, Ariel},
+  year   = {2026},
+  url    = {https://github.com/nyanovsky/scfm-perturbation-failure-modes}
+}
+```
+
+If you use the screens, please also cite Nadig et al. (2025). If you use the models, please
+cite their original papers.
