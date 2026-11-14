@@ -57,7 +57,9 @@ NORMALIZATIONS = ("raw", "standardized", "recentred", "log2fc")
 #: Every anchor and every perturbation value is expressed in CP10K, the one unit
 #: all four models can be given a defensible map into: counts-scale models take
 #: the value as the count of a 10,000-count virtual cell, and scGPT takes the
-#: matching quantile bin (see features/anchors.py).
+#: matching quantile bin. The anchors are built by `features/extract.py:build_anchors`
+#: and the CP10K->native maps live on each adapter's `to_native`; there is no
+#: `features/anchors.py` and there never was (corrected 2026-08-29, comment only).
 VALUE_GRID_CP10K = (0.0, 1.0, 4.0, 16.0, 64.0)
 #: gradient-trajectory base values: the same grid, so one forward pass at each
 #: value serves both the interval feature and the centre of its derivative
